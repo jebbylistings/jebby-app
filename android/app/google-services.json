@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "369111140699",
+    "project_id": "jebby-525d6",
+    "storage_bucket": "jebby-525d6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:369111140699:android:bb727908c68f7da1e1b27e",
+        "android_client_info": {
+          "package_name": "com.jebbylistings.jebby"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBLO1JSYjnBkdG1xKb4d_lhejY8xhLiTko"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
