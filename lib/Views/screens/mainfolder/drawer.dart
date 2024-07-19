@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -66,6 +67,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
   String? fullname;
   String? email;
   String? role;
+   String Url = dotenv.env['baseUrlM'] ?? 'No url found';
   void profileData(BuildContext context) async {
     getUserDate().then((value) async {
       token = value.token.toString();
@@ -125,8 +127,6 @@ class _DrawerScreenState extends State<DrawerScreen> {
                   padding: const EdgeInsets.only(left: 10),
                   child: Row(
                     children: [
-                      //  imagesapi=="null"?Image.asset("assets/slicing/userblankpng.png",fit: BoxFit.cover,):Image.network("https://api.jebbylistings.com${imagesapi}",fit: BoxFit.cover,),
-                      // imagesapi=="null"?Center(child: CircularProgressIndicator()):Image.network("https://api.jebbylistings.com${imagesapi}",fit: BoxFit.cover,),
                       usp.image.toString() == "null"
                           ? sp.imageUrl.toString() == "null"
                           ? CircleAvatar(radius: 40, backgroundImage: AssetImage("assets/slicing/blankuser.jpeg"))
@@ -134,7 +134,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           : CircleAvatar(
                           radius: 40,
                           backgroundImage: NetworkImage(
-                            "https://api.jebbylistings.com${usp.image}",
+                            "${Url}${usp.image}",
                           )),
 
                       SizedBox(
@@ -934,7 +934,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         : CircleAvatar(
                         radius: 40,
                         backgroundImage: NetworkImage(
-                          "https://api.jebbylistings.com${usp.image}",
+                          "${Url}${usp.image}",
                         )),
 
                     SizedBox(
@@ -2245,7 +2245,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         : CircleAvatar(
                         radius: 40,
                         backgroundImage: NetworkImage(
-                          "https://api.jebbylistings.com${usp.image}",
+                          "${Url}${usp.image}",
                         )),
 
                     SizedBox(
@@ -3562,7 +3562,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
   var datalength;
 
   Future getProductsApi(id) async {
-    final response = await http.get(Uri.parse('https://api.jebbylistings.com/UserProfileGetById/${id}'));
+    final response = await http.get(Uri.parse('${Url}/UserProfileGetById/${id}'));
     var data = jsonDecode(response.body.toString());
     log(data.toString());
     datalength = data["data"].length;

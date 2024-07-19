@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:get/get.dart';
@@ -139,7 +140,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
   }
 
   void getSuggestion(String input) async {
-    String kPLACES_API_KEY = "AIzaSyBkzoEvOmBy1dUxRP24ekNAtokQL4rllsE";
+    String kPLACES_API_KEY = dotenv.env['kPLACES_API_KEY'] ?? 'No secret key found';
     String type = '(regions)';
 
     try {
@@ -185,7 +186,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
 
    double taxValue = 0;
   Future<void> getSalesTax(zipcode) async {
-    final apiKey = '53985e5cdaf81bfa4d268061e40964fd';
+    String apiKey = dotenv.env['apiKey'] ?? 'No secret key found';
     final apiUrl = 'https://api.taxjar.com/v2/rates?zip=${zipcode}'; // API endpoint URL
 
     final response = await http.get(

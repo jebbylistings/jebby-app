@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:get/get.dart';
 import 'package:getwidget/components/accordion/gf_accordion.dart';
@@ -331,7 +332,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   ////////
   Future getProductsApi(id) async {
-    final response = await http.get(Uri.parse('https://api.jebbylistings.com/UserProfileGetById/${id}'));
+    String Url = dotenv.env['baseUrlM'] ?? 'No url found';
+    final response = await http.get(Uri.parse('${Url}/UserProfileGetById/${id}'));
     var data = jsonDecode(response.body.toString());
     print(data);
     setState(() {

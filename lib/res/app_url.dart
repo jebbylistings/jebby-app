@@ -1,5 +1,7 @@
 
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class AppUrl {
 
 
@@ -15,8 +17,8 @@ class AppUrl {
   static var moviesListEndPoint =  moviesBaseUrl + 'movies_list' ;
 
 
-
-  static var baseUrlM = 'https://api.jebbylistings.com' ; /// base url
+  static var Url = dotenv.env['baseUrlM'] ?? 'No url found';
+  static var baseUrlM = Url ; /// base url
   static var registerApiEndPointM =  baseUrlM + '/register' ;
   static var loginApiEndPointM =  baseUrlM + '/login' ;
 

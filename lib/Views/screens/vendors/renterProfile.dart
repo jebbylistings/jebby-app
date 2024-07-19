@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:get/get.dart';
 import 'package:jared/Views/helper/colors.dart';
@@ -30,6 +31,7 @@ class RenterProfile extends StatefulWidget {
 }
 
 class _RenterProfileState extends State<RenterProfile> {
+   String Url = dotenv.env['baseUrlM'] ?? 'No url found';
   TextEditingController _emailController = TextEditingController();
   TextEditingController _nameController = TextEditingController();
   var _locationController = TextEditingController();
@@ -211,7 +213,7 @@ class _RenterProfileState extends State<RenterProfile> {
                               ? Image.asset("assets/slicing/blankuser.jpeg", fit: BoxFit.cover)
                               : Image.network("${sp.imageUrl}", fit: BoxFit.cover)
                           : Image.network(
-                              "https://api.jebbylistings.com${back_image_api}",
+                              "${Url}${back_image_api}",
                               fit: BoxFit.cover,
                             ),
                     ),
@@ -229,7 +231,7 @@ class _RenterProfileState extends State<RenterProfile> {
                             //           :CircleAvatar(radius: 40, backgroundImage: NetworkImage("${sp.imageUrl}")): CircleAvatar(
                             //               radius: 40,
                             //               backgroundImage: NetworkImage(
-                            //                 "https://api.jebbylistings.com${imagesapi}",
+                            //                 "${Url}${imagesapi}",
                             //               )),)
                             usp.image.toString() == "null"
                                 ? sp.imageUrl.toString() == "null"
@@ -238,7 +240,7 @@ class _RenterProfileState extends State<RenterProfile> {
                                 : CircleAvatar(
                                     radius: 40,
                                     backgroundImage: NetworkImage(
-                                      "https://api.jebbylistings.com${usp.image}",
+                                      "${Url}${usp.image}",
                                     )),
                       ),
                     )
@@ -744,7 +746,7 @@ class _RenterProfileState extends State<RenterProfile> {
 
   ////////
   Future getProductsApi(id) async {
-    final response = await http.get(Uri.parse('https://api.jebbylistings.com/UserProfileGetById/${id}'));
+    final response = await http.get(Uri.parse('${Url}/UserProfileGetById/${id}'));
     var data = jsonDecode(response.body.toString());
     log(data.toString());
     if (data["data"].length != 0) {

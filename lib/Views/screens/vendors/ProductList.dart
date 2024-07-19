@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:get/get.dart';
 import 'package:jared/Views/helper/colors.dart';
@@ -18,6 +19,7 @@ import '../../../view_model/user_view_model.dart';
 import 'package:http/http.dart' as http;
 
 class ProductListScreen extends StatefulWidget {
+  
   final side;
    ProductListScreen({Key? key, required this.side}) : super(key: key);
   @override
@@ -26,6 +28,7 @@ class ProductListScreen extends StatefulWidget {
 
 class _ProductListScreenState extends State<ProductListScreen> {
   final GlobalKey<ScaffoldState> _key = GlobalKey();
+   String Url = dotenv.env['baseUrlM'] ?? 'No url found';
 
   bool emptyData = false;
   bool isLoading = true;
@@ -64,7 +67,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
   var profile = [];
   Future getProductsApi(id) async {
-    final response = await http.get(Uri.parse('https://api.jebbylistings.com/UserProfileGetById/${id}'));
+    final response = await http.get(Uri.parse('${Url}/UserProfileGetById/${id}'));
     var data = jsonDecode(response.body.toString());
     profile = data['data'];
     print("data ${data['data'].toString()}");

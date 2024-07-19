@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:jared/provider/prodetail_provider.dart';
 
@@ -25,7 +26,7 @@ import 'view_model/user_view_model.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  // Stripe.publishableKey = "pk_test_51Iw2FFKl1ZAnnMNkMEtJGcvYDf19HGfk5Jns9Akj5omsZb4xfxsPyOEs3AZBi1UHnmdoL9yP3gWBpr1c1gbFRq7h00LYMbXXN5";
+  await dotenv.load(fileName: ".env");
   runApp(
     OverlaySupport.global(
       child: MyApp(), // Replace with your actual app widget

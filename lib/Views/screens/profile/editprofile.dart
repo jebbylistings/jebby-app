@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -35,6 +36,7 @@ class EditProfile extends StatefulWidget {
 }
 
 class _EditProfileState extends State<EditProfile> {
+   String Url = dotenv.env['baseUrlM'] ?? 'No url found';
   File? _image;
   File? _image1;
 
@@ -109,7 +111,7 @@ class _EditProfileState extends State<EditProfile> {
   }
 
   void getSuggestion(String input) async {
-    String kPLACES_API_KEY = "AIzaSyBkzoEvOmBy1dUxRP24ekNAtokQL4rllsE";
+    String kPLACES_API_KEY = dotenv.env['kPLACES_API_KEY'] ?? 'No secret key found';
     String type = '(regions)';
 
     try {
@@ -134,7 +136,7 @@ class _EditProfileState extends State<EditProfile> {
   }
 
   void getSuggestion1(String input) async {
-    String kPLACES_API_KEY = "AIzaSyBkzoEvOmBy1dUxRP24ekNAtokQL4rllsE";
+    String kPLACES_API_KEY = dotenv.env['kPLACES_API_KEY'] ?? 'No secret key found';
     String type = '(regions)';
 
     try {
@@ -348,7 +350,7 @@ class _EditProfileState extends State<EditProfile> {
                                           : Image.network("${sp.imageUrl}",
                                               fit: BoxFit.cover)
                                       : Image.network(
-                                          "https://api.jebbylistings.com" +
+                                          "${Url}" +
                                               back_image_api.toString(),
                                           fit: BoxFit.cover)),
 
@@ -414,7 +416,7 @@ class _EditProfileState extends State<EditProfile> {
                                               : CircleAvatar(
                                                   radius: 40,
                                                   backgroundImage: NetworkImage(
-                                                      "https://api.jebbylistings.com${imagesapi}"))),
+                                                      "${Url}${imagesapi}"))),
                                   Positioned(
                                     bottom: -12,
                                     right: 18,
@@ -837,7 +839,7 @@ class _EditProfileState extends State<EditProfile> {
 
                                 print(formData.toString());
                                 d.Response response = await Dio().post(
-                                    "https://api.jebbylistings.com/UserProfileInsert",
+                                    "${Url}/UserProfileInsert",
                                     data: formData);
                                 log(response.statusCode.toString());
                                 print(response.data);
@@ -910,7 +912,7 @@ class _EditProfileState extends State<EditProfile> {
 
                                 print(formData.toString());
                                 d.Response response = await Dio().post(
-                                    "https://api.jebbylistings.com/UserProfileInsert",
+                                    "${Url}/UserProfileInsert",
                                     data: formData);
                                 print(
                                     'STATUS ${response.statusCode.toString()}');
@@ -1247,7 +1249,7 @@ class _EditProfileState extends State<EditProfile> {
                             }
                             print(formData.toString());
                             d.Response response = await Dio().post(
-                                "https://api.jebbylistings.com/UserProfileUpdate",
+                                "${Url}/UserProfileUpdate",
                                 data: formData);
                             print(response.statusCode.toString());
                             log(response.statusCode.toString());
@@ -1431,7 +1433,7 @@ class _EditProfileState extends State<EditProfile> {
   ////////
   Future getProductsApi(id) async {
     final response = await http.get(
-        Uri.parse('https://api.jebbylistings.com/UserProfileGetById/${id}'));
+        Uri.parse('${Url}/UserProfileGetById/${id}'));
     var data = jsonDecode(response.body.toString());
     print('data $data');
     log(data.toString());

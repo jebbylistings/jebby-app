@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
 import 'package:jared/Views/controller/bottomcontroller.dart';
 import 'package:jared/Views/screens/home/filteredData.dart';
@@ -87,7 +88,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
   }
 
   void getSuggestion(String input) async {
-    String kPLACES_API_KEY = "AIzaSyBkzoEvOmBy1dUxRP24ekNAtokQL4rllsE";
+    String kPLACES_API_KEY = dotenv.env['kPLACES_API_KEY'] ?? 'No secret key found';
     String type = '(regions)';
 
     try {
@@ -795,6 +796,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
                               setState(() {
                                 filteredData = true;
                               });
+                               String Url = dotenv.env['baseUrlM'] ?? 'No url found';
                               if(DateTime.parse(selectedDate.toString()).compareTo(DateTime.parse(selectedDate1.toString())) > 0){
                                 var snackBar = new SnackBar(
                                         content: new Text(
@@ -818,22 +820,22 @@ class _FilterScreeenState extends State<FilterScreeen> {
                                   else {
                                     if (price == 0 && fromDate == null) {
                                       url =
-                                          "https://api.jebbylistings.com/getProductSearching/null/null/null/null/null/${selected_sub_id}/null";
+                                          "${Url}/getProductSearching/null/null/null/null/null/${selected_sub_id}/null";
                                       print(url);
                                       getData(url);
                                     } else if (price != 0 && fromDate == null) {
                                       url =
-                                          "https://api.jebbylistings.com/getProductSearching/null/null/null/null/null/${selected_sub_id}/${price}";
+                                          "${Url}/getProductSearching/null/null/null/null/null/${selected_sub_id}/${price}";
                                       print(url);
                                       getData(url);
                                     } else if (price == 0 && fromDate != null) {
                                       url =
-                                          "https://api.jebbylistings.com/getProductSearching/${fromDate}/${toDate == null ? selectedDate1 : toDate}/null/null/null/${selected_sub_id}/null";
+                                          "${Url}/getProductSearching/${fromDate}/${toDate == null ? selectedDate1 : toDate}/null/null/null/${selected_sub_id}/null";
                                       print(url);
                                       getData(url);
                                     } else if (price != 0 && fromDate != null) {
                                       url =
-                                          "https://api.jebbylistings.com/getProductSearching/${fromDate}/${toDate == null ? selectedDate1 : toDate}/null/null/null/${selected_sub_id}/${price}";
+                                          "${Url}/getProductSearching/${fromDate}/${toDate == null ? selectedDate1 : toDate}/null/null/null/${selected_sub_id}/${price}";
                                       print(url);
                                       getData(url);
                                     }
@@ -844,22 +846,22 @@ class _FilterScreeenState extends State<FilterScreeen> {
                                   if (radius != 0) {
                                     if (price == 0 && fromDate == null) {
                                       url =
-                                          "https://api.jebbylistings.com/getProductSearching/null/null/${Latitiude}/${Longitude}/${radius}/${selected_sub_id}/null";
+                                          "${Url}/getProductSearching/null/null/${Latitiude}/${Longitude}/${radius}/${selected_sub_id}/null";
                                       print(url);
                                       getData(url);
                                     } else if (price != 0 && fromDate == null) {
                                       url =
-                                          "https://api.jebbylistings.com/getProductSearching/null/null/${Latitiude}/${Longitude}/${radius}/${selected_sub_id}/${price}";
+                                          "${Url}/getProductSearching/null/null/${Latitiude}/${Longitude}/${radius}/${selected_sub_id}/${price}";
                                       print(url);
                                       getData(url);
                                     } else if (price == 0 && fromDate != null) {
                                       url =
-                                          "https://api.jebbylistings.com/getProductSearching/${fromDate}/${toDate == null ? selectedDate1 : toDate}/${Latitiude}/${Longitude}/${radius}/${selected_sub_id}/null";
+                                          "${Url}/getProductSearching/${fromDate}/${toDate == null ? selectedDate1 : toDate}/${Latitiude}/${Longitude}/${radius}/${selected_sub_id}/null";
                                       print(url);
                                       getData(url);
                                     } else if (price != 0 && fromDate != null) {
                                       url =
-                                          "https://api.jebbylistings.com/getProductSearching/${fromDate}/${toDate == null ? selectedDate1 : toDate}/${Latitiude}/${Longitude}/${radius}/${selected_sub_id}/${price}";
+                                          "${Url}/getProductSearching/${fromDate}/${toDate == null ? selectedDate1 : toDate}/${Latitiude}/${Longitude}/${radius}/${selected_sub_id}/${price}";
                                       print(url);
                                       getData(url);
                                     }

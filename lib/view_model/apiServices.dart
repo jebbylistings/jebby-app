@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:jared/Views/screens/vendors/ProductList.dart';
@@ -104,7 +105,8 @@ class ApiRepository extends ChangeNotifier {
   static var shared = ApiRepository();
 
   var notificationTimer;
-
+  static var Url = dotenv.env['baseUrlM'] ?? 'No url found';
+  
   checkApiStatus(status, apiName) {
     if (apiName == "categoryList") {
       getCategoryListApiStatus = status;
@@ -375,7 +377,7 @@ class ApiRepository extends ChangeNotifier {
   }
 
   Future<LastProductByVendorIdModel> getLastProductByVendorId(onResponse(LastProductByVendorIdModel list), onError(error), id) async {
-    final response = await http.get(Uri.parse("https://api.jebbylistings.com/LastProductByVendorId/${id}"), headers: {
+    final response = await http.get(Uri.parse("${Url}/LastProductByVendorId/${id}"), headers: {
       'Content-type': "application/json",
     });
     if (response.statusCode == 200) {
@@ -445,7 +447,7 @@ class ApiRepository extends ChangeNotifier {
     });
 
     final response = await http.post(
-      Uri.parse("https://api.jebbylistings.com/productInfoInsert"),
+      Uri.parse("${Url}/productInfoInsert"),
       body: request,
       headers: {
         'Content-type': "application/json",
@@ -713,7 +715,7 @@ class ApiRepository extends ChangeNotifier {
     };
     print(data);
     final response = await http.post(
-      Uri.parse("https://api.jebbylistings.com/productUpdate"),
+      Uri.parse("${Url}/productUpdate"),
       body: request,
       headers: {
         'Content-type': "application/json",
@@ -1200,7 +1202,7 @@ class ApiRepository extends ChangeNotifier {
   }
 
   Future<GetAllMessagesModel> getMessagesApi(String sourceID, String targetID, onResponse(GetAllMessagesModel List), onError(error)) async {
-    final response = await http.get(Uri.parse("https://api.jebbylistings.com/GetMessagesByIds/${sourceID}/${targetID}"), headers: {
+    final response = await http.get(Uri.parse("${Url}/GetMessagesByIds/${sourceID}/${targetID}"), headers: {
       'Content-type': "application/json",
     });
     if (response.statusCode == 200) {
@@ -1246,7 +1248,7 @@ class ApiRepository extends ChangeNotifier {
     });
 
     final response = await http.post(
-      Uri.parse("https://api.jebbylistings.com/InsertMessage"),
+      Uri.parse("${Url}/InsertMessage"),
       body: request,
       headers: {
         'Content-type': "application/json",
@@ -1268,7 +1270,7 @@ class ApiRepository extends ChangeNotifier {
   }
 
   Future<GetChatHistoryModel> chatsHistory(String sourceID, onResponse(GetChatHistoryModel List), onError(error)) async {
-    final response = await http.get(Uri.parse("https://api.jebbylistings.com/getMessageVendorsProfile/${sourceID}"), headers: {
+    final response = await http.get(Uri.parse("${Url}/getMessageVendorsProfile/${sourceID}"), headers: {
       'Content-type': "application/json",
     });
     if (response.statusCode == 200) {
@@ -1316,7 +1318,7 @@ class ApiRepository extends ChangeNotifier {
     print("request ${request}");
 
     final response = await http.post(
-      Uri.parse("https://api.jebbylistings.com/payByStripe"),
+      Uri.parse("${Url}/payByStripe"),
       body: request,
       headers: {
         'Content-type': "application/json",
@@ -1358,7 +1360,7 @@ class ApiRepository extends ChangeNotifier {
   }
 
   void ChargeBack(context, userid, productId, rentStart, originalReturn, name, email, location, lat, long, negoPrice,shipping_address, cardNumber, expiryMonth, expiryYear, cvv, amount, security_deposit) async {
-    final String SeenMessageUrl = "https://api.jebbylistings.com/PyaByStripeSecurityDeposit";
+    final String SeenMessageUrl = "${Url}/PyaByStripeSecurityDeposit";
     var data = {
     "cardNumber":cardNumber,
     "exp_month":expiryMonth,
@@ -1421,7 +1423,7 @@ class ApiRepository extends ChangeNotifier {
     print("request $request");
 
     final response = await http.post(
-      Uri.parse("https://api.jebbylistings.com/rentProductInsert"),
+      Uri.parse("${Url}/rentProductInsert"),
       body: request,
       headers: {
         'Content-type': "application/json",
@@ -1937,7 +1939,7 @@ class ApiRepository extends ChangeNotifier {
     print(request);
 
     final response = await http.post(
-      Uri.parse("https://api.jebbylistings.com/payByStripe"),
+      Uri.parse("${Url}/payByStripe"),
       body: request,
       headers: {
         'Content-type': "application/json",

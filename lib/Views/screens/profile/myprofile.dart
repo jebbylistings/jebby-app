@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -29,6 +30,7 @@ class MyProfileScreen extends StatefulWidget {
 class _MyProfileScreenState extends State<MyProfileScreen> {
   ///Instance of Provider Get
   //HomeViewViewModel homeViewViewModel = HomeViewViewModel();
+   String Url = dotenv.env['baseUrlM'] ?? 'No url found';
 
   Future getData() async {
     final sp = context.read<SignInProvider>();
@@ -134,7 +136,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                       ? Image.asset("assets/slicing/blankuser.jpeg", fit: BoxFit.cover)
                                       : Image.network("${sp.imageUrl}", fit: BoxFit.cover)
                                   : Image.network(
-                                      "https://api.jebbylistings.com${back_image_api}",
+                                      "${Url}${back_image_api}",
                                       fit: BoxFit.cover,
                                     )
                               //  imagesapi == "null"
@@ -143,7 +145,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                               //         fit: BoxFit.cover,
                               //       )
                               //     : Image.network(
-                              //         "https://api.jebbylistings.com${imagesapi}",
+                              //         "${Url}${imagesapi}",
                               //         fit: BoxFit.cover,
                               //       ),
                               ),
@@ -158,7 +160,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                   : CircleAvatar(
                                       radius: 40,
                                       backgroundImage: NetworkImage(
-                                        "https://api.jebbylistings.com${imagesapi}",
+                                        "${Url}${imagesapi}",
                                       )),
                             ),
                           )
@@ -508,7 +510,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 
   ////////
   Future getProductsApi(id) async {
-    final response = await http.get(Uri.parse('https://api.jebbylistings.com/UserProfileGetById/${id}'));
+    final response = await http.get(Uri.parse('${Url}/UserProfileGetById/${id}'));
     var data = jsonDecode(response.body.toString());
     if (data["data"].length != 0) {
       log(data["data"][0]["id"].toString());
@@ -688,7 +690,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 //                                         width: 50,
 //                                         color: Colors.white,
 //                                       ),
-//                                       // Image.network("https://api.jebbylistings.com" + profileValues.image.toString(), fit: BoxFit.cover),
+//                                       // Image.network("${Url}" + profileValues.image.toString(), fit: BoxFit.cover),
 //                                     ),
 //                                     Positioned(
 //                                         left: 15,
@@ -701,7 +703,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 //                                               width: 50,
 //                                               color: Colors.white,
 //                                             ),
-//                                             //  backgroundImage: NetworkImage("https://api.jebbylistings.com${profileValues.image.toString()}")),
+//                                             //  backgroundImage: NetworkImage("${Url}${profileValues.image.toString()}")),
 //                                           ),
 //                                         ))
 //                                   ],
@@ -945,7 +947,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 //                                     sp.imageUrl.toString() == "null"
 //                                     ? usp.image.toString() == "null"
 //                                         ? Image.asset("assets/slicing/blankuser.jpeg", fit: BoxFit.cover)
-//                                         : Image.network("https://api.jebbylistings.com${ back_image_api}", fit: BoxFit.cover)
+//                                         : Image.network("${Url}${ back_image_api}", fit: BoxFit.cover)
 //                                     : Image.network("${sp.imageUrl}", fit: BoxFit.cover),),
 //                                   Positioned(
 //                                     left: 15,
@@ -958,7 +960,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 //                                     )
 //                                 : CircleAvatar(
 //                                     radius: 40,
-//                                     backgroundImage: NetworkImage("https://api.jebbylistings.com${usp.image}"))
+//                                     backgroundImage: NetworkImage("${Url}${usp.image}"))
 //                                     : CircleAvatar(radius: 40, backgroundImage: NetworkImage("${sp.imageUrl}")),
                                 
 
@@ -968,7 +970,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 //                                       //     ? sp.name.toString() == "null"? CircleAvatar(radius: 40, backgroundImage: AssetImage("assets/slicing/blankuser.jpeg")):CircleAvatar(radius: 40, backgroundImage: NetworkImage("${sp.imageUrl}"))
 //                                       //     : CircleAvatar(
 //                                       //         radius: 40,
-//                                       //         backgroundImage: NetworkImage("https://api.jebbylistings.com${profileValues.image.toString()}")),
+//                                       //         backgroundImage: NetworkImage("${Url}${profileValues.image.toString()}")),
 //                                     ),
 //                                   ),
 //                                 ],
@@ -1312,7 +1314,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 //   var emailapi = "null";
 //   var back_image_api = "null";
 //    Future getProductsApi(id) async {
-//     final response = await http.get(Uri.parse('https://api.jebbylistings.com/UserProfileGetById/${id}'));
+//     final response = await http.get(Uri.parse('${Url}/UserProfileGetById/${id}'));
 //     var data = jsonDecode(response.body.toString());
 //     log(data.toString());
 //     if (data["data"].length != 0) {

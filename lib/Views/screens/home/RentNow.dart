@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:get/get.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -116,7 +117,7 @@ class _RentnowScreenState extends State<RentnowScreen> {
   }
 
   void getSuggestion(String input) async {
-    String kPLACES_API_KEY = "AIzaSyBkzoEvOmBy1dUxRP24ekNAtokQL4rllsE";
+    String kPLACES_API_KEY = dotenv.env['kPLACES_API_KEY'] ?? 'No secret key found';
     String type = '(regions)';
 
     try {
@@ -139,7 +140,7 @@ class _RentnowScreenState extends State<RentnowScreen> {
   }
 
   void getSuggestion1(String input) async {
-    String kPLACES_API_KEY = "AIzaSyBkzoEvOmBy1dUxRP24ekNAtokQL4rllsE";
+    String kPLACES_API_KEY = dotenv.env['kPLACES_API_KEY'] ?? 'No secret key found';
     String type = '(regions)';
 
     try {

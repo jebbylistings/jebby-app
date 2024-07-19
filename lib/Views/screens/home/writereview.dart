@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:jared/Views/screens/mainfolder/homemain.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter/material.dart';
@@ -38,6 +39,7 @@ class _WriteReviewState extends State<WriteReview> {
       }
     });
   }
+   String Url = dotenv.env['baseUrlM'] ?? 'No url found';
 
   @override
   Widget build(BuildContext context) {
@@ -247,7 +249,7 @@ class _WriteReviewState extends State<WriteReview> {
                               "description": reviewController.text.toString(),};
                               print(data);
                             d.Response response = await Dio().post(
-                                "https://api.jebbylistings.com/reviewInsert",
+                                "${Url}/reviewInsert",
                                 data: formData);
                             print("API HIT SUCESSFULL");
                             print(response.data);

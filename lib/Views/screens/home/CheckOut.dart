@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:jared/Services/provider/sign_in_provider.dart';
@@ -100,8 +101,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   double taxValue = 0;
   Future<void> getSalesTax() async {
     print("zipCode ${widget.zipCode}");
-    final apiKey = '53985e5cdaf81bfa4d268061e40964fd';
-    final apiUrl = 'https://api.taxjar.com/v2/rates?zip=${widget.zipCode}'; // API endpoint URL
+    String apiKey = dotenv.env['apiKey'] ?? 'No secret key found';
+    final apiUrl = 'https://api.taxjar.com/v2/rates?zip=${widget.zipCode}';
 
     final response = await http.get(
       Uri.parse(apiUrl),

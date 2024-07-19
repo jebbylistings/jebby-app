@@ -132,7 +132,6 @@
 //   }
 
 //   void getSuggestion(String input) async {
-//     String kPLACES_API_KEY = "AIzaSyBkzoEvOmBy1dUxRP24ekNAtokQL4rllsE";
 //     String type = '(regions)';
 
 //     try {

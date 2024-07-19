@@ -1852,7 +1852,7 @@
 			"response": []
 		},
 		{
-			"name": "https://api.jebbylistings.com/getjobsbyuserid/4",
+			"name": "${Url}/getjobsbyuserid/4",
 			"request": {
 				"method": "GET",
 				"header": [
@@ -1863,7 +1863,7 @@
 					}
 				],
 				"url": {
-					"raw": "https://api.jebbylistings.com/getjobsbyuserid/4",
+					"raw": "${Url}/getjobsbyuserid/4",
 					"protocol": "https",
 					"host": [
 						"perfectassistancebackend",

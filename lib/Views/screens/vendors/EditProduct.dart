@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
@@ -58,6 +59,7 @@ class EditProductScreen extends StatefulWidget {
 }
 
 class _EditProductScreenState extends State<EditProductScreen> {
+   String Url = dotenv.env['baseUrlM'] ?? 'No url found';
   // bool switchnot = false;
   bool insRentSwitchNot = false;
   bool messageSwitchNot = false;
@@ -456,7 +458,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
         print("images ---->>>>>");
         print(image_document);
 
-        d.Response response = await Dio().post("https://api.jebbylistings.com/productUpdateImage", data: formData);
+        d.Response response = await Dio().post("${Url}/productUpdateImage", data: formData);
         setState(() {
           imagesPath = []; //for displaying images at grid
           imageFileList = []; //for displaying images at grid

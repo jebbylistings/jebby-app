@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:jared/Views/helper/colors.dart';
 import 'package:jared/Views/screens/vendors/addproduct2.dart';
@@ -24,6 +25,7 @@ class AddProductScreen extends StatefulWidget {
 }
 
 class _AddProductScreenState extends State<AddProductScreen> {
+   String Url = dotenv.env['baseUrlM'] ?? 'No url found';
   bool addBtn = false;
   final ImagePicker imagePicker = ImagePicker();
   List<XFile> imageFileList = [];
@@ -311,7 +313,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
           "array": relatedProductsId.length == 1 ? [relatedProductsId] : relatedProductsId,
           "isMessage": "1"
         });
-        d.Response response = await Dio().post("https://api.jebbylistings.com/productInsert", data: formData);
+        d.Response response = await Dio().post("${Url}/productInsert", data: formData);
 
         print("API HIT SUCESSFULL");
         print("---> ID  ${id}");
