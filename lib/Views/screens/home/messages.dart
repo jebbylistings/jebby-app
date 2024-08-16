@@ -50,13 +50,13 @@ class _MessageScreenState extends State<MessageScreen> {
       email = value.email.toString();
       role = value.role.toString();
       // seenNotification();
-      print("token ${token}");
-      print("Source ID: ${sourceId}");
-      print("role: ${role}");
+     
+     
+     
       getNotifications();
     }).onError((error, stackTrace) {
       if (kDebugMode) {
-        print(error.toString());
+       
       }
     });
   }
@@ -94,7 +94,7 @@ class _MessageScreenState extends State<MessageScreen> {
   }
 
   Future<GetNotificationModel> notifications(id, onResponse(GetNotificationModel List), onError(error)) async {
-    print("URL --> ${AppUrl.getAllNotificationForApp + sourceId.toString()}");
+   
     final response = await http.get(Uri.parse(AppUrl.getAllNotificationForApp + sourceId.toString()), headers: {
       'Content-type': "application/json",
     });
@@ -102,30 +102,30 @@ class _MessageScreenState extends State<MessageScreen> {
       try {
         // ApiRepository.shared.checkApiStatus(true, "getNotifications");
         var data = GetNotificationModel.fromJson(jsonDecode(response.body));
-        print("Admin Notifications is here ${data.data.toString()}");
+       
         ApiRepository.shared.getNotifications(data);
-        print("notification status");
+       
         onResponse(data);
-        print("Admin Notifications data");
+       
         return data;
       } catch (error) {
-        print("Notifications catched");
+       
         onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
     return GetNotificationModel();
   }
 
   Future<DeleteNotificationModel> deleteNotification(id, ind) async {
     final request = json.encode(<String, dynamic>{"id": id});
-    print(request);
+   
 
     final response = await http.post(
       Uri.parse(AppUrl.deleteNotification),
@@ -137,23 +137,23 @@ class _MessageScreenState extends State<MessageScreen> {
 
     if (response.statusCode == 201) {
       try {
-        print("Notification deleted");
+       
         notifications(id, (List) {
           if (this.mounted) {
             setState(() {});
           }
         }, (error) {});
       } catch (error) {
-        print("Notification deleted :catched");
+       
         // onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
     return DeleteNotificationModel();
   }
@@ -241,8 +241,8 @@ class _MessageScreenState extends State<MessageScreen> {
                         var price = ApiRepository.shared.getNotificationModelList!.data![index].price;
                         var negoId = ApiRepository.shared.getNotificationModelList!.data![index].negoId.toString();
                         var userId = ApiRepository.shared.getNotificationModelList!.data![index].userId.toString();
-                        print("price ${price}");
-                        // print("date ${date}");
+                       
+                        //
                         // return card(name, count, desc, date, id, ind);
                         return name == "order"
                             ? SizedBox(
@@ -359,7 +359,7 @@ class _MessageScreenState extends State<MessageScreen> {
                 ),
                 GestureDetector(
                     onTap: () {
-                      print("Notificsation id ${id}");
+                     
                       name == "admin" ? null : deleteNotification(id, ind);
                     },
                     child: name == "admin" ? null : Icon(Icons.close_outlined)),

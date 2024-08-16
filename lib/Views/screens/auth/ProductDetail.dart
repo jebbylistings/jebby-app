@@ -253,6 +253,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   String sourceId = "";
   String? fullname;
   String? email;
+  String? phoneNumber;
   String? role;
   String? guestName;
 
@@ -262,6 +263,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       sourceId = value.id.toString();
       fullname = value.name.toString();
       email = value.email.toString();
+      phoneNumber = value.phoneNumber.toString();
       role = value.role.toString();
       getFavourites();
       getProductsApi(value.id.toString());

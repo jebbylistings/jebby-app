@@ -161,8 +161,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     diff = selectedDate1.difference(selectedDate).inDays;
     print('diff ${diff}');
     print('dc ${dc}');
-    dc = int.parse(widget.delivery_charges);
-    Jebby = int.parse(widget.JebbyFee);
+    dc = int.parse(widget.delivery_charges.replaceAll(new RegExp(r'[^0-9]'),''));
+    Jebby = int.parse(widget.JebbyFee.replaceAll(new RegExp(r'[^0-9]'),''));
 
     super.initState();
   }
@@ -180,6 +180,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   String userID = "";
   String? fullname;
   String? email;
+  String? phoneNumber;
   String? role;
   void profileData(BuildContext context) async {
     getUserDate().then((value) async {
@@ -187,6 +188,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       userID = value.id.toString();
       fullname = value.name.toString();
       email = value.email.toString();
+      phoneNumber = value.phoneNumber.toString();
       role = value.role.toString();
       print("User: ${userID}");
       print("fullname: ${fullname}");

@@ -68,12 +68,8 @@ class _HomeScreenState extends State<HomeScreen> {
       fullname = value.name.toString();
       email = value.email.toString();
       role = value.role.toString();
-      print("Source ID: ${sourceId}");
-      print("role: ${role}");
     }).onError((error, stackTrace) {
-      if (kDebugMode) {
-        print(error.toString());
-      }
+      if (kDebugMode) {}
     });
   }
 
@@ -143,7 +139,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void check() async {
-    print("Function check ");
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     prefs.getBool('time') == false
@@ -151,11 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
         : notiTimer().timer = prefs.getBool('time') == false
             ? notiTimer().timer?.cancel()
             : new Timer.periodic(Duration(seconds: 5), (_) {
-                print("timer ---- ${prefs.getBool('notifiction')}");
-                print("token ---- ${token}");
                 if (token == null || token == "" || role == "" || role == null || prefs.getBool('time') != true) {
-                  print("last token ${token}");
-                  print("time ${prefs.getBool("time")}");
                   cancelTimer();
                 } else {
                   prefs.getBool('notifiction') == true
@@ -170,19 +161,17 @@ class _HomeScreenState extends State<HomeScreen> {
   cancelTimer() {
     notiTimer().timer.cancel();
     notiTimer().timer = null;
-    print("timerrr ${notiTimer().timer}");
   }
 
   void dispose() {
     super.dispose();
-    print("disposed");
+
     // timer.cancel();
   }
 
   void func() async {
-    print("bool start");
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    print(prefs.getBool('time'));
+
     prefs.setBool("time", true);
     if (role != "Guest") {
       check();
@@ -341,44 +330,44 @@ class _HomeScreenState extends State<HomeScreen> {
                     Container(
                       width: res_width * 0.94,
                       child: TextFormField(
-  onChanged: (value) {},
-  controller: searchController,
-  style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
-  decoration: InputDecoration(
-    suffixIcon: InkWell(
-      onTap: () {
-        if (searchController.text.isNotEmpty) {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => SearchData(
-                word: searchController.text,
-              ),
-            ),
-          );
-        }
-      },
-      child: Icon(
-        Icons.search,
-        color: kprimaryColor,
-      ),
-    ),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(15.0),
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderSide: BorderSide(color: kprimaryColor, width: 1),
-      borderRadius: const BorderRadius.all(Radius.circular(15)),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderSide: BorderSide(color: kprimaryColor, width: 1),
-      borderRadius: const BorderRadius.all(Radius.circular(15)),
-    ),
-    filled: true,
-    hintStyle: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
-    hintText: "Product Name",
-    fillColor: Colors.white,
-  ),
-),
+                        onChanged: (value) {},
+                        controller: searchController,
+                        style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+                        decoration: InputDecoration(
+                          suffixIcon: InkWell(
+                            onTap: () {
+                              if (searchController.text.isNotEmpty) {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => SearchData(
+                                      word: searchController.text,
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                            child: Icon(
+                              Icons.search,
+                              color: kprimaryColor,
+                            ),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15.0),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: kprimaryColor, width: 1),
+                            borderRadius: const BorderRadius.all(Radius.circular(15)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: kprimaryColor, width: 1),
+                            borderRadius: const BorderRadius.all(Radius.circular(15)),
+                          ),
+                          filled: true,
+                          hintStyle: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+                          hintText: "Product Name",
+                          fillColor: Colors.white,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -460,9 +449,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? Text("")
                     : isEmpty
                         ? Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          child: Text("No items available currently"),
-                        )
+                            padding: EdgeInsets.symmetric(horizontal: 10),
+                            child: Text("No items available currently"),
+                          )
                         : GridView.builder(
                             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 2, crossAxisSpacing: 2.0, mainAxisSpacing: 30.0, childAspectRatio: 1),
@@ -541,9 +530,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Image.network(
-                  '$img',
+                padding: const EdgeInsets.all(12.0),
+                child: ClipOval(
+                  child: Image.network(
+                    '$img',
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),
@@ -645,7 +637,6 @@ class _HomeScreenState extends State<HomeScreen> {
   /////////////////////////////////
   Future<CategoryList> getCategoryList() async {
     dynamic response = await http.get(Uri.parse(AppUrl.categoryGetUrl));
-    log("Response Status : " + response.statusCode.toString());
     if (response.statusCode == 200) {
       var data = jsonDecode(response.body);
       return CategoryList.fromJson(data);

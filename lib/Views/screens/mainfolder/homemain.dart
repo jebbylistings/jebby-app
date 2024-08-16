@@ -76,13 +76,12 @@ class _MainScreenState extends State<MainScreen> {
     //  final sps = context.watch<SignInProvider>();
     sp.getDataFromSharedPreferences();
 
-    log("for checking spppp  " + sp.name.toString());
   }
 
   bool isNotific = true;
 
   void check() async {
-    print("Function check ");
+   
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     prefs.getBool('time') == false
@@ -90,11 +89,11 @@ class _MainScreenState extends State<MainScreen> {
         : notiTimer().timer = prefs.getBool('time') == false
             ? notiTimer().timer?.cancel()
             : new Timer.periodic(Duration(seconds: 5), (_) {
-                print("timer ---- ${prefs.getBool('notifiction')}");
-                print("token ---- ${token}");
+               
+               
                 if (token == null || token == "" || role == "" || role == null || prefs.getBool('time') != true) {
-                  print("last token ${token}");
-                  print("time ${prefs.getBool("time")}");
+                 
+                 
                   cancelTimer();
                 } else {
                   prefs.getBool('notifiction') == true
@@ -109,7 +108,7 @@ class _MainScreenState extends State<MainScreen> {
   cancelTimer() {
     notiTimer().timer.cancel();
     notiTimer().timer = null;
-    print("timerrr ${notiTimer().timer}");
+   
   }
 
   @override
@@ -130,7 +129,7 @@ class _MainScreenState extends State<MainScreen> {
   //         await SharedPreferences.getInstance();
   //     String _name = sharedPreferences.getString('fullname') ?? "";
   //     setState(() {
-  //       print("the user is $_name");
+  //      
   //       userName = _name;
   //     });
   //   }
@@ -138,12 +137,12 @@ class _MainScreenState extends State<MainScreen> {
 
   void dispose() {
     super.dispose();
-    print("disposed");
+   
     timer.cancel();
   }
 
   void func() async {
-    print("bool start");
+   
     SharedPreferences prefs = await SharedPreferences.getInstance();
     print(prefs.getBool('time'));
     prefs.setBool("time", true);
@@ -160,13 +159,12 @@ class _MainScreenState extends State<MainScreen> {
     getUserDate().then((value) async {
       token = value.token.toString();
       id = value.id.toString();
-      log("get Product APi" + id.toString());
       getProductsApi(id.toString());
       fullname = value.name.toString();
       email = value.email.toString();
       role = value.role.toString();
       // getNotifications();
-      print("get user data" + role.toString());
+     
     }).onError((error, stackTrace) {});
   }
 
@@ -204,9 +202,9 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print("Widget Rebuilding");
+   
     final userName = context.watch<AuthViewModel>();
-    print("userName is ${userName.userName}");
+   
     // State variable for delayed condition check
   var delayedCheck = false;
 
@@ -216,7 +214,6 @@ class _MainScreenState extends State<MainScreen> {
 
     //  sp.role=="null" ? role="1":role="1";
     //role= sp.role.toString();
-    log("?????????????????????????????????????${role}");
     final Size size = MediaQuery.of(context).size;
     return Scaffold(
       extendBody: true,
@@ -459,9 +456,9 @@ class _MainScreenState extends State<MainScreen> {
   Future getProductsApi(String ids) async {
     final response = await http.get(Uri.parse('${Url}/UserProfileGetById/${ids}'));
     var data = jsonDecode(response.body.toString());
-    log(data.toString());
+
     if (data["data"].length != 0) {
-      log(data["data"][0]["id"].toString());
+
     }
 
     if (data["data"].length != 0) {
@@ -489,7 +486,6 @@ class _MainScreenState extends State<MainScreen> {
 
       String? test = updatePrefrences.getString("fullname");
 
-      log("From Main Screen Get Data " + data.toString() + "Shared Prefrece Data" + test.toString());
       return data;
     } else {
       return "No data";

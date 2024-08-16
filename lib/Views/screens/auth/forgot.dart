@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jared/Views/helper/colors.dart';
+import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
-
 
 import '../../../utils/utils.dart';
 import '../../../view_model/auth_view_model.dart';
@@ -19,26 +19,24 @@ class _ForgotScreenState extends State<ForgotScreen> {
 
   @override
   Widget build(BuildContext context) {
-      final authViewMode = Provider.of<AuthViewModel>(context);
+    final authViewMode = Provider.of<AuthViewModel>(context);
 
     double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
     return Container(
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: AssetImage("assets/slicing/bg2.jpg"),
+          image: AssetImage("assets/slicing/bg3.jpg"),
           fit: BoxFit.cover,
         ),
       ),
       child: Scaffold(
-        //backgroundColor: Colors.transparent,
-        appBar: AppBar(
         backgroundColor: Colors.transparent,
-
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
           elevation: 0,
-          
-           leading: GestureDetector(
-            onTap: (){
+          leading: GestureDetector(
+            onTap: () {
               Get.back();
             },
             child: Icon(
@@ -51,19 +49,33 @@ class _ForgotScreenState extends State<ForgotScreen> {
           width: double.infinity,
           child: Column(
             children: [
-              SizedBox(
-                height: res_height * 0.175,
-              ),
+              // SizedBox(
+              //   height: res_height * 0.175,
+              // ),
               Container(
                 width: res_width * 0.9,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Forgot Password',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 30),
+                      child: Lottie.asset('assets/lottie/forget_password.json', width: res_width * 0.9, height: 200),
                     ),
+                    SizedBox(
+                      height: res_height * 0.04,
+                    ),
+                    Center(
+                      child: Text(
+                        'Forgot Password',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30, color: darkBlue),
+                      ),
+                    ),
+                    Align(
+                      child: Text(
+                        "Can't remember your password?",
+                        style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
+                      ),
+                    )
                   ],
                 ),
               ),
@@ -73,10 +85,10 @@ class _ForgotScreenState extends State<ForgotScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Email'),
-                  SizedBox(
-                    height: res_height * 0.01,
-                  ),
+                  // Text('Email'),
+                  // SizedBox(
+                  //   height: res_height * 0.01,
+                  // ),
                   Container(
                     width: res_width * 0.9,
                     child: TextFormField(
@@ -84,63 +96,60 @@ class _ForgotScreenState extends State<ForgotScreen> {
                       autocorrect: false,
                       // controller: userEmailController,
                       validator: (text) {
-                        if (text == null ||
-                            text.isEmpty ||
-                            !text.contains("@")) {
+                        if (text == null || text.isEmpty || !text.contains("@")) {
                           return 'Enter correct email';
                         }
                         return null;
                       },
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
                       decoration: InputDecoration(
+                          prefixIcon: Icon(
+                            Icons.email,
+                            color: darkBlue,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15.0),
                           ),
                           enabledBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(
-                                color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(color: darkBlue, width: 1),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                           focusedBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(
-                                color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(color: darkBlue, width: 1),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                           filled: true,
-                          hintStyle: TextStyle(color: Colors.grey),
-                          hintText: "Example@gmail.com",
-                          fillColor: Colors.white),
+                          hintStyle: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
+                          hintText: "Enter Your Email Address",
+                          fillColor: lightBlue),
                     ),
                   ),
                 ],
               ),
               SizedBox(
-                height: res_height * 0.015,
+                height: res_height * 0.04,
               ),
               GestureDetector(
                 onTap: () {
-                  if (_emailController.text.isEmpty ) {
-                      Utils.flushBarErrorMessage('Please enter email', context);
-                    }else{
-                      Map data = {
-                        'email' : _emailController.text.toString(),                    
-                      };
-                      authViewMode.forgetPasswordApi(data, context, "forgot");
-                    }
+                  if (_emailController.text.isEmpty) {
+                    Utils.flushBarErrorMessage('Please enter email', context);
+                  } else {
+                    Map data = {
+                      'email': _emailController.text.toString(),
+                    };
+                    authViewMode.forgetPasswordApi(data, context, "forgot");
+                  }
                 },
                 child: Container(
-                  height: res_height * 0.065,
+                  height: res_height * 0.055,
                   width: res_width * 0.9,
                   child: Center(
                     child: Text(
                       'Continue',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
                     ),
                   ),
-                  decoration: BoxDecoration(
-                      color: kprimaryColor,
-                      borderRadius: BorderRadius.circular(14)),
+                  decoration: BoxDecoration(color: darkBlue, borderRadius: BorderRadius.circular(30)),
                 ),
               ),
               SizedBox(

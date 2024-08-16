@@ -361,7 +361,6 @@ class _SettingsState extends State<Settings> {
                                               Get.to(() => LoginScreen());
                                             }).catchError((e) {
                                               if (kDebugMode) {
-                                                log(e.toString());
                                               }
                                             });
                                           },
@@ -514,7 +513,6 @@ class _SettingsState extends State<Settings> {
                     Get.offAll(() => LoginScreen());
                   }).catchError((e) {
                     if (kDebugMode) {
-                      log(e.toString());
                     }
                   });
                 },

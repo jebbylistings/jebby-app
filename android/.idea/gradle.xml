@@ -7,9 +7,9 @@
         <compositeConfiguration>
           <compositeBuild compositeDefinitionSource="SCRIPT">
             <builds>
-              <build path="$USER_HOME$/Documents/flutterdev/sdk/flutter/packages/flutter_tools/gradle" name="gradle">
+              <build path="$USER_HOME$/development/flutter/packages/flutter_tools/gradle" name="gradle">
                 <projects>
-                  <project path="$USER_HOME$/Documents/flutterdev/sdk/flutter/packages/flutter_tools/gradle" />
+                  <project path="$USER_HOME$/development/flutter/packages/flutter_tools/gradle" />
                 </projects>
               </build>
             </builds>
@@ -26,23 +26,24 @@
             <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/file_picker-5.5.0/android" />
             <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/firebase_auth-4.20.0/android" />
             <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/firebase_core-2.32.0/android" />
-            <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_facebook_auth-6.0.4/android" />
+            <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_facebook_auth-5.0.11/android" />
             <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_plugin_android_lifecycle-2.0.20/android" />
+            <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_secure_storage-8.1.0/android" />
             <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/fluttertoast-8.2.6/android" />
             <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/geocoding_android-3.3.1/android" />
             <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/geolocator_android-3.2.1/android" />
-            <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/google_maps_flutter_android-2.9.0/android" />
-            <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/google_sign_in_android-6.1.24/android" />
+            <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/google_maps_flutter_android-2.12.0/android" />
+            <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/google_sign_in_android-6.1.27/android" />
             <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/image_picker_android-0.8.12+3/android" />
             <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/modal_progress_hud_nsn-0.1.0-nullsafety-1/android" />
             <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/multi_image_picker-4.8.01/android" />
-            <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/path_provider_android-2.2.5/android" />
+            <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/path_provider_android-2.2.7/android" />
             <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/shared_preferences_android-2.2.3/android" />
             <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/sign_in_with_apple-5.0.0/android" />
             <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/webview_flutter_android-2.10.4/android" />
-            <option value="$USER_HOME$/Documents/flutterdev/sdk/flutter/packages/flutter_tools/gradle" />
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$USER_HOME$/development/flutter/packages/flutter_tools/gradle" />
           </set>
         </option>
       </GradleProjectSettings>

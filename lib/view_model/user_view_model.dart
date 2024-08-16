@@ -18,6 +18,9 @@ class UserViewModel with ChangeNotifier {
   String? _email;
   String? get email => _email;
 
+  String? _phoneNumber;
+  String? get phoneNumber => _phoneNumber;
+
   String? _image;
   String? get image => _image;
   String? _number;
@@ -36,6 +39,7 @@ class UserViewModel with ChangeNotifier {
     sp.setString('id', user.id.toString());
     sp.setString('fullname', user.name.toString());
     sp.setString('email', user.email.toString());
+    sp.setString('phoneNumber', user.phoneNumber.toString());
     sp.setString('role', user.role.toString());
     sp.setString('isGuest', user.isGuest.toString());
 
@@ -51,6 +55,7 @@ class UserViewModel with ChangeNotifier {
     
     sp.setString('fullname', updatedUser.name.toString());
     sp.setString('email', updatedUser.email.toString());
+    sp.setString('phoneNumber', updatedUser.phoneNumber.toString());
     sp.setString('image', updatedUser.image.toString());
     sp.setString('address', updatedUser.address.toString());
     sp.setString('latitude', updatedUser.latitude.toString());
@@ -68,6 +73,7 @@ class UserViewModel with ChangeNotifier {
     _id = sp.getString('id');
     _name = sp.getString('fullname');
     _email = sp.getString('email');
+    _phoneNumber = sp.getString('phoneNumber');
     _role = sp.getString('role');
     _address = sp.getString('address');
     _latitude = sp.getString('latitude');
@@ -83,6 +89,7 @@ class UserViewModel with ChangeNotifier {
  Data(
         image: image.toString(),
         name: name.toString(),
+        phoneNumber: phoneNumber.toString(),
         email: email.toString(),
         number: number.toString(),
         address: address.toString(),
@@ -102,12 +109,13 @@ class UserViewModel with ChangeNotifier {
     _id = sp.getString('id');
     _name = sp.getString('fullname');
     _email = sp.getString('email');
+    _phoneNumber = sp.getString('phoneNumber');
     _role = sp.getString('role');
     String? isGuestUserString  = sp.getString('isGuest') ;
     bool isGuest  = (isGuestUserString != null && isGuestUserString == 'true')? true : false;
 
     notifyListeners();
-    return UserModel(token: token.toString(), id: id.toString(), name: name, email: email, role: role.toString(), isGuest : isGuest );
+    return UserModel(token: token.toString(), id: id.toString(), name: name, email: email, phoneNumber: phoneNumber, role: role.toString(), isGuest : isGuest );
   }
 
   Future<bool> remove() async {
@@ -117,6 +125,7 @@ class UserViewModel with ChangeNotifier {
     sp.remove('id');
     sp.remove('fullname');
     sp.remove('email');
+    sp.remove('phoneNumber');
     sp.remove('role');
     sp.remove('address');
     sp.remove('latitude');

@@ -63,14 +63,12 @@ class _RenterProfileState extends State<RenterProfile> {
     getUserDate().then((value) async {
       token = value.token.toString();
       id = value.id.toString();
-      log("From renter Profile Page check id ${id}");
       getProductsApi(id);
       fullname = value.name.toString();
       email = value.email.toString();
       role = value.role.toString();
       getReviews();
       getProducts();
-      log(fullname.toString());
     }).onError((error, stackTrace) {
       if (kDebugMode) {
         print(error.toString());
@@ -748,9 +746,7 @@ class _RenterProfileState extends State<RenterProfile> {
   Future getProductsApi(id) async {
     final response = await http.get(Uri.parse('${Url}/UserProfileGetById/${id}'));
     var data = jsonDecode(response.body.toString());
-    log(data.toString());
     if (data["data"].length != 0) {
-      log(data["data"][0]["id"].toString());
     }
 
     setState(() {

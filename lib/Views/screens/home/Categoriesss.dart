@@ -128,9 +128,12 @@ class _CategoriesssScreenState extends State<CategoriesssScreen> {
                 ],
               ),
               child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Image.network(
-                  '$img',
+                padding: const EdgeInsets.all(12.0),
+                child: ClipOval(
+                  child: Image.network(
+                    '$img',
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),

@@ -77,7 +77,6 @@ class AuthViewModel with ChangeNotifier {
         ));
         userName = value['name'].toString();
         if (kDebugMode) {
-          log(value.toString());
         }
         if(isFromGuestFlow){
           // Get.until((route) => route.settings.name == 'PD');
@@ -112,7 +111,7 @@ class AuthViewModel with ChangeNotifier {
     if(_signUpLoading) return;
     setSignUpLoading(true);
 
-    _myRepo.signUpApi(data).then((value) {
+    _myRepo.signUpApi(data).then((value) async {
       setSignUpLoading(false);
       if (value["message"].toString() == "OTP send") {
         Utils.flushBarErrorMessage('Otp sent', context);
@@ -123,7 +122,31 @@ class AuthViewModel with ChangeNotifier {
               role: data["role"],
             isGuestUserFlow: isFromGuestFlow,
             ));
-      } else if (value["message"].toString() == "Email Already Registered") {
+      } else if(value["message"].toString() == "Signin successfull") {
+        Utils.flushBarErrorMessage('Signin Successful', context);
+
+        // Save Data To SharedPrefrences
+        SharedPreferences updatePrefrences = await SharedPreferences.getInstance();
+        print("data ${data}");
+        print("value ${value}");
+        updatePrefrences.setString('fullname', value["data"]["full_name"].toString());
+        updatePrefrences.setString('email', value["data"]["email"].toString());
+        updatePrefrences.setString('id', value["data"]["id"].toString());
+        updatePrefrences.setString('phoneNumber', value["data"]["phoneNumber"].toString());
+        // updatePrefrences.setString('address', value["address"].toString());
+        updatePrefrences.setString('latitude', value["data"]["latitude"].toString());
+        updatePrefrences.setString('longitude', value["data"]["longitude"].toString());
+        updatePrefrences.setString('role', value["data"]["role"].toString());
+        // updatePrefrences.setString('number', value["number"].toString());
+        String? test = updatePrefrences.getString("id");
+// if(value["data"]["role"]==1){
+        // Get.offAll(() => VendrosHomeScreen());
+// }
+// else{
+        Get.offAll(() => MainScreen());
+// }
+      } 
+      else if (value["message"].toString() == "Email Already Registered") {
         Utils.flushBarErrorMessage('Email Already Registered', context);
       } else {
         Utils.flushBarErrorMessage('Something went wrong', context);
@@ -131,7 +154,6 @@ class AuthViewModel with ChangeNotifier {
       //  Get.to(()=> OTPSCREEN()) ;
       if (kDebugMode) {
         print(value["message"].toString());
-        log(data["email"].toString());
       }
     }).onError((error, stackTrace) {
       setSignUpLoading(false);
@@ -163,7 +185,6 @@ class AuthViewModel with ChangeNotifier {
       //  Get.to(()=> OTPSCREEN()) ;
       if (kDebugMode) {
         print(value["message"].toString());
-        log(data["email"].toString());
       }
     }).onError((error, stackTrace) {
       setSignUpLoading(false);
@@ -182,8 +203,6 @@ class AuthViewModel with ChangeNotifier {
       setSignUpLoading(false);
       if (value["message"].toString() == "Signin successfull") {
         Utils.flushBarErrorMessage('Signin Successful', context);
-        log("From SignUp with Social " + value["data"].toString());
-        log("From SignUp with Social " + data.toString());
 
         // Save Data To SharedPrefrences
         SharedPreferences updatePrefrences = await SharedPreferences.getInstance();
@@ -198,7 +217,6 @@ class AuthViewModel with ChangeNotifier {
         updatePrefrences.setString('role', value["data"]["role"].toString());
         // updatePrefrences.setString('number', value["number"].toString());
         String? test = updatePrefrences.getString("id");
-        log("For checking shared Prefrences " + test.toString());
 // if(value["data"]["role"]==1){
         // Get.offAll(() => VendrosHomeScreen());
 // }
@@ -211,7 +229,6 @@ class AuthViewModel with ChangeNotifier {
 
       if (kDebugMode) {
         print(value["message"].toString());
-        log(data["email"].toString());
       }
     }).onError((error, stackTrace) {
       setSignUpLoading(false);
@@ -286,7 +303,6 @@ class AuthViewModel with ChangeNotifier {
       }
       if (kDebugMode) {
         print(value["message"].toString());
-        log(data["email"].toString());
       }
     }).onError((error, stackTrace) {
       setSignUpLoading(false);
@@ -313,7 +329,6 @@ class AuthViewModel with ChangeNotifier {
       //  Get.to(()=> OTPSCREEN()) ;
       if (kDebugMode) {
         print(value["message"].toString());
-        log(data["email"].toString());
       }
     }).onError((error, stackTrace) {
       setSignUpLoading(false);
@@ -342,7 +357,6 @@ class AuthViewModel with ChangeNotifier {
       //  Get.to(()=> OTPSCREEN()) ;
       if (kDebugMode) {
         print(value["message"].toString());
-        log(data["email"].toString());
       }
     }).onError((error, stackTrace) {
       setSignUpLoading(false);
@@ -359,8 +373,6 @@ class AuthViewModel with ChangeNotifier {
     _myRepo.editProfileApi(data).then((value) {
       setSignUpLoading(false);
       if (value["result"].toString() == data["file"].toString()) {
-        log(data.toString());
-
         Utils.flushBarErrorMessage('Otp sent', context);
         Get.to(() => MyProfileScreen());
       } else if (value["message"].toString() == "Please upload a file!") {
@@ -371,7 +383,6 @@ class AuthViewModel with ChangeNotifier {
       //  Get.to(()=> OTPSCREEN()) ;
       if (kDebugMode) {
         print(value["message"].toString());
-        log(data["email"].toString());
       }
     }).onError((error, stackTrace) {
       setSignUpLoading(false);

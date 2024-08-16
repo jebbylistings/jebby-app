@@ -79,4 +79,6 @@ class AppUrl {
  static var negoRequestUpdate = baseUrlM + "/ChangeNegoStatus";
  static var negoById = baseUrlM + "/getNegoById/";
 
+static var updateUserRoleApiEndPoint =  baseUrlM + '/UpdateUserRole' ;
+
 }

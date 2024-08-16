@@ -18,7 +18,7 @@ class _SetProfileScreenState extends State<SetProfileScreen> {
     return Container(
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: AssetImage("assets/slicing/bg2.jpg"),
+          image: AssetImage("assets/slicing/bg3.jpg"),
           fit: BoxFit.cover,
         ),
       ),
@@ -48,8 +48,7 @@ class _SetProfileScreenState extends State<SetProfileScreen> {
                   Container(
                     child: Text(
                       "Set Profile",
-                      style:
-                          TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: darkBlue),
                     ),
                   ),
                   SizedBox(
@@ -65,7 +64,7 @@ class _SetProfileScreenState extends State<SetProfileScreen> {
                           child: Padding(
                             padding: EdgeInsets.all(1),
                             child: Image(
-                              image: AssetImage("assets/slicing/cross.png"),
+                              image: AssetImage("assets/slicing/blankuser_2.png"),
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -83,25 +82,17 @@ class _SetProfileScreenState extends State<SetProfileScreen> {
                         bottom: 0,
                         right: 42,
                         child: Container(
-                          width: 39,
-                          height: 39,
-                          decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.transparent),
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.transparent),
                           child: RawMaterialButton(
                             onPressed: () {},
                             elevation: 1,
-                            fillColor: Colors.black,
-                            child: Container(
-                              width: 21,
-                              height: 16,
-                              child: Icon(
-                                Icons.upload,
-                                color: Colors.white,
-                              ),
-                              // child: Image.asset(
-                              //   "assets/images/Icon ionic-ios-camera.png",
-                              // ),
+                            fillColor: darkBlue,
+                            child: Icon(
+                              Icons.upload,
+                              color: Colors.white,
+                              size: 20,
                             ),
                             // padding: EdgeInsets.all(2),
                             shape: CircleBorder(),
@@ -141,10 +132,10 @@ class _SetProfileScreenState extends State<SetProfileScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Name'),
-                      SizedBox(
-                        height: res_height * 0.01,
-                      ),
+                      // Text('Name'),
+                      // SizedBox(
+                      //   height: res_height * 0.01,
+                      // ),
                       Container(
                         width: res_width * 0.9,
                         child: TextFormField(
@@ -158,41 +149,41 @@ class _SetProfileScreenState extends State<SetProfileScreen> {
                           //   }
                           //   return null;
                           // },
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
                           decoration: InputDecoration(
+                              prefixIcon: Icon(
+                                Icons.person,
+                                color: darkBlue,
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(15.0),
                               ),
                               enabledBorder: const OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                    color: kprimaryColor, width: 1),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(15)),
+                                borderSide: const BorderSide(color: darkBlue, width: 1),
+                                borderRadius: BorderRadius.all(Radius.circular(15)),
                               ),
                               focusedBorder: const OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                    color: kprimaryColor, width: 1),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(15)),
+                                borderSide: const BorderSide(color: darkBlue, width: 1),
+                                borderRadius: BorderRadius.all(Radius.circular(15)),
                               ),
                               filled: true,
-                              hintStyle: TextStyle(color: Colors.grey),
-                              // hintText: "Username",
-                              fillColor: Colors.white),
+                              hintStyle: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
+                              hintText: "Enter Name",
+                              fillColor: lightBlue),
                         ),
                       ),
                     ],
                   ),
                   SizedBox(
-                    height: 15,
+                    height: 25,
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Location'),
-                      SizedBox(
-                        height: res_height * 0.01,
-                      ),
+                      // Text('Location'),
+                      // SizedBox(
+                      //   height: res_height * 0.01,
+                      // ),
                       Container(
                         width: res_width * 0.9,
                         child: TextFormField(
@@ -206,41 +197,41 @@ class _SetProfileScreenState extends State<SetProfileScreen> {
                           //   }
                           //   return null;
                           // },
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
                           decoration: InputDecoration(
+                              prefixIcon: Icon(
+                                Icons.location_pin,
+                                color: darkBlue,
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(15.0),
                               ),
                               enabledBorder: const OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                    color: kprimaryColor, width: 1),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(15)),
+                                borderSide: const BorderSide(color: darkBlue, width: 1),
+                                borderRadius: BorderRadius.all(Radius.circular(15)),
                               ),
                               focusedBorder: const OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                    color: kprimaryColor, width: 1),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(15)),
+                                borderSide: const BorderSide(color: darkBlue, width: 1),
+                                borderRadius: BorderRadius.all(Radius.circular(15)),
                               ),
                               filled: true,
-                              hintStyle: TextStyle(color: Colors.grey),
-                              // hintText: "Username",
-                              fillColor: Colors.white),
+                              hintStyle: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
+                              hintText: "Enter Location",
+                              fillColor: lightBlue),
                         ),
                       ),
                     ],
                   ),
                   SizedBox(
-                    height: 15,
+                    height: 25,
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Phone Number'),
-                      SizedBox(
-                        height: res_height * 0.01,
-                      ),
+                      // Text('Phone Number'),
+                      // SizedBox(
+                      //   height: res_height * 0.01,
+                      // ),
                       Container(
                         width: res_width * 0.9,
                         child: TextFormField(
@@ -254,52 +245,48 @@ class _SetProfileScreenState extends State<SetProfileScreen> {
                           //   }
                           //   return null;
                           // },
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
                           decoration: InputDecoration(
+                              prefixIcon: Icon(
+                                Icons.phone,
+                                color: darkBlue,
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(15.0),
                               ),
                               enabledBorder: const OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                    color: kprimaryColor, width: 1),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(15)),
+                                borderSide: const BorderSide(color: darkBlue, width: 1),
+                                borderRadius: BorderRadius.all(Radius.circular(15)),
                               ),
                               focusedBorder: const OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                    color: kprimaryColor, width: 1),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(15)),
+                                borderSide: const BorderSide(color: darkBlue, width: 1),
+                                borderRadius: BorderRadius.all(Radius.circular(15)),
                               ),
                               filled: true,
-                              hintStyle: TextStyle(color: Colors.grey),
-                              // hintText: "Username",
-                              fillColor: Colors.white),
+                              hintStyle: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
+                              hintText: "Enter Phone Number",
+                              fillColor: lightBlue),
                         ),
                       ),
                     ],
                   ),
                   SizedBox(
-                    height: 15,
+                    height: 50,
                   ),
                   GestureDetector(
                     onTap: () {
                       Get.to(() => MainScreen());
                     },
-                    child:
-                     Container(
-                      height: res_height * 0.065,
+                    child: Container(
+                      height: res_height * 0.055,
                       width: res_width * 0.9,
                       child: Center(
                         child: Text(
                           'Continue',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
                         ),
                       ),
-                      decoration: BoxDecoration(
-                          color: kprimaryColor,
-                          borderRadius: BorderRadius.circular(14)),
+                      decoration: BoxDecoration(color: darkBlue, borderRadius: BorderRadius.circular(30)),
                     ),
                   ),
                 ],

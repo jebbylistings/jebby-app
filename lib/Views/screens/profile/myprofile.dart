@@ -60,7 +60,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       
       email = value.email.toString();
       role = value.role.toString();
-      log(fullname.toString());
     }).onError((error, stackTrace) {
       if (kDebugMode) {
         print(error.toString());
@@ -75,7 +74,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     final sp = context.watch<SignInProvider>();
     double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
-    log(sp.name.toString());
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -513,7 +511,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     final response = await http.get(Uri.parse('${Url}/UserProfileGetById/${id}'));
     var data = jsonDecode(response.body.toString());
     if (data["data"].length != 0) {
-      log(data["data"][0]["id"].toString());
     }
     setState(() {
       if (data["data"].length != 0) {

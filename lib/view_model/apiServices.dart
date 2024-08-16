@@ -118,10 +118,10 @@ class ApiRepository extends ChangeNotifier {
       getProductsListApiStatus = status;
     } else if (apiName == "getNotifications") {
       getNotificationModelListApiStatus = status;
-      print("notification status ${getNotificationModelListApiStatus}");
+     
     } else if (apiName == "getAllOrdersByVenodrId") {
       getAllOrdersByVenodrIdListApiStatus = status;
-      print("order status ${getNotificationModelListApiStatus}");
+     
     }
   }
 
@@ -229,7 +229,7 @@ class ApiRepository extends ChangeNotifier {
 
   getAllMessages(data) {
     getAllMessagesModelList = data;
-    print("length 1: ${getAllMessagesModelList!.data!.length}");
+   
   }
 
   getChatHistory(data) {
@@ -250,11 +250,11 @@ class ApiRepository extends ChangeNotifier {
   var unseenMessages = "";
 
   getNotifications(data) {
-    print("notifications list rebuild");
+   
     getNotificationModelList = data;
     notificationLoader = true;
     unseenMessages = ApiRepository.shared.getNotificationModelList!.unseen.toString();
-    print("unseen Messages ${unseenMessages}");
+   
     notifyListeners();
   }
 
@@ -292,27 +292,27 @@ class ApiRepository extends ChangeNotifier {
     final response = await http.get(Uri.parse(AppUrl.categoryGetUrl), headers: {
       'Content-type': "application/json",
     });
-    print("INVOKED");
+   
     if (response.statusCode == 200) {
       try {
         var data = CategoryList.fromJson(jsonDecode(response.body));
-        print("Data is here  ${data.data.toString()}");
+       
 
         getCategory(data);
         onResponse(data);
-        print("tried");
+       
         return data;
       } catch (error) {
-        print("catched");
+       
         onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
 
     return CategoryList();
@@ -325,23 +325,23 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = SubCategoryList.fromJson(jsonDecode(response.body));
-        print("Data is here  ${data.data.toString()}");
+       
 
         getSubCategory(data);
         onResponse(data);
-        print("tried");
+       
         return data;
       } catch (error) {
-        print("catched");
+       
         onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
 
     return SubCategoryList();
@@ -354,23 +354,23 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetVendorProductsModel.fromJson(jsonDecode(response.body));
-        print("Vendor Product Data is here  ${data.data.toString()}");
+       
 
         getVendorProduct(data);
         onResponse(data);
-        print("tried");
+       
         return data;
       } catch (error) {
-        print("catched");
+       
         onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
 
     return GetVendorProductsModel();
@@ -383,24 +383,24 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = LastProductByVendorIdModel.fromJson(jsonDecode(response.body));
-        print("Last Product Vendor Data is here  ${data.data.toString()}");
+       
 
         // getVendorProduct(data);
         getLastVendorProductList(data);
         onResponse(data);
-        print("tried");
+       
         return data;
       } catch (error) {
-        print("catched");
+       
         onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
 
     return LastProductByVendorIdModel();
@@ -426,7 +426,7 @@ class ApiRepository extends ChangeNotifier {
       "longitude": long,
       "security_deposit": security_deposit,
     };
-    print(pData);
+   
     final request = json.encode(<String, dynamic>{
       "product_id": prodID,
       "user_id": userID,
@@ -457,7 +457,7 @@ class ApiRepository extends ChangeNotifier {
       try {
         // ProductInfoInsert data = ProductInfoInsert.fromJson(json.decode(response.body));
 
-        print("Post Product Data is here");
+       
         Get.off(() => ProductListScreen(side: false));
 
         // if (data != null) {
@@ -468,16 +468,16 @@ class ApiRepository extends ChangeNotifier {
         //   // onError(data.message.toString());
         // return data;
       } catch (error) {
-        print("postProduct :catched");
+       
         // onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
     return ProductInfoInsert();
   }
@@ -489,24 +489,24 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetAllProductsByVendorId.fromJson(jsonDecode(response.body));
-        print("Vendor Products Data is here  ${data.data.toString()}");
+       
 
         getVendorProductsById(data);
         onResponse(data);
-        print("tried");
+       
         return data;
       } catch (error) {
-        print("catched");
+       
         onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
-      print("Response ${response.body}");
+     
       onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
 
     return GetAllProductsByVendorId();
@@ -519,53 +519,53 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetProductsByProductId.fromJson(jsonDecode(response.body));
-        print("Products Data By Product Id is here  ${data.data.toString()}");
+       
 
         getProductByProductId(data);
         onResponse(data);
-        print("tried");
+       
         return data;
       } catch (error) {
-        print("catched");
+       
         onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
 
     return GetProductsByProductId();
   }
 
   Future<GetRelatedProducts> getRelatedProducts(onResponse(GetRelatedProducts List), onError(error), id) async {
-    print("Method Invoked");
+   
     final response = await http.get(Uri.parse(AppUrl.getRelatedProduct + id), headers: {
       'Content-type': "application/json",
     });
     if (response.statusCode == 200) {
       try {
         var data = GetRelatedProducts.fromJson(jsonDecode(response.body));
-        print("Related Products Data is here  ${data.data.toString()}");
+       
 
         getRelatedProductsByProductId(data);
         onResponse(data);
-        print("tried");
+       
         return data;
       } catch (error) {
-        print("catched");
+       
         onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
 
     return GetRelatedProducts();
@@ -579,20 +579,20 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetProductsByProductId.fromJson(jsonDecode(response.body));
-        // print("Products Data By Product Id is here  ${data.data.toString()}");
-        print("product deleted");
+        //
+       
         Get.to(() => ProductListScreen(side: false));
       } catch (error) {
-        print("catched");
+       
         // onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
 
     return DeleteProduct();
@@ -606,20 +606,20 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = ProductDeleteImageModel.fromJson(jsonDecode(response.body));
-        // print("Products Data By Product Id is here  ${data.data.toString()}");
-        print("product Image deleted");
+        //
+       
         getdeletedProductImage(true);
       } catch (error) {
-        print("Product Delete Image catched");
+       
         // onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
 
     return ProductDeleteImageModel();
@@ -713,7 +713,7 @@ class ApiRepository extends ChangeNotifier {
       "delivery_charges":delivery_charges,
       "security_deposit":security_deposit,
     };
-    print(data);
+   
     final response = await http.post(
       Uri.parse("${Url}/productUpdate"),
       body: request,
@@ -725,7 +725,7 @@ class ApiRepository extends ChangeNotifier {
       try {
         // ProductInfoInsert data = ProductInfoInsert.fromJson(json.decode(response.body));
 
-        print("Product Updated");
+       
         Get.off(() => ProductListScreen(side: false));
 
         // if (data != null) {
@@ -736,105 +736,105 @@ class ApiRepository extends ChangeNotifier {
         //   // onError(data.message.toString());
         // return data;
       } catch (error) {
-        print("Product Update :catched");
+       
         // onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
     return ProductUpdateModel();
   }
 
   Future<GetCategoryByIdModel> CategoryId(onResponse(GetCategoryByIdModel List), onError(error), id) async {
-    print("Method Invoked");
+   
     final response = await http.get(Uri.parse(AppUrl.categoryID + id), headers: {
       'Content-type': "application/json",
     });
     if (response.statusCode == 200) {
       try {
         var data = GetCategoryByIdModel.fromJson(jsonDecode(response.body));
-        print("Category Data is here  ${data.data.toString()}");
+       
 
         getCategoryById(data);
         onResponse(data);
-        print("tried");
+       
         return data;
       } catch (error) {
-        print("catched");
+       
         onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
 
     return GetCategoryByIdModel();
   }
 
   Future<GetSubCategoryByIdModel> SubCategoryId(onResponse(GetSubCategoryByIdModel List), onError(error), id) async {
-    print("Method Invoked");
+   
     final response = await http.get(Uri.parse(AppUrl.subCategoryID + id), headers: {
       'Content-type': "application/json",
     });
     if (response.statusCode == 200) {
       try {
         var data = GetSubCategoryByIdModel.fromJson(jsonDecode(response.body));
-        print("SubCategory Data is here  ${data.data.toString()}");
+       
 
         getSubCategoryById(data);
         onResponse(data);
-        print("tried");
+       
         return data;
       } catch (error) {
-        print("catched");
+       
         onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
 
     return GetSubCategoryByIdModel();
   }
 
   Future<GetFilteredProductDataModel> filteredData(onResponse(GetFilteredProductDataModel List), onError(error), url) async {
-    print("Method Invoked");
+   
     final response = await http.get(Uri.parse(url), headers: {
       'Content-type': "application/json",
     });
     if (response.statusCode == 200) {
       try {
         var data = GetFilteredProductDataModel.fromJson(jsonDecode(response.body));
-        print("FilteredProduct Data is here  ${data.data.toString()}");
+       
 
         getFilteredProduct(data);
         onResponse(data);
-        print("tried");
+       
         return data;
       } catch (error) {
-        print("catched");
+       
         onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
 
     return GetFilteredProductDataModel();
@@ -848,23 +848,23 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetPrivacyPolicyModel.fromJson(jsonDecode(response.body));
-        print("PP Data is here  ${data.data.toString()}");
+       
 
         getPrivacyPolicy(data);
         onResponse(data);
-        print("tried");
+       
         return data;
       } catch (error) {
-        print("catched");
+       
         onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
 
     return GetPrivacyPolicyModel();
@@ -878,23 +878,23 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetTermsAndConditionsModel.fromJson(jsonDecode(response.body));
-        print("T&C Data is here  ${data.data.toString()}");
+       
 
         getTermsAndConditions(data);
         onResponse(data);
-        print("tried");
+       
         return data;
       } catch (error) {
-        print("catched");
+       
         onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
 
     return GetTermsAndConditionsModel();
@@ -908,23 +908,23 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetAboutAppModel.fromJson(jsonDecode(response.body));
-        print("T&C Data is here  ${data.data.toString()}");
+       
 
         getAboutApp(data);
         onResponse(data);
-        print("tried");
+       
         return data;
       } catch (error) {
-        print("catched");
+       
         onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
 
     return GetAboutAppModel();
@@ -938,55 +938,55 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetTermLengthModel.fromJson(jsonDecode(response.body));
-        print("T&C Data is here  ${data.data.toString()}");
+       
 
         getTermLength(data);
         onResponse(data);
-        print("tried");
+       
         return data;
       } catch (error) {
-        print("catched");
+       
         onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
 
     return GetTermLengthModel();
   }
 
   Future<GetUserCredentialModel> userCredential(onResponse(GetUserCredentialModel List), onError(error), id) async {
-    print(AppUrl.userCredential + id.toString());
+   
     final response = await http.get(Uri.parse(AppUrl.userCredential + id.toString()), headers: {
       'Content-type': "application/json",
     });
 
     if (response.statusCode == 200) {
       try {
-        print("user data here");
+       
         var data = GetUserCredentialModel.fromJson(jsonDecode(response.body));
-        print("User Data is here  ${data.data.toString()}");
+       
         getUserCredential(data);
         onResponse(data);
-        print("tried");
+       
         return data;
       } catch (error) {
-        print("user data catched" );
+       
         onError(error.toString());
-        print("error $error");
+       
       }
-      print("user data  ${response.body}" );
+     
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
 
     return GetUserCredentialModel();
@@ -1000,23 +1000,23 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetRentalAgreementModel.fromJson(jsonDecode(response.body));
-        print("T&C Data is here  ${data.data.toString()}");
+       
 
         getRentalAgreement(data);
         onResponse(data);
-        print("tried");
+       
         return data;
       } catch (error) {
-        print("catched");
+       
         onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
 
     return GetRentalAgreementModel();
@@ -1030,23 +1030,23 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetUsagePolicyModel.fromJson(jsonDecode(response.body));
-        print("T&C Data is here  ${data.data.toString()}");
+       
 
         getUsagePolicy(data);
         onResponse(data);
-        print("tried");
+       
         return data;
       } catch (error) {
-        print("catched");
+       
         onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
 
     return GetUsagePolicyModel();
@@ -1060,23 +1060,23 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetInsuranceModel.fromJson(jsonDecode(response.body));
-        print("T&C Data is here  ${data.data.toString()}");
+       
 
         getInsurance(data);
         onResponse(data);
-        print("tried");
+       
         return data;
       } catch (error) {
-        print("catched");
+       
         onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
 
     return GetInsuranceModel();
@@ -1090,23 +1090,23 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetTransportModel.fromJson(jsonDecode(response.body));
-        print("T&C Data is here  ${data.data.toString()}");
+       
 
         getTransport(data);
         onResponse(data);
-        print("tried");
+       
         return data;
       } catch (error) {
-        print("catched");
+       
         onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
 
     return GetTransportModel();
@@ -1120,23 +1120,23 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetMaintanenceModel.fromJson(jsonDecode(response.body));
-        print("T&C Data is here  ${data.data.toString()}");
+        
 
         getMaintainence(data);
         onResponse(data);
-        print("tried");
+        
         return data;
       } catch (error) {
-        print("catched");
+        
         onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
 
     return GetMaintanenceModel();
@@ -1150,23 +1150,23 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetTerminationModel.fromJson(jsonDecode(response.body));
-        print("T&C Data is here  ${data.data.toString()}");
+        
 
         getTermination(data);
         onResponse(data);
-        print("tried");
+        
         return data;
       } catch (error) {
-        print("catched");
+        
         onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
 
     return GetTerminationModel();
@@ -1179,23 +1179,23 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetAllProductsModel.fromJson(jsonDecode(response.body));
-        print("Product Data is here  ${data.data.toString()}");
+        
 
         getAllProducts(data);
         onResponse(data);
-        print("tried");
+        
         return data;
       } catch (error) {
-        print("catched");
+        
         onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
 
     return GetAllProductsModel();
@@ -1208,23 +1208,23 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetAllMessagesModel.fromJson(jsonDecode(response.body));
-        print("Message is here  ${data.data.toString()}");
+        
 
         getAllMessages(data);
         onResponse(data);
-        print("tried");
+        
         return data;
       } catch (error) {
-        print("catched");
+        
         onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
 
     return GetAllMessagesModel();
@@ -1240,7 +1240,7 @@ class ApiRepository extends ChangeNotifier {
       "sender_id": sender_id.toString(),
       "recipient_id": recipient_id.toString(),
     };
-    print(data);
+    
     final request = json.encode(<String, dynamic>{
       "content": content.toString(),
       "sender_id": sender_id.toString(),
@@ -1256,15 +1256,15 @@ class ApiRepository extends ChangeNotifier {
     );
     if (response.statusCode == 200) {
       try {
-        print("Message Sent");
+        
       } catch (error) {
-        print("Message Unsent :catched");
-        print(error);
+        
+        
       }
     } else if (response.statusCode == 400) {
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
-      print("Internal Server Error");
+      
     }
     return PostlMessagesModel();
   }
@@ -1276,23 +1276,23 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetChatHistoryModel.fromJson(jsonDecode(response.body));
-        print("chats history is here  ${data.data.toString()}");
+        
 
         getChatHistory(data);
         onResponse(data);
-        print("chats history data");
+        
         return data;
       } catch (error) {
-        print("catched");
+        
         onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
 
     return GetChatHistoryModel();
@@ -1315,7 +1315,7 @@ class ApiRepository extends ChangeNotifier {
 
     });
 
-    print("request ${request}");
+    
 
     final response = await http.post(
       Uri.parse("${Url}/payByStripe"),
@@ -1328,7 +1328,7 @@ class ApiRepository extends ChangeNotifier {
       try {
         final snackBar = new SnackBar(content: new Text("Placing order please wait"));
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        // print("Paid SucessFully");
+        // 
         ChargeBack(context, userid, productId, rentStart, originalReturn, name, email, location, lat, long, negoPrice,shipping_address, cardNumber, expiryMonth, expiryYear, cvv, amount, security_deposit);
         // ApiRepository.shared.postOrder(context, userid, productId, rentStart, originalReturn, name, email, location, lat, long, negoPrice,shipping_address);
         // Get.to(() => ProductListScreen());
@@ -1341,16 +1341,16 @@ class ApiRepository extends ChangeNotifier {
         //   // onError(data.message.toString());
         // return data;
       } catch (error) {
-        print("Payment :catched");
+        
         // onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
-      print("hhhhhh ${response.body.toString()}");
-      print("Internal Server Error");
+      
+      
       // ApiRepository.shared.postOrder(context, userid, productId, rentStart, originalReturn, name, email, location, lat, long);
       final snackBar = new SnackBar(content: new Text("Error in placing order ${response.body.toString()}"));
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
@@ -1368,7 +1368,7 @@ class ApiRepository extends ChangeNotifier {
     "cvc":cvv,
     "amount":security_deposit
     };
-    print(data);
+    
     try {
       final response = await http.post(
         Uri.parse(SeenMessageUrl),
@@ -1378,8 +1378,8 @@ class ApiRepository extends ChangeNotifier {
         body: json.encode(data),
       );
       final responseBody = jsonDecode(response.body);
-      print("response ${responseBody}");
-      print("response ${responseBody["paymentIntent"]["id"]}");
+      
+      
       final snackBar = new SnackBar(content: new Text("Placing payment please wait"));
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       ApiRepository.shared.postOrder(context, userid, productId, rentStart, originalReturn, name, email, location, lat, long, negoPrice,shipping_address,security_deposit,responseBody["paymentIntent"]["id"]);
@@ -1397,7 +1397,7 @@ class ApiRepository extends ChangeNotifier {
       //   Utils.flushBarErrorMessage(responseBody["message"].toString(), context);
       // }
     } catch (err) {
-      print(err);
+      
       final snackBar = new SnackBar(content: new Text('Something went wrong plz check your internet connection'));
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
@@ -1420,7 +1420,7 @@ class ApiRepository extends ChangeNotifier {
       "deposit_payment_id" :deposit_id,
     });
 
-    print("request $request");
+    
 
     final response = await http.post(
       Uri.parse("${Url}/rentProductInsert"),
@@ -1429,12 +1429,12 @@ class ApiRepository extends ChangeNotifier {
         'Content-type': "application/json",
       },
     );
-    print("response4324343432 ${response.body}");
+    
     if (response.statusCode == 200) {
       try {
         // ProductInfoInsert data = ProductInfoInsert.fromJson(json.decode(response.body));
 
-        print("Order Placed SucessFully");
+        
         final snackBar = new SnackBar(content: new Text("Order placed sucessfully"));
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
          Get.offAll(() => MainScreen());
@@ -1447,18 +1447,18 @@ class ApiRepository extends ChangeNotifier {
         //   // onError(data.message.toString());
         // return data;
       } catch (error) {
-        print("Payment :catched");
+        
         // onError(error.toString());
-        print(error.toString());
+        
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       final snackBar = new SnackBar(content: new Text("Error in saving order"));
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
       // onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
     return PostOrderModel();
   }
@@ -1470,23 +1470,23 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetFavouriteProductsModel.fromJson(jsonDecode(response.body));
-        print("favourites data is here  ${data.data.toString()}");
+        
 
         getFavouriteProduct(data);
         onResponse(data);
-        print("favourites data");
+        
         return data;
       } catch (error) {
-        print("catched");
+        
         onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
 
     return GetFavouriteProductsModel();
@@ -1498,7 +1498,7 @@ class ApiRepository extends ChangeNotifier {
       ) async {
     final request = json.encode(<String, dynamic>{"user_id": userId, "product_id": prodID, "fav": fav});
 
-    print(request);
+    
 
     final response = await http.post(
       Uri.parse(AppUrl.addToFavourite),
@@ -1507,22 +1507,22 @@ class ApiRepository extends ChangeNotifier {
       },
       body: request,
     );
-    print(response.statusCode);
+    
     if (response.statusCode == 200) {
       try {
-        print("Favorite Added");
+        
         // ApiRepository.shared.getFavourites(userId, (List) => {}, (error) => {});
       } catch (error) {
-        print("Favorite :catched");
+        
         // onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
     return AddFavouriteModel();
   }
@@ -1535,7 +1535,7 @@ class ApiRepository extends ChangeNotifier {
       "PayerID": payerID,
     });
 
-    print(request);
+    
 
     final response = await http.post(
       Uri.parse("http://192.168.18.39:7000/payByPayPal"),
@@ -1546,24 +1546,24 @@ class ApiRepository extends ChangeNotifier {
     );
     if (response.statusCode == 200) {
       try {
-        print("Paid SucessFully");
+        
       } catch (error) {
-        print("Payment :catched");
+        
         // onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
     return PayByPayPalModel();
   }
 
   Future<GetNotificationModel> notifications(id, onResponse(GetNotificationModel List), onError(error)) async {
-    print("URL --> ${AppUrl.getAllNotificationForApp + id.toString()}");
+    
     final response = await http.get(Uri.parse(AppUrl.getAllNotificationForApp + id.toString()), headers: {
       'Content-type': "application/json",
     });
@@ -1571,39 +1571,39 @@ class ApiRepository extends ChangeNotifier {
       try {
         ApiRepository.shared.checkApiStatus(true, "getNotifications");
         var data = GetNotificationModel.fromJson(jsonDecode(response.body));
-        print("Admin Notifications is here ");
+        
         //${data.data.toString()}
         getNotifications(data);
         // ApiRepository.shared.getNotificationModelListApiStatus == true ?
         // "" :
         // if (unseenMessages == "") {
-        //   print("null unseen messages");
+        //   
         //   getNotifications(data);
         // } else {
         //   if (unseenMessages.toString() == data.unseen.toString().toString()) {
-        //     print("matched unseen messages");
+        //     
         //   } else {
-        //     print("messages rebuild");
+        //     
         //     getNotifications(data);
         //   }
         // }
 
-        print("notification status ${getNotificationModelListApiStatus}");
+        
         onResponse(data);
 
-        print("Admin Notifications data");
+        
         return data;
       } catch (error) {
-        print("Notifications catched");
+        
         onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
 
     return GetNotificationModel();
@@ -1616,23 +1616,23 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetAllReviewsByProductId.fromJson(jsonDecode(response.body));
-        print("Reviews Data is here  ${data.data.toString()}");
+        
 
         getReviewsByProductId(data);
         onResponse(data);
-        print("Reviews Data");
+        
         return data;
       } catch (error) {
-        print("Reviews catched");
+        
         onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
 
     return GetAllReviewsByProductId();
@@ -1645,23 +1645,23 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetAllReviewsByVendorId.fromJson(jsonDecode(response.body));
-        print(" Vendor Reviews Data is here  ${data.data.toString()}");
+        
 
         getAllReviewsByVendorId(data);
         onResponse(data);
-        print(" Vendor Reviews Data");
+        
         return data;
       } catch (error) {
-        print(" Vendor Reviews catched");
+        
         onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
 
     return GetAllReviewsByVendorId();
@@ -1674,29 +1674,29 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetVendorProductsByReveiwsModel.fromJson(jsonDecode(response.body));
-        print(" Vendor Product Reviews Data is here  ${data.data.toString()}");
+        
         getVenodrProductsByReviews(data);
         onResponse(data);
-        print(" Vendor Product Reviews Data");
+        
         return data;
       } catch (error) {
-        print(" Vendor Product Reviews catched");
+        
         onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
     return GetVendorProductsByReveiwsModel();
   }
 
   Future<DeleteNotificationModel> deleteNotification(id) async {
     final request = json.encode(<String, dynamic>{"id": id});
-    print(request);
+    
 
     final response = await http.post(
       Uri.parse(AppUrl.deleteNotification),
@@ -1709,19 +1709,19 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 201) {
       try {
         unseenMessages = "";
-        print("Notification deleted");
+        
         ApiRepository.shared.notifications(id, (List) {}, (error) {});
       } catch (error) {
-        print("Notification deleted :catched");
+        
         // onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
     return DeleteNotificationModel();
   }
@@ -1729,7 +1729,7 @@ class ApiRepository extends ChangeNotifier {
   Future<GetNotificationSeenModel> seenNotification(id) async {
     final request = json.encode(<String, dynamic>{"user_id": id});
 
-    print(request);
+    
 
     final response = await http.post(
       Uri.parse(AppUrl.postSeenNotification),
@@ -1740,19 +1740,19 @@ class ApiRepository extends ChangeNotifier {
     );
     if (response.statusCode == 201) {
       try {
-        print("Notification seen");
+        
         ApiRepository.shared.notifications(id, (List) {}, (error) {});
       } catch (error) {
-        print("Notification seen :catched");
+        
         // onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
     return GetNotificationSeenModel();
   }
@@ -1760,7 +1760,7 @@ class ApiRepository extends ChangeNotifier {
     Future<GetNotificationSeenOneModel> seenoneNotification(id) async {
     final request = json.encode(<String, dynamic>{"id": id});
 
-    print(AppUrl.postSeenoneNotification);
+    
 
     final response = await http.post(
       Uri.parse(AppUrl.postSeenoneNotification),
@@ -1769,22 +1769,22 @@ class ApiRepository extends ChangeNotifier {
         'Content-type': "application/json",
       },
     );
-    print("${response.body} khbhhjkh");
+    
     if (response.statusCode == 201) {
       try {
-        print("Notification seen");
+        
         ApiRepository.shared.notifications(id, (List) {}, (error) {});
       } catch (error) {
-        print("Notification seen :catched");
+        
         // onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
     return GetNotificationSeenOneModel();
   }
@@ -1796,23 +1796,23 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetAllOrderByVendorIdModel.fromJson(jsonDecode(response.body));
-        print("Vendor Order  ${data.data.toString()}");
+        
 
         getAllOrdersByVenodrId(data);
         onResponse(data);
-        print("orders data");
+        
         return data;
       } catch (error) {
-        print("orders data catched");
+        
         onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
 
     return GetAllOrderByVendorIdModel();
@@ -1821,7 +1821,7 @@ class ApiRepository extends ChangeNotifier {
   Future<PostOrderStatusUpdateModel> orderStatusUpdate(id, status, desc, vendorID, route) async {
     final request = json.encode(<String, dynamic>{"id": id, "status": status, "description": desc});
 
-    print(request);
+    
     final response = await http.post(
       Uri.parse(AppUrl.orderStatusById),
       body: request,
@@ -1831,49 +1831,49 @@ class ApiRepository extends ChangeNotifier {
     );
     if (response.statusCode == 200) {
       try {
-        print("Order Status Updated");
+        
         ApiRepository.shared.getVenodorOrders(vendorID.toString(), (List) {}, (error) {});
       } catch (error) {
-        print("Order Status :catched");
+        
         // onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
     return PostOrderStatusUpdateModel();
   }
 
   Future<GetAllOrdersByUserIdModel> getAllOrdersByUserId(String id, onResponse(GetAllOrdersByUserIdModel List), onError(error)) async {
-    print("id ====>  ${AppUrl.getAllUserOrders + id}");
+    
     final response = await http.get(Uri.parse(AppUrl.getAllUserOrders + id), headers: {
       'Content-type': "application/json",
     });
-    print("Response ${response.statusCode}");
+    
     if (response.statusCode == 200) {
       try {
         var data = GetAllOrdersByUserIdModel.fromJson(jsonDecode(response.body));
-        print("User Order  ${data.data.toString()}");
+        
 
         getAllUserOrders(data);
         onResponse(data);
-        print("User orders data $data");
+        
         return data;
       } catch (error) {
-        print("User orders data catched");
+        
         onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
 
     return GetAllOrdersByUserIdModel();
@@ -1885,7 +1885,7 @@ class ApiRepository extends ChangeNotifier {
       "location": location,
     });
 
-    print("request $request");
+    
     final response = await http.post(
       Uri.parse(AppUrl.reOrder),
       body: request,
@@ -1897,19 +1897,19 @@ class ApiRepository extends ChangeNotifier {
       try {
         final snackBar = new SnackBar(content: new Text("Order Placed Sucessfully"));
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        print("Order Posted ");
+        
          Get.offAll(() => MainScreen());
       } catch (error) {
-        print("Order Post :catched");
+        
         // onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
     return ReOrderModel();
   }
@@ -1936,7 +1936,7 @@ class ApiRepository extends ChangeNotifier {
       "sales_tax" : applicationFee,
     });
 
-    print(request);
+    
 
     final response = await http.post(
       Uri.parse("${Url}/payByStripe"),
@@ -1949,19 +1949,19 @@ class ApiRepository extends ChangeNotifier {
       try {
         final snackBar = new SnackBar(content: new Text("Amount debited, placing order please wait"));
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        print("Paid SucessFully");
+        
         ApiRepository.shared.reOrder(orderId, location, context);
       } catch (error) {
-        print("Payment :catched");
+        
         // onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
-      print("response ${response}");
-      print("Internal Server Error");
+      
+      
       final snackBar = new SnackBar(content: new Text("Seller Payment Method Invalid, Cannot Place Order"));
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
       // onError("Internal Server Error");
@@ -1976,22 +1976,22 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetFeaturedModel.fromJson(jsonDecode(response.body));
-        print("Featured Data  ${data.data.toString()}");
+        
 
         getFeaturedProducts(data);
         onResponse(data);
-        print("Featured Data");
+        
         return data;
       } catch (error) {
         onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
 
     return GetFeaturedModel();
@@ -2000,7 +2000,7 @@ class ApiRepository extends ChangeNotifier {
   Future<PostNegotiationRequestModel> negotiationRequest(prodId, userId, price, context) async {
     final request = json.encode(<String, dynamic>{"product_id": prodId, "user_id": userId, "price": price});
 
-    print(request);
+    
 
     final response = await http.post(
       Uri.parse(AppUrl.negoRequest),
@@ -2012,19 +2012,19 @@ class ApiRepository extends ChangeNotifier {
 
     if (response.statusCode == 201) {
       try {
-        print("Neogotiation Requested");
+        
         final snackBar1 = new SnackBar(content: new Text("Your request has been send"));
         ScaffoldMessenger.of(context).showSnackBar(snackBar1);
       } catch (error) {
-        print("Neogotiation Request :catched");
-        print(error);
+        
+        
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
     return PostNegotiationRequestModel();
   }
@@ -2032,7 +2032,7 @@ class ApiRepository extends ChangeNotifier {
   Future<OrderRequestStatusUpdateModel>negotiationRequestUpdate(status, id, context) async {
     final request = json.encode(<String, dynamic>{"status": status, "id": id});
 
-    print(request);
+    
 
     final response = await http.post(
       Uri.parse(AppUrl.negoRequestUpdate),
@@ -2044,21 +2044,21 @@ class ApiRepository extends ChangeNotifier {
 
     if (response.statusCode == 201) {
       try {
-        print("response $response");
-        print("Neogotiation Updated");
+        
+        
         final snackBar1 = new SnackBar(content: new Text(status == 1 ? "Order Request Approved" : "Order Request Canclled"));
         ScaffoldMessenger.of(context).showSnackBar(snackBar1);
         Get.offAll(() => MainScreen());
       } catch (error) {
-        print("Neogotiation Update :catched");
-        print(error);
+        
+        
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
     return OrderRequestStatusUpdateModel();
   }
@@ -2070,23 +2070,23 @@ class ApiRepository extends ChangeNotifier {
     if (response.statusCode == 200) {
       try {
         var data = GetNegoByIdModel.fromJson(jsonDecode(response.body));
-        print("Nego By Id  ${data.data.toString()}");
+        
 
         getNegoById(data);
         onResponse(data);
-        print("Nego By Id");
+        
         return data;
       } catch (error) {
-        print("Nego By Id: catched");
+        
         onError(error.toString());
-        print(error);
+        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+      
     }
 
     return GetNegoByIdModel();

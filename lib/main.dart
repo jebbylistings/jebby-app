@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
+import 'package:jared/Views/helper/colors.dart';
 import 'package:jared/provider/prodetail_provider.dart';
 
 import 'package:jared/view_model/auth_view_model.dart';
@@ -86,12 +87,11 @@ class _SplashScreenState extends State<SplashScreen> {
     FirebaseAuth auth = FirebaseAuth.instance;
     final user = auth.currentUser;
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    log("before going " + sharedPreferences.getString("fullname").toString());
     Name = sharedPreferences.getString('fullname')??"";
-    // print(user.toString());
+    //
     if (user != null) {
-      print("/////////////////////////////////////////////////////");
-      print("////////////////////${user.displayName}//////////////////////");
+     
+     
 
       Timer(const Duration(seconds: 2), () {
         Get.offAll(() => MainScreen());
@@ -99,15 +99,15 @@ class _SplashScreenState extends State<SplashScreen> {
     } else {
 
       String _name = sharedPreferences.getString('fullname')??"";
-      print("username is initial $_name");
+     
       context.read<AuthViewModel>().userName = _name;
       if(_name == "Guest"){
         Timer(const Duration(seconds: 2), () {
           Get.offAll(() => MainScreen());
         });
       }else {
-        print("/////////////////////////////////////////////////////");
-        print("//////////////////////////////////////////");
+       
+       
         splashServices.checkAuthentication(context);
         // Timer(const Duration(seconds: 2), () {Get.to(() => LoginScreen());});
         }
@@ -122,7 +122,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("assets/slicing/bg2.jpg"),
+            image: AssetImage("assets/slicing/bg3.jpg"),
             fit: BoxFit.cover,
           ),
         ),
@@ -141,7 +141,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 SizedBox(
                   height: res_height * 0.028,
                 ),
-                Text('Explore Renting At\n Your Fingertips', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 23)),
+                Text('Explore Renting At\n Your Fingertips', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 23)),
                 SizedBox(
                   height: res_height * 0.028,
                 ),
@@ -152,7 +152,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   },
                   child: Container(
                     width: res_width * 0.5,
-                    decoration: BoxDecoration(color: Color(0xFF4285F4), borderRadius: BorderRadius.all(Radius.circular(13))),
+                    decoration: BoxDecoration(color: darkBlue, borderRadius: BorderRadius.all(Radius.circular(13))),
                     child: Padding(
                       padding: const EdgeInsets.all(15.0),
                       child: Center(

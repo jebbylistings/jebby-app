@@ -36,12 +36,14 @@ class _ChatState extends State<Chat> {
   String sourceId = "";
   String? fullname;
   String? email;
+  String? phoneNumber;
   String? role;
   void profileData(BuildContext context) async {
     getUserDate().then((value) async {
       token = value.token.toString();
       sourceId = value.id.toString();
       fullname = value.name.toString();
+      phoneNumber = value.phoneNumber.toString();
       email = value.email.toString();
       role = value.role.toString();
       print("Source ID: ${sourceId}");

@@ -51,11 +51,11 @@ class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
       fullname = value.name.toString();
       email = value.email.toString();
       role = value.role.toString();
-      print("Source ID: ${sourceId}");
-      print("role: ${role}");
+    
+    
     }).onError((error, stackTrace) {
       if (kDebugMode) {
-        print(error.toString());
+      
       }
     });
   }
@@ -96,7 +96,7 @@ class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
   }
 
   void check() async {
-    print("Function check ");
+  
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     prefs.getBool('time') == false
@@ -104,11 +104,11 @@ class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
         : notiTimer().timer = prefs.getBool('time') == false
             ? notiTimer().timer?.cancel()
             : new Timer.periodic(Duration(seconds: 5), (_) {
-                print("timer ---- ${prefs.getBool('notifiction')}");
-                print("token ---- ${token}");
+              
+              
                 if (token == null || token == "" || role == "" || role == null || prefs.getBool('time') != true) {
-                  print("last token ${token}");
-                  print("time ${prefs.getBool("time")}");
+                
+                
                   cancelTimer();
                 } else {
                   prefs.getBool('notifiction') == true
@@ -123,19 +123,19 @@ class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
   cancelTimer() {
     notiTimer().timer.cancel();
     notiTimer().timer = null;
-    print("timerrr ${notiTimer().timer}");
+  
   }
 
   void dispose() {
     super.dispose();
-    print("disposed");
+  
     timer.cancel();
   }
 
   void func() async {
-    print("bool start");
+  
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    print(prefs.getBool('time'));
+  
     prefs.setBool("time", true);
     check();
   }

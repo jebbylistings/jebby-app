@@ -94,7 +94,6 @@ class FirebaseAuthMethods with ChangeNotifier{
           //     //Store into a data base or postApi
           //   }
           // }
-          log(usercredential.toString());
           showSnackBar(context, "Successfull Login");
         }
       }
@@ -108,7 +107,6 @@ class FirebaseAuthMethods with ChangeNotifier{
     try {
       final LoginResult loginResult = await FacebookAuth.instance.login();
           print("loginResult.toString() ${loginResult.toString()}");
-          log("loginResult.toString() ${loginResult.toString()}");
 
       final OAuthCredential facebookAuthCredential =
           FacebookAuthProvider.credential(loginResult.accessToken!.token);

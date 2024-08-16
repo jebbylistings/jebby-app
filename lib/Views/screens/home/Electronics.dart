@@ -21,7 +21,6 @@ class ElectronicsScreen extends StatefulWidget {
 class _ElectronicsScreenState extends State<ElectronicsScreen> {
   @override
   void initState() {
-    log(widget.id.toString());
     super.initState();
   }
 

@@ -36,7 +36,7 @@ class EditProfile extends StatefulWidget {
 }
 
 class _EditProfileState extends State<EditProfile> {
-   String Url = dotenv.env['baseUrlM'] ?? 'No url found';
+  String Url = dotenv.env['baseUrlM'] ?? 'No url found';
   File? _image;
   File? _image1;
 
@@ -44,29 +44,42 @@ class _EditProfileState extends State<EditProfile> {
 
   Future getGalleryImage() async {
     final picker = ImagePicker();
-    final pickedImage =
-        await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
-    setState(() {
-      if (pickedImage != null) {
-        _image = File(pickedImage.path);
+    final pickedImage = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+
+    if (pickedImage != null) {
+      final file = File(pickedImage.path);
+      final fileSize = await file.length();
+
+      if (fileSize > 5 * 1024 * 1024) {
+        _showAlert('Selected file is larger than 5MB. Please select a smaller file.');
       } else {
-        log("no picked Image");
+        setState(() {
+          _image = file;
+        });
       }
-    });
+    } else {
+      log("No image picked");
+    }
   }
 
   Future getGalleryImage1() async {
-
     final picker = ImagePicker();
-    final pickedImage =
-        await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
-    setState(() {
-      if (pickedImage != null) {
-        _image1 = File(pickedImage.path);
+    final pickedImage = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+
+    if (pickedImage != null) {
+      final file = File(pickedImage.path);
+      final fileSize = await file.length();
+
+      if (fileSize > 5 * 1024 * 1024) {
+        _showAlert('Selected file is larger than 5MB. Please select a smaller file.');
       } else {
-        log("no picked Image");
+        setState(() {
+          _image1 = file;
+        });
       }
-    });
+    } else {
+      log("No image picked");
+    }
   }
 
   Future getData() async {
@@ -110,15 +123,33 @@ class _EditProfileState extends State<EditProfile> {
     getSuggestion1(_ShippingAddressController.text);
   }
 
+  void _showAlert(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('File Size Exceeded'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void getSuggestion(String input) async {
     String kPLACES_API_KEY = dotenv.env['kPLACES_API_KEY'] ?? 'No secret key found';
     String type = '(regions)';
 
     try {
-      String baseURL =
-          'https://maps.googleapis.com/maps/api/place/autocomplete/json';
-      String request =
-          '$baseURL?input=$input&key=$kPLACES_API_KEY&sessiontoken=$_sessionToken';
+      String baseURL = 'https://maps.googleapis.com/maps/api/place/autocomplete/json';
+      String request = '$baseURL?input=$input&key=$kPLACES_API_KEY&sessiontoken=$_sessionToken';
       var response = await http.get(Uri.parse(request));
       var data = json.decode(response.body);
       log('mydata');
@@ -140,10 +171,8 @@ class _EditProfileState extends State<EditProfile> {
     String type = '(regions)';
 
     try {
-      String baseURL =
-          'https://maps.googleapis.com/maps/api/place/autocomplete/json';
-      String request =
-          '$baseURL?input=$input&key=$kPLACES_API_KEY&sessiontoken=$_sessionToken';
+      String baseURL = 'https://maps.googleapis.com/maps/api/place/autocomplete/json';
+      String request = '$baseURL?input=$input&key=$kPLACES_API_KEY&sessiontoken=$_sessionToken';
       var response = await http.get(Uri.parse(request));
       var data = jsonDecode(response.body);
       // log('mydata');
@@ -209,48 +238,22 @@ class _EditProfileState extends State<EditProfile> {
                   else
                     {
                       setState(() {
-                        stripeEmailController.text = ApiRepository
-                                    .shared
-                                    .getUserCredentialModelList!
-                                    .data![0]
-                                    .stripeEmail
-                                    .toString() ==
-                                "0"
+                        stripeEmailController.text = ApiRepository.shared.getUserCredentialModelList!.data![0].stripeEmail.toString() == "0"
                             ? ""
-                            : ApiRepository.shared.getUserCredentialModelList!
-                                .data![0].stripeEmail
-                                .toString();
-                        paypalEmailController.text = ApiRepository.shared
-                            .getUserCredentialModelList!.data![0].paypalEmail
-                            .toString();
-                        dropdownValue = ApiRepository
-                                    .shared
-                                    .getUserCredentialModelList!
-                                    .data![0]
-                                    .stripeAccountType
-                                    .toString() ==
-                                "0"
+                            : ApiRepository.shared.getUserCredentialModelList!.data![0].stripeEmail.toString();
+                        paypalEmailController.text = ApiRepository.shared.getUserCredentialModelList!.data![0].paypalEmail.toString();
+                        dropdownValue = ApiRepository.shared.getUserCredentialModelList!.data![0].stripeAccountType.toString() == "0"
                             ? "standard"
-                            : ApiRepository.shared.getUserCredentialModelList!
-                                .data![0].stripeAccountType
-                                .toString();
+                            : ApiRepository.shared.getUserCredentialModelList!.data![0].stripeAccountType.toString();
                         // print("acc type ${ ApiRepository
                         // .shared
                         // .getUserCredentialModelList!
                         // .data![0]
                         // .stripeAccountType
                         // .toString()}");
-                        selected = ApiRepository
-                                    .shared
-                                    .getUserCredentialModelList!
-                                    .data![0]
-                                    .stripeAccountType
-                                    .toString() ==
-                                "0"
+                        selected = ApiRepository.shared.getUserCredentialModelList!.data![0].stripeAccountType.toString() == "0"
                             ? "standard"
-                            : ApiRepository.shared.getUserCredentialModelList!
-                                .data![0].stripeAccountType
-                                .toString();
+                            : ApiRepository.shared.getUserCredentialModelList!.data![0].stripeAccountType.toString();
                         print("dropdown ${dropdownValue}");
                         print("selected ${selected}");
                       })
@@ -284,10 +287,7 @@ class _EditProfileState extends State<EditProfile> {
     final usp = context.watch<UserViewModel>();
 
     // final authViewMode = Provider.of<AuthViewModel>(context);
-    log("For Providersssssssssssssss " +
-        usp.name.toString() +
-        "For Providersssssssssssssss " +
-        sp.name.toString());
+    log("For Providersssssssssssssss " + usp.name.toString() + "For Providersssssssssssssss " + sp.name.toString());
     _emailController.text = sp.email.toString();
     double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
@@ -298,8 +298,7 @@ class _EditProfileState extends State<EditProfile> {
         centerTitle: true,
         title: Text(
           'Edit Profile',
-          style: TextStyle(
-              fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
         ),
         leading: GestureDetector(
           onTap: () {
@@ -344,15 +343,9 @@ class _EditProfileState extends State<EditProfile> {
                                     )
                                   : back_image_api.toString() == "null"
                                       ? sp.imageUrl.toString() == "null"
-                                          ? Image.asset(
-                                              "assets/slicing/blankuser.jpeg",
-                                              fit: BoxFit.cover)
-                                          : Image.network("${sp.imageUrl}",
-                                              fit: BoxFit.cover)
-                                      : Image.network(
-                                          "${Url}" +
-                                              back_image_api.toString(),
-                                          fit: BoxFit.cover)),
+                                          ? Image.asset("assets/slicing/blankuser.jpeg", fit: BoxFit.cover)
+                                          : Image.network("${sp.imageUrl}", fit: BoxFit.cover)
+                                      : Image.network("${Url}" + back_image_api.toString(), fit: BoxFit.cover)),
 
                           //////
 
@@ -404,44 +397,33 @@ class _EditProfileState extends State<EditProfile> {
                                             )
                                           : imagesapi.toString() == "null"
                                               ? sp.imageUrl.toString() == "null"
-                                                  ? CircleAvatar(
-                                                      radius: 40,
-                                                      backgroundImage: AssetImage(
-                                                          "assets/slicing/blankuser.jpeg"))
-                                                  : CircleAvatar(
-                                                      radius: 40,
-                                                      backgroundImage:
-                                                          NetworkImage(
-                                                              "${sp.imageUrl}"))
-                                              : CircleAvatar(
-                                                  radius: 40,
-                                                  backgroundImage: NetworkImage(
-                                                      "${Url}${imagesapi}"))),
+                                                  ? CircleAvatar(radius: 40, backgroundImage: AssetImage("assets/slicing/blankuser.jpeg"))
+                                                  : CircleAvatar(radius: 40, backgroundImage: NetworkImage("${sp.imageUrl}"))
+                                              : CircleAvatar(radius: 40, backgroundImage: NetworkImage("${Url}${imagesapi}"))),
                                   Positioned(
-                                    bottom: -12,
-                                    right: 18,
-                                    child:GestureDetector(
-                                      onTap: (){
-                                        print("ANAS getGalleryImage2  aaaaa");
-                                        getGalleryImage1();
-                                      },
-                                      child: Container(
-                                        height: 36,
-                                        alignment: Alignment.center,
-                                        decoration: BoxDecoration(
-                                          color: Color(0xFF4285F4),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Icon(
-                                            Icons.camera_alt_rounded,
-                                            color: Colors.white,
+                                      bottom: -12,
+                                      right: 18,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          print("ANAS getGalleryImage2  aaaaa");
+                                          getGalleryImage1();
+                                        },
+                                        child: Container(
+                                          height: 36,
+                                          alignment: Alignment.center,
+                                          decoration: BoxDecoration(
+                                            color: Color(0xFF4285F4),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Icon(
+                                              Icons.camera_alt_rounded,
+                                              color: Colors.white,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    )
-                                  ),
+                                      )),
                                 ],
                               ),
                             ),
@@ -463,21 +445,18 @@ class _EditProfileState extends State<EditProfile> {
                                       ? fullname.toString()
                                       : sp.name.toString()
                                   : nameapi.toString(),
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 32),
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32),
                             ),
                             Text(
                               "Verified User",
-                              style:
-                                  TextStyle(fontSize: 16, color: Colors.grey),
+                              style: TextStyle(fontSize: 16, color: Colors.grey),
                             ),
                           ],
                         )
                       ],
                     ),
                     Txtfld("Name", _nameController, ""),
-                    TxtfldforEmail("Email", _emailController,
-                        _emailController.text.toString()),
+                    TxtfldforEmail("Email", _emailController, _emailController.text.toString()),
                     // role == "1"
                     //     ?
                     //     Txtfld(
@@ -546,32 +525,22 @@ class _EditProfileState extends State<EditProfile> {
 
                             if (_locationController.text.isEmpty) {
                               return Text("");
-                            } else if (name.toLowerCase().contains(
-                                _locationController.text.toLowerCase())) {
+                            } else if (name.toLowerCase().contains(_locationController.text.toLowerCase())) {
                               return ListTile(
                                 onTap: () async {
-                                  _locationController.text =
-                                      _placeList[index]["description"];
-                                  List<Location> location =
-                                      await locationFromAddress(
-                                          _placeList[index]["description"]);
-                                  log("Latitiude : " +
-                                      location.last.latitude.toString());
-                                  log("Longitude : " +
-                                      location.last.longitude.toString());
+                                  _locationController.text = _placeList[index]["description"];
+                                  List<Location> location = await locationFromAddress(_placeList[index]["description"]);
+                                  log("Latitiude : " + location.last.latitude.toString());
+                                  log("Longitude : " + location.last.longitude.toString());
 
                                   setState(() {
                                     _locationController.removeListener(() {});
-                                    Latitiude =
-                                        location.last.latitude.toString();
-                                    Longitude =
-                                        location.last.longitude.toString();
+                                    Latitiude = location.last.latitude.toString();
+                                    Longitude = location.last.longitude.toString();
                                     _placeList = [];
                                   });
                                 },
-                                leading: CircleAvatar(
-                                    child: Icon(Icons.pin_drop,
-                                        color: Colors.white)),
+                                leading: CircleAvatar(child: Icon(Icons.pin_drop, color: Colors.white)),
                                 title: Text(_placeList[index]["description"]),
                               );
                             } else {
@@ -702,20 +671,15 @@ class _EditProfileState extends State<EditProfile> {
                                     decoration: InputDecoration(
                                       // hintText:placholder,
                                       border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(15.0),
+                                        borderRadius: BorderRadius.circular(15.0),
                                       ),
                                       enabledBorder: const OutlineInputBorder(
-                                        borderSide: const BorderSide(
-                                            color: kprimaryColor, width: 1),
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(15)),
+                                        borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                                        borderRadius: BorderRadius.all(Radius.circular(15)),
                                       ),
                                       focusedBorder: const OutlineInputBorder(
-                                        borderSide: const BorderSide(
-                                            color: kprimaryColor, width: 1),
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(15)),
+                                        borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                                        borderRadius: BorderRadius.all(Radius.circular(15)),
                                       ),
                                     ),
                                   ),
@@ -735,34 +699,22 @@ class _EditProfileState extends State<EditProfile> {
 
                             if (_ShippingAddressController.text.isEmpty) {
                               return Text("");
-                            } else if (name.toLowerCase().contains(
-                                _ShippingAddressController.text
-                                    .toLowerCase())) {
+                            } else if (name.toLowerCase().contains(_ShippingAddressController.text.toLowerCase())) {
                               return ListTile(
                                 onTap: () async {
-                                  _ShippingAddressController.text =
-                                      _placeList1[index]["description"];
-                                  List<Location> location =
-                                      await locationFromAddress(
-                                          _placeList1[index]["description"]);
-                                  log("Latitiude : " +
-                                      location.last.latitude.toString());
-                                  log("Longitude : " +
-                                      location.last.longitude.toString());
+                                  _ShippingAddressController.text = _placeList1[index]["description"];
+                                  List<Location> location = await locationFromAddress(_placeList1[index]["description"]);
+                                  log("Latitiude : " + location.last.latitude.toString());
+                                  log("Longitude : " + location.last.longitude.toString());
 
                                   setState(() {
-                                    _ShippingAddressController.removeListener(
-                                        () {});
-                                    Latitiude =
-                                        location.last.latitude.toString();
-                                    Longitude =
-                                        location.last.longitude.toString();
+                                    _ShippingAddressController.removeListener(() {});
+                                    Latitiude = location.last.latitude.toString();
+                                    Longitude = location.last.longitude.toString();
                                     _placeList1 = [];
                                   });
                                 },
-                                leading: CircleAvatar(
-                                    child: Icon(Icons.pin_drop,
-                                        color: Colors.white)),
+                                leading: CircleAvatar(child: Icon(Icons.pin_drop, color: Colors.white)),
                                 title: Text(_placeList1[index]["description"]),
                               );
                             } else {
@@ -783,24 +735,20 @@ class _EditProfileState extends State<EditProfile> {
                           try {
                             if (_nameController.text.isEmpty) {
                               Loader.hide();
-                              return ShowErrorDialog(
-                                  context, "Please Enter Name");
+                              return ShowErrorDialog(context, "Please Enter Name");
                             }
 
                             if (_locationController.text.isEmpty) {
                               Loader.hide();
-                              return ShowErrorDialog(
-                                  context, "Please enter current location");
+                              return ShowErrorDialog(context, "Please enter current location");
                             }
                             if (_image == null) {
                               Loader.hide();
-                              return ShowErrorDialog(
-                                  context, "Please Upload Cover Picture");
+                              return ShowErrorDialog(context, "Please Upload Cover Picture");
                             }
                             if (_image1 == null) {
                               Loader.hide();
-                              return ShowErrorDialog(
-                                  context, "Please Upload Profile Picture");
+                              return ShowErrorDialog(context, "Please Upload Profile Picture");
                             } else {
                               String fileName = Uuid().v4();
                               String fileName1 = Uuid().v4();
@@ -809,44 +757,34 @@ class _EditProfileState extends State<EditProfile> {
                                 // if (stripeEmailController.text.isNotEmpty ) {
                                 d.FormData formData = new d.FormData.fromMap({
                                   "file": [
-                                    await d.MultipartFile.fromFile(
-                                        _image1!.path,
-                                        filename: fileName1),
-                                    await d.MultipartFile.fromFile(_image!.path,
-                                        filename: fileName),
+                                    await d.MultipartFile.fromFile(_image1!.path, filename: fileName1),
+                                    await d.MultipartFile.fromFile(_image!.path, filename: fileName),
                                   ],
                                   'name': _nameController.text.toString(),
                                   'email': _emailController.text.toString(),
                                   'number': '',
-                                  'address':
-                                      _locationController.text.toString(),
+                                  'address': _locationController.text.toString(),
                                   'latitude': Latitiude,
                                   'longitude': Longitude,
                                   //"files": await d.MultipartFile.fromFile(_image!.path, filename: fileName),
                                   'user_id': id,
-                                  'stripe_email':
-                                      _emailController.text.toString(),
+                                  'stripe_email': _emailController.text.toString(),
                                   // 'stripe_email':
                                   //     stripeEmailController.text.toString(),
                                   'paypal_email': "testppemail@gmail.com",
                                   'stripe_account_type': "standard",
                                   // 'stripe_account_type': selected.toString(),
-                                  'shipping_address':
-                                      _locationController.text.toString(),
+                                  'shipping_address': _locationController.text.toString(),
                                   // "pics":3
                                 });
                                 log(formData.fields.toString());
 
                                 print(formData.toString());
-                                d.Response response = await Dio().post(
-                                    "${Url}/UserProfileInsert",
-                                    data: formData);
+                                d.Response response = await Dio().post("${Url}/UserProfileInsert", data: formData);
                                 log(response.statusCode.toString());
                                 print(response.data);
                                 Loader.hide();
-                                role == "1"
-                                    ? Get.off(() => RenterProfile())
-                                    : Get.off(() => MyProfileScreen());
+                                role == "1" ? Get.off(() => RenterProfile()) : Get.off(() => MyProfileScreen());
                                 // } else {
                                 //   final snackBar = new SnackBar(
                                 //       content: new Text(
@@ -859,17 +797,13 @@ class _EditProfileState extends State<EditProfile> {
                               else {
                                 d.FormData formData = new d.FormData.fromMap({
                                   "file": [
-                                    await d.MultipartFile.fromFile(
-                                        _image1!.path,
-                                        filename: fileName1),
-                                    await d.MultipartFile.fromFile(_image!.path,
-                                        filename: fileName),
+                                    await d.MultipartFile.fromFile(_image1!.path, filename: fileName1),
+                                    await d.MultipartFile.fromFile(_image!.path, filename: fileName),
                                   ],
                                   'name': _nameController.text.toString(),
                                   'email': _emailController.text.toString(),
                                   'number': '',
-                                  'address':
-                                      _locationController.text.toString(),
+                                  'address': _locationController.text.toString(),
                                   'latitude': Latitiude,
                                   'longitude': Longitude,
                                   //"files": await d.MultipartFile.fromFile(_image!.path, filename: fileName),
@@ -877,25 +811,19 @@ class _EditProfileState extends State<EditProfile> {
                                   'stripe_email': 'testemail@gmail.com',
                                   'paypal_email': "testppemail@gmail.com",
                                   'stripe_account_type': "standard",
-                                  'shipping_address': _ShippingAddressController
-                                      .text
-                                      .toString(),
+                                  'shipping_address': _ShippingAddressController.text.toString(),
                                   // "pics":3
                                 });
                                 log(formData.fields.toString());
                                 var data = {
                                   "file": [
-                                    await d.MultipartFile.fromFile(
-                                        _image1!.path,
-                                        filename: fileName1),
-                                    await d.MultipartFile.fromFile(_image!.path,
-                                        filename: fileName),
+                                    await d.MultipartFile.fromFile(_image1!.path, filename: fileName1),
+                                    await d.MultipartFile.fromFile(_image!.path, filename: fileName),
                                   ],
                                   'name': _nameController.text.toString(),
                                   'email': _emailController.text.toString(),
                                   'number': '',
-                                  'address':
-                                      _locationController.text.toString(),
+                                  'address': _locationController.text.toString(),
                                   'latitude': Latitiude,
                                   'longitude': Longitude,
                                   //"files": await d.MultipartFile.fromFile(_image!.path, filename: fileName),
@@ -903,24 +831,17 @@ class _EditProfileState extends State<EditProfile> {
                                   'stripe_email': 'testemail@gmail.com',
                                   'paypal_email': "testppemail@gmail.com",
                                   'stripe_account_type': "standard",
-                                  'shipping_address': _ShippingAddressController
-                                      .text
-                                      .toString(),
+                                  'shipping_address': _ShippingAddressController.text.toString(),
                                   // "pics":3
                                 };
                                 print(data);
 
                                 print(formData.toString());
-                                d.Response response = await Dio().post(
-                                    "${Url}/UserProfileInsert",
-                                    data: formData);
-                                print(
-                                    'STATUS ${response.statusCode.toString()}');
+                                d.Response response = await Dio().post("${Url}/UserProfileInsert", data: formData);
+                                print('STATUS ${response.statusCode.toString()}');
                                 log(response.statusCode.toString());
                                 Loader.hide();
-                                role == "1"
-                                    ? Get.off(() => RenterProfile())
-                                    : Get.off(() => MyProfileScreen());
+                                role == "1" ? Get.off(() => RenterProfile()) : Get.off(() => MyProfileScreen());
                               }
                             }
 
@@ -939,46 +860,35 @@ class _EditProfileState extends State<EditProfile> {
                                 if (_image == null && _image1 != null) {
                                   String fileName1 = p.basename(_image1!.path);
                                   formData = new d.FormData.fromMap({
-                                    "file": await d.MultipartFile.fromFile(
-                                        _image1!.path,
-                                        filename: fileName1),
+                                    "file": await d.MultipartFile.fromFile(_image1!.path, filename: fileName1),
                                     'name': _nameController.text.toString(),
                                     'email': _emailController.text.toString(),
                                     'number': '',
-                                    'address':
-                                        _locationController.text.toString(),
+                                    'address': _locationController.text.toString(),
                                     'latitude': Latitiude,
                                     'longitude': Longitude,
                                     'user_id': id,
                                     //"files": await d.MultipartFile.fromFile(_image!.path, filename: fileName),
                                     "pics": 1,
-                                    "paypal_email":
-                                        "testingpaypalemail@gmail.com",
+                                    "paypal_email": "testingpaypalemail@gmail.com",
 
-                                    "stripe_email":
-                                        stripeEmailController.text.toString(),
+                                    "stripe_email": stripeEmailController.text.toString(),
                                     "stripe_account_type": selected.toString(),
-                                    'shipping_address':
-                                        _locationController.text.toString(),
+                                    'shipping_address': _locationController.text.toString(),
                                   });
                                   var data = {
-                                    "file": await d.MultipartFile.fromFile(
-                                        _image1!.path,
-                                        filename: fileName1),
+                                    "file": await d.MultipartFile.fromFile(_image1!.path, filename: fileName1),
                                     'name': _nameController.text.toString(),
                                     'email': _emailController.text.toString(),
                                     'number': '',
-                                    'address':
-                                        _locationController.text.toString(),
+                                    'address': _locationController.text.toString(),
                                     'latitude': Latitiude,
                                     'longitude': Longitude,
                                     'user_id': id,
                                     //"files": await d.MultipartFile.fromFile(_image!.path, filename: fileName),
                                     "pics": 1,
-                                    "paypal_email":
-                                        "testingpaypalemail@gmail.com",
-                                    "stripe_email":
-                                        stripeEmailController.text.toString(),
+                                    "paypal_email": "testingpaypalemail@gmail.com",
+                                    "stripe_email": stripeEmailController.text.toString(),
                                     "stripe_account_type": selected.toString(),
                                     // 'shipping_address': _ShippingAddressController.text.toString(),
                                   };
@@ -986,14 +896,11 @@ class _EditProfileState extends State<EditProfile> {
                                 } else if (_image1 == null && _image != null) {
                                   String fileName = p.basename(_image!.path);
                                   formData = new d.FormData.fromMap({
-                                    "file": await d.MultipartFile.fromFile(
-                                        _image!.path,
-                                        filename: fileName),
+                                    "file": await d.MultipartFile.fromFile(_image!.path, filename: fileName),
                                     'name': _nameController.text.toString(),
                                     'email': _emailController.text.toString(),
                                     'number': '',
-                                    'address':
-                                        _locationController.text.toString(),
+                                    'address': _locationController.text.toString(),
                                     'latitude': Latitiude,
                                     'longitude': Longitude,
                                     'user_id': id,
@@ -1001,23 +908,17 @@ class _EditProfileState extends State<EditProfile> {
                                     //"files": await d.MultipartFile.fromFile(_image!.path, filename: fileName),
 
                                     "pics": 2,
-                                    "paypal_email":
-                                        "testingpaypalemail@gmail.com",
-                                    "stripe_email":
-                                        stripeEmailController.text.toString(),
+                                    "paypal_email": "testingpaypalemail@gmail.com",
+                                    "stripe_email": stripeEmailController.text.toString(),
                                     "stripe_account_type": selected.toString(),
-                                    'shipping_address':
-                                        _locationController.text.toString(),
+                                    'shipping_address': _locationController.text.toString(),
                                   });
                                   var data = {
-                                    "file": await d.MultipartFile.fromFile(
-                                        _image!.path,
-                                        filename: fileName),
+                                    "file": await d.MultipartFile.fromFile(_image!.path, filename: fileName),
                                     'name': _nameController.text.toString(),
                                     'email': _emailController.text.toString(),
                                     'number': '',
-                                    'address':
-                                        _locationController.text.toString(),
+                                    'address': _locationController.text.toString(),
                                     'latitude': Latitiude,
                                     'longitude': Longitude,
                                     'user_id': id,
@@ -1025,14 +926,10 @@ class _EditProfileState extends State<EditProfile> {
                                     //"files": await d.MultipartFile.fromFile(_image!.path, filename: fileName),
 
                                     "pics": 2,
-                                    "paypal_email":
-                                        "testingpaypalemail@gmail.com",
-                                    "stripe_email":
-                                        stripeEmailController.text.toString(),
+                                    "paypal_email": "testingpaypalemail@gmail.com",
+                                    "stripe_email": stripeEmailController.text.toString(),
                                     "stripe_account_type": selected.toString(),
-                                    'shipping_address':
-                                        _ShippingAddressController.text
-                                            .toString(),
+                                    'shipping_address': _ShippingAddressController.text.toString(),
                                   };
                                   print(data);
                                 } else if (_image1 == null && _image == null) {
@@ -1041,38 +938,31 @@ class _EditProfileState extends State<EditProfile> {
                                     'name': _nameController.text.toString(),
                                     'email': _emailController.text.toString(),
                                     'number': '',
-                                    'address':
-                                        _locationController.text.toString(),
+                                    'address': _locationController.text.toString(),
                                     'latitude': Latitiude,
                                     'longitude': Longitude,
                                     'user_id': id,
                                     //"files": await d.MultipartFile.fromFile(_image!.path, filename: fileName),
 
                                     "pics": 1,
-                                    "paypal_email":
-                                        "testingpaypalemail@gmail.com",
-                                    "stripe_email":
-                                        stripeEmailController.text.toString(),
+                                    "paypal_email": "testingpaypalemail@gmail.com",
+                                    "stripe_email": stripeEmailController.text.toString(),
                                     "stripe_account_type": selected.toString(),
-                                    'shipping_address':
-                                        _locationController.text.toString(),
+                                    'shipping_address': _locationController.text.toString(),
                                   });
                                   var data = {
                                     'name': _nameController.text.toString(),
                                     'email': _emailController.text.toString(),
                                     'number': '',
-                                    'address':
-                                        _locationController.text.toString(),
+                                    'address': _locationController.text.toString(),
                                     'latitude': Latitiude,
                                     'longitude': Longitude,
                                     'user_id': id,
                                     //"files": await d.MultipartFile.fromFile(_image!.path, filename: fileName),
 
                                     "pics": 1,
-                                    "paypal_email":
-                                        "testingpaypalemail@gmail.com",
-                                    "stripe_email":
-                                        stripeEmailController.text.toString(),
+                                    "paypal_email": "testingpaypalemail@gmail.com",
+                                    "stripe_email": stripeEmailController.text.toString(),
                                     "stripe_account_type": selected.toString(),
                                     // 'shipping_address': _ShippingAddressController.text.toString(),
                                   };
@@ -1083,55 +973,41 @@ class _EditProfileState extends State<EditProfile> {
                                   String fileName1 = p.basename(_image1!.path);
                                   formData = new d.FormData.fromMap({
                                     "file": [
-                                      await d.MultipartFile.fromFile(
-                                          _image1!.path,
-                                          filename: fileName1),
-                                      await d.MultipartFile.fromFile(
-                                          _image!.path,
-                                          filename: fileName)
+                                      await d.MultipartFile.fromFile(_image1!.path, filename: fileName1),
+                                      await d.MultipartFile.fromFile(_image!.path, filename: fileName)
                                     ],
                                     'name': _nameController.text.toString(),
                                     'email': _emailController.text.toString(),
                                     'number': '',
-                                    'address':
-                                        _locationController.text.toString(),
+                                    'address': _locationController.text.toString(),
                                     'latitude': Latitiude,
                                     'longitude': Longitude,
                                     'user_id': id,
                                     //"files": await d.MultipartFile.fromFile(_image!.path, filename: fileName),
 
                                     "pics": 3,
-                                    "paypal_email":
-                                        "testingpaypalemail@gmail.com",
-                                    "stripe_email":
-                                        stripeEmailController.text.toString(),
+                                    "paypal_email": "testingpaypalemail@gmail.com",
+                                    "stripe_email": stripeEmailController.text.toString(),
                                     "stripe_account_type": selected.toString(),
                                     // 'shipping_address': _ShippingAddressController.text.toString(),
                                   });
                                   var data = {
                                     "file": [
-                                      await d.MultipartFile.fromFile(
-                                          _image1!.path,
-                                          filename: fileName1),
-                                      await d.MultipartFile.fromFile(
-                                          _image!.path,
-                                          filename: fileName)
+                                      await d.MultipartFile.fromFile(_image1!.path, filename: fileName1),
+                                      await d.MultipartFile.fromFile(_image!.path, filename: fileName)
                                     ],
                                     'name': _nameController.text.toString(),
                                     'email': _emailController.text.toString(),
                                     'number': '',
-                                    'address':
-                                        _locationController.text.toString(),
+                                    'address': _locationController.text.toString(),
                                     'latitude': Latitiude,
                                     'longitude': Longitude,
                                     'user_id': id,
                                     //"files": await d.MultipartFile.fromFile(_image!.path, filename: fileName),
 
                                     "pics": 3,
-                                    "paypal_email":
-                                        "testingpaypalemail@gmail.com",
-                                    "stripe_email":
-                                        stripeEmailController.text.toString(),
+                                    "paypal_email": "testingpaypalemail@gmail.com",
+                                    "stripe_email": stripeEmailController.text.toString(),
                                     "stripe_account_type": selected.toString(),
                                     // 'shipping_address': _ShippingAddressController.text.toString(),
                                   };
@@ -1140,25 +1016,19 @@ class _EditProfileState extends State<EditProfile> {
                                 log(formData.fields.toString());
                               } else {
                                 Loader.hide();
-                                final snackBar = new SnackBar(
-                                    content: new Text(
-                                        "Payment fields cannot be empty"));
-                                ScaffoldMessenger.of(context)
-                                    .showSnackBar(snackBar);
+                                final snackBar = new SnackBar(content: new Text("Payment fields cannot be empty"));
+                                ScaffoldMessenger.of(context).showSnackBar(snackBar);
                               }
                             } else {
                               // for client update
                               if (_image == null && _image1 != null) {
                                 String fileName1 = p.basename(_image1!.path);
                                 formData = new d.FormData.fromMap({
-                                  "file": await d.MultipartFile.fromFile(
-                                      _image1!.path,
-                                      filename: fileName1),
+                                  "file": await d.MultipartFile.fromFile(_image1!.path, filename: fileName1),
                                   'name': _nameController.text.toString(),
                                   'email': _emailController.text.toString(),
                                   'number': '',
-                                  'address':
-                                      _locationController.text.toString(),
+                                  'address': _locationController.text.toString(),
                                   'latitude': Latitiude,
                                   'longitude': Longitude,
                                   'user_id': id,
@@ -1171,14 +1041,11 @@ class _EditProfileState extends State<EditProfile> {
                               } else if (_image1 == null && _image != null) {
                                 String fileName = p.basename(_image!.path);
                                 formData = new d.FormData.fromMap({
-                                  "file": await d.MultipartFile.fromFile(
-                                      _image!.path,
-                                      filename: fileName),
+                                  "file": await d.MultipartFile.fromFile(_image!.path, filename: fileName),
                                   'name': _nameController.text.toString(),
                                   'email': _emailController.text.toString(),
                                   'number': '',
-                                  'address':
-                                      _locationController.text.toString(),
+                                  'address': _locationController.text.toString(),
                                   'latitude': Latitiude,
                                   'longitude': Longitude,
                                   'user_id': id,
@@ -1189,9 +1056,7 @@ class _EditProfileState extends State<EditProfile> {
                                   "paypal_email": "testemail@gmail.com",
                                   "stripe_email": "testemail@gmail.com",
                                   "stripe_account_type": "standard",
-                                  'shipping_address': _ShippingAddressController
-                                      .text
-                                      .toString(),
+                                  'shipping_address': _ShippingAddressController.text.toString(),
                                 });
                               } else if (_image1 == null && _image == null) {
                                 log("both images are null");
@@ -1199,8 +1064,7 @@ class _EditProfileState extends State<EditProfile> {
                                   'name': _nameController.text.toString(),
                                   'email': _emailController.text.toString(),
                                   'number': '',
-                                  'address':
-                                      _locationController.text.toString(),
+                                  'address': _locationController.text.toString(),
                                   'latitude': Latitiude,
                                   'longitude': Longitude,
                                   'user_id': id,
@@ -1210,9 +1074,7 @@ class _EditProfileState extends State<EditProfile> {
                                   "paypal_email": "testemail@gmail.com",
                                   "stripe_email": "testemail@gmail.com",
                                   "stripe_account_type": "standard",
-                                  'shipping_address': _ShippingAddressController
-                                      .text
-                                      .toString(),
+                                  'shipping_address': _ShippingAddressController.text.toString(),
                                 });
                               } else {
                                 log("hellooooo22");
@@ -1220,17 +1082,13 @@ class _EditProfileState extends State<EditProfile> {
                                 String fileName1 = p.basename(_image1!.path);
                                 formData = new d.FormData.fromMap({
                                   "file": [
-                                    await d.MultipartFile.fromFile(
-                                        _image1!.path,
-                                        filename: fileName1),
-                                    await d.MultipartFile.fromFile(_image!.path,
-                                        filename: fileName)
+                                    await d.MultipartFile.fromFile(_image1!.path, filename: fileName1),
+                                    await d.MultipartFile.fromFile(_image!.path, filename: fileName)
                                   ],
                                   'name': _nameController.text.toString(),
                                   'email': _emailController.text.toString(),
                                   'number': '',
-                                  'address':
-                                      _locationController.text.toString(),
+                                  'address': _locationController.text.toString(),
                                   'latitude': Latitiude,
                                   'longitude': Longitude,
                                   'user_id': id,
@@ -1240,23 +1098,17 @@ class _EditProfileState extends State<EditProfile> {
                                   "paypal_email": "testemail@gmail.com",
                                   "stripe_email": "testemail@gmail.com",
                                   "stripe_account_type": "standard",
-                                  'shipping_address': _ShippingAddressController
-                                      .text
-                                      .toString(),
+                                  'shipping_address': _ShippingAddressController.text.toString(),
                                 });
                               }
                               log(formData.fields.toString());
                             }
                             print(formData.toString());
-                            d.Response response = await Dio().post(
-                                "${Url}/UserProfileUpdate",
-                                data: formData);
+                            d.Response response = await Dio().post("${Url}/UserProfileUpdate", data: formData);
                             print(response.statusCode.toString());
                             log(response.statusCode.toString());
                             Loader.hide();
-                            role == "1"
-                                ? Get.off(() => RenterProfile())
-                                : Get.off(() => MyProfileScreen());
+                            role == "1" ? Get.off(() => RenterProfile()) : Get.off(() => MyProfileScreen());
                             // print("File upload response: $response");
                           } catch (e) {
                             Loader.hide();
@@ -1273,21 +1125,18 @@ class _EditProfileState extends State<EditProfile> {
                         child: Center(
                           child: Text(
                             'Save',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 19),
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19),
                           ),
                         ),
-                        decoration: BoxDecoration(
-                            color: kprimaryColor,
-                            borderRadius: BorderRadius.circular(14)),
+                        decoration: BoxDecoration(color: kprimaryColor, borderRadius: BorderRadius.circular(14)),
                       ),
                     ),
                   ],
                 ),
               ),
               SizedBox(
-                      height: res_height * 0.02,
-                    ),
+                height: res_height * 0.02,
+              ),
             ],
           ),
         ),
@@ -1432,8 +1281,7 @@ class _EditProfileState extends State<EditProfile> {
 
   ////////
   Future getProductsApi(id) async {
-    final response = await http.get(
-        Uri.parse('${Url}/UserProfileGetById/${id}'));
+    final response = await http.get(Uri.parse('${Url}/UserProfileGetById/${id}'));
     var data = jsonDecode(response.body.toString());
     print('data $data');
     log(data.toString());
@@ -1448,8 +1296,7 @@ class _EditProfileState extends State<EditProfile> {
         _nameController.text = data["data"][0]["name"].toString();
         _emailController.text = data["data"][0]["email"].toString();
         _locationController.text = data["data"][0]["address"].toString();
-        _ShippingAddressController.text =
-            data["data"][0]["shipping_address"].toString();
+        _ShippingAddressController.text = data["data"][0]["shipping_address"].toString();
         back_image_api = data["data"][0]["back_image"].toString();
         Latitiude = data["data"][0]["latitude"].toString();
         Longitude = data["data"][0]["longitude"].toString();
@@ -1457,24 +1304,16 @@ class _EditProfileState extends State<EditProfile> {
     });
     if (response.statusCode == 200) {
       if (data["data"].length != 0) {
-        SharedPreferences updatePrefrences =
-            await SharedPreferences.getInstance();
+        SharedPreferences updatePrefrences = await SharedPreferences.getInstance();
 
         setState(() {
-          updatePrefrences.setString(
-              'fullname', data["data"][0]["name"].toString());
-          updatePrefrences.setString(
-              'email', data["data"][0]["email"].toString());
-          updatePrefrences.setString(
-              'image', data["data"][0]["image"].toString());
-          updatePrefrences.setString(
-              'address', data["data"][0]["address"].toString());
-          updatePrefrences.setString(
-              'latitude', data["data"][0]["latitude"].toString());
-          updatePrefrences.setString(
-              'longitude', data["data"][0]["longitude"].toString());
-          updatePrefrences.setString(
-              'number', data["data"][0]["number"].toString());
+          updatePrefrences.setString('fullname', data["data"][0]["name"].toString());
+          updatePrefrences.setString('email', data["data"][0]["email"].toString());
+          updatePrefrences.setString('image', data["data"][0]["image"].toString());
+          updatePrefrences.setString('address', data["data"][0]["address"].toString());
+          updatePrefrences.setString('latitude', data["data"][0]["latitude"].toString());
+          updatePrefrences.setString('longitude', data["data"][0]["longitude"].toString());
+          updatePrefrences.setString('number', data["data"][0]["number"].toString());
         });
         return data;
       } else {

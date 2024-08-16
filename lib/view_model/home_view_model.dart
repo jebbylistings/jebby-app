@@ -46,7 +46,6 @@ class HomeViewViewModel with ChangeNotifier {
     DataUsers dataUsers = DataUsers();
     dataUsers.profileData();
     dataUsers.fullname;
-    log("dataUsers.fullname.toString()" + dataUsers.fullname.toString());
   }
 
   Future<void> changeProfileDataApi(id) async {

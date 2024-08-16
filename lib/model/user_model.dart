@@ -2,6 +2,7 @@ class UserModel {
   int? status;
   String? name;
   String? email;
+  String? phoneNumber;
   String? id;
   String? role;
   String? source;
@@ -16,7 +17,7 @@ class UserModel {
       this.role,
       this.source,
       this.token,
-      this.isGuest = false});
+      this.isGuest = false, this.phoneNumber});
 
   UserModel.fromJson(Map<String, dynamic> json) {
     status = json['status'];
@@ -93,7 +94,7 @@ class Data {
       this.address,
       this.userId,
       this.latitude,
-      this.longitude});
+      this.longitude, required String phoneNumber});
 
   Data.fromJson(Map<String, dynamic> json) {
     id = json['id'];

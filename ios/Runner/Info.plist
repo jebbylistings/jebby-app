@@ -30,6 +30,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>com.googleusercontent.apps.369111140699-jda16p6mepbjftlcs9ibcb7tfh7q0b4p</string>
+				<string>fb2014559258906156</string>
 			</array>
 		</dict>
 	</array>
@@ -41,6 +42,11 @@
 	<string>97d3bb3191f1a0d7808e936c66cbbe21</string>
 	<key>FacebookDisplayName</key>
 	<string>jebby</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+  		<string>fbapi</string>
+  		<string>fb-messenger-share-api</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
@@ -48,6 +54,8 @@
 	<key>NSLocationAlwaysAndWhenInUsageDescription</key>
 	<string> The app requires access to your location for smoother deliveries of the item.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>The app requires access to your location for smoother deliveries of the item.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>The app requires access to your location for smoother deliveries of the item.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Access to your Photos is required to be able to upload the pictures of the items on the marketplace and upload you profile picture.</string>

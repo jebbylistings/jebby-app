@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:jared/Views/helper/colors.dart';
+import 'package:lottie/lottie.dart';
 
 import 'package:provider/provider.dart';
 
@@ -32,7 +33,7 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
     return Container(
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: AssetImage("assets/slicing/bg2.jpg"),
+          image: AssetImage("assets/slicing/bg3.jpg"),
           fit: BoxFit.cover,
         ),
       ),
@@ -43,17 +44,29 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
           child: Column(
             children: [
               SizedBox(
-                height: res_height * 0.175,
+                height: res_height * 0.1,
               ),
               Container(
                 width: res_width * 0.9,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Create New Password',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
+                    Lottie.asset('assets/lottie/create_password.json', width: res_width * 0.9, height: 200),
+                    SizedBox(
+                      height: res_height * 0.02,
                     ),
+                    Center(
+                      child: Text(
+                        'Create New Password',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30, color: darkBlue),
+                      ),
+                    ),
+                    Align(
+                      child: Text(
+                        "Create a new password for your account",
+                        style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
+                      ),
+                    )
                   ],
                 ),
               ),
@@ -63,10 +76,10 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Enter New Password'),
-                  SizedBox(
-                    height: res_height * 0.01,
-                  ),
+                  // Text('Enter New Password'),
+                  // SizedBox(
+                  //   height: res_height * 0.01,
+                  // ),
                   Container(
                     width: res_width * 0.9,
                     child: TextFormField(
@@ -79,44 +92,51 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                         }
                         return null;
                       },
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
                       decoration: InputDecoration(
+                          prefixIcon: Icon(
+                            Icons.lock,
+                            color: darkBlue,
+                          ),
                           suffixIcon: InkWell(
                               onTap: () {
                                 setState(() {
                                   obscureText = !obscureText;
                                 });
                               },
-                              child: Icon(!obscureText ? Icons.visibility_off : Icons.visibility)),
+                              child: Icon(
+                                !obscureText ? Icons.visibility_off : Icons.visibility,
+                                color: darkBlue,
+                              )),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15.0),
                           ),
                           enabledBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(color: darkBlue, width: 1),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                           focusedBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(color: darkBlue, width: 1),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                           filled: true,
-                          hintStyle: TextStyle(color: Colors.grey),
-                          hintText: "*******",
-                          fillColor: Colors.white),
+                          hintStyle: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
+                          hintText: "Enter New Password",
+                          fillColor: lightBlue),
                     ),
                   ),
                 ],
               ),
               SizedBox(
-                height: res_height * 0.015,
+                height: res_height * 0.02,
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Repeat Password'),
-                  SizedBox(
-                    height: res_height * 0.01,
-                  ),
+                  // Text('Repeat Password'),
+                  // SizedBox(
+                  //   height: res_height * 0.01,
+                  // ),
                   Container(
                     width: res_width * 0.9,
                     child: TextFormField(
@@ -129,73 +149,73 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                         }
                         return null;
                       },
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
                       decoration: InputDecoration(
-                        suffixIcon: InkWell(
+                          prefixIcon: Icon(
+                            Icons.lock,
+                            color: darkBlue,
+                          ),
+                          suffixIcon: InkWell(
                               onTap: () {
                                 setState(() {
                                   obscureText1 = !obscureText1;
                                 });
                               },
-                              child: Icon(!obscureText1 ? Icons.visibility_off : Icons.visibility)),
+                              child: Icon(
+                                !obscureText1 ? Icons.visibility_off : Icons.visibility,
+                                color: darkBlue,
+                              )),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15.0),
                           ),
                           enabledBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(color: darkBlue, width: 1),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                           focusedBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(color: darkBlue, width: 1),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                           filled: true,
-                          hintStyle: TextStyle(color: Colors.grey),
-                          hintText: "*******",
-                          fillColor: Colors.white),
+                          hintStyle: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
+                          hintText: "Repeat Password",
+                          fillColor: lightBlue),
                     ),
                   ),
                 ],
               ),
               SizedBox(
-                height: res_height * 0.015,
+                height: res_height * 0.04,
               ),
               GestureDetector(
                 onTap: () {
-                   if (_passwordController.text.isEmpty) {
-                          Utils.flushBarErrorMessage(
-                              'Enter Your Password', context);
-                      }
-                  else if ((!_passwordController.text.contains(RegExp(r'^(?=.*?[A-Z])(?=.*?[!@#\$&*~]).{8,}$')))) {
-                          Utils.flushBarErrorMessage(
-                              'Password should be minimum of 8 characters and contain small letter, capital letter and special character', context);
-                      }
-                  else if (_confirmpasswordController.text.isEmpty) {
+                  if (_passwordController.text.isEmpty) {
+                    Utils.flushBarErrorMessage('Enter Your Password', context);
+                  } else if ((!_passwordController.text.contains(RegExp(r'^(?=.*?[A-Z])(?=.*?[!@#\$&*~]).{8,}$')))) {
+                    Utils.flushBarErrorMessage(
+                        'Password should be minimum of 8 characters and contain small letter, capital letter and special character', context);
+                  } else if (_confirmpasswordController.text.isEmpty) {
                     Utils.flushBarErrorMessage('Enter Repeat Password', context);
-                  }
-                 else if (_passwordController.text != _confirmpasswordController.text) {
+                  } else if (_passwordController.text != _confirmpasswordController.text) {
                     Utils.flushBarErrorMessage('Password doesn\'t match ', context);
-                  } 
-                  
-                  else {
+                  } else {
                     Map data = {
                       "email": widget.email.toString(),
                       "password": _passwordController.text.toString(),
                     };
-                    log(data.toString());
                     authViewMode.changePasswordAPi(data, context);
                   }
                 },
                 child: Container(
-                  height: res_height * 0.065,
+                  height: res_height * 0.055,
                   width: res_width * 0.9,
                   child: Center(
                     child: Text(
                       'Save',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
                     ),
                   ),
-                  decoration: BoxDecoration(color: kprimaryColor, borderRadius: BorderRadius.circular(14)),
+                  decoration: BoxDecoration(color: darkBlue, borderRadius: BorderRadius.circular(30)),
                 ),
               ),
             ],

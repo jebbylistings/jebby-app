@@ -138,13 +138,13 @@ class _FilterScreeenState extends State<FilterScreeen> {
                           items.add(category_name.toString()),
                           items_id.add(category_id),
                         },
-                      print("CATEGORY LIST --> ${items}"),
-                      print("Category ID ---->> ${items_id}"),
+                      
+                      
                       selected_id = items_id[0],
-                      print("PRINT SELECTED CATEG ID ${selected_id}"),
+                      
                       setState(() {
                         dropdownValue = items.first;
-                        print("EXEXEXEXEXEXE");
+                        
                         isLoading = false;
                       }),
                     }
@@ -158,7 +158,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
                       setState(() {
                         isLoading = false;
                         isError = true;
-                        print("Error:  ${error}");
+                        
                       }),
                     }
                 }
@@ -188,10 +188,10 @@ class _FilterScreeenState extends State<FilterScreeen> {
                           sub_items.add(sub_name),
                           sub_items_id.add(sub_id),
                         },
-                      print("Sub CATEGORY LIST --> ${sub_items}"),
-                      print("Sub Category ID ---->> ${sub_items_id}"),
+                      
+                      
                       selected_sub_id = sub_items_id[0],
-                      print("PRINT Selected_Sub CATEG ID ${selected_sub_id}"),
+                      
                       setState(() {
                         sub_dropdownvalue = sub_items.first;
                         sub_categoryLoader = false;
@@ -214,7 +214,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
   }
 
   getData(url) {
-    print(url);
+    
     setState(() {
       filteredData = true;
     });
@@ -283,7 +283,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
       setState(() {
         selectedDate1 = picked;
         toDate = DateFormat('yyyy-MM-dd').format(selectedDate1);
-        print("to: ${toDate}");
+        
       });
     }
   }
@@ -300,7 +300,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
       setState(() {
         selectedDate = picked;
         fromDate = DateFormat('yyyy-MM-dd').format(selectedDate);
-        print("From: ${fromDate}");
+        
       });
     }
   }
@@ -503,10 +503,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
                                             location.last.latitude.toString();
                                         Longitude =
                                             location.last.longitude.toString();
-                                        print(
-                                            "Latitude: ${location.last.latitude.toString()}");
-                                        print(
-                                            "Longitude: ${location.last.longitude.toString()}");
+                                        
                                         _placeList = [];
                                       });
                                     },
@@ -614,12 +611,10 @@ class _FilterScreeenState extends State<FilterScreeen> {
                                       // This is called when the user selects an item.
                                       setState(() {
                                         dropdownValue = value!;
-                                        print(dropdownValue);
-                                        print(items_id[
-                                            items.indexOf(dropdownValue)]);
+                                        
+                                        
                                         selected_id = items_id[
                                             items.indexOf(dropdownValue)];
-                                        print("selected ID ${selected_id}");
                                         sub_id = [];
                                         sub_items = [];
                                         getSubCategory(selected_id);
@@ -681,13 +676,10 @@ class _FilterScreeenState extends State<FilterScreeen> {
                                         // This is called when the user selects an item.
                                         setState(() {
                                           sub_dropdownvalue = value!;
-                                          print(
-                                              "SubDropDown --> ${sub_dropdownvalue}");
+                                          
                                           selected_sub_id = sub_items_id[
                                               sub_items
                                                   .indexOf(sub_dropdownvalue)];
-                                          print(
-                                              "SelectedSubID --> ${selected_sub_id}");
                                         });
                                       },
                                       items: sub_items
@@ -821,22 +813,22 @@ class _FilterScreeenState extends State<FilterScreeen> {
                                     if (price == 0 && fromDate == null) {
                                       url =
                                           "${Url}/getProductSearching/null/null/null/null/null/${selected_sub_id}/null";
-                                      print(url);
+                                     
                                       getData(url);
                                     } else if (price != 0 && fromDate == null) {
                                       url =
                                           "${Url}/getProductSearching/null/null/null/null/null/${selected_sub_id}/${price}";
-                                      print(url);
+                                     
                                       getData(url);
                                     } else if (price == 0 && fromDate != null) {
                                       url =
                                           "${Url}/getProductSearching/${fromDate}/${toDate == null ? selectedDate1 : toDate}/null/null/null/${selected_sub_id}/null";
-                                      print(url);
+                                     
                                       getData(url);
                                     } else if (price != 0 && fromDate != null) {
                                       url =
                                           "${Url}/getProductSearching/${fromDate}/${toDate == null ? selectedDate1 : toDate}/null/null/null/${selected_sub_id}/${price}";
-                                      print(url);
+                                     
                                       getData(url);
                                     }
                                   }
@@ -847,22 +839,22 @@ class _FilterScreeenState extends State<FilterScreeen> {
                                     if (price == 0 && fromDate == null) {
                                       url =
                                           "${Url}/getProductSearching/null/null/${Latitiude}/${Longitude}/${radius}/${selected_sub_id}/null";
-                                      print(url);
+                                     
                                       getData(url);
                                     } else if (price != 0 && fromDate == null) {
                                       url =
                                           "${Url}/getProductSearching/null/null/${Latitiude}/${Longitude}/${radius}/${selected_sub_id}/${price}";
-                                      print(url);
+                                     
                                       getData(url);
                                     } else if (price == 0 && fromDate != null) {
                                       url =
                                           "${Url}/getProductSearching/${fromDate}/${toDate == null ? selectedDate1 : toDate}/${Latitiude}/${Longitude}/${radius}/${selected_sub_id}/null";
-                                      print(url);
+                                     
                                       getData(url);
                                     } else if (price != 0 && fromDate != null) {
                                       url =
                                           "${Url}/getProductSearching/${fromDate}/${toDate == null ? selectedDate1 : toDate}/${Latitiude}/${Longitude}/${radius}/${selected_sub_id}/${price}";
-                                      print(url);
+                                     
                                       getData(url);
                                     }
                                   } else {
@@ -979,7 +971,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
                   setState(() {
                     _onChanged();
                     value == "" ? {Latitiude = null, Longitude = null} : null;
-                    print("Latitude ${Latitiude} Longitude ${Longitude}");
+                    
                   });
                 },
                 maxLines: 1,

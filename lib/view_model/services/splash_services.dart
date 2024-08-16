@@ -17,7 +17,6 @@ class SplashServices {
  
     getUserDate().then((value) async {
       print("value ${value.role}");
-      log(value.token.toString());
       FirebaseAuth auth = FirebaseAuth.instance;
       final user = auth.currentUser;
       if (value.role.toString() == 'null' || value.role.toString() == '') {
@@ -48,6 +47,7 @@ class DataUsers {
   String? id;
   String? fullname;
   String? email;
+  String? phoneNumber;
   String? role;
   void profileData() async {
     getUserDate().then((value) async {
@@ -55,8 +55,8 @@ class DataUsers {
       id = value.id.toString();
       fullname = value.name.toString();
       email = value.email.toString();
+      phoneNumber = value.phoneNumber.toString();
       role = value.role.toString();
-      log(fullname.toString());
     }).onError((error, stackTrace) {});
   }
 }

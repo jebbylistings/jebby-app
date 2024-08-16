@@ -49,21 +49,21 @@ class _VendorNotificationsState extends State<VendorNotifications> {
       fullname = value.name.toString();
       email = value.email.toString();
       role = value.role.toString();
-      print("token ${token}");
-      print("Source ID: ${sourceId}");
+     
+     
       // seenNotification();
-      print("role: ${role}");
+     
       getNotifications();
     }).onError((error, stackTrace) {
       if (kDebugMode) {
-        print(error.toString());
+       
       }
     });
   }
 
   Future<GetNotificationModel> notifications(
       id, onResponse(GetNotificationModel List), onError(error)) async {
-    print("URL --> ${AppUrl.getAllNotificationForApp + sourceId.toString()}");
+   
     final response = await http.get(
         Uri.parse(AppUrl.getAllNotificationForApp + sourceId.toString()),
         headers: {
@@ -73,30 +73,30 @@ class _VendorNotificationsState extends State<VendorNotifications> {
       try {
         // ApiRepository.shared.checkApiStatus(true, "getNotifications");
         var data = GetNotificationModel.fromJson(jsonDecode(response.body));
-        print("Admin Notifications is here ${data.data.toString()}");
+       
         ApiRepository.shared.getNotifications(data);
-        print("notification status");
+       
         onResponse(data);
-        print("Admin Notifications data");
+       
         return data;
       } catch (error) {
-        print("Notifications catched");
+       
         onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
     return GetNotificationModel();
   }
 
   Future<DeleteNotificationModel> deleteNotification(id, ind) async {
     final request = json.encode(<String, dynamic>{"id": id});
-    print(request);
+   
 
     final response = await http.post(
       Uri.parse(AppUrl.deleteNotification),
@@ -108,23 +108,23 @@ class _VendorNotificationsState extends State<VendorNotifications> {
 
     if (response.statusCode == 201) {
       try {
-        print("Notification deleted");
+       
         notifications(id, (List) {
           if (this.mounted) {
             setState(() {});
           }
         }, (error) {});
       } catch (error) {
-        print("Notification deleted :catched");
+       
         // onError(error.toString());
-        print(error);
+       
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      print("You are not in Range");
+     
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      print("Internal Server Error");
+     
     }
     return DeleteNotificationModel();
   }
@@ -255,7 +255,7 @@ class _VendorNotificationsState extends State<VendorNotifications> {
                         .toString();
                     var formattedDate =
                         DateFormat('dd-MM-yy').format(DateTime.parse(date));
-                        // print(formattedDate);
+                        //
                     var prodId = ApiRepository
                         .shared.getNotificationModelList!.data![index].productId.toString();
                     var status = ApiRepository
@@ -264,7 +264,7 @@ class _VendorNotificationsState extends State<VendorNotifications> {
                         .shared.getNotificationModelList!.data![index].price.toString();
                     var negoId = ApiRepository
                         .shared.getNotificationModelList!.data![index].negoId;
-                    // print("index: ${name}");
+                    //
                     // return card(name, count, desc, date, id, ind, seen);
                     return GestureDetector(
                       onTap: () {
@@ -382,7 +382,7 @@ class _VendorNotificationsState extends State<VendorNotifications> {
                 ),
                 GestureDetector(
                     onTap: () {
-                      print("Notificsation id ${id}");
+                     
                       name == "admin" ? null : deleteNotification(id, ind);
                     },
                     child: name == "admin" ? null : Icon(Icons.close_outlined)),
