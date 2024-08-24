@@ -28,6 +28,7 @@ import 'package:jared/Views/screens/vendors/orderrequest.dart';
 import 'package:jared/Views/screens/vendors/productreturn.dart';
 import 'package:jared/Views/screens/vendors/renterProfile.dart';
 import 'package:jared/Views/screens/vendors/transactionlist.dart';
+import 'package:jared/Views/screens/vendors/vendorhome.dart';
 import 'package:jared/Views/support/FAQs.dart';
 import 'package:jared/Views/support/contactsupport.dart';
 import 'package:jared/Views/support/providerfeedback.dart';
@@ -986,7 +987,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                       ),
                     ),
                     SizedBox(height: res_height * 0.01),
-                    (usp.role == "0" || sp.role == "0")
+                    usp.role == "0"
                         ? Center(
                             child: ElevatedButton(
                                 onPressed: () async {
@@ -996,12 +997,14 @@ class _DrawerScreenState extends State<DrawerScreen> {
 
                                       setState(() {
                                         sharedPreferences.setString('role', "1");
+                                        sp.saveDataToSharedPreferences();
                                       });
 
                                       getData();
                                       Get.back();
                                       widget.onCloseDrawer?.call();
                                       _showSuccessAlert(context);
+                                      Get.offAll(() => VendrosHomeScreen());
                                       // final userPrefernece = Provider.of<UserViewModel>(context, listen: false);
                                       // userPrefernece.saveUser()
                                     }
@@ -2317,7 +2320,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                       ),
                     ),
                     SizedBox(height: res_height * 0.01),
-                    (usp.role == "0" || sp.role == "0")
+                    usp.role == "0"
                         ? Center(
                             child: ElevatedButton(
                                 onPressed: () async {
@@ -2332,6 +2335,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                       getData();
                                       Get.back();
                                       widget.onCloseDrawer?.call();
+                                      Get.offAll(() => VendrosHomeScreen());
                                       _showSuccessAlert(context);
                                       // final userPrefernece = Provider.of<UserViewModel>(context, listen: false);
                                       // userPrefernece.saveUser()

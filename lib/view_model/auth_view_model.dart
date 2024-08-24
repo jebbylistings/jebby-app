@@ -8,6 +8,7 @@ import 'package:jared/Views/screens/auth/createnewpassword.dart';
 import 'package:jared/Views/screens/auth/forgetPasswordOtp.dart';
 import 'package:jared/Views/screens/auth/login.dart';
 import 'package:jared/Views/screens/profile/myprofile.dart';
+import 'package:jared/Views/screens/vendors/vendorhome.dart';
 import 'package:jared/model/user_model.dart';
 import 'package:jared/respository/auth_repository.dart';
 import 'package:jared/utils/utils.dart';
@@ -19,7 +20,6 @@ import '../Views/screens/mainfolder/homemain.dart';
 import '../utils/overlay_support.dart';
 
 class AuthViewModel with ChangeNotifier {
-
   final _myRepo = AuthRepository();
 
   bool _loading = false;
@@ -34,16 +34,12 @@ class AuthViewModel with ChangeNotifier {
     notifyListeners();
   }
 
-  void getUserName()  async {
+  void getUserName() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    String _name = sharedPreferences.getString('fullname') ?? "";
 
-      SharedPreferences sharedPreferences =
-      await SharedPreferences.getInstance();
-      String _name = sharedPreferences.getString('fullname') ?? "";
-
-        print("the user in authview model is is $_name");
-        userName = _name;
-
-
+    print("the user in authview model is is $_name");
+    userName = _name;
   }
 
   setSignUpLoading(bool value) {
@@ -51,9 +47,7 @@ class AuthViewModel with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loginApi(dynamic data, BuildContext context,{
-    bool isFromGuestFlow = false
-  }) async {
+  Future<void> loginApi(dynamic data, BuildContext context, {bool isFromGuestFlow = false}) async {
     setLoading(true);
     Loader.show();
 
@@ -76,23 +70,21 @@ class AuthViewModel with ChangeNotifier {
           role: value['role'].toString(),
         ));
         userName = value['name'].toString();
-        if (kDebugMode) {
-        }
-        if(isFromGuestFlow){
+        if (kDebugMode) {}
+        if (isFromGuestFlow) {
           // Get.until((route) => route.settings.name == 'PD');
-          Get.until((route){
+          Get.until((route) {
             print("routeName is ");
-            return Get.currentRoute == "/PD";});
-        }else {
-          if(value['role'].toString() == "1"){
-            Get.offAll(() => MainScreen());
+            return Get.currentRoute == "/PD";
+          });
+        } else {
+          if (value['role'].toString() == "1") {
             loginType = "vendor";
-          }
-          else{
+            Get.offAll(() => VendrosHomeScreen());
+          } else {
             loginType = "user";
             Get.offAll(() => MainScreen());
           }
-          
         }
         // ChangeNotifierProvider(create: (context) => ApiRepository(), child: MainScreen());
       }
@@ -106,9 +98,8 @@ class AuthViewModel with ChangeNotifier {
     });
   }
 
-  Future<void> signUpApi(dynamic data, BuildContext context,
-      {bool isFromGuestFlow= false}) async {
-    if(_signUpLoading) return;
+  Future<void> signUpApi(dynamic data, BuildContext context, {bool isFromGuestFlow = false}) async {
+    if (_signUpLoading) return;
     setSignUpLoading(true);
 
     _myRepo.signUpApi(data).then((value) async {
@@ -120,9 +111,9 @@ class AuthViewModel with ChangeNotifier {
               name: data["full_name"],
               password: data["password"],
               role: data["role"],
-            isGuestUserFlow: isFromGuestFlow,
+              isGuestUserFlow: isFromGuestFlow,
             ));
-      } else if(value["message"].toString() == "Signin successfull") {
+      } else if (value["message"].toString() == "Signin successfull") {
         Utils.flushBarErrorMessage('Signin Successful', context);
 
         // Save Data To SharedPrefrences
@@ -139,14 +130,12 @@ class AuthViewModel with ChangeNotifier {
         updatePrefrences.setString('role', value["data"]["role"].toString());
         // updatePrefrences.setString('number', value["number"].toString());
         String? test = updatePrefrences.getString("id");
-// if(value["data"]["role"]==1){
-        // Get.offAll(() => VendrosHomeScreen());
-// }
-// else{
-        Get.offAll(() => MainScreen());
-// }
-      } 
-      else if (value["message"].toString() == "Email Already Registered") {
+        if (value["data"]["role"] == 1) {
+          Get.offAll(() => VendrosHomeScreen());
+        } else {
+          Get.offAll(() => MainScreen());
+        }
+      } else if (value["message"].toString() == "Email Already Registered") {
         Utils.flushBarErrorMessage('Email Already Registered', context);
       } else {
         Utils.flushBarErrorMessage('Something went wrong', context);
@@ -164,8 +153,7 @@ class AuthViewModel with ChangeNotifier {
     });
   }
 
-  Future<void> otpRegisterApi(dynamic data, BuildContext context,
-      {bool isGuestUserFlow = false}) async {
+  Future<void> otpRegisterApi(dynamic data, BuildContext context, {bool isGuestUserFlow = false}) async {
     setSignUpLoading(true);
 
     _myRepo.otpRegisterApi(data).then((value) {
@@ -175,7 +163,7 @@ class AuthViewModel with ChangeNotifier {
         // if(isGuestUserFlow){
         //   loginApi(data, context,isFromGuestFlow: true);
         // } else {
-          Get.to(() => LoginScreen());
+        Get.to(() => LoginScreen());
         // }
       } else if (value["message"].toString() == "invalid OTP") {
         Utils.flushBarErrorMessage('invalid OTP', context);
@@ -217,12 +205,11 @@ class AuthViewModel with ChangeNotifier {
         updatePrefrences.setString('role', value["data"]["role"].toString());
         // updatePrefrences.setString('number', value["number"].toString());
         String? test = updatePrefrences.getString("id");
-// if(value["data"]["role"]==1){
-        // Get.offAll(() => VendrosHomeScreen());
-// }
-// else{
-        Get.offAll(() => MainScreen());
-// }
+        if (value["data"]["role"] == 1) {
+          Get.offAll(() => VendrosHomeScreen());
+        } else {
+          Get.offAll(() => MainScreen());
+        }
       } else {
         Utils.flushBarErrorMessage('Something went wrong', context);
       }
@@ -239,7 +226,7 @@ class AuthViewModel with ChangeNotifier {
     });
   }
 
-   Future<void> signUpApiWithGuest(dynamic data, BuildContext context) async {
+  Future<void> signUpApiWithGuest(dynamic data, BuildContext context) async {
     setSignUpLoading(true);
 
     _myRepo.signUpApiWithGuest(data).then((value) async {
@@ -247,13 +234,13 @@ class AuthViewModel with ChangeNotifier {
       if (value["message"].toString() == "Signin successfull") {
         final userPreference = Provider.of<UserViewModel>(context, listen: false);
         userPreference.saveUser(UserModel(
-      token: "",
-      name: "Guest",
-      email: "",
-      id: value?["data"]?["id"].toString(),
-      role: "Guest",
-      isGuest: true,
-    ));
+          token: "",
+          name: "Guest",
+          email: "",
+          id: value?["data"]?["id"].toString(),
+          role: "Guest",
+          isGuest: true,
+        ));
 
         // Save Data To SharedPrefrences
         // SharedPreferences updatePrefrences = await SharedPreferences.getInstance();
@@ -265,6 +252,7 @@ class AuthViewModel with ChangeNotifier {
         // updatePrefrences.setString('role', value["data"]["role"].toString());
         // String? test = updatePrefrences.getString("id");
         // log("For checking shared Prefrences " + test.toString());
+        loginType = "user";
         Get.offAll(() => MainScreen());
 // }
       } else {
@@ -279,8 +267,7 @@ class AuthViewModel with ChangeNotifier {
     });
   }
 
-  Future<void> forgetPasswordApi(dynamic data, BuildContext context, route,
-      {bool isGuestUserFlow = false}) async {
+  Future<void> forgetPasswordApi(dynamic data, BuildContext context, route, {bool isGuestUserFlow = false}) async {
     setSignUpLoading(true);
 
     _myRepo.forgetPasswordApi(data).then((value) {
@@ -393,19 +380,19 @@ class AuthViewModel with ChangeNotifier {
     });
   }
 
-    Future<void> DeleteAccount(dynamic data, BuildContext context) async {
+  Future<void> DeleteAccount(dynamic data, BuildContext context) async {
     setSignUpLoading(true);
 
-    _myRepo.DeleteAccount(data).then((value) async{
+    _myRepo.DeleteAccount(data).then((value) async {
       setSignUpLoading(false);
       if (value["message"] == "User has been deleted" || value["message"] == "Vendor has been deleted") {
         Utils.flushBarErrorMessage(value["message"].toString(), context);
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-      notifyListeners();
-      sharedPreferences.setString('token', "");
-      sharedPreferences.setString('role', "");
-      print("cancelled");
-      Get.to(() => LoginScreen());
+        SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+        notifyListeners();
+        sharedPreferences.setString('token', "");
+        sharedPreferences.setString('role', "");
+        print("cancelled");
+        Get.to(() => LoginScreen());
       } else {
         Utils.flushBarErrorMessage(value["message"].toString(), context);
       }

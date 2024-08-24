@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:jared/Views/helper/colors.dart';
+import 'package:jared/Views/screens/vendors/vendorhome.dart';
 import 'package:jared/provider/prodetail_provider.dart';
 
 import 'package:jared/view_model/auth_view_model.dart';
@@ -32,7 +33,7 @@ void main() async {
     OverlaySupport.global(
       child: MyApp(), // Replace with your actual app widget
     ),
-    );
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -87,31 +88,28 @@ class _SplashScreenState extends State<SplashScreen> {
     FirebaseAuth auth = FirebaseAuth.instance;
     final user = auth.currentUser;
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    Name = sharedPreferences.getString('fullname')??"";
+    Name = sharedPreferences.getString('fullname') ?? "";
     //
     if (user != null) {
-     
-     
-
       Timer(const Duration(seconds: 2), () {
-        Get.offAll(() => MainScreen());
+        if (sharedPreferences.getString('role').toString() == "1") {
+          Get.offAll(() => VendrosHomeScreen());
+        } else {
+          Get.offAll(() => MainScreen());
+        }
       });
     } else {
+      String _name = sharedPreferences.getString('fullname') ?? "";
 
-      String _name = sharedPreferences.getString('fullname')??"";
-     
       context.read<AuthViewModel>().userName = _name;
-      if(_name == "Guest"){
+      if (_name == "Guest") {
         Timer(const Duration(seconds: 2), () {
           Get.offAll(() => MainScreen());
         });
-      }else {
-       
-       
+      } else {
         splashServices.checkAuthentication(context);
         // Timer(const Duration(seconds: 2), () {Get.to(() => LoginScreen());});
-        }
-
+      }
     }
   }
 
@@ -141,7 +139,8 @@ class _SplashScreenState extends State<SplashScreen> {
                 SizedBox(
                   height: res_height * 0.028,
                 ),
-                Text('Explore Renting At\n Your Fingertips', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 23)),
+                Text('Explore Renting At\n Your Fingertips',
+                    textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 23)),
                 SizedBox(
                   height: res_height * 0.028,
                 ),

@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:jared/Views/helper/global.dart';
 import 'package:jared/Views/screens/auth/login.dart';
 import 'package:jared/Views/screens/mainfolder/homemain.dart';
+import 'package:jared/Views/screens/vendors/vendorhome.dart';
 import 'package:jared/model/user_model.dart';
 import 'package:jared/view_model/user_view_model.dart';
 
@@ -14,7 +15,6 @@ class SplashServices {
   Future<UserModel> getUserDate() => UserViewModel().getUser();
 
   void checkAuthentication(BuildContext context) async {
- 
     getUserDate().then((value) async {
       print("value ${value.role}");
       FirebaseAuth auth = FirebaseAuth.instance;
@@ -24,12 +24,12 @@ class SplashServices {
         Get.offAll(() => LoginScreen());
       } else {
         await Future.delayed(Duration(seconds: 3));
-        if(value.role.toString() == "1"){
+        if (value.role.toString() == "1") {
           loginType = "vendor";
-        Get.offAll(() => MainScreen());
-        }else{
-        Get.offAll(() => MainScreen());
-        loginType = "user";
+          Get.offAll(() => VendrosHomeScreen());
+        } else {
+          loginType = "user";
+          Get.offAll(() => MainScreen());
         }
       }
     }).onError((error, stackTrace) {

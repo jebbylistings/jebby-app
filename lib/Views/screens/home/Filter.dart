@@ -290,6 +290,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
 
   var myFormat = DateFormat('yyyy-MM-dd');
   var myFormat1 = DateFormat('dd/MM/yyyy');
+  var myFormat2 = DateFormat('MM/dd/yyyy');
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
         context: context,
@@ -421,7 +422,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
                                         padding: const EdgeInsets.all(4.0),
                                         child: Center(
                                           child: Text(
-                                            myFormat1.format(selectedDate),
+                                            myFormat2.format(selectedDate),
                                             style: TextStyle(fontSize: 11),
                                           ),
                                         ),
@@ -456,7 +457,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
                                         padding: const EdgeInsets.all(4.0),
                                         child: Center(
                                           child: Text(
-                                            myFormat1.format(selectedDate1),
+                                            myFormat2.format(selectedDate1),
                                             style: TextStyle(fontSize: 11),
                                           ),
                                         ),
@@ -770,17 +771,17 @@ class _FilterScreeenState extends State<FilterScreeen> {
                         SizedBox(
                           height: res_height * 0.01,
                         ),
-                        Container(
-                          child: Text(
-                            "Brands",
-                            style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 21,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
+                        // Container(
+                        //   child: Text(
+                        //     "Brands",
+                        //     style: TextStyle(
+                        //         color: Colors.black,
+                        //         fontSize: 21,
+                        //         fontWeight: FontWeight.bold),
+                        //   ),
+                        // ),
                         SizedBox(
-                          height: res_height * 0.02,
+                          height: res_height * 0.08,
                         ),
                         Center(
                           child: GestureDetector(
@@ -977,6 +978,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
                 maxLines: 1,
                 controller: _locationController,
                 decoration: InputDecoration(
+                   suffixIcon: Icon(Icons.location_pin, color: kprimaryColor),
                   // hintText:placholder,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(15.0),
@@ -989,8 +991,8 @@ class _FilterScreeenState extends State<FilterScreeen> {
                     borderSide: const BorderSide(color: kprimaryColor, width: 1),
                     borderRadius: BorderRadius.all(Radius.circular(15)),
                   ),
-                  hintStyle: TextStyle(fontWeight: FontWeight.bold),
-                  hintText: "New York, NY,USA",
+                  // hintStyle: TextStyle(fontWeight: FontWeight.bold),
+                  // hintText: "New York, NY,USA",
                 ),
               ),
             ),
