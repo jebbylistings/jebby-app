@@ -34,7 +34,7 @@ class _Electronics2State extends State<Electronics2> {
 
     return Scaffold(
       key: _key,
-      drawer: DrawerScreen(),
+      // drawer: DrawerScreen(),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

@@ -23,7 +23,7 @@ class _OrderListingScreenState extends State<OrderListingScreen> {
     double res_height = MediaQuery.of(context).size.height;
     return Scaffold(
       key: _key,
-      drawer: DrawerScreen(),
+      // drawer: DrawerScreen(),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

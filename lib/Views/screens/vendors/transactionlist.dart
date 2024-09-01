@@ -95,7 +95,7 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
 
     return Scaffold(
       key: _key,
-      drawer: DrawerScreen(),
+      // drawer: DrawerScreen(),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

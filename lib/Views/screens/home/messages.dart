@@ -176,9 +176,9 @@ class _MessageScreenState extends State<MessageScreen> {
 
     return Scaffold(
       key: _key,
-      drawer: DrawerScreen(onCloseDrawer: (){
-        Get.back();
-      },),
+      // drawer: DrawerScreen(onCloseDrawer: (){
+      //   Get.back();
+      // },),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -189,13 +189,12 @@ class _MessageScreenState extends State<MessageScreen> {
         ),
         leading: GestureDetector(
           onTap: () {
-            _key.currentState!.openDrawer();
+            Get.back();
+            // _key.currentState!.openDrawer();
           },
-          child: Padding(
-            padding: const EdgeInsets.all(17.0),
-            child: Container(
-              child: Image.asset('assets/slicing/hamburger.png'),
-            ),
+          child: Icon(
+            Icons.arrow_back,
+            color: Colors.black,
           ),
         ),
         actions: [

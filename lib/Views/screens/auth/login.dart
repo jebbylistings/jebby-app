@@ -398,7 +398,20 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Container(width: res_width * 0.15, height: res_width * 0.08, child: Image.asset('assets/slicing/fb.png')),
                         ),
 
-                        IOSButton(res_width)
+                        GetPlatform.isIOS
+                            ? IOSButton(res_width)
+                            : Container(
+                                height: res_width * 0.116,
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    showPhoneNumberDialog(context, _phoneController, res_width);
+                                  },
+                                  label: Icon(
+                                    Icons.phone,
+                                    size: 28,
+                                    color: darkBlue,
+                                  ),
+                                )),
 
                         // InkWell(
                         //   onTap: () {
@@ -416,7 +429,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         //       height: res_width * 0.15,
                         //       child: Image.asset('assets/slicing/google.png')),
                         // )
-                        ,
+
                         RoundedLoadingButton(
                           onPressed: () => {handleGoogleSignIn(_value)},
                           controller: googleController,
@@ -466,18 +479,20 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(
                     height: res_height * 0.02,
                   ),
-                  Container(
-                      height: res_width * 0.116,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          showPhoneNumberDialog(context, _phoneController, res_width);
-                        },
-                        label: Icon(
-                          Icons.phone,
-                          size: 28,
-                          color: darkBlue,
-                        ),
-                      )),
+                  GetPlatform.isIOS
+                      ? Container(
+                          height: res_width * 0.116,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              showPhoneNumberDialog(context, _phoneController, res_width);
+                            },
+                            label: Icon(
+                              Icons.phone,
+                              size: 28,
+                              color: darkBlue,
+                            ),
+                          ))
+                      : SizedBox.shrink(),
                   // RoundedLoadingButton(
                   //   onPressed: () => {
                   //     // Get.dialog(
@@ -838,13 +853,13 @@ void showPhoneNumberDialog(BuildContext context, TextEditingController _phoneCon
                     },
                   ),
                   SizedBox(height: 15),
-                Container(
-                  margin: EdgeInsets.only(left: 10),
-                  child: Text(
-                    '* Phone number must be entered with country code +1 --- --- ----',
-                    style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold),
+                  Container(
+                    margin: EdgeInsets.only(left: 10),
+                    child: Text(
+                      '* Phone number must be entered with country code +1 --- --- ----',
+                      style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
                   ),
-                ),
                 ],
               ),
               SizedBox(height: 20),
@@ -856,7 +871,10 @@ void showPhoneNumberDialog(BuildContext context, TextEditingController _phoneCon
                       Navigator.of(context).pop();
                       _phoneController.clear();
                     },
-                    child: Text('Cancel', style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
+                    ),
                   ),
                   SizedBox(width: 10),
                   ElevatedButton(
@@ -885,7 +903,10 @@ void showPhoneNumberDialog(BuildContext context, TextEditingController _phoneCon
                         );
                       }
                     },
-                    child: Text('Continue', style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),),
+                    child: Text(
+                      'Continue',
+                      style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ],
               ),

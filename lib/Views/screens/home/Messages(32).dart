@@ -8,6 +8,7 @@ import 'package:jared/Views/controller/bottomcontroller.dart';
 import 'package:jared/Views/helper/colors.dart';
 import 'package:jared/Views/screens/home/chat.dart';
 import 'package:jared/Views/screens/mainfolder/homemain.dart';
+import 'package:jared/Views/screens/vendors/vendorhome.dart';
 import 'package:jared/res/app_url.dart';
 import 'package:jared/view_model/apiServices.dart';
 import 'package:provider/provider.dart';
@@ -150,7 +151,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
             // }
             // Navigator.of(context).push(MaterialPageRoute(builder: ((context) => MainScreen())));
             Mtimer.cancel();
-            Navigator.push(context, MaterialPageRoute(builder: ((context) => MainScreen())));
+            Navigator.push(context, MaterialPageRoute(builder: ((context) => role == "1" ? VendrosHomeScreen() : MainScreen())));
           },
           child: Icon(
             Icons.arrow_back,

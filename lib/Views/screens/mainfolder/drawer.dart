@@ -21,6 +21,7 @@ import 'package:jared/Views/screens/auth/login.dart';
 import 'package:jared/Views/screens/home/Favourites.dart';
 import 'package:jared/Views/screens/home/Messages(32).dart';
 import 'package:jared/Views/screens/home/MyOrders.dart';
+import 'package:jared/Views/screens/home/home.dart';
 import 'package:jared/Views/screens/home/returnproduct.dart';
 import 'package:jared/Views/screens/home/setting.dart';
 import 'package:jared/Views/screens/profile/myprofile.dart';
@@ -44,8 +45,8 @@ import '../../controller/bottomcontroller.dart';
 
 class DrawerScreen extends StatefulWidget {
   final VoidCallback? onCloseDrawer;
-
-  DrawerScreen({Key? key, this.onCloseDrawer}) : super(key: key);
+  final String stack;
+  DrawerScreen({Key? key, this.onCloseDrawer, this.stack = "home"}) : super(key: key);
 
   @override
   _DrawerScreenState createState() => _DrawerScreenState();
@@ -211,7 +212,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                     },
                     child: Container(
                         width: res_width * 0.7,
-                        height: res_height * 0.039,
+                        height: res_height * 0.041,
                         decoration: BoxDecoration(
                             color: shaka == 1 ? Color(0xFF4285F4) : Colors.transparent,
                             borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -263,7 +264,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                     },
                     child: Container(
                         width: res_width * 0.7,
-                        height: res_height * 0.039,
+                        height: res_height * 0.041,
                         decoration: BoxDecoration(
                             color: shaka == 4 ? Color(0xFF4285F4) : Colors.transparent,
                             borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -317,7 +318,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                     },
                     child: Container(
                         width: res_width * 0.7,
-                        height: res_height * 0.039,
+                        height: res_height * 0.041,
                         decoration: BoxDecoration(
                             color: shaka == 6 ? Color(0xFF4285F4) : Colors.transparent,
                             borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -399,7 +400,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                     },
                     child: Container(
                         width: res_width * 0.7,
-                        height: res_height * 0.039,
+                        height: res_height * 0.041,
                         decoration: BoxDecoration(
                             color: shaka == 10 ? Color(0xFF4285F4) : Colors.transparent,
                             borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -453,7 +454,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                     },
                     child: Container(
                         width: res_width * 0.7,
-                        height: res_height * 0.039,
+                        height: res_height * 0.041,
                         decoration: BoxDecoration(
                             color: shaka == 11 ? Color(0xFF4285F4) : Colors.transparent,
                             borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -508,7 +509,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                     },
                     child: Container(
                         width: res_width * 0.7,
-                        height: res_height * 0.039,
+                        height: res_height * 0.041,
                         decoration: BoxDecoration(
                             color: shaka == 12 ? Color(0xFF4285F4) : Colors.transparent,
                             borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -560,7 +561,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                     },
                     child: Container(
                         width: res_width * 0.7,
-                        height: res_height * 0.039,
+                        height: res_height * 0.041,
                         decoration: BoxDecoration(
                             color: shaka == 13 ? Color(0xFF4285F4) : Colors.transparent,
                             borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -612,7 +613,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                     },
                     child: Container(
                         width: res_width * 0.7,
-                        height: res_height * 0.039,
+                        height: res_height * 0.041,
                         decoration: BoxDecoration(
                             color: shaka == 14 ? Color(0xFF4285F4) : Colors.transparent,
                             borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -664,7 +665,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                     },
                     child: Container(
                         width: res_width * 0.7,
-                        height: res_height * 0.039,
+                        height: res_height * 0.041,
                         decoration: BoxDecoration(
                             color: shaka == 15 ? Color(0xFF4285F4) : Colors.transparent,
                             borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -716,7 +717,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                     },
                     child: Container(
                         width: res_width * 0.7,
-                        height: res_height * 0.039,
+                        height: res_height * 0.041,
                         decoration: BoxDecoration(
                             color: shaka == 16 ? Color(0xFF4285F4) : Colors.transparent,
                             borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -768,7 +769,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                     },
                     child: Container(
                         width: res_width * 0.7,
-                        height: res_height * 0.039,
+                        height: res_height * 0.041,
                         decoration: BoxDecoration(
                             color: shaka == 17 ? Color(0xFF4285F4) : Colors.transparent,
                             borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -820,7 +821,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                     },
                     child: Container(
                       width: res_width * 0.7,
-                      height: res_height * 0.039,
+                      height: res_height * 0.041,
                       decoration: BoxDecoration(
                           color: shaka == 18 ? Color(0xFF4285F4) : Colors.transparent,
                           borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -1004,6 +1005,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                       Get.back();
                                       widget.onCloseDrawer?.call();
                                       _showSuccessAlert(context);
+
                                       Get.offAll(() => VendrosHomeScreen());
                                       // final userPrefernece = Provider.of<UserViewModel>(context, listen: false);
                                       // userPrefernece.saveUser()
@@ -1019,7 +1021,27 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                     textStyle: TextStyle(fontSize: 16),
                                     backgroundColor: darkBlue)),
                           )
-                        : SizedBox(),
+                        : Center(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Transform.scale(
+                                  scale: 0.8,
+                                  child: Switch(
+                                      value: widget.stack == "vendor" ? true : false,
+                                      onChanged: (value) {
+                                        Get.offAll(() => widget.stack == "vendor" ? HomeScreen() : VendrosHomeScreen());
+                                      },
+                                      activeTrackColor: lightBlue,
+                                      activeColor: darkBlue),
+                                ),
+                                Text(
+                                  widget.stack == "vendor" ? 'Provider' : 'Customer',
+                                  style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
                     SizedBox(height: res_height * 0.04),
                     Container(
                       width: res_width * 0.9,
@@ -1045,7 +1067,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 1 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -1128,7 +1150,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 2 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -1190,7 +1212,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 3 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -1247,7 +1269,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 4 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -1304,7 +1326,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 5 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -1361,7 +1383,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 6 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -1444,7 +1466,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 // color: Colors.transparent,
                                 color: shaka == 7 ? Color(0xFF4285F4) : Colors.transparent,
@@ -1502,7 +1524,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 8 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -1559,7 +1581,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 9 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -1642,7 +1664,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 10 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -1699,7 +1721,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 11 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -1756,7 +1778,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 12 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -1813,7 +1835,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 13 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -1870,7 +1892,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 14 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -1927,7 +1949,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 15 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -1984,7 +2006,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 16 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -2041,7 +2063,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 17 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -2098,7 +2120,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                           width: res_width * 0.7,
-                          height: res_height * 0.039,
+                          height: res_height * 0.041,
                           decoration: BoxDecoration(
                               color: shaka == 18 ? Color(0xFF4285F4) : Colors.transparent,
                               borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -2157,7 +2179,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 19 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -2351,7 +2373,27 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                     textStyle: TextStyle(fontSize: 16),
                                     backgroundColor: darkBlue)),
                           )
-                        : SizedBox(),
+                        : Center(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Transform.scale(
+                                  scale: 0.8,
+                                  child: Switch(
+                                      value: widget.stack == "vendor" ? true : false,
+                                      onChanged: (value) {
+                                        Get.offAll(() => widget.stack == "vendor" ? HomeScreen() : VendrosHomeScreen());
+                                      },
+                                      activeTrackColor: lightBlue,
+                                      activeColor: darkBlue),
+                                ),
+                                Text(
+                                  widget.stack == "vendor" ? 'Provider' : 'Customer',
+                                  style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
                     SizedBox(height: res_height * 0.04),
                     Container(
                       width: res_width * 0.9,
@@ -2377,7 +2419,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 1 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -2465,7 +2507,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 2 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -2522,7 +2564,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 3 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -2579,7 +2621,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 4 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -2636,7 +2678,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 5 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -2693,7 +2735,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 6 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -2779,7 +2821,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 7 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -2836,7 +2878,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 8 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -2893,7 +2935,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 9 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -2979,7 +3021,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 10 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -3036,7 +3078,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 11 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -3093,7 +3135,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 12 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -3150,7 +3192,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 13 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -3207,7 +3249,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 14 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -3264,7 +3306,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 15 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -3321,7 +3363,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 16 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -3378,7 +3420,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                             width: res_width * 0.7,
-                            height: res_height * 0.039,
+                            height: res_height * 0.041,
                             decoration: BoxDecoration(
                                 color: shaka == 17 ? Color(0xFF4285F4) : Colors.transparent,
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -3435,7 +3477,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         },
                         child: Container(
                           width: res_width * 0.7,
-                          height: res_height * 0.039,
+                          height: res_height * 0.041,
                           decoration: BoxDecoration(
                               color: shaka == 18 ? Color(0xFF4285F4) : Colors.transparent,
                               borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),
@@ -3507,7 +3549,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           },
                           child: Container(
                               width: res_width * 0.7,
-                              height: res_height * 0.039,
+                              height: res_height * 0.041,
                               decoration: BoxDecoration(
                                   color: shaka == 19 ? Color(0xFF4285F4) : Colors.transparent,
                                   borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomRight: Radius.circular(20))),

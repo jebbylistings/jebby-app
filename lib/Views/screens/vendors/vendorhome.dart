@@ -165,7 +165,7 @@ final GlobalKey<ScaffoldState> _key = GlobalKey();
         // backgroundColor: Colors.transparent,key: _key,
         key: _key,
 
-        drawer: DrawerScreen(),
+        drawer: DrawerScreen(stack: "vendor"),
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,

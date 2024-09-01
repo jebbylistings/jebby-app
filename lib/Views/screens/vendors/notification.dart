@@ -179,7 +179,7 @@ class _VendorNotificationsState extends State<VendorNotifications> {
 
     return Scaffold(
       key: _key,
-      drawer: DrawerScreen(),
+      // drawer: DrawerScreen(),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,

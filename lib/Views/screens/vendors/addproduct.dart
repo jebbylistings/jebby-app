@@ -296,23 +296,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
         "array": relatedProductsId.length == 1 ? [relatedProductsId] : relatedProductsId,
         "isMessage": "1"
       };
+      print("dataaaaaaaaaaaaaaaaaaaaa");
       print(data);
       try {
         // print("hello length , ${relatedProductsId}");
-        d.FormData formData = new d.FormData.fromMap({
-          "file": image_document,
-          "user_id": id.toString(),
-          "category_id": selected_id.toString(),
-          "subcategory_id": selected_sub_id.toString(),
-          "name": productController.text.toString(),
-          "price": rentPriceController.text.toString(),
-          "delivery_charges": deliveryChargesController.text.toString().isEmpty ? "0" : deliveryChargesController.text.toString(),
-          "specifications": specsController.text.toString(),
-          "service_agreements": descriptionController.text.toString(),
-          "negotiation": negotiationController.text.toString().isEmpty ? "0" : negotiationController.text.toString(),
-          "array": relatedProductsId.length == 1 ? [relatedProductsId] : relatedProductsId,
-          "isMessage": "1"
-        });
+        d.FormData formData = new d.FormData.fromMap(data);
         d.Response response = await Dio().post("${Url}/productInsert", data: formData);
 
         print("API HIT SUCESSFULL");

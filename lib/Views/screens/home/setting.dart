@@ -65,7 +65,6 @@ class _SettingsState extends State<Settings> {
     check();
     super.initState();
   }
-  
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +76,7 @@ class _SettingsState extends State<Settings> {
       // backgroundColor: Colors.transparent,key: _key,
       key: _key,
 
-      drawer: DrawerScreen(),
+      // drawer: DrawerScreen(),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -88,13 +87,12 @@ class _SettingsState extends State<Settings> {
         ),
         leading: GestureDetector(
           onTap: () {
-            _key.currentState!.openDrawer();
+            Get.back();
+            // _key.currentState!.openDrawer();
           },
-          child: Padding(
-            padding: const EdgeInsets.all(17.0),
-            child: Container(
-              child: Image.asset('assets/slicing/hamburger.png'),
-            ),
+          child: Icon(
+            Icons.arrow_back,
+            color: Colors.black,
           ),
         ),
         actions: [
@@ -183,8 +181,7 @@ class _SettingsState extends State<Settings> {
                                 children: [
                                   Expanded(
                                     child: Container(
-                                      height:60,
-
+                                      height: 60,
                                       decoration: BoxDecoration(
                                           borderRadius: BorderRadius.only(
                                             bottomLeft: Radius.circular(10),
@@ -207,14 +204,11 @@ class _SettingsState extends State<Settings> {
                                     child: GestureDetector(
                                       onTap: () async {
                                         SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-                                        Map data = {
-                                          "id": sharedPreferences.getString('id'),
-                                           "role": sharedPreferences.getString('role')
-                                           };
-                                           authViewMode.DeleteAccount(data, context);
+                                        Map data = {"id": sharedPreferences.getString('id'), "role": sharedPreferences.getString('role')};
+                                        authViewMode.DeleteAccount(data, context);
                                       },
                                       child: Container(
-                                        height:60,
+                                        height: 60,
                                         decoration: BoxDecoration(
                                             borderRadius: BorderRadius.only(
                                               bottomRight: Radius.circular(10),
@@ -360,8 +354,7 @@ class _SettingsState extends State<Settings> {
                                               print("SOME wORK");
                                               Get.to(() => LoginScreen());
                                             }).catchError((e) {
-                                              if (kDebugMode) {
-                                              }
+                                              if (kDebugMode) {}
                                             });
                                           },
                                           child: Container(
@@ -512,8 +505,7 @@ class _SettingsState extends State<Settings> {
                     print("SOME wORK");
                     Get.offAll(() => LoginScreen());
                   }).catchError((e) {
-                    if (kDebugMode) {
-                    }
+                    if (kDebugMode) {}
                   });
                 },
                 child: Container(
