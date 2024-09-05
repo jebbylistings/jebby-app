@@ -24,13 +24,13 @@ class SplashServices {
         Get.offAll(() => LoginScreen());
       } else {
         await Future.delayed(Duration(seconds: 3));
-        if (value.role.toString() == "1") {
-          loginType = "vendor";
-          Get.offAll(() => VendrosHomeScreen());
-        } else {
+        // if (value.role.toString() == "1") {
+        //   loginType = "vendor";
+        //   Get.offAll(() => VendrosHomeScreen());
+        // } else {
           loginType = "user";
           Get.offAll(() => MainScreen());
-        }
+        // }
       }
     }).onError((error, stackTrace) {
       if (kDebugMode) {

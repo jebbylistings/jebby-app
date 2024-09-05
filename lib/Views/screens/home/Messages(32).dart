@@ -148,10 +148,11 @@ class _MessagesScreenState extends State<MessagesScreen> {
             print("role : ${role}");
             // if (bottomctrl.navigationBarIndexValue != 0) {
             bottomctrl.navBarChange(0);
+            Get.back();
             // }
             // Navigator.of(context).push(MaterialPageRoute(builder: ((context) => MainScreen())));
             Mtimer.cancel();
-            Navigator.push(context, MaterialPageRoute(builder: ((context) => role == "1" ? VendrosHomeScreen() : MainScreen())));
+            // Navigator.push(context, MaterialPageRoute(builder: ((context) => role == "1" ? VendrosHomeScreen() : MainScreen())));
           },
           child: Icon(
             Icons.arrow_back,

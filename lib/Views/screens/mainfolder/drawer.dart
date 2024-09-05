@@ -21,9 +21,9 @@ import 'package:jared/Views/screens/auth/login.dart';
 import 'package:jared/Views/screens/home/Favourites.dart';
 import 'package:jared/Views/screens/home/Messages(32).dart';
 import 'package:jared/Views/screens/home/MyOrders.dart';
-import 'package:jared/Views/screens/home/home.dart';
 import 'package:jared/Views/screens/home/returnproduct.dart';
 import 'package:jared/Views/screens/home/setting.dart';
+import 'package:jared/Views/screens/mainfolder/homemain.dart';
 import 'package:jared/Views/screens/profile/myprofile.dart';
 import 'package:jared/Views/screens/vendors/orderrequest.dart';
 import 'package:jared/Views/screens/vendors/productreturn.dart';
@@ -1030,13 +1030,13 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                   child: Switch(
                                       value: widget.stack == "vendor" ? true : false,
                                       onChanged: (value) {
-                                        Get.offAll(() => widget.stack == "vendor" ? HomeScreen() : VendrosHomeScreen());
+                                        Get.offAll(() => widget.stack == "vendor" ? MainScreen() : VendrosHomeScreen());
                                       },
                                       activeTrackColor: lightBlue,
                                       activeColor: darkBlue),
                                 ),
                                 Text(
-                                  widget.stack == "vendor" ? 'Provider' : 'Customer',
+                                  widget.stack == "vendor" ? 'Provider' : 'Renter',
                                   style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
                                 ),
                               ],
@@ -2382,13 +2382,13 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                   child: Switch(
                                       value: widget.stack == "vendor" ? true : false,
                                       onChanged: (value) {
-                                        Get.offAll(() => widget.stack == "vendor" ? HomeScreen() : VendrosHomeScreen());
+                                        Get.offAll(() => widget.stack == "vendor" ? MainScreen() : VendrosHomeScreen());
                                       },
                                       activeTrackColor: lightBlue,
                                       activeColor: darkBlue),
                                 ),
                                 Text(
-                                  widget.stack == "vendor" ? 'Provider' : 'Customer',
+                                  widget.stack == "vendor" ? 'Provider' : 'Renter',
                                   style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
                                 ),
                               ],

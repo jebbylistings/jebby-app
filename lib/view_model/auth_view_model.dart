@@ -78,13 +78,13 @@ class AuthViewModel with ChangeNotifier {
             return Get.currentRoute == "/PD";
           });
         } else {
-          if (value['role'].toString() == "1") {
-            loginType = "vendor";
-            Get.offAll(() => VendrosHomeScreen());
-          } else {
+          // if (value['role'].toString() == "1") {
+          //   loginType = "vendor";
+          //   Get.offAll(() => VendrosHomeScreen());
+          // } else {
             loginType = "user";
             Get.offAll(() => MainScreen());
-          }
+          // }
         }
         // ChangeNotifierProvider(create: (context) => ApiRepository(), child: MainScreen());
       }
@@ -130,11 +130,11 @@ class AuthViewModel with ChangeNotifier {
         updatePrefrences.setString('role', value["data"]["role"].toString());
         // updatePrefrences.setString('number', value["number"].toString());
         String? test = updatePrefrences.getString("id");
-        if (value["data"]["role"] == 1) {
-          Get.offAll(() => VendrosHomeScreen());
-        } else {
+        // if (value["data"]["role"] == 1) {
+        //   Get.offAll(() => VendrosHomeScreen());
+        // } else {
           Get.offAll(() => MainScreen());
-        }
+        // }
       } else if (value["message"].toString() == "Email Already Registered") {
         Utils.flushBarErrorMessage('Email Already Registered', context);
       } else {
@@ -205,11 +205,11 @@ class AuthViewModel with ChangeNotifier {
         updatePrefrences.setString('role', value["data"]["role"].toString());
         // updatePrefrences.setString('number', value["number"].toString());
         String? test = updatePrefrences.getString("id");
-        if (value["data"]["role"] == 1) {
-          Get.offAll(() => VendrosHomeScreen());
-        } else {
+        // if (value["data"]["role"] == 1) {
+        //   Get.offAll(() => VendrosHomeScreen());
+        // } else {
           Get.offAll(() => MainScreen());
-        }
+        // }
       } else {
         Utils.flushBarErrorMessage('Something went wrong', context);
       }

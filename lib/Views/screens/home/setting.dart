@@ -87,6 +87,7 @@ class _SettingsState extends State<Settings> {
         ),
         leading: GestureDetector(
           onTap: () {
+            bottomctrl.navBarChange(0);
             Get.back();
             // _key.currentState!.openDrawer();
           },

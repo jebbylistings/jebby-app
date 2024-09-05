@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:jared/Views/controller/bottomcontroller.dart';
 import 'package:jared/Views/helper/colors.dart';
 
 import 'package:get/get.dart';
@@ -105,6 +106,7 @@ class _CategoryState extends State<Category> {
     double res_height = MediaQuery.of(context).size.height;
     GetAPiFromModel getAPiFromModel = GetAPiFromModel();
     final userName = context.watch<AuthViewModel>();
+    final bottomctrl = Get.put(BottomController());
 
     return Scaffold(
       key: _key,
@@ -119,6 +121,7 @@ class _CategoryState extends State<Category> {
         ),
         leading: GestureDetector(
           onTap: () {
+            bottomctrl.navBarChange(0);
             Get.back();
             // _key.currentState!.openDrawer();
           },

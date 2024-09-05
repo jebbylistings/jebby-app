@@ -92,11 +92,11 @@ class _SplashScreenState extends State<SplashScreen> {
     //
     if (user != null) {
       Timer(const Duration(seconds: 2), () {
-        if (sharedPreferences.getString('role').toString() == "1") {
-          Get.offAll(() => VendrosHomeScreen());
-        } else {
+        // if (sharedPreferences.getString('role').toString() == "1") {
+        //   Get.offAll(() => VendrosHomeScreen());
+        // } else {
           Get.offAll(() => MainScreen());
-        }
+        // }
       });
     } else {
       String _name = sharedPreferences.getString('fullname') ?? "";
