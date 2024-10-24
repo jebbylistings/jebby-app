@@ -282,7 +282,7 @@ class _MainScreenState extends State<MainScreen> {
                         })
                     : IconButton(
                         icon: Image.asset(
-                          'assets/slicing/Icon awesome-shopping-basket@3x.png',
+                          'assets/slicing/filter.png',
                           width: 20,
                         ),
                         onPressed: () {

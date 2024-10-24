@@ -226,18 +226,18 @@ class _ReOrderPaymentState extends State<ReOrderPayment> {
                           "amount": widget.price,
                           "vendorAccountId": widget.accountId,
                         };
-                        ApiRepository.shared.reOrderStripePayment(
-                          int.parse(cardNumber.replaceAll(' ', '')),
-                          expiryDate.toString().substring(0, 2),
-                          expiryDate.toString().substring(3),
-                          int.parse(cvv.toString()),
-                          widget.price,
-                          widget.accountId.toString(),
-                          context,
-                          widget.orderId,
-                          widget.location,
-                          widget.applicationFee,
-                        );
+                        // ApiRepository.shared.reOrderStripePayment(
+                        //   int.parse(cardNumber.replaceAll(' ', '')),
+                        //   expiryDate.toString().substring(0, 2),
+                        //   expiryDate.toString().substring(3),
+                        //   int.parse(cvv.toString()),
+                        //   widget.price,
+                        //   widget.accountId.toString(),
+                        //   context,
+                        //   widget.orderId,
+                        //   widget.location,
+                        //   widget.applicationFee,
+                        // );
                         print(data);
                       } else {
                         final snackBar = new SnackBar(

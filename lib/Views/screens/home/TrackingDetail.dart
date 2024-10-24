@@ -130,7 +130,7 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
                 Row(
                   children: [
                     Text(
-                      "Placed on ${widget.date}",
+                      "Rent starts on ${widget.date}",
                       style: TextStyle(color: Colors.black, fontSize: 20),
                     ),
                   ],

@@ -27,21 +27,10 @@ class OrderConfirmationScreen extends StatefulWidget {
   var vendorID;
 
   OrderConfirmationScreen(
-      {this.image,
-      this.name,
-      this.price,
-      this.orderId,
-      this.prodId,
-      this.location,
-      this.long,
-      this.lat,
-      this.username,
-      this.userid,
-      this.vendorID});
+      {this.image, this.name, this.price, this.orderId, this.prodId, this.location, this.long, this.lat, this.username, this.userid, this.vendorID});
 
   @override
-  State<OrderConfirmationScreen> createState() =>
-      _OrderConfirmationScreenState();
+  State<OrderConfirmationScreen> createState() => _OrderConfirmationScreenState();
 }
 
 class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
@@ -99,12 +88,8 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
                   else
                     {
                       setState(() {
-                        vendorAccountId = ApiRepository.shared
-                            .getUserCredentialModelList!.data![0].accountId
-                            .toString();
-                        vendorPPEmail = ApiRepository.shared
-                            .getUserCredentialModelList!.data![0].paypalEmail
-                            .toString();
+                        vendorAccountId = ApiRepository.shared.getUserCredentialModelList!.data![0].accountId.toString();
+                        vendorPPEmail = ApiRepository.shared.getUserCredentialModelList!.data![0].paypalEmail.toString();
                         orderVisibility = true;
                       })
                     }
@@ -144,10 +129,8 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
     String type = '(regions)';
 
     try {
-      String baseURL =
-          'https://maps.googleapis.com/maps/api/place/autocomplete/json';
-      String request =
-          '$baseURL?input=$input&key=$kPLACES_API_KEY&sessiontoken=$_sessionToken';
+      String baseURL = 'https://maps.googleapis.com/maps/api/place/autocomplete/json';
+      String request = '$baseURL?input=$input&key=$kPLACES_API_KEY&sessiontoken=$_sessionToken';
       var response = await http.get(Uri.parse(request));
       var data = jsonDecode(response.body);
       // log('mydata');
@@ -164,7 +147,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
     }
   }
 
-    String? zipCode;
+  String? zipCode;
   String? countryCode;
   Future<void> _getZipCodeFromCoordinates(double latitude, double longitude) async {
     try {
@@ -184,7 +167,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
     }
   }
 
-   double taxValue = 0;
+  double taxValue = 0;
   Future<void> getSalesTax(zipcode) async {
     String apiKey = dotenv.env['apiKey'] ?? 'No secret key found';
     final apiUrl = 'https://api.taxjar.com/v2/rates?zip=${zipcode}'; // API endpoint URL
@@ -196,7 +179,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
         'Content-Type': 'application/json',
       },
     );
-    
+
     // print("response ${response.body}");
 
     if (response.statusCode == 200) {
@@ -215,6 +198,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
       print('Error: ${response.statusCode} - ${response.reasonPhrase}');
     }
   }
+
   var JebbyFee = 0;
   dynamic array = [];
   late Map<String, dynamic> _data;
@@ -236,7 +220,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
   bool locationVisibility = false;
 
   void initState() {
-   _loadData();
+    _loadData();
     getUserData();
     getProducts();
     _getZipCodeFromCoordinates(widget.lat, widget.long);
@@ -279,7 +263,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
                 ),
                 Container(
                   width: 390,
-                  height: MediaQuery.of(context).size.height*0.35,
+                  height: MediaQuery.of(context).size.height * 0.35,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     boxShadow: [
@@ -308,8 +292,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
                             Container(
                               child: Text(
                                 widget.username,
-                                style: TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                               ),
                             )
                           ],
@@ -323,10 +306,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
                               width: 300,
                               child: Text(
                                 widget.location,
-                                style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.normal,
-                                    color: Colors.grey),
+                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: Colors.grey),
                               ),
                             ),
                           ],
@@ -347,18 +327,13 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
                               child: Container(
                                 child: Text(
                                   "Change",
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.normal,
-                                      color: Colors.black),
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.normal, color: Colors.black),
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        locationVisibility
-                            ? TxtfldforLocation("Location", _locationController)
-                            : Text(""),
+                        locationVisibility ? TxtfldforLocation("Location", _locationController) : Text(""),
                         SizedBox(
                           height: MediaQuery.of(context).size.height * .1,
                           child: ListView.builder(
@@ -370,36 +345,24 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
 
                                 if (_locationController.text.isEmpty) {
                                   return Text("");
-                                } else if (name.toLowerCase().contains(
-                                    _locationController.text.toLowerCase())) {
+                                } else if (name.toLowerCase().contains(_locationController.text.toLowerCase())) {
                                   return ListTile(
                                     onTap: () async {
-                                      _locationController.text =
-                                          _placeList[index]["description"];
-                                      List<Location> location =
-                                          await locationFromAddress(
-                                              _placeList[index]["description"]);
+                                      _locationController.text = _placeList[index]["description"];
+                                      List<Location> location = await locationFromAddress(_placeList[index]["description"]);
 
                                       setState(() {
-                                        _locationController
-                                            .removeListener(() {});
-                                        Latitiude =
-                                            location.last.latitude.toString();
-                                        Longitude =
-                                            location.last.longitude.toString();
-                                        print(
-                                            "Latitude: ${location.last.latitude.toString()}");
-                                        print(
-                                            "Longitude: ${location.last.longitude.toString()}");
+                                        _locationController.removeListener(() {});
+                                        Latitiude = location.last.latitude.toString();
+                                        Longitude = location.last.longitude.toString();
+                                        print("Latitude: ${location.last.latitude.toString()}");
+                                        print("Longitude: ${location.last.longitude.toString()}");
                                         _getZipCodeFromCoordinates(location.last.latitude, location.last.longitude);
                                         _placeList = [];
                                       });
                                     },
-                                    leading: CircleAvatar(
-                                        child: Icon(Icons.pin_drop,
-                                            color: Colors.white)),
-                                    title:
-                                        Text(_placeList[index]["description"]),
+                                    leading: CircleAvatar(child: Icon(Icons.pin_drop, color: Colors.white)),
+                                    title: Text(_placeList[index]["description"]),
                                   );
                                 } else {
                                   return Container();
@@ -416,23 +379,24 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
                 subs("Sub Total", "${widget.price} \$"),
                 subs("Sales Tax", "${taxValue * 100} \$"),
                 subs("Jebby Fee", "${int.parse(widget.price) * JebbyFee / 100} \$"),
-                subs("Total", "${(int.parse(widget.price) + (int.parse(widget.price) * JebbyFee / 100) +  (taxValue * 100)).round()} \$"),
+                subs("Total", "${(int.parse(widget.price) + (int.parse(widget.price) * JebbyFee / 100) + (taxValue * 100)).round()} \$"),
                 SizedBox(
                   height: 40,
                 ),
                 GestureDetector(
                   onTap: () {
-                    orderVisibility
-                        ? 
-                        Get.to(() => ReOrderPayment(
-                              accountId: vendorAccountId,
-                              paypalMail: vendorPPEmail,
-                              price: widget.price,
-                              orderId: widget.orderId,
-                              location: newLocation == "" ? widget.location : newLocation,
-                              applicationFee: ((int.parse(widget.price) * JebbyFee / 100) +  (taxValue * 100)).round()
-                            ))
-                        : null;
+                    if (orderVisibility) {
+                      ApiRepository.shared.reOrderStripePayment(widget.price, vendorAccountId, context, widget.orderId,
+                          newLocation == "" ? widget.location : newLocation, ((int.parse(widget.price) * JebbyFee / 100) + (taxValue * 100)).round());
+                      //  Get.to(() => ReOrderPayment(
+                      //           accountId: vendorAccountId,
+                      //           paypalMail: vendorPPEmail,
+                      //           price: widget.price,
+                      //           orderId: widget.orderId,
+                      //           location: newLocation == "" ? widget.location : newLocation,
+                      //           applicationFee: ((int.parse(widget.price) * JebbyFee / 100) +  (taxValue * 100)).round()
+                      //         ));
+                    }
                   },
                   child: Container(
                     height: 58,
@@ -440,15 +404,11 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
                     child: Center(
                       child: Text(
                         'Pay Now',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 19),
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19),
                       ),
                     ),
                     decoration: BoxDecoration(
-                        color: orderVisibility
-                            ? kprimaryColor
-                            : kprimaryColor.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(15)),
+                        color: orderVisibility ? kprimaryColor : kprimaryColor.withOpacity(0.5), borderRadius: BorderRadius.circular(15)),
                   ),
                 ),
                 SizedBox(
@@ -504,8 +464,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
                           ),
                         ],
                       ),
-                      child: Image.network(
-                          AppUrl.baseUrlM + widget.image.toString()),
+                      child: Image.network(AppUrl.baseUrlM + widget.image.toString()),
                     ),
                     SizedBox(
                       width: 10,
@@ -533,9 +492,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
                               : Row(
                                   children: [
                                     RatingBarIndicator(
-                                      rating: double.parse(ApiRepository.shared
-                                          .getProductsByIdList!.data![0].stars
-                                          .toString()),
+                                      rating: double.parse(ApiRepository.shared.getProductsByIdList!.data![0].stars.toString()),
                                       itemBuilder: (context, index) => Icon(
                                         Icons.star,
                                         color: Colors.amber,

@@ -411,7 +411,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       style: TextStyle(fontSize: 20, color: Colors.black, fontFamily: "Inter, Regular"),
                     ),
                     Text(
-                      "${taxValue * 100}\%",
+                      "${(taxValue * 100).toStringAsFixed(2)}\%",
                       style: TextStyle(fontSize: 25, color: Colors.black, fontFamily: "Inter, ExtraBold"),
                     ),
                   ],
@@ -485,22 +485,41 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         Utils.flushBarErrorMessage('You must agree to Terms of Service and Privacy Policy', context);
                       }
                       else{
-                         Get.to(() => SelectPaymentMethodScreen(
-                      amount,
-                      widget.vendorAccountId,
-                      widget.vendorPayPalEmail,
-                      userID,
-                      widget.productID,
-                      DateFormat('yyyy-MM-dd').format(selectedDate).toString(),
-                      DateFormat('yyyy-MM-dd').format(selectedDate1).toString(),
-                      fullname,
-                      emailController.text.toString(),
-                      _locationController.text.toString(),
-                      widget.lat,
-                      widget.long,
-                      widget.negoPrice,
-                      int.parse(widget.security_deposit),
-                      ApplicationFees));
+                         ApiRepository.shared.stripePayment(
+                            // amount,
+                            num.parse((((widget.price * (diff + 1)) + dc + ((widget.price * (diff + 1)) * Jebby / 100) + int.parse(widget.security_deposit)) + ((widget.price * (diff + 1)) * taxValue)).toStringAsFixed(2)),
+                            widget.vendorAccountId.toString(),
+                            context,
+                            widget.userId,
+                            widget.productID,
+                            widget.rentStart,
+                            widget.rentEnd,
+                            widget.userName,
+                            widget.email,
+                            widget.location,
+                            widget.lat,
+                            widget.long,
+                            widget.negoPrice,
+                            '',
+                            widget.security_deposit.toString(),
+                            ApplicationFees,
+                            );
+                      //    Get.to(() => SelectPaymentMethodScreen(
+                      // amount,
+                      // widget.vendorAccountId,
+                      // widget.vendorPayPalEmail,
+                      // userID,
+                      // widget.productID,
+                      // DateFormat('yyyy-MM-dd').format(selectedDate).toString(),
+                      // DateFormat('yyyy-MM-dd').format(selectedDate1).toString(),
+                      // fullname,
+                      // emailController.text.toString(),
+                      // _locationController.text.toString(),
+                      // widget.lat,
+                      // widget.long,
+                      // widget.negoPrice,
+                      // int.parse(widget.security_deposit),
+                      // ApplicationFees));
                       }
                  
                 },

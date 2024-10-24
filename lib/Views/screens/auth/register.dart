@@ -239,7 +239,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                               filled: true,
                               hintStyle: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
-                              hintText: "Username",
+                              hintText: "Name",
                               fillColor: lightBlue),
                         ),
                       ),

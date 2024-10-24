@@ -69,9 +69,12 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    
     // change read to watch!!!!
     //
     final sp = context.watch<SignInProvider>();
+    print('sp.imageUrl');
+    print(sp.imageUrl);
     double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
     return Scaffold(

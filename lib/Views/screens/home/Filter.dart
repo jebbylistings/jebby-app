@@ -385,7 +385,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
                 width: double.infinity,
                 child: SingleChildScrollView(
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 10),
+                    padding: EdgeInsets.only(left: 10, right: 10, bottom: 100),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -519,9 +519,9 @@ class _FilterScreeenState extends State<FilterScreeen> {
                                 }
                               })),
                         ),
-                        SizedBox(
-                          height: res_height * 0.01,
-                        ),
+                        // SizedBox(
+                        //   height: res_height * 0.01,
+                        // ),
                         Container(
                           child: Text(
                             "Set Distance",
@@ -603,10 +603,10 @@ class _FilterScreeenState extends State<FilterScreeen> {
                                     icon: const Icon(Icons.arrow_downward),
                                     elevation: 16,
                                     style:
-                                        const TextStyle(color: kprimaryColor),
+                                        const TextStyle(color: darkBlue),
                                     underline: Container(
                                       height: 2,
-                                      color: kprimaryColor,
+                                      color: darkBlue,
                                     ),
                                     onChanged: (String? value) {
                                       // This is called when the user selects an item.
@@ -668,10 +668,10 @@ class _FilterScreeenState extends State<FilterScreeen> {
                                       icon: const Icon(Icons.arrow_downward),
                                       elevation: 16,
                                       style:
-                                          const TextStyle(color: kprimaryColor),
+                                          const TextStyle(color: darkBlue),
                                       underline: Container(
                                         height: 2,
-                                        color: kprimaryColor,
+                                        color: darkBlue,
                                       ),
                                       onChanged: (String? value) {
                                         // This is called when the user selects an item.
@@ -781,7 +781,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
                         //   ),
                         // ),
                         SizedBox(
-                          height: res_height * 0.08,
+                          height: res_height * 0.01,
                         ),
                         Center(
                           child: GestureDetector(
@@ -978,7 +978,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
                 maxLines: 1,
                 controller: _locationController,
                 decoration: InputDecoration(
-                   suffixIcon: Icon(Icons.location_pin, color: kprimaryColor),
+                   suffixIcon: Icon(Icons.location_pin, color: darkBlue),
                   // hintText:placholder,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(15.0),

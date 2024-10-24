@@ -1527,8 +1527,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                                 color: Colors.black,
                                               ),
                                               elevation: 16,
-                                              style: const TextStyle(color: kprimaryColor),
-                                              underline: Container(height: 2, color: kprimaryColor),
+                                              style: const TextStyle(color: darkBlue),
+                                              underline: Container(height: 2, color: darkBlue),
                                               onChanged: (String? value) {
                                                 // This is called when the user selects an item.
                                                 setState(() {
@@ -1600,10 +1600,10 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                               value: sub_cat_value,
                                               icon: const Icon(Icons.arrow_downward),
                                               elevation: 16,
-                                              style: const TextStyle(color: kprimaryColor),
+                                              style: const TextStyle(color: darkBlue),
                                               underline: Container(
                                                 height: 2,
-                                                color: kprimaryColor,
+                                                color: darkBlue,
                                               ),
                                               onChanged: (String? value) {
                                                 // This is called when the user selects an item.
@@ -2198,7 +2198,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                   padding: const EdgeInsets.only(right: 3),
                                   child: Center(
                                     child: Text(
-                                      value == 1 ? DateFormat('dd/MM/yyyy').format(DateTime.parse(pasd.toString())).toString() : DateFormat('dd/MM/yyyy').format(DateTime.parse(dasd.toString())).toString(),
+                                      value == 1 ? DateFormat('MM/dd/yyyy').format(DateTime.parse(pasd.toString())).toString() : DateFormat('MM/dd/yyyy').format(DateTime.parse(dasd.toString())).toString(),
                                       style: TextStyle(fontSize: 10),
                                     ),
                                   ),
@@ -2298,7 +2298,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                   padding: const EdgeInsets.only(right: 3),
                                   child: Center(
                                     child: Text(
-                                      value == 1 ? DateFormat('dd/MM/yyyy').format(DateTime.parse(paed.toString())).toString() : DateFormat('dd/MM/yyyy').format(DateTime.parse(daed.toString())).toString(),
+                                      value == 1 ? DateFormat('MM/dd/yyyy').format(DateTime.parse(paed.toString())).toString() : DateFormat('MM/dd/yyyy').format(DateTime.parse(daed.toString())).toString(),
                                       style: TextStyle(fontSize: 10),
                                     ),
                                   ),

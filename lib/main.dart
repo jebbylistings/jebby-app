@@ -23,12 +23,13 @@ import 'package:provider/provider.dart';
 import 'provider/get_products_provider.dart';
 import 'view_model/services/splash_services.dart';
 import 'view_model/user_view_model.dart';
-// import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await dotenv.load(fileName: ".env");
+  Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY'].toString();
   runApp(
     OverlaySupport.global(
       child: MyApp(), // Replace with your actual app widget

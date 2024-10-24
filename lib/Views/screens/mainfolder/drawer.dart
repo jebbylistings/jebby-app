@@ -1025,6 +1025,10 @@ class _DrawerScreenState extends State<DrawerScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
+                                Text(
+                                  'Renter',
+                                  style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                                ),
                                 Transform.scale(
                                   scale: 0.8,
                                   child: Switch(
@@ -1036,7 +1040,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                       activeColor: darkBlue),
                                 ),
                                 Text(
-                                  widget.stack == "vendor" ? 'Provider' : 'Renter',
+                                  'Provider',
                                   style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
                                 ),
                               ],
@@ -2377,6 +2381,10 @@ class _DrawerScreenState extends State<DrawerScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
+                                 Text(
+                                  'Renter',
+                                  style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                                ),
                                 Transform.scale(
                                   scale: 0.8,
                                   child: Switch(
@@ -2388,7 +2396,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                       activeColor: darkBlue),
                                 ),
                                 Text(
-                                  widget.stack == "vendor" ? 'Provider' : 'Renter',
+                                  'Provider',
                                   style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
                                 ),
                               ],

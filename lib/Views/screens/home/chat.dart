@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:jared/Views/helper/colors.dart';
 import 'package:jared/Views/screens/home/Messages(32).dart';
@@ -234,11 +235,11 @@ class _ChatState extends State<Chat> {
         ),
         leading: GestureDetector(
           onTap: () {
-          //  Get.back();
+           Get.back();
           Ctimer.cancel();
           // Navigator.pop(context);
-            Navigator.of(context)
-            .push(MaterialPageRoute(builder: ((context) => MessagesScreen())));
+            // Navigator.of(context)
+            // .push(MaterialPageRoute(builder: ((context) => MessagesScreen())));
             // Navigator.pop(context);
             // Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>MessagesScreen()), (route) => false);
           },

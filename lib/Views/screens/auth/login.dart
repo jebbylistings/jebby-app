@@ -400,18 +400,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         GetPlatform.isIOS
                             ? IOSButton(res_width)
-                            : Container(
-                                height: res_width * 0.116,
-                                child: ElevatedButton.icon(
-                                  onPressed: () {
-                                    showPhoneNumberDialog(context, _phoneController, res_width);
-                                  },
-                                  label: Icon(
-                                    Icons.phone,
-                                    size: 28,
-                                    color: darkBlue,
-                                  ),
-                                )),
+                            : SizedBox.shrink(),
+                            // : Container(
+                            //     height: res_width * 0.116,
+                            //     child: ElevatedButton.icon(
+                            //       onPressed: () {
+                            //         showPhoneNumberDialog(context, _phoneController, res_width);
+                            //       },
+                            //       label: Icon(
+                            //         Icons.phone,
+                            //         size: 28,
+                            //         color: darkBlue,
+                            //       ),
+                            //     )),
 
                         // InkWell(
                         //   onTap: () {
@@ -479,20 +480,20 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(
                     height: res_height * 0.02,
                   ),
-                  GetPlatform.isIOS
-                      ? Container(
-                          height: res_width * 0.116,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              showPhoneNumberDialog(context, _phoneController, res_width);
-                            },
-                            label: Icon(
-                              Icons.phone,
-                              size: 28,
-                              color: darkBlue,
-                            ),
-                          ))
-                      : SizedBox.shrink(),
+                  // GetPlatform.isIOS
+                  //     ? Container(
+                  //         height: res_width * 0.116,
+                  //         child: ElevatedButton.icon(
+                  //           onPressed: () {
+                  //             showPhoneNumberDialog(context, _phoneController, res_width);
+                  //           },
+                  //           label: Icon(
+                  //             Icons.phone,
+                  //             size: 28,
+                  //             color: darkBlue,
+                  //           ),
+                  //         ))
+                  //     : SizedBox.shrink(),
                   // RoundedLoadingButton(
                   //   onPressed: () => {
                   //     // Get.dialog(

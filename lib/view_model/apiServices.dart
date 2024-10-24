@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:jared/Views/screens/vendors/ProductList.dart';
@@ -1298,24 +1299,29 @@ class ApiRepository extends ChangeNotifier {
     return GetChatHistoryModel();
   }
 
-  Future<PayWithStripeModel> stripePayment(cardNumber, expiryMonth, expiryYear, cvv, amount, accountId, context, userid, productId, rentStart,
+  Future<PayWithStripeModel> stripePayment(/*cardNumber, expiryMonth, expiryYear, cvv,*/ amount, accountId, context, userid, productId, rentStart,
       originalReturn, name, email, location, lat, long, negoPrice, shipping_address, security_deposit, ApplicationFees
       // onResponse(PayWithStripeModel  list),
       // onError(error))
 
       ) async {
-    final request = json.encode(<String, dynamic>{
-      "cardNumber": cardNumber,
-      "exp_month": expiryMonth,
-      "exp_year": "20${expiryYear}",
-      "cvc": cvv,
+
+    // final request = json.encode(<String, dynamic>{
+    //   "cardNumber": cardNumber,
+    //   "exp_month": expiryMonth,
+    //   "exp_year": "20${expiryYear}",
+    //   "cvc": cvv,
+    //   "amount": amount,
+    //   "vendorAccountId": accountId,
+    //   "sales_tax" : ApplicationFees.toInt()
+    // });
+   
+     final request = json.encode(<String, dynamic>{
       "amount": amount,
       "vendorAccountId": accountId,
-      "sales_tax" : ApplicationFees.toInt()
-
+      "sales_tax": ApplicationFees.toInt(),
     });
 
-    
 
     final response = await http.post(
       Uri.parse("${Url}/payByStripe"),
@@ -1326,10 +1332,30 @@ class ApiRepository extends ChangeNotifier {
     );
     if (response.statusCode == 200) {
       try {
-        final snackBar = new SnackBar(content: new Text("Placing order please wait"));
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        final responseData = json.decode(response.body);
+
+      // Assuming your backend returns the client secret
+      final clientSecret = responseData['client_secret'];
+
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: clientSecret,
+          merchantDisplayName: 'Jebby LLC',
+          customerId: userid, // Optional
+          // Optionally, configure Google Pay and Apple Pay here:
+          // style: ThemeMode.light, // Customize as needed
+        ),
+      );
+
+      // 3. Present PaymentSheet
+      await Stripe.instance.presentPaymentSheet();
+
+
+        // final snackBar = new SnackBar(content: new Text("Placing order please wait"));
+        // ScaffoldMessenger.of(context).showSnackBar(snackBar);
         // 
-        ChargeBack(context, userid, productId, rentStart, originalReturn, name, email, location, lat, long, negoPrice,shipping_address, cardNumber, expiryMonth, expiryYear, cvv, amount, security_deposit);
+        // ChargeBack(context, userid, productId, rentStart, originalReturn, name, email, location, lat, long, negoPrice,shipping_address, cardNumber, expiryMonth, expiryYear, cvv, amount, security_deposit);
+        ApiRepository.shared.postOrder(context, userid, productId, rentStart, originalReturn, name, email, location, lat, long, negoPrice,shipping_address,security_deposit,responseData['payment_intent_id']);
         // ApiRepository.shared.postOrder(context, userid, productId, rentStart, originalReturn, name, email, location, lat, long, negoPrice,shipping_address);
         // Get.to(() => ProductListScreen());
 
@@ -1429,15 +1455,15 @@ class ApiRepository extends ChangeNotifier {
         'Content-type': "application/json",
       },
     );
-    
+
     if (response.statusCode == 200) {
-      try {
+      // try {
         // ProductInfoInsert data = ProductInfoInsert.fromJson(json.decode(response.body));
 
         
         final snackBar = new SnackBar(content: new Text("Order placed sucessfully"));
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
-         Get.offAll(() => MainScreen());
+        Get.off(() => MainScreen());
 
         // if (data != null) {
         //   // onResponse(data);
@@ -1446,11 +1472,11 @@ class ApiRepository extends ChangeNotifier {
 
         //   // onError(data.message.toString());
         // return data;
-      } catch (error) {
+      // } catch (error) {
         
-        // onError(error.toString());
+      //   // onError(error.toString());
         
-      }
+      // }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
       
@@ -1915,10 +1941,10 @@ class ApiRepository extends ChangeNotifier {
   }
 
   Future<PayWithStripeModel> reOrderStripePayment(
-    cardNumber,
-    expiryMonth,
-    expiryYear,
-    cvv,
+    // cardNumber,
+    // expiryMonth,
+    // expiryYear,
+    // cvv,
     amount,
     accountId,
     context,
@@ -1926,17 +1952,21 @@ class ApiRepository extends ChangeNotifier {
     location,
     applicationFee,
   ) async {
-    final request = json.encode(<String, dynamic>{
-      "cardNumber": cardNumber,
-      "exp_month": expiryMonth,
-      "exp_year": "20${expiryYear}",
-      "cvc": cvv,
+    // final request = json.encode(<String, dynamic>{
+    //   "cardNumber": cardNumber,
+    //   "exp_month": expiryMonth,
+    //   "exp_year": "20${expiryYear}",
+    //   "cvc": cvv,
+    //   "amount": amount,
+    //   "vendorAccountId": accountId,
+    //   "sales_tax" : applicationFee,
+    // });
+
+     final request = json.encode(<String, dynamic>{
       "amount": amount,
       "vendorAccountId": accountId,
-      "sales_tax" : applicationFee,
+      "sales_tax": applicationFee,
     });
-
-    
 
     final response = await http.post(
       Uri.parse("${Url}/payByStripe"),
@@ -1947,6 +1977,22 @@ class ApiRepository extends ChangeNotifier {
     );
     if (response.statusCode == 200) {
       try {
+        final responseData = json.decode(response.body);
+        // Assuming your backend returns the client secret
+      final clientSecret = responseData['client_secret'];
+
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: clientSecret,
+          merchantDisplayName: 'Jebby LLC',
+          // Optionally, configure Google Pay and Apple Pay here:
+          // style: ThemeMode.light, // Customize as needed
+        ),
+      );
+
+      // 3. Present PaymentSheet
+      await Stripe.instance.presentPaymentSheet();
+
         final snackBar = new SnackBar(content: new Text("Amount debited, placing order please wait"));
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         
