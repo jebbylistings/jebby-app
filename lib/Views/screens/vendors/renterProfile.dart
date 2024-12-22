@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -157,7 +158,7 @@ class _RenterProfileState extends State<RenterProfile> {
         ),
         elevation: 0,
         centerTitle: true,
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             setState(() {
             //   Navigator.push(
@@ -168,6 +169,7 @@ class _RenterProfileState extends State<RenterProfile> {
               Get.back();
             });
           },
+          borderRadius: BorderRadius.circular(50),
           child: Container(
             child: Icon(
               Icons.arrow_back,
@@ -209,11 +211,28 @@ class _RenterProfileState extends State<RenterProfile> {
                       child: imagesapi == "null"
                           ? sp.imageUrl.toString() == "null"
                               ? Image.asset("assets/slicing/blankuser.jpeg", fit: BoxFit.cover)
-                              : Image.network("${sp.imageUrl}", fit: BoxFit.cover)
-                          : Image.network(
-                              "${Url}${back_image_api}",
-                              fit: BoxFit.cover,
-                            ),
+                              : CachedNetworkImage(
+                                          imageUrl: "${sp.imageUrl}",
+                                          fit: BoxFit.cover,
+                                          placeholder: (context, url) => Center(
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                          errorWidget: (context, url, error) => Icon(
+                                            Icons.error,
+                                            color: Colors.red,
+                                          ),
+                                        )
+                          : CachedNetworkImage(
+                                      imageUrl: "${Url}${back_image_api}",
+                                      fit: BoxFit.cover,
+                                      placeholder: (context, url) => Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                      errorWidget: (context, url, error) => Icon(
+                                        Icons.error,
+                                        color: Colors.red,
+                                      ),
+                                    ),
                     ),
                     Positioned(
                       left: 15,
@@ -234,12 +253,28 @@ class _RenterProfileState extends State<RenterProfile> {
                             usp.image.toString() == "null"
                                 ? sp.imageUrl.toString() == "null"
                                     ? CircleAvatar(radius: 40, backgroundImage: AssetImage("assets/slicing/blankuser.jpeg"))
-                                    : CircleAvatar(radius: 40, backgroundImage: NetworkImage("${sp.imageUrl}"))
+                                    : CachedNetworkImage(
+                                            imageUrl: "${sp.imageUrl}",
+                                            imageBuilder: (context, imageProvider) => CircleAvatar(
+                                              radius: 40,
+                                              backgroundImage: imageProvider,
+                                            ),
+                                            placeholder: (context, url) => CircularProgressIndicator(), // Placeholder widget
+                                            errorWidget: (context, url, error) => Icon(Icons.error, size: 40), // Error widget
+                                          )
                                 : CircleAvatar(
-                                    radius: 40,
-                                    backgroundImage: NetworkImage(
-                                      "${Url}${usp.image}",
-                                    )),
+                                      radius: 40,
+                                      backgroundColor: Colors.grey[200],
+                                      child: CachedNetworkImage(
+                                        imageUrl: "${Url}${usp.image}",
+                                        imageBuilder: (context, imageProvider) => CircleAvatar(
+                                          radius: 40,
+                                          backgroundImage: imageProvider,
+                                        ),
+                                        placeholder: (context, url) => CircularProgressIndicator(), // Placeholder widget
+                                        errorWidget: (context, url, error) => Icon(Icons.error, size: 40), // Error widget
+                                      ),
+                                    )
                       ),
                     )
                   ],

@@ -187,11 +187,12 @@ class _MessageScreenState extends State<MessageScreen> {
           'Notifications',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
         ),
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             Get.back();
             // _key.currentState!.openDrawer();
           },
+          borderRadius: BorderRadius.circular(50),
           child: Icon(
             Icons.arrow_back,
             color: Colors.black,
@@ -204,9 +205,11 @@ class _MessageScreenState extends State<MessageScreen> {
             },
             child: Padding(
               padding: const EdgeInsets.all(19.0),
-              child: Container(
-                child: Image.asset('assets/slicing/avatar.png'),
-              ),
+              child: Icon(
+                        Icons.person_outline,
+                        color: Colors.black,
+                        size: 25
+                      )
             ),
           )
         ],

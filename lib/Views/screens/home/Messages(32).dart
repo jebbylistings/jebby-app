@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:intl/intl.dart';
 import 'package:jared/Views/controller/bottomcontroller.dart';
 import 'package:jared/Views/helper/colors.dart';
 import 'package:jared/Views/screens/home/chat.dart';
@@ -139,7 +140,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             print("navigated");
             // Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>HomeScreen()), (route) => false);
@@ -154,6 +155,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
             Mtimer.cancel();
             // Navigator.push(context, MaterialPageRoute(builder: ((context) => role == "1" ? VendrosHomeScreen() : MainScreen())));
           },
+          borderRadius: BorderRadius.circular(50),
           child: Icon(
             Icons.arrow_back,
             color: Colors.black,
@@ -171,25 +173,28 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     ? Text("Error occured in loading data")
                     : isLoading
                         ? CircularProgressIndicator()
-                        : ListView.builder(
-                            physics: NeverScrollableScrollPhysics(),
-                            shrinkWrap: true,
-                            itemCount: ApiRepository.shared.getChatsHistoryModelList!.data!.length,
-                            itemBuilder: (context, index) {
-                              // Access elements in reversed order using reversed.toList()
-                              var reversedData = ApiRepository.shared.getChatsHistoryModelList!.data!.reversed.toList();
-                              var element = reversedData[index];
+                        : ApiRepository.shared.getChatsHistoryModelList!.data!.length == 0
+                            ? Text("No messages", style: TextStyle(fontSize: 14))
+                            : ListView.builder(
+                                physics: NeverScrollableScrollPhysics(),
+                                shrinkWrap: true,
+                                itemCount: ApiRepository.shared.getChatsHistoryModelList!.data!.length,
+                                itemBuilder: (context, index) {
+                                  // Access elements in reversed order using reversed.toList()
+                                  var reversedData = ApiRepository.shared.getChatsHistoryModelList!.data!.reversed.toList();
+                                  var element = reversedData[index];
 
-                              var name = element.name;
-                              var image = element.image.toString();
-                              var targetId = element.id.toString();
-                              var count = element.count.toString();
-                              var lastMessage = element.lastMessage.toString();
+                                  var name = element.name;
+                                  var image = element.image.toString();
+                                  var targetId = element.id.toString();
+                                  var count = element.count.toString();
+                                  var lastMessage = element.lastMessage.toString();
+                                  var lastMessageTime = element.lastMessageTime.toString();
 
-                              print("index: ${index} count: ${count}");
-                              return msgs(name, image, targetId, count, lastMessage);
-                            },
-                          ),
+                                  print("index: ${index} count: ${count}");
+                                  return msgs(name, image, targetId, count, lastMessage, lastMessageTime);
+                                },
+                              ),
                 SizedBox(
                   height: 50,
                 ),
@@ -201,10 +206,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
     );
   }
 
-  msgs(name, img, id, count, lastMsg) {
+  msgs(name, img, id, count, lastMsg, lastMessageTime) {
     double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
-    return InkWell(
+    return GestureDetector(
       onTap: () {
         Mtimer.cancel();
         Navigator.of(context).push(MaterialPageRoute(builder: ((context) => Chat(id))));
@@ -215,7 +220,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
             height: 20,
           ),
           Container(
-            height: res_height * 0.114,
+            height: res_height * 0.1,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -257,12 +262,23 @@ class _MessagesScreenState extends State<MessagesScreen> {
                               name == "" ? "Vendor" : name,
                               style: TextStyle(fontWeight: count == "0" ? FontWeight.normal : FontWeight.bold),
                             ),
-                            SizedBox(
-                              height: 10,
-                            ),
+                            // SizedBox(
+                            //   height: 3
+                            // ),
                             Text(
                               lastMsg.length > 30 ? lastMsg.substring(0, 20) + '...' : lastMsg,
                               style: TextStyle(fontWeight: count != "0" ? FontWeight.bold : FontWeight.normal),
+                            ),
+                            SizedBox(
+                              height: 10
+                            ),
+                            Align(
+                              alignment: Alignment.bottomLeft,
+                              child: Text(
+                                DateFormat('MMM dd, yyyy hh:mm a').format(
+                              DateTime.parse(lastMessageTime).toLocal()),
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 8.5),
+                              ),
                             )
                           ],
                         ),

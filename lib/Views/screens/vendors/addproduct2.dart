@@ -230,10 +230,11 @@ class _AddProduct2ScreenState extends State<AddProduct2Screen> {
           style: TextStyle(
               fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
         ),
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             Get.back();
           },
+          borderRadius: BorderRadius.circular(50),
           child: Icon(
             Icons.arrow_back,
             color: Colors.black,
@@ -901,26 +902,26 @@ class _AddProduct2ScreenState extends State<AddProduct2Screen> {
                                 initialDate: DateTime.now(),
                                 firstDate: DateTime.now(),
                                 lastDate: DateTime(2030),
-                                builder: (context, child) {
-                                  return Theme(
-                                    data: Theme.of(context).copyWith(
-                                      colorScheme: ColorScheme.light(
-                                        primary:
-                                            kprimaryColor, // header background color
-                                        onPrimary:
-                                            Colors.white, // header text color
-                                        onSurface:
-                                            kprimaryColor, // body text color
-                                      ),
-                                      textButtonTheme: TextButtonThemeData(
-                                        style: TextButton.styleFrom(
-                                          foregroundColor: kprimaryColor, // button text color
-                                        ),
-                                      ),
-                                    ),
-                                    child: child!,
-                                  );
-                                },
+                                // builder: (context, child) {
+                                //   return Theme(
+                                //     data: Theme.of(context).copyWith(
+                                //       colorScheme: ColorScheme.light(
+                                //         primary:
+                                //             kprimaryColor, // header background color
+                                //         onPrimary:
+                                //             Colors.white, // header text color
+                                //         onSurface:
+                                //             kprimaryColor, // body text color
+                                //       ),
+                                //       textButtonTheme: TextButtonThemeData(
+                                //         style: TextButton.styleFrom(
+                                //           foregroundColor: kprimaryColor, // button text color
+                                //         ),
+                                //       ),
+                                //     ),
+                                //     child: child!,
+                                //   );
+                                // },
                               );
                               print(pickedDate);
                               String formattedDate =
@@ -1017,26 +1018,26 @@ class _AddProduct2ScreenState extends State<AddProduct2Screen> {
                                 initialDate: nextDate,
                                 firstDate: nextDate,
                                 lastDate: DateTime(2030),
-                                builder: (context, child) {
-                                  return Theme(
-                                    data: Theme.of(context).copyWith(
-                                      colorScheme: ColorScheme.light(
-                                        primary:
-                                            kprimaryColor, // header background color
-                                        onPrimary:
-                                            Colors.white, // header text color
-                                        onSurface:
-                                            kprimaryColor, // body text color
-                                      ),
-                                      textButtonTheme: TextButtonThemeData(
-                                        style: TextButton.styleFrom(
-                                          foregroundColor: kprimaryColor, // button text color
-                                        ),
-                                      ),
-                                    ),
-                                    child: child!,
-                                  );
-                                },
+                                // builder: (context, child) {
+                                //   return Theme(
+                                //     data: Theme.of(context).copyWith(
+                                //       colorScheme: ColorScheme.light(
+                                //         primary:
+                                //             kprimaryColor, // header background color
+                                //         onPrimary:
+                                //             Colors.white, // header text color
+                                //         onSurface:
+                                //             kprimaryColor, // body text color
+                                //       ),
+                                //       textButtonTheme: TextButtonThemeData(
+                                //         style: TextButton.styleFrom(
+                                //           foregroundColor: kprimaryColor, // button text color
+                                //         ),
+                                //       ),
+                                //     ),
+                                //     child: child!,
+                                //   );
+                                // },
                               );
                               if(pickedDate!=null){
                                 print(pickedDate);

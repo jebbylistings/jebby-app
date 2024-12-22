@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -72,8 +73,8 @@ class _RentnowScreenState extends State<RentnowScreen> {
   Future<void> _selectDate1(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.parse(widget.pastart),
-      firstDate: DateTime.parse(widget.pastart),
+      initialDate: DateTime.now().add(Duration(days: 1)),//DateTime.parse(widget.pastart),
+      firstDate: DateTime.now().add(Duration(days: 1)),//DateTime.parse(widget.pastart),
       lastDate: DateTime.parse(widget.paend),
     );
     if (picked != null && picked != selectedDate1) {
@@ -84,13 +85,14 @@ class _RentnowScreenState extends State<RentnowScreen> {
   }
 
   var myFormat = DateFormat('yyyy-MM-dd');
-   var myFormat1 = DateFormat('MM/dd/yyyy');
+  var myFormat1 = DateFormat('MM/dd/yyyy');
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
         context: context,
-        initialDate: DateTime.parse(widget.pastart).isBefore(DateTime.now()) ? DateTime.now() : DateTime.parse(widget.pastart),
-        firstDate: DateTime.parse(widget.pastart).isBefore(DateTime.now()) ? DateTime.now() : DateTime.parse(widget.pastart),
-        lastDate: DateTime.parse(widget.paend));
+        initialDate: DateTime.now(),//DateTime.parse(widget.pastart).isBefore(DateTime.now()) ? DateTime.now() : DateTime.parse(widget.pastart),
+        firstDate: DateTime.now(),//DateTime.parse(widget.pastart).isBefore(DateTime.now()) ? DateTime.now() : DateTime.parse(widget.pastart),
+        lastDate: DateTime.parse(widget.paend)
+        );
     if (picked != null && picked != selectedDate) {
       setState(() {
         selectedDate = picked;
@@ -209,15 +211,15 @@ class _RentnowScreenState extends State<RentnowScreen> {
     Latitiude = Prefrences.getString('latitude').toString();
     print("Longitude ${Prefrences.getString('longitude').toString()}");
     print("Latitiude ${Prefrences.getString('latitude').toString()}");
-    _getZipCodeFromCoordinates(double.parse(Latitiude),double.parse(Longitude));
+    _getZipCodeFromCoordinates(double.parse(Latitiude), double.parse(Longitude));
   }
 
   void initState() {
     _loadData();
     getData();
     profileData(context);
-    selectedDate = DateTime.parse(widget.pastart).isBefore(DateTime.now()) ? DateTime.now() : DateTime.parse(widget.pastart);
-    selectedDate1 = DateTime.parse(widget.paend);
+    selectedDate = DateTime.now();//DateTime.parse(widget.pastart).isBefore(DateTime.now()) ? DateTime.now() : DateTime.parse(widget.pastart);
+    selectedDate1 = DateTime.now().add(Duration(days: 1));//DateTime.parse(widget.paend);
     var diff = selectedDate1.difference(selectedDate).inDays;
     print("Product ID : ${widget.productID}");
     print("User ID : ${widget.vendorID}");
@@ -277,10 +279,11 @@ class _RentnowScreenState extends State<RentnowScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             Get.back();
           },
+          borderRadius: BorderRadius.circular(50),
           child: Padding(
             padding: const EdgeInsets.all(17.0),
             child: Container(
@@ -314,9 +317,16 @@ class _RentnowScreenState extends State<RentnowScreen> {
                             itemBuilder: (context, int index) {
                               var img = ApiRepository.shared.getProductsByIdList?.data?[1].images?[index].path;
                               return Container(
-                                child: Image.network(
-                                  AppUrl.baseUrlM + img.toString(),
+                                child: CachedNetworkImage(
+                                  imageUrl: AppUrl.baseUrlM + img.toString(),
                                   fit: BoxFit.fill,
+                                  placeholder: (context, url) => Center(
+                                    child: CircularProgressIndicator(), // Loading spinner
+                                  ),
+                                  errorWidget: (context, url, error) => Icon(
+                                    Icons.error,
+                                    color: Colors.red,
+                                  ), // Display an error icon
                                 ),
                               );
                             }),
@@ -948,9 +958,9 @@ class _RentnowScreenState extends State<RentnowScreen> {
                           };
                           print("data ====> $data");
                         } else {
-                          String message="Fields Cannot Be Empty";
-                          if(_locationController.text.toString().isEmpty){
-                             message="Please enter location";
+                          String message = "Fields Cannot Be Empty";
+                          if (_locationController.text.toString().isEmpty) {
+                            message = "Please enter location";
                           }
                           final snackBar = new SnackBar(content: new Text(message));
                           ScaffoldMessenger.of(context).showSnackBar(snackBar);
@@ -995,9 +1005,9 @@ class _RentnowScreenState extends State<RentnowScreen> {
                               zipCode,
                               countryCode));
                         } else {
-                          String message="Fields Cannot Be Empty";
-                          if(_locationController.text.toString().isEmpty){
-                            message="Please enter location";
+                          String message = "Fields Cannot Be Empty";
+                          if (_locationController.text.toString().isEmpty) {
+                            message = "Please enter location";
                           }
                           final snackBar = new SnackBar(content: new Text(message));
                           ScaffoldMessenger.of(context).showSnackBar(snackBar);

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:jared/Views/controller/bottomcontroller.dart';
@@ -119,12 +120,13 @@ class _CategoryState extends State<Category> {
           'Categories',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
         ),
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             bottomctrl.navBarChange(0);
             Get.back();
             // _key.currentState!.openDrawer();
           },
+          borderRadius: BorderRadius.circular(50),
           child: Icon(
             Icons.arrow_back,
             color: Colors.black,
@@ -139,9 +141,11 @@ class _CategoryState extends State<Category> {
               },
               child: Padding(
                 padding: const EdgeInsets.all(19.0),
-                child: Container(
-                  child: Image.asset('assets/slicing/avatar.png'),
-                ),
+                child: Icon(
+                        Icons.person_outline,
+                        color: Colors.black,
+                        size: 25
+                      )
               ),
             ),
           )
@@ -154,41 +158,42 @@ class _CategoryState extends State<Category> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: res_height * 0.03),
-              Container(
-                // width: res_width * 0.9,
-                child: TextFormField(
-                  onChanged: (value) {},
-                  controller: searchController,
-                  decoration: InputDecoration(
-                    hintStyle: TextStyle(color: Colors.grey),
-                    suffixIcon: IconButton(
-                      onPressed: () {
-                        if (searchController.text.isNotEmpty) {
-                          print(searchController.text);
-                          runFilter();
-                        }
-                      },
-                      icon: Icon(
-                        Icons.search_outlined,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    hintText: "Search Category",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15.0),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: kprimaryColor, width: 1),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: kprimaryColor, width: 1),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: res_height * 0.03),
+              //! Search Bar Commented out
+              // Container(
+              //   // width: res_width * 0.9,
+              //   child: TextFormField(
+              //     onChanged: (value) {},
+              //     controller: searchController,
+              //     decoration: InputDecoration(
+              //       hintStyle: TextStyle(color: Colors.grey),
+              //       suffixIcon: IconButton(
+              //         onPressed: () {
+              //           if (searchController.text.isNotEmpty) {
+              //             print(searchController.text);
+              //             runFilter();
+              //           }
+              //         },
+              //         icon: Icon(
+              //           Icons.search_outlined,
+              //           color: Colors.grey,
+              //         ),
+              //       ),
+              //       hintText: "Search Category",
+              //       border: OutlineInputBorder(
+              //         borderRadius: BorderRadius.circular(15.0),
+              //       ),
+              //       enabledBorder: OutlineInputBorder(
+              //         borderSide: BorderSide(color: kprimaryColor, width: 1),
+              //         borderRadius: BorderRadius.circular(15),
+              //       ),
+              //       focusedBorder: OutlineInputBorder(
+              //         borderSide: BorderSide(color: kprimaryColor, width: 1),
+              //         borderRadius: BorderRadius.circular(15),
+              //       ),
+              //     ),
+              //   ),
+              // ),
+              // SizedBox(height: res_height * 0.03),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 10),
                 child: Text(
@@ -260,10 +265,20 @@ class _CategoryState extends State<Category> {
                 ],
               ),
               child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Image.network(
-                  '$img',
-                ),
+                padding: const EdgeInsets.all(12.0),
+                child: ClipOval(
+                  child: CachedNetworkImage(
+                    imageUrl: '$img',
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Center(
+                      child: CircularProgressIndicator(), // Loading spinner
+                    ),
+                    errorWidget: (context, url, error) => Icon(
+                      Icons.error,
+                      color: Colors.red,
+                    ), // Display an error icon
+                  ),
+                )
               ),
             ),
             SizedBox(

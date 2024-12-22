@@ -117,11 +117,12 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
           style: TextStyle(
               fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
         ),
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             Get.back();
           //  Navigator.of(context).push(MaterialPageRoute(builder: (context) => MainScreen()));
           },
+          borderRadius: BorderRadius.circular(50),
           child: Container(
             child: Icon(
               Icons.arrow_back,
@@ -136,9 +137,11 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
             },
             child: Padding(
               padding: const EdgeInsets.all(19.0),
-              child: Container(
-                child: Image.asset('assets/slicing/avatar.png'),
-              ),
+              child: Icon(
+                        Icons.person_outline,
+                        color: Colors.black,
+                        size: 25
+                      )
             ),
           )
         ],

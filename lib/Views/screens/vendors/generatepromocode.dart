@@ -26,10 +26,11 @@ class _GeneratePromoCodeState extends State<GeneratePromoCode> {
             'Generate Promo Code',
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
           ),
-          leading: GestureDetector(
+          leading: InkWell(
             onTap: () {
               Get.back();
             },
+            borderRadius: BorderRadius.circular(50),
             child: Icon(
               Icons.arrow_back,
               color: Colors.black,

@@ -74,10 +74,11 @@ class _SelectPaymentMethodScreenState extends State<SelectPaymentMethodScreen> {
         ),
         centerTitle: true,
         automaticallyImplyLeading: false,
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             Get.back();
           },
+          borderRadius: BorderRadius.circular(50),
           child: Container(
             child: Icon(
               Icons.arrow_back,

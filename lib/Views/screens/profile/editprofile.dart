@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geocoding/geocoding.dart';
@@ -300,10 +301,11 @@ class _EditProfileState extends State<EditProfile> {
           'Edit Profile',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
         ),
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             Get.back();
           },
+          borderRadius: BorderRadius.circular(50),
           child: Icon(
             Icons.arrow_back,
             color: Colors.black,
@@ -344,11 +346,26 @@ class _EditProfileState extends State<EditProfile> {
                                   : back_image_api.toString() == "null"
                                       ? sp.imageUrl.toString() == "null"
                                           ? Image.asset("assets/slicing/blankuser.jpeg", fit: BoxFit.cover)
-                                          : Image.network("${sp.imageUrl}", fit: BoxFit.cover)
-                                      : Image.network("${Url}" + back_image_api.toString(), fit: BoxFit.cover)),
-
-                          //////
-
+                                          : CachedNetworkImage(
+                                              imageUrl: "${sp.imageUrl}",
+                                              fit: BoxFit.cover,
+                                              placeholder: (context, url) => Center(
+                                                child: CircularProgressIndicator(),
+                                              ),
+                                              errorWidget: (context, url, error) => Center(
+                                                child: Icon(Icons.error),
+                                              ),
+                                            )
+                                      : CachedNetworkImage(
+                                          imageUrl: "${Url}${back_image_api}",
+                                          fit: BoxFit.cover,
+                                          placeholder: (context, url) => Center(
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                          errorWidget: (context, url, error) => Center(
+                                            child: Icon(Icons.error),
+                                          ),
+                                        )),
                           Positioned(
                             bottom: 50,
                             right: -17,
@@ -398,8 +415,24 @@ class _EditProfileState extends State<EditProfile> {
                                           : imagesapi.toString() == "null"
                                               ? sp.imageUrl.toString() == "null"
                                                   ? CircleAvatar(radius: 40, backgroundImage: AssetImage("assets/slicing/blankuser.jpeg"))
-                                                  : CircleAvatar(radius: 40, backgroundImage: NetworkImage("${sp.imageUrl}"))
-                                              : CircleAvatar(radius: 40, backgroundImage: NetworkImage("${Url}${imagesapi}"))),
+                                                  : CachedNetworkImage(
+                                                      imageUrl: "${sp.imageUrl}",
+                                                      imageBuilder: (context, imageProvider) => CircleAvatar(
+                                                        radius: 40,
+                                                        backgroundImage: imageProvider,
+                                                      ),
+                                                      placeholder: (context, url) => CircularProgressIndicator(), // Placeholder widget
+                                                      errorWidget: (context, url, error) => Icon(Icons.error, size: 40), // Error widget
+                                                    )
+                                              : CachedNetworkImage(
+                                                  imageUrl: "${Url}${imagesapi}",
+                                                  imageBuilder: (context, imageProvider) => CircleAvatar(
+                                                    radius: 40,
+                                                    backgroundImage: imageProvider,
+                                                  ),
+                                                  placeholder: (context, url) => CircularProgressIndicator(), // Placeholder widget
+                                                  errorWidget: (context, url, error) => Icon(Icons.error, size: 40), // Error widget
+                                                )),
                                   Positioned(
                                       bottom: -12,
                                       right: 18,
@@ -439,13 +472,16 @@ class _EditProfileState extends State<EditProfile> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              nameapi == "null"
-                                  ? sp.name.toString() == "null"
-                                      ? fullname.toString()
-                                      : sp.name.toString()
-                                  : nameapi.toString(),
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32),
+                            Container(
+                              width: res_width * 0.9,
+                              child: Text(
+                                nameapi == "null"
+                                    ? sp.name.toString() == "null"
+                                        ? fullname.toString()
+                                        : sp.name.toString()
+                                    : nameapi.toString(),
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32),
+                              ),
                             ),
                             Text(
                               "Verified User",

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart' as d;
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -161,12 +162,36 @@ class _DrawerScreenState extends State<DrawerScreen> {
                       usp.image.toString() == "null"
                           ? sp.imageUrl.toString() == "null"
                               ? CircleAvatar(radius: 40, backgroundImage: AssetImage("assets/slicing/blankuser.jpeg"))
-                              : CircleAvatar(radius: 40, backgroundImage: NetworkImage("${sp.imageUrl}"))
-                          : CircleAvatar(
-                              radius: 40,
-                              backgroundImage: NetworkImage(
-                                "${Url}${usp.image}",
-                              )),
+                              : CachedNetworkImage(
+                                  imageUrl: "${sp.imageUrl}",
+                                  imageBuilder: (context, imageProvider) => CircleAvatar(
+                                    radius: 40,
+                                    backgroundImage: imageProvider,
+                                  ),
+                                  placeholder: (context, url) => SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.0,
+                                    ),
+                                  ),
+                                  errorWidget: (context, url, error) => Icon(Icons.error, size: 40),
+                                )
+                          : CachedNetworkImage(
+                              imageUrl: "${Url}${usp.image}",
+                              imageBuilder: (context, imageProvider) => CircleAvatar(
+                                radius: 40,
+                                backgroundImage: imageProvider,
+                              ),
+                              placeholder: (context, url) => SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.0,
+                                ),
+                              ),
+                              errorWidget: (context, url, error) => Icon(Icons.error, size: 40),
+                            ),
                       SizedBox(
                         width: 15,
                       ),
@@ -948,12 +973,42 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           usp.image.toString() == "null"
                               ? sp.imageUrl.toString() == "null"
                                   ? CircleAvatar(radius: 40, backgroundImage: AssetImage("assets/slicing/blankuser.jpeg"))
-                                  : CircleAvatar(radius: 40, backgroundImage: NetworkImage("${sp.imageUrl}"))
-                              : CircleAvatar(
-                                  radius: 40,
-                                  backgroundImage: NetworkImage(
-                                    "https://api.jebbylistings.com${usp.image}",
-                                  )),
+                                  : CachedNetworkImage(
+                                      imageUrl: "${sp.imageUrl}",
+                                      imageBuilder: (context, imageProvider) => CircleAvatar(
+                                        radius: 40,
+                                        backgroundImage: imageProvider,
+                                      ),
+                                      placeholder: (context, url) => Padding(
+                                        padding: const EdgeInsets.all(20),
+                                        child: SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.0,
+                                          ),
+                                        ),
+                                      ),
+                                      errorWidget: (context, url, error) => Icon(Icons.error, size: 40),
+                                    )
+                              : CachedNetworkImage(
+                                  imageUrl: "https://api.jebbylistings.com${usp.image}",
+                                  imageBuilder: (context, imageProvider) => CircleAvatar(
+                                    radius: 40,
+                                    backgroundImage: imageProvider,
+                                  ),
+                                  placeholder: (context, url) => Padding(
+                                    padding: const EdgeInsets.all(20),
+                                    child: SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.0,
+                                      ),
+                                    ),
+                                  ),
+                                  errorWidget: (context, url, error) => Icon(Icons.error, size: 40),
+                                ),
                           SizedBox(
                             width: 15,
                           ),
@@ -2306,12 +2361,42 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           usp.image.toString() == "null"
                               ? sp.imageUrl.toString() == "null"
                                   ? CircleAvatar(radius: 40, backgroundImage: AssetImage("assets/slicing/blankuser.jpeg"))
-                                  : CircleAvatar(radius: 40, backgroundImage: NetworkImage("${sp.imageUrl}"))
-                              : CircleAvatar(
-                                  radius: 40,
-                                  backgroundImage: NetworkImage(
-                                    "https://api.jebbylistings.com${usp.image}",
-                                  )),
+                                  : CachedNetworkImage(
+                                      imageUrl: "${sp.imageUrl}",
+                                      imageBuilder: (context, imageProvider) => CircleAvatar(
+                                        radius: 40,
+                                        backgroundImage: imageProvider,
+                                      ),
+                                      placeholder: (context, url) => Padding(
+                                        padding: const EdgeInsets.all(20),
+                                        child: SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.0,
+                                          ),
+                                        ),
+                                      ),
+                                      errorWidget: (context, url, error) => Icon(Icons.error, size: 40),
+                                    )
+                              : CachedNetworkImage(
+                                  imageUrl: "https://api.jebbylistings.com${usp.image}",
+                                  imageBuilder: (context, imageProvider) => CircleAvatar(
+                                    radius: 40,
+                                    backgroundImage: imageProvider,
+                                  ),
+                                  placeholder: (context, url) => Padding(
+                                    padding: const EdgeInsets.all(20),
+                                    child: SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.0,
+                                      ),
+                                    ),
+                                  ),
+                                  errorWidget: (context, url, error) => Icon(Icons.error, size: 40),
+                                ),
                           SizedBox(
                             width: 15,
                           ),
@@ -2381,7 +2466,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                 Text(
+                                Text(
                                   'Renter',
                                   style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
                                 ),

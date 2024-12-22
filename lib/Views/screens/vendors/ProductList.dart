@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -19,16 +20,15 @@ import '../../../view_model/user_view_model.dart';
 import 'package:http/http.dart' as http;
 
 class ProductListScreen extends StatefulWidget {
-  
   final side;
-   ProductListScreen({Key? key, required this.side}) : super(key: key);
+  ProductListScreen({Key? key, required this.side}) : super(key: key);
   @override
   State<ProductListScreen> createState() => _ProductListScreenState();
 }
 
 class _ProductListScreenState extends State<ProductListScreen> {
   final GlobalKey<ScaffoldState> _key = GlobalKey();
-   String Url = dotenv.env['baseUrlM'] ?? 'No url found';
+  String Url = dotenv.env['baseUrlM'] ?? 'No url found';
 
   bool emptyData = false;
   bool isLoading = true;
@@ -154,29 +154,30 @@ class _ProductListScreenState extends State<ProductListScreen> {
           'Products List',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
         ),
-        leading: 
-        widget.side ? GestureDetector(
-            onTap: () {
-              _key.currentState!.openDrawer();
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(17.0),
-              child: Container(
-                child: Image.asset('assets/slicing/hamburger.png'),
+        leading: widget.side
+            ? GestureDetector(
+                onTap: () {
+                  _key.currentState!.openDrawer();
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(17.0),
+                  child: Container(
+                    child: Image.asset('assets/slicing/hamburger.png'),
+                  ),
+                ),
+              )
+            : InkWell(
+                onTap: () {
+                  Get.back();
+                },
+                borderRadius: BorderRadius.circular(50),
+                child: Container(
+                  child: Icon(
+                    Icons.arrow_back,
+                    color: Colors.black,
+                  ),
+                ),
               ),
-            ),
-          ) :
-         GestureDetector(
-          onTap: () {
-            Get.back();
-          },
-          child: Container(
-            child: Icon(
-              Icons.arrow_back,
-              color: Colors.black,
-            ),
-          ),
-        ),
         actions: [
           GestureDetector(
             onTap: () {
@@ -192,10 +193,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
               child: Container(
                 width: 25,
                 height: 25,
-                decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color:
-                        kprimaryColor),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: kprimaryColor),
                 child: Center(
                   child: Icon(
                     Icons.add,
@@ -221,43 +219,46 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   : isLoading
                       ? Center(child: CircularProgressIndicator())
                       : emptyData
-                          ? profile.length == 0 ? Center(child: Text("Complete Your Profile"))
-                          : Center(child: Text("No Product Added"))
-                          : FutureBuilder(builder: (context, snapshot) {
-                              return GridView.builder(
-                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 2, crossAxisSpacing: 2.0, mainAxisSpacing: 1.0, childAspectRatio: 0.7
-                                    ),
-                                shrinkWrap: true,
-                                physics: NeverScrollableScrollPhysics(),
-                                itemCount: ApiRepository.shared.vendorProductsByIdList?.data?.length,
-                                itemBuilder: (context, int index) {
-                                  var id = ApiRepository.shared.vendorProductsByIdList?.data?[index].id;
-                                  var name = ApiRepository.shared.vendorProductsByIdList?.data?[index].name;
-                                  var price = ApiRepository.shared.vendorProductsByIdList?.data?[index].price;
-                                  var stars = ApiRepository.shared.vendorProductsByIdList?.data?[index].stars;
-                                  var reviews = ApiRepository.shared.vendorProductsByIdList?.data?[index].length;
-                                  var specs = ApiRepository.shared.vendorProductsByIdList?.data?[index].specifications;
-                                  var image = ApiRepository.shared.vendorProductsByIdList?.data?[index].image;
-                                  var length = ApiRepository.shared.vendorProductsByIdList?.data?[index].length;
-                                  return Container(
-                                    child: Wrap(
-                                      spacing: 1,
-                                      runSpacing: 5,
-                                      children: [
-                                        itmBox(
-                                            img: AppUrl.baseUrlM + image.toString(),
-                                            dx: '\$${price}',
-                                            rv: length.toString(),
-                                            tx: name,
-                                            rt: stars,
-                                            id: id),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              );
-                            }, future: null,),
+                          ? profile.length == 0
+                              ? Center(child: Text("Complete Your Profile"))
+                              : Center(child: Text("No Product Added"))
+                          : FutureBuilder(
+                              builder: (context, snapshot) {
+                                return GridView.builder(
+                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2, crossAxisSpacing: 2.0, mainAxisSpacing: 1.0, childAspectRatio: 0.7),
+                                  shrinkWrap: true,
+                                  physics: NeverScrollableScrollPhysics(),
+                                  itemCount: ApiRepository.shared.vendorProductsByIdList?.data?.length,
+                                  itemBuilder: (context, int index) {
+                                    var id = ApiRepository.shared.vendorProductsByIdList?.data?[index].id;
+                                    var name = ApiRepository.shared.vendorProductsByIdList?.data?[index].name;
+                                    var price = ApiRepository.shared.vendorProductsByIdList?.data?[index].price;
+                                    var stars = ApiRepository.shared.vendorProductsByIdList?.data?[index].stars;
+                                    var reviews = ApiRepository.shared.vendorProductsByIdList?.data?[index].length;
+                                    var specs = ApiRepository.shared.vendorProductsByIdList?.data?[index].specifications;
+                                    var image = ApiRepository.shared.vendorProductsByIdList?.data?[index].image;
+                                    var length = ApiRepository.shared.vendorProductsByIdList?.data?[index].length;
+                                    return Container(
+                                      child: Wrap(
+                                        spacing: 1,
+                                        runSpacing: 5,
+                                        children: [
+                                          itmBox(
+                                              img: AppUrl.baseUrlM + image.toString(),
+                                              dx: '\$${price}',
+                                              rv: length.toString(),
+                                              tx: name,
+                                              rt: stars,
+                                              id: id),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                              future: null,
+                            ),
               // Container(
               //   height: 100,
               //   width: 100,
@@ -280,84 +281,88 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 id: id,
               ));
         },
-        child:
-            Container(
-              width: res_width * 0.44,
-              height: res_height * 0.3,
-              decoration: BoxDecoration(
-                color: Color.fromARGB(255, 244, 244, 244),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              // child: Padding(
-              //   padding: const EdgeInsets.only(
-              //       bottom: 120, left: 10, right: 10, top: 10),
-              child: Padding(
-                padding: const EdgeInsets.all(13.0),
-                child: Column(
-                  children: [
-                    Container(
-                      height: res_height * 0.2,
-                      decoration: BoxDecoration(),
-                      child: ClipRRect(
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(10),
-                          ),
-                          child: Image.network(
-                            img.toString(),
-                            fit: BoxFit.fill,
-                          )),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Color.fromARGB(255, 244, 244, 244),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          // child: Padding(
+          //   padding: const EdgeInsets.only(
+          //       bottom: 120, left: 10, right: 10, top: 10),
+          child: Padding(
+            padding: const EdgeInsets.all(13.0),
+            child: Column(
+              children: [
+                Container(
+                  height: res_height * 0.2,
+                  decoration: BoxDecoration(),
+                  child: ClipRRect(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(10),
+                      ),
+                      child: CachedNetworkImage(
+                    imageUrl: img.toString(),
+                    fit: BoxFit.fill,
+                    placeholder: (context, url) => Center(
+                      child: CircularProgressIndicator(), // Loading spinner
                     ),
-                    SizedBox(
-                      height: res_height * 0.005,
-                    ),
-                    Container(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    errorWidget: (context, url, error) => Icon(
+                      Icons.error,
+                      color: Colors.red,
+                    ), // Display an error icon
+                  )),
+                ),
+                SizedBox(
+                  height: res_height * 0.005,
+                ),
+                Container(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: res_width * 0.5,
+                        child: Text(
+                          '$tx',
+                          style: TextStyle(fontSize: 15, overflow: TextOverflow.ellipsis),
+                        ),
+                      ),
+                      SizedBox(
+                        height: res_height * 0.006,
+                      ),
+                      Text(
+                        '$dx',
+                        style: TextStyle(fontSize: 13),
+                        textAlign: TextAlign.left,
+                      ),
+                      Row(
                         children: [
-                          SizedBox(
-                            width: res_width * 0.5,
-                            child: Text(
-                              '$tx',
-                              style: TextStyle(fontSize: 11),
+                          RatingBarIndicator(
+                            rating: double.parse(rt),
+                            itemBuilder: (context, index) => Icon(
+                              Icons.star,
+                              color: Colors.amber,
                             ),
-                          ),
-                          SizedBox(
-                            height: res_height * 0.006,
+                            itemCount: 5,
+                            itemSize: 15,
+                            direction: Axis.horizontal,
                           ),
                           Text(
-                            '$dx',
-                            style: TextStyle(fontSize: 11),
-                            textAlign: TextAlign.left,
-                          ),
-                          Row(
-                            children: [
-                              RatingBarIndicator(
-                                rating: double.parse(rt),
-                                itemBuilder: (context, index) => Icon(
-                                  Icons.star,
-                                  color: Colors.amber,
-                                ),
-                                itemCount: 5,
-                                itemSize: 15,
-                                direction: Axis.horizontal,
-                              ),
-                              Text(
-                                '($rv) Reviews',
-                                style: TextStyle(
-                                  fontSize: 9,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
+                            '($rv) Reviews',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey,
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          
+          ),
+        ),
       ),
     );
   }

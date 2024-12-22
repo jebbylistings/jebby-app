@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:get/get.dart';
@@ -50,7 +51,7 @@ class _ProductDetail2ScreenState extends State<ProductDetail2Screen> {
   bool editVisibility = false;
   var length = "";
   var stars = "";
-  var delivery_charges= null;
+  var delivery_charges = null;
 
   void initState() {
     getProducts(widget.id.toString());
@@ -176,10 +177,11 @@ class _ProductDetail2ScreenState extends State<ProductDetail2Screen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: GestureDetector(
+        leading: InkWell(
             onTap: () {
               Get.back();
             },
+            borderRadius: BorderRadius.circular(50),
             child: Icon(
               Icons.arrow_back,
               color: Colors.black,
@@ -215,8 +217,16 @@ class _ProductDetail2ScreenState extends State<ProductDetail2Screen> {
                                             itemBuilder: (context, int index) {
                                               var img = ApiRepository.shared.getProductsByIdList?.data?[1].images?[index].path;
                                               return Container(
-                                                child: Image.network(AppUrl.baseUrlM + img.toString()),
-                                              );
+                                                  child: CachedNetworkImage(
+                                                imageUrl: AppUrl.baseUrlM + img.toString(),
+                                                fit: BoxFit.cover,
+                                                placeholder: (context, url) => Center(
+                                                  child: CircularProgressIndicator(),
+                                                ),
+                                                errorWidget: (context, url, error) => Center(
+                                                  child: Icon(Icons.error, color: Colors.red),
+                                                ),
+                                              ));
                                             }),
                                       )
                                     : Text("No Images"),
@@ -597,58 +607,55 @@ class _ProductDetail2ScreenState extends State<ProductDetail2Screen> {
                                               alignment: AlignmentDirectional.center,
                                               children: [
                                                 Container(
-                                                  width: 320,
-                                                  height: 222,
+                                                  width: res_width * 0.8,
+                                                  height: res_height * 0.3,
                                                   decoration: BoxDecoration(
                                                       // border: Border.all(color: Colors.white),
                                                       borderRadius: BorderRadius.circular(10),
                                                       color: Color(0xffFEB038)),
-                                                  child: ListView(
+                                                  child: Column(
+                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                     children: [
-                                                      Column(
-                                                        mainAxisAlignment: MainAxisAlignment.end,
+                                                      SizedBox(
+                                                        height: res_height * 0.07,
+                                                      ),
+                                                      Text(
+                                                        "Delete",
+                                                        style: TextStyle(fontFamily: "Inter, Bold", fontSize: 25, color: Colors.white),
+                                                      ),
+                                                      Padding(
+                                                        padding: const EdgeInsets.all(10.0),
+                                                        child: Text(
+                                                          "Are you sure you want to delete this item?",
+                                                          style: TextStyle(fontFamily: "Inter, Regular", fontSize: 18, color: Colors.white),
+                                                        ),
+                                                      ),
+                                                      // 15.verticalSpace,
+                                                      // Container(
+                                                      //   width: 270.w,
+                                                      //   height: 50.h,
+                                                      //   child: Text(
+                                                      //     "You will be contacted by the Owner via direct message to confirm!",
+                                                      //     textAlign: TextAlign.center,
+                                                      //     style: TextStyle(
+                                                      //       fontFamily: "Inter, Regular",
+                                                      //       fontSize: 15.sp,
+                                                      //       color: Colors.white,
+                                                      //     ),
+                                                      //   ),
+                                                      // ),
+                                                      // SizedBox(
+                                                      //   height: 18,
+                                                      // ),
+                                                      Row(
                                                         children: [
-                                                          SizedBox(
-                                                            height: 67,
-                                                          ),
-                                                          Text(
-                                                            "Delete",
-                                                            style: TextStyle(fontFamily: "Inter, Bold", fontSize: 30, color: Colors.white),
-                                                          ),
-                                                          SizedBox(
-                                                            height: 10,
-                                                          ),
-                                                          Container(
-                                                            width: 250,
-                                                            child: Center(
-                                                              child: Text(
-                                                                "Are you sure you want to delete this item?",
-                                                                style: TextStyle(fontFamily: "Inter, Regular", fontSize: 19, color: Colors.white),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          // 15.verticalSpace,
-                                                          // Container(
-                                                          //   width: 270.w,
-                                                          //   height: 50.h,
-                                                          //   child: Text(
-                                                          //     "You will be contacted by the Owner via direct message to confirm!",
-                                                          //     textAlign: TextAlign.center,
-                                                          //     style: TextStyle(
-                                                          //       fontFamily: "Inter, Regular",
-                                                          //       fontSize: 15.sp,
-                                                          //       color: Colors.white,
-                                                          //     ),
-                                                          //   ),
-                                                          // ),
-                                                          SizedBox(
-                                                            height: 18,
-                                                          ),
-                                                          Row(
-                                                            children: [
-                                                              Container(
-                                                                width: 160,
-                                                                height: 51,
+                                                          Expanded(
+                                                            child: InkWell(
+                                                              onTap: () {
+                                                                Get.back();
+                                                              },
+                                                              child: Container(
+                                                                height: 50,
                                                                 decoration: BoxDecoration(
                                                                     borderRadius: BorderRadius.only(
                                                                       bottomLeft: Radius.circular(10),
@@ -656,22 +663,25 @@ class _ProductDetail2ScreenState extends State<ProductDetail2Screen> {
                                                                       //     Radius.circular(10.r),
                                                                     ),
                                                                     color: Colors.white),
-                                                                child: GestureDetector(
-                                                                  onTap: () {
-                                                                    Get.back();
-                                                                  },
-                                                                  child: Center(
-                                                                    child: Text(
-                                                                      "No",
-                                                                      style:
-                                                                          TextStyle(fontFamily: "Inter, Regular", fontSize: 14, color: Colors.black),
-                                                                    ),
+                                                                child: Center(
+                                                                  child: Text(
+                                                                    "No",
+                                                                    style: TextStyle(fontFamily: "Inter, Regular", fontSize: 14, color: Colors.black),
                                                                   ),
                                                                 ),
                                                               ),
-                                                              Container(
-                                                                width: 160,
-                                                                height: 51,
+                                                            ),
+                                                          ),
+                                                          Expanded(
+                                                            child: InkWell(
+                                                              onTap: () {
+                                                                ApiRepository.shared.deleteProductsById(prodID);
+                                                                final bottomcontroller = Get.put(BottomController());
+                                                                bottomcontroller.navBarChange(1);
+                                                                print("Navigated");
+                                                              },
+                                                              child: Container(
+                                                                height: 50,
                                                                 decoration: BoxDecoration(
                                                                     borderRadius: BorderRadius.only(
                                                                       // bottomLeft:
@@ -680,24 +690,13 @@ class _ProductDetail2ScreenState extends State<ProductDetail2Screen> {
                                                                     ),
                                                                     color: Colors.white),
                                                                 child: Center(
-                                                                  child: GestureDetector(
-                                                                    onTap: () {
-                                                                      ApiRepository.shared.deleteProductsById(prodID);
-                                                                      final bottomcontroller = Get.put(BottomController());
-                                                                      bottomcontroller.navBarChange(1);
-                                                                      print("Navigated");
-                                                                    },
-                                                                    child: Container(
-                                                                      child: Text(
-                                                                        "yes",
-                                                                        style: TextStyle(
-                                                                            fontFamily: "Inter, Regular", fontSize: 14, color: Colors.black),
-                                                                      ),
-                                                                    ),
+                                                                  child: Text(
+                                                                    "Yes",
+                                                                    style: TextStyle(fontFamily: "Inter, Regular", fontSize: 14, color: Colors.black),
                                                                   ),
                                                                 ),
                                                               ),
-                                                            ],
+                                                            ),
                                                           ),
                                                         ],
                                                       )
@@ -751,8 +750,7 @@ class _ProductDetail2ScreenState extends State<ProductDetail2Screen> {
                                           images != null &&
                                           imageID != null &&
                                           message != null &&
-                                          delivery_charges != null
-                                      ){
+                                          delivery_charges != null) {
                                         // print(
                                         //   categoryID.toString() +
                                         //   subCategoryID.toString() +
@@ -785,7 +783,6 @@ class _ProductDetail2ScreenState extends State<ProductDetail2Screen> {
                                               //     .name,
                                               price: price,
 
-                                              
                                               // ApiRepository
                                               //     .shared
                                               //     .getProductsByIdList
@@ -819,7 +816,7 @@ class _ProductDetail2ScreenState extends State<ProductDetail2Screen> {
                                               images: images,
                                               imageID: imageID,
                                               messageStatus: message,
-                                              delivery_charges:delivery_charges,
+                                              delivery_charges: delivery_charges,
                                             ));
                                       }
                                     },
@@ -849,41 +846,44 @@ class _ProductDetail2ScreenState extends State<ProductDetail2Screen> {
                               ? SizedBox(
                                   height: 10,
                                 )
-                              : FutureBuilder(builder: (context, snapshot) {
-                                  return GridView.builder(
-                                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: 2, crossAxisSpacing: 2.0, mainAxisSpacing: 30.0, childAspectRatio: 1),
-                                    shrinkWrap: true,
-                                    physics: NeverScrollableScrollPhysics(),
-                                    itemCount: ApiRepository.shared.getRelatedProductsList?.data?.length,
-                                    itemBuilder: (context, int index) {
-                                      relProdArray.add(ApiRepository.shared.getRelatedProductsList!.data![index]);
-                                      var name = ApiRepository.shared.getRelatedProductsList!.data![index].name;
-                                      var price = ApiRepository.shared.getRelatedProductsList!.data![index].price;
-                                      var stars = ApiRepository.shared.getRelatedProductsList!.data![index].stars;
-                                      var reviews = ApiRepository.shared.getRelatedProductsList!.data![index].length;
-                                      var specs = ApiRepository.shared.getRelatedProductsList!.data![index].specifications;
-                                      var image = ApiRepository.shared.getRelatedProductsList!.data![index].image;
-                                      var length = ApiRepository.shared.getRelatedProductsList!.data![index].length;
-                                      var id = ApiRepository.shared.getRelatedProductsList!.data![index].id;
-                                      return Container(
-                                        child: Wrap(
-                                          spacing: 10,
-                                          runSpacing: 10,
-                                          children: [
-                                            itmBox(
-                                                img: AppUrl.baseUrlM + image.toString(),
-                                                dx: '\$${price}',
-                                                rv: length.toString(),
-                                                tx: name,
-                                                rt: stars,
-                                                id: id),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  );
-                                }, future: null,),
+                              : FutureBuilder(
+                                  builder: (context, snapshot) {
+                                    return GridView.builder(
+                                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: 2, crossAxisSpacing: 2.0, mainAxisSpacing: 30.0, childAspectRatio: 1),
+                                      shrinkWrap: true,
+                                      physics: NeverScrollableScrollPhysics(),
+                                      itemCount: ApiRepository.shared.getRelatedProductsList?.data?.length,
+                                      itemBuilder: (context, int index) {
+                                        relProdArray.add(ApiRepository.shared.getRelatedProductsList!.data![index]);
+                                        var name = ApiRepository.shared.getRelatedProductsList!.data![index].name;
+                                        var price = ApiRepository.shared.getRelatedProductsList!.data![index].price;
+                                        var stars = ApiRepository.shared.getRelatedProductsList!.data![index].stars;
+                                        var reviews = ApiRepository.shared.getRelatedProductsList!.data![index].length;
+                                        var specs = ApiRepository.shared.getRelatedProductsList!.data![index].specifications;
+                                        var image = ApiRepository.shared.getRelatedProductsList!.data![index].image;
+                                        var length = ApiRepository.shared.getRelatedProductsList!.data![index].length;
+                                        var id = ApiRepository.shared.getRelatedProductsList!.data![index].id;
+                                        return Container(
+                                          child: Wrap(
+                                            spacing: 10,
+                                            runSpacing: 10,
+                                            children: [
+                                              itmBox(
+                                                  img: AppUrl.baseUrlM + image.toString(),
+                                                  dx: '\$${price}',
+                                                  rv: length.toString(),
+                                                  tx: name,
+                                                  rt: stars,
+                                                  id: id),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                  future: null,
+                                ),
                           SizedBox(
                             height: 100,
                           )
@@ -925,14 +925,19 @@ class _ProductDetail2ScreenState extends State<ProductDetail2Screen> {
                 height: res_height * 0.2,
                 decoration: BoxDecoration(),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(10),
-                  ),
-                  child: Image.network(
-                    '$img',
-                    fit: BoxFit.fill,
-                  ),
-                ),
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(10),
+                    ),
+                    child: CachedNetworkImage(
+                      imageUrl: '$img',
+                      fit: BoxFit.fill,
+                      placeholder: (context, url) => Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                      errorWidget: (context, url, error) => Center(
+                        child: Icon(Icons.error),
+                      ),
+                    )),
               ),
               SizedBox(
                 height: res_height * 0.005,

@@ -38,6 +38,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   final bottomctrl = Get.put(BottomController());
+  num activeIndex = 0;
 
   // String userName = "";
 
@@ -75,13 +76,11 @@ class _MainScreenState extends State<MainScreen> {
     final sp = context.read<SignInProvider>();
     //  final sps = context.watch<SignInProvider>();
     sp.getDataFromSharedPreferences();
-
   }
 
   bool isNotific = true;
 
   void check() async {
-   
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     prefs.getBool('time') == false
@@ -89,11 +88,7 @@ class _MainScreenState extends State<MainScreen> {
         : notiTimer().timer = prefs.getBool('time') == false
             ? notiTimer().timer?.cancel()
             : new Timer.periodic(Duration(seconds: 5), (_) {
-               
-               
                 if (token == null || token == "" || role == "" || role == null || prefs.getBool('time') != true) {
-                 
-                 
                   cancelTimer();
                 } else {
                   prefs.getBool('notifiction') == true
@@ -108,7 +103,6 @@ class _MainScreenState extends State<MainScreen> {
   cancelTimer() {
     notiTimer().timer.cancel();
     notiTimer().timer = null;
-   
   }
 
   @override
@@ -129,7 +123,7 @@ class _MainScreenState extends State<MainScreen> {
   //         await SharedPreferences.getInstance();
   //     String _name = sharedPreferences.getString('fullname') ?? "";
   //     setState(() {
-  //      
+  //
   //       userName = _name;
   //     });
   //   }
@@ -137,12 +131,11 @@ class _MainScreenState extends State<MainScreen> {
 
   void dispose() {
     super.dispose();
-   
+
     timer.cancel();
   }
 
   void func() async {
-   
     SharedPreferences prefs = await SharedPreferences.getInstance();
     print(prefs.getBool('time'));
     prefs.setBool("time", true);
@@ -164,7 +157,6 @@ class _MainScreenState extends State<MainScreen> {
       email = value.email.toString();
       role = value.role.toString();
       // getNotifications();
-     
     }).onError((error, stackTrace) {});
   }
 
@@ -202,15 +194,14 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-   
     final userName = context.watch<AuthViewModel>();
-   
-    // State variable for delayed condition check
-  var delayedCheck = false;
 
-  Future.delayed(const Duration(seconds: 1), () {
-    delayedCheck = true;
-  });
+    // State variable for delayed condition check
+    var delayedCheck = false;
+
+    Future.delayed(const Duration(seconds: 1), () {
+      delayedCheck = true;
+    });
 
     //  sp.role=="null" ? role="1":role="1";
     //role= sp.role.toString();
@@ -218,7 +209,10 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       extendBody: true,
       body: GetBuilder<BottomController>(
-        builder: (_) => (loginType == "user") ? screens[bottomctrl.navigationBarIndexValue] : screensVendor[bottomctrl.navigationBarIndexValue],
+        builder: (controller) { 
+          activeIndex = controller.navigationBarIndexValue;
+          return (loginType == "user") ? screens[bottomctrl.navigationBarIndexValue] : screensVendor[bottomctrl.navigationBarIndexValue];
+        },
       ),
       bottomNavigationBar: role != "Guest" ? bottomForUser(userName) : bottomForGuest(),
     );
@@ -257,12 +251,16 @@ class _MainScreenState extends State<MainScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 IconButton(
-                  icon: Image.asset(
-                    'assets/slicing/home.png',
-                    width: 20,
+                  icon: Icon(
+                    activeIndex == 0 ? Icons.home : Icons.home_outlined,
+                    color: const Color.fromARGB(218, 255, 255, 255),
+                    size: 30,
                   ),
                   onPressed: () {
                     bottomctrl.navBarChange(0);
+                    setState(() {
+                      activeIndex = 0;
+                    });
                   },
                   splashColor: Colors.white,
                 ),
@@ -281,11 +279,15 @@ class _MainScreenState extends State<MainScreen> {
                           Get.to(() => FilterScreeen());
                         })
                     : IconButton(
-                        icon: Image.asset(
-                          'assets/slicing/filter.png',
-                          width: 20,
+                        icon: Icon(
+                          activeIndex == 1 ? Icons.filter_alt : Icons.filter_alt_outlined,
+                          color: const Color.fromARGB(218, 255, 255, 255),
+                          size: 30,
                         ),
                         onPressed: () {
+                          setState(() {
+                            activeIndex = 1;
+                          });
                           bottomctrl.navBarChange(1);
                         }),
                 Container(
@@ -315,7 +317,7 @@ class _MainScreenState extends State<MainScreen> {
                     visible: role != "Guest",
                     child: IconButton(
                         icon: Icon(
-                          Icons.chat_outlined,
+                          activeIndex == 5 ? Icons.chat : Icons.chat_outlined,
                           color: role != "Guest" ? const Color.fromARGB(218, 255, 255, 255) : Color(0xFF808080),
                         ),
                         // Image.asset(
@@ -330,6 +332,9 @@ class _MainScreenState extends State<MainScreen> {
                           // bottomctrl.navBarChange(3);
                           // Get.to(() => MessagesScreen());
                           if (role != "Guest") {
+                            setState(() {
+                              activeIndex = 5;
+                            });
                             bottomctrl.navBarChange(5);
                           } else {
                             Utils.toastMessage("Not Available For Guest User");
@@ -339,8 +344,10 @@ class _MainScreenState extends State<MainScreen> {
                 ]),
                 role == "1"
                     ? IconButton(
-                        icon: Image.asset('assets/slicing/settings.png',
-                            width: 20, color: role != "Guest" ? const Color.fromARGB(218, 255, 255, 255) : Color(0xFF808080)),
+                        icon: Icon(
+                          activeIndex == 4 ? Icons.settings : Icons.settings_outlined,
+                          color: role != "Guest" ? const Color.fromARGB(218, 255, 255, 255) : Color(0xFF808080),
+                        ),
                         // icon: Icon(
                         //   Icons.person_sharp,
                         //   color: Colors.white,
@@ -348,6 +355,9 @@ class _MainScreenState extends State<MainScreen> {
                         // ),
                         onPressed: () {
                           if (role != "Guest") {
+                            setState(() {
+                              activeIndex = 4;
+                            });
                             bottomctrl.navBarChange(4);
                           } else {
                             Utils.toastMessage("Not Available For Guest User");
@@ -355,10 +365,15 @@ class _MainScreenState extends State<MainScreen> {
                         })
                     : (role != "Guest")
                         ? IconButton(
-                            icon: Image.asset('assets/slicing/settings.png',
-                                width: 20, color: role != "Guest" ? const Color.fromARGB(218, 255, 255, 255) : Color(0xFF7E7979)),
+                            icon: Icon(
+                              activeIndex == 4 ? Icons.settings : Icons.settings_outlined,
+                              color: role != "Guest" ? const Color.fromARGB(218, 255, 255, 255) : Color(0xFF808080),
+                            ),
                             onPressed: () {
                               if (role != "Guest") {
+                                setState(() {
+                                  activeIndex = 4;
+                                });
                                 bottomctrl.navBarChange(4);
                               } else {
                                 Utils.toastMessage("Not Available For Guest User");
@@ -414,9 +429,10 @@ class _MainScreenState extends State<MainScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 IconButton(
-                  icon: Image.asset(
-                    'assets/slicing/home.png',
-                    width: 20,
+                  icon: Icon(
+                    Icons.home,
+                    color: const Color.fromARGB(218, 255, 255, 255),
+                    size: 30,
                   ),
                   onPressed: () {
                     bottomctrl.navBarChange(0);
@@ -451,15 +467,13 @@ class _MainScreenState extends State<MainScreen> {
   var nameapi = "null";
   var locationapi = "null";
   var emailapi = "null";
-   String Url = dotenv.env['baseUrlM'] ?? 'No url found';
+  String Url = dotenv.env['baseUrlM'] ?? 'No url found';
   ////////
   Future getProductsApi(String ids) async {
     final response = await http.get(Uri.parse('${Url}/UserProfileGetById/${ids}'));
     var data = jsonDecode(response.body.toString());
 
-    if (data["data"].length != 0) {
-
-    }
+    if (data["data"].length != 0) {}
 
     if (data["data"].length != 0) {
       setState(() {

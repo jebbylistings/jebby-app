@@ -215,10 +215,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             Get.back();
           },
+          borderRadius: BorderRadius.circular(50),
           child: Padding(
             padding: const EdgeInsets.all(17.0),
             child: Container(

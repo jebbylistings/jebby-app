@@ -27,10 +27,11 @@ class _SetProfileScreenState extends State<SetProfileScreen> {
         appBar: AppBar(
           elevation: 0,
           backgroundColor: Colors.transparent,
-          leading: GestureDetector(
+          leading: InkWell(
             onTap: () {
               Get.back();
             },
+            borderRadius: BorderRadius.circular(50),
             child: Icon(
               Icons.arrow_back,
               color: Colors.black,
@@ -273,11 +274,12 @@ class _SetProfileScreenState extends State<SetProfileScreen> {
                   SizedBox(
                     height: 50,
                   ),
-                  GestureDetector(
+                  InkWell(
                     onTap: () {
                       Get.to(() => MainScreen());
                     },
-                    child: Container(
+                    borderRadius: BorderRadius.circular(30),
+                    child: Ink(
                       height: res_height * 0.055,
                       width: res_width * 0.9,
                       child: Center(

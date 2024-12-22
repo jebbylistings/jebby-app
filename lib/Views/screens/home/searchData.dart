@@ -100,11 +100,12 @@ class _SearchDataState extends State<SearchData> {
               fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
         ),
         automaticallyImplyLeading: false,
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             Get.back();
             // _key.currentState!.openDrawer();
           },
+          borderRadius: BorderRadius.circular(50),
           child: Icon(
             Icons.arrow_back,
             color: Colors.black,

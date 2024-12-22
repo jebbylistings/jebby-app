@@ -103,10 +103,11 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
           style: TextStyle(color: Colors.black, fontSize: 22),
         ),
         centerTitle: true,
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             Get.back();
           },
+          borderRadius: BorderRadius.circular(50),
           child: Container(
             child: Icon(
               Icons.arrow_back,

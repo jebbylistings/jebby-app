@@ -71,10 +71,11 @@ class _RentalAgreementState extends State<RentalAgreement> {
           style: TextStyle(
               fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
         ),
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             Get.back();
           },
+          borderRadius: BorderRadius.circular(50),
           child: Padding(
             padding: const EdgeInsets.all(17.0),
             child: Container(

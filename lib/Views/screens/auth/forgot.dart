@@ -35,10 +35,11 @@ class _ForgotScreenState extends State<ForgotScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: GestureDetector(
+          leading: InkWell(
             onTap: () {
               Get.back();
             },
+            borderRadius: BorderRadius.circular(50),
             child: Icon(
               Icons.arrow_back,
               color: Colors.black,
@@ -129,7 +130,7 @@ class _ForgotScreenState extends State<ForgotScreen> {
               SizedBox(
                 height: res_height * 0.04,
               ),
-              GestureDetector(
+              InkWell(
                 onTap: () {
                   if (_emailController.text.isEmpty) {
                     Utils.flushBarErrorMessage('Please enter email', context);
@@ -140,7 +141,8 @@ class _ForgotScreenState extends State<ForgotScreen> {
                     authViewMode.forgetPasswordApi(data, context, "forgot");
                   }
                 },
-                child: Container(
+                borderRadius: BorderRadius.circular(30),
+                child: Ink(
                   height: res_height * 0.055,
                   width: res_width * 0.9,
                   child: Center(

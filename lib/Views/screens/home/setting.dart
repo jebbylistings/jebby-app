@@ -85,12 +85,13 @@ class _SettingsState extends State<Settings> {
           'Settings',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
         ),
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             bottomctrl.navBarChange(0);
             Get.back();
             // _key.currentState!.openDrawer();
           },
+          borderRadius: BorderRadius.circular(50),
           child: Icon(
             Icons.arrow_back,
             color: Colors.black,
@@ -101,12 +102,7 @@ class _SettingsState extends State<Settings> {
             onTap: () {
               Get.to(() => MyProfileScreen());
             },
-            child: Padding(
-              padding: const EdgeInsets.all(19.0),
-              child: Container(
-                child: Image.asset('assets/slicing/avatar.png'),
-              ),
-            ),
+            child: Padding(padding: const EdgeInsets.all(19.0), child: Icon(Icons.person_outline, color: Colors.black, size: 25)),
           )
         ],
       ),
@@ -118,6 +114,7 @@ class _SettingsState extends State<Settings> {
             SizedBox(height: res_height * 0.03),
             cardbox('Notifications'),
             Card2(
+              Icons.info,
               "About App",
               () {
                 Get.to(
@@ -125,18 +122,18 @@ class _SettingsState extends State<Settings> {
                 );
               },
             ),
-            Card2("Privacy Policy", () {
+            Card2(Icons.security, "Privacy Policy", () {
               Get.to(
                 () => PrivacyPolicy(),
               );
             }),
-            Card2("Terms & Conditions", () {
+            Card2(Icons.description, "Terms & Conditions", () {
               Get.to(
                 () => TermsAndCondition(),
               );
             }),
 
-            Card2("Delete Account", () {
+            Card2(Icons.warning, "Delete Account", () {
               showDialog(
                 context: context,
                 builder: (_) => AlertDialog(
@@ -152,47 +149,44 @@ class _SettingsState extends State<Settings> {
                       alignment: AlignmentDirectional.center,
                       children: [
                         Container(
-                          width: 340,
-                          height: 270,
+                          width: res_width * 0.8,
+                          height: res_height * 0.3,
                           decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Color(0xffFEB038)),
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               SizedBox(
-                                height: 70,
+                                height: res_height * 0.07,
                               ),
                               Text(
                                 "Delete Account",
-                                style: TextStyle(fontFamily: "Inter, Bold", fontSize: 30, color: Colors.white),
-                              ),
-                              SizedBox(
-                                height: 10,
+                                style: TextStyle(fontFamily: "Inter, Bold", fontSize: 25, color: Colors.white),
                               ),
                               Padding(
-                                padding: const EdgeInsets.all(8.0),
+                                padding: const EdgeInsets.all(10.0),
                                 child: Text(
                                   "Are you sure you want to Delete your Account?",
-                                  style: TextStyle(fontFamily: "Inter, Regular", fontSize: 19, color: Colors.white),
+                                  style: TextStyle(fontFamily: "Inter, Regular", fontSize: 18, color: Colors.white),
                                 ),
                               ),
-                              SizedBox(
-                                height: 32,
-                              ),
+                              // SizedBox(
+                              //   height: 32,
+                              // ),
                               Row(
                                 children: [
                                   Expanded(
-                                    child: Container(
-                                      height: 60,
-                                      decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.only(
-                                            bottomLeft: Radius.circular(10),
-                                          ),
-                                          color: Colors.white),
-                                      child: Center(
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            Get.back();
-                                          },
+                                    child: InkWell(
+                                      onTap: () {
+                                        Get.back();
+                                      },
+                                      child: Container(
+                                        height: 50,
+                                        decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.only(
+                                              bottomLeft: Radius.circular(10),
+                                            ),
+                                            color: Colors.white),
+                                        child: Center(
                                           child: Text(
                                             "Cancel",
                                             style: TextStyle(fontFamily: "Inter, Regular", fontSize: 14, color: Colors.black),
@@ -202,14 +196,14 @@ class _SettingsState extends State<Settings> {
                                     ),
                                   ),
                                   Expanded(
-                                    child: GestureDetector(
+                                    child: InkWell(
                                       onTap: () async {
                                         SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
                                         Map data = {"id": sharedPreferences.getString('id'), "role": sharedPreferences.getString('role')};
                                         authViewMode.DeleteAccount(data, context);
                                       },
                                       child: Container(
-                                        height: 60,
+                                        height: 50,
                                         decoration: BoxDecoration(
                                             borderRadius: BorderRadius.only(
                                               bottomRight: Radius.circular(10),
@@ -513,26 +507,28 @@ class _SettingsState extends State<Settings> {
                   width: 363,
                   height: 52,
                   decoration: BoxDecoration(
-                      color: Color(0xFF4285F4),
+                      color: Colors.red,
                       borderRadius: BorderRadius.all(
                         Radius.circular(10),
                       )),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.only(top: 6, bottom: 6, left: 16),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
+                            Icon(
+                              Icons.logout,
+                              color: Colors.white,
+                            ),
+                            SizedBox(
+                              width: 10,
+                            ),
                             Text(
                               "Logout",
-                              style: TextStyle(color: Colors.white, fontSize: 16),
-                            ),
-                            Icon(
-                              Icons.arrow_forward,
-                              color: Colors.white,
+                              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                             )
                           ],
                         ),
@@ -573,10 +569,16 @@ class _SettingsState extends State<Settings> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              txt,
-              style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
-            ),
+            Row(children: [
+              Icon(Icons.notifications, color: Colors.white),
+              SizedBox(
+                width: 10,
+              ), 
+              Text(
+                txt,
+                style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
+              )
+            ]),
             Transform.scale(
               scale: 0.8,
               child: CupertinoSwitch(
@@ -600,6 +602,7 @@ class _SettingsState extends State<Settings> {
   }
 
   Card2(
+    icon,
     Txts,
     VoidCallback onTap,
   ) {
@@ -619,14 +622,16 @@ class _SettingsState extends State<Settings> {
                   Radius.circular(10),
                 )),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.only(top: 6, bottom: 6, left: 16),
+              child: Row(
                 children: [
+                  Icon(icon, color: Colors.white),
+                  SizedBox(
+                    width: 10,
+                  ),
                   Text(
                     Txts,
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+                    style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),

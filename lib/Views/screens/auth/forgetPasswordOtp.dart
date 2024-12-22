@@ -39,10 +39,11 @@ class _ForgetPasswordOtpScreenState extends State<ForgetPasswordOtpScreen> {
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          leading: GestureDetector(
+          leading: InkWell(
             onTap: () {
               Get.back();
             },
+            borderRadius: BorderRadius.circular(50),
             child: Icon(
               Icons.arrow_back,
               color: Colors.black,
@@ -128,7 +129,7 @@ class _ForgetPasswordOtpScreenState extends State<ForgetPasswordOtpScreen> {
               SizedBox(
                 height: res_height * 0.04,
               ),
-              GestureDetector(
+              InkWell(
                 onTap: () {
                   if (otpController.toString() == "null") {
                     Utils.flushBarErrorMessage("Please Enter Otp", context);
@@ -140,7 +141,8 @@ class _ForgetPasswordOtpScreenState extends State<ForgetPasswordOtpScreen> {
 
                   // Get.to(() => CreatePasswordScreen());
                 },
-                child: Container(
+                borderRadius: BorderRadius.circular(30),
+                child: Ink(
                   height: res_height * 0.055,
                   width: res_width * 0.9,
                   child: Center(

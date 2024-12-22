@@ -174,10 +174,11 @@ final GlobalKey<ScaffoldState> _key = GlobalKey();
             'Home',
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
           ),
-          leading: GestureDetector(
+          leading: InkWell(
             onTap: () {
               _key.currentState!.openDrawer();
             },
+            borderRadius: BorderRadius.circular(50),
             child: Padding(
               padding: const EdgeInsets.all(17.0),
               child: Container(
@@ -195,9 +196,10 @@ final GlobalKey<ScaffoldState> _key = GlobalKey();
                   },
                   child: Padding(
                     padding: const EdgeInsets.only(top: 18.0, bottom: 18.0, right: 7),
-                    child: Container(
-                      child: Image.asset('assets/slicing/notification.png'),
-                    ),
+                    child: Icon(
+                        Icons.notifications_none,
+                        color: Colors.black,
+                      )
                   ),
                 ),
                 // IconButton(
@@ -249,10 +251,8 @@ final GlobalKey<ScaffoldState> _key = GlobalKey();
                 Get.to(() => RenterProfile());
               },
               child: Padding(
-                padding: const EdgeInsets.all(19.0),
-                child: Container(
-                  child: Image.asset('assets/slicing/avatar.png'),
-                ),
+                 padding: const EdgeInsets.symmetric(horizontal: 19.0, vertical: 18.0),
+                  child: Icon(Icons.person_outline, color: Colors.black, size: 25),
               ),
             )
           ],
@@ -273,7 +273,7 @@ final GlobalKey<ScaffoldState> _key = GlobalKey();
                       spacing: 15,
                       runSpacing: 15,
                       children: [
-                        contBox(txt: "Profile", img: 'assets/slicing/user.png'),
+                        contBox(txt: "Profile", img: 'assets/slicing/user_thick.png'),
                         contBox(txt: "Product", img: 'assets/slicing/Icon awesome-shopping-basket@3x.png'),
                         contBox(txt: "Orders", img: 'assets/slicing/layer.png'),
                         contBox(txt: "Transactions", img: 'assets/slicing/swap.png'),

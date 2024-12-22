@@ -45,10 +45,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          leading: GestureDetector(
+          leading: InkWell(
             onTap: () {
               Get.back();
             },
+            borderRadius: BorderRadius.circular(50),
             child: Icon(
               Icons.arrow_back,
               color: Colors.black,
@@ -430,7 +431,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   SizedBox(
                     height: res_height * 0.02,
                   ),
-                  GestureDetector(
+                  InkWell(
                     onTap: () {
                       if (_userNameController.text.isEmpty &&
                           _emailController.text.isEmpty &&
@@ -472,7 +473,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                       //Get.to(() => SetProfileScreen());
                     },
-                    child: Container(
+                    borderRadius: BorderRadius.circular(30),
+                    child: Ink(
                       height: res_height * 0.055,
                       width: res_width * 0.9,
                       child: Center(
@@ -494,7 +496,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         "Already have an account? ",
                         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                       ),
-                      GestureDetector(
+                      InkWell(
                         onTap: () {
                           Get.to(() => LoginScreen());
                         },

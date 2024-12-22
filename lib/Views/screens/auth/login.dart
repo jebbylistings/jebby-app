@@ -220,18 +220,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   Container(
                       width: res_width * 0.9,
-                      child: GestureDetector(
-                        onTap: () {
-                          Get.to(() => ForgotScreen());
-                        },
-                        child: Align(
-                            alignment: Alignment.bottomRight,
-                            child: Text('Forgot Password?', style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold))),
-                      )),
+                      child: Align(
+                          alignment: Alignment.bottomRight,
+                          child: InkWell(
+                              onTap: () {
+                                Get.to(() => ForgotScreen());
+                              },
+                              child: Text('Forgot Password?', style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold))))),
                   SizedBox(
                     height: res_height * 0.03,
                   ),
-                  GestureDetector(
+                  InkWell(
                     onTap: () {
                       print(_emailController.text.toString());
                       if (_emailController.text.toString().toLowerCase() == "vendor") {
@@ -255,7 +254,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         print(loginType);
                       }
                     },
-                    child: Container(
+                    borderRadius: BorderRadius.circular(30),
+                    child: Ink(
                       height: res_height * 0.055,
                       width: res_width * 0.9,
                       child: Center(
@@ -280,7 +280,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           fontSize: 18,
                         ),
                       ),
-                      GestureDetector(
+                      InkWell(
                         onTap: () {
                           Get.to(() => RegisterScreen());
                         },
@@ -398,21 +398,19 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Container(width: res_width * 0.15, height: res_width * 0.08, child: Image.asset('assets/slicing/fb.png')),
                         ),
 
-                        GetPlatform.isIOS
-                            ? IOSButton(res_width)
-                            : SizedBox.shrink(),
-                            // : Container(
-                            //     height: res_width * 0.116,
-                            //     child: ElevatedButton.icon(
-                            //       onPressed: () {
-                            //         showPhoneNumberDialog(context, _phoneController, res_width);
-                            //       },
-                            //       label: Icon(
-                            //         Icons.phone,
-                            //         size: 28,
-                            //         color: darkBlue,
-                            //       ),
-                            //     )),
+                        GetPlatform.isIOS ? IOSButton(res_width) : SizedBox.shrink(),
+                        // : Container(
+                        //     height: res_width * 0.116,
+                        //     child: ElevatedButton.icon(
+                        //       onPressed: () {
+                        //         showPhoneNumberDialog(context, _phoneController, res_width);
+                        //       },
+                        //       label: Icon(
+                        //         Icons.phone,
+                        //         size: 28,
+                        //         color: darkBlue,
+                        //       ),
+                        //     )),
 
                         // InkWell(
                         //   onTap: () {
@@ -443,7 +441,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Container(width: res_width * 0.15, height: res_width * 0.15, child: Image.asset('assets/slicing/google.png')),
                         ),
                         Container(
-                            height: res_width * 0.116,
+                            height: res_width * 0.127,
                             child: ElevatedButton.icon(
                               onPressed: () {
                                 getUserDate().then((value) async {
@@ -472,6 +470,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               label: Icon(
                                 Icons.person,
                                 size: 28,
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                elevation: 0
                               ),
                             ))
                       ],

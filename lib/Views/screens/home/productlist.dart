@@ -26,7 +26,7 @@ class _ProductListState extends State<ProductList> {
           'Products List',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
         ),
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             Get.offAll(() => MainScreen());
 //             Navigator.push(
@@ -40,6 +40,7 @@ class _ProductListState extends State<ProductList> {
             // Get.to(() => MainScreen());
             // Get.back();
           },
+          borderRadius: BorderRadius.circular(50),
           child: Icon(
             Icons.arrow_back,
             color: Colors.black,
@@ -52,9 +53,11 @@ class _ProductListState extends State<ProductList> {
             },
             child: Padding(
               padding: const EdgeInsets.all(19.0),
-              child: Container(
-                child: Image.asset('assets/slicing/avatar.png'),
-              ),
+              child: Icon(
+                        Icons.person_outline,
+                        color: Colors.black,
+                        size: 25
+                      )
             ),
           )
         ],

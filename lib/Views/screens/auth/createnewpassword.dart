@@ -187,7 +187,7 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
               SizedBox(
                 height: res_height * 0.04,
               ),
-              GestureDetector(
+              InkWell(
                 onTap: () {
                   if (_passwordController.text.isEmpty) {
                     Utils.flushBarErrorMessage('Enter Your Password', context);
@@ -206,7 +206,8 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
                     authViewMode.changePasswordAPi(data, context);
                   }
                 },
-                child: Container(
+                borderRadius: BorderRadius.circular(30),
+                child: Ink(
                   height: res_height * 0.055,
                   width: res_width * 0.9,
                   child: Center(

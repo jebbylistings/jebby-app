@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jared/Services/product_services.dart';
@@ -41,15 +42,15 @@ class _Electronics2State extends State<Electronics2> {
         centerTitle: true,
         title: Text(
           '${widget.catname}',
-          style: TextStyle(
-              fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
         ),
         automaticallyImplyLeading: false,
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             Get.back();
             // _key.currentState!.openDrawer();
           },
+          borderRadius: BorderRadius.circular(50),
           child: Icon(
             Icons.arrow_back,
             color: Colors.black,
@@ -75,27 +76,20 @@ class _Electronics2State extends State<Electronics2> {
                           child: Center(
                             child: CircularProgressIndicator.adaptive(),
                             // child: Text("No data"),
-                            
                           ),
                         );
-                      }
-                      else if(snapshot.hasError){
+                      } else if (snapshot.hasError) {
                         return Text("Error Occured While Loading Data");
-                      }
-                      
-                       else {
+                      } else {
                         if (snapshot.data?.data?.length != 0) {
                           final data = snapshot.data?.data;
                           return GridView.builder(
                             physics: NeverScrollableScrollPhysics(),
+                            padding: EdgeInsets.all(12),
                             shrinkWrap: true,
                             scrollDirection: Axis.vertical,
-                            gridDelegate:
-                                const SliverGridDelegateWithMaxCrossAxisExtent(
-                                    maxCrossAxisExtent: 300,
-                                    childAspectRatio: 2 / 3,
-                                    crossAxisSpacing: 10,
-                                    mainAxisSpacing: 10),
+                            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                                maxCrossAxisExtent: 300, childAspectRatio: 2 / 3, crossAxisSpacing: 10, mainAxisSpacing: 10),
                             itemCount: snapshot.data?.data?.length,
                             itemBuilder: (context, index) {
                               var st = snapshot.data?.data[index].stars;
@@ -103,20 +97,21 @@ class _Electronics2State extends State<Electronics2> {
                               print("stars ${stars}");
                               return GestureDetector(
                                 onTap: () {
-                                  print(
-                                      "PRODUCT ID : ======> ${snapshot.data?.data[index].id}");
-                                  Get.to(routeName: "PD",() => ProductDetailScreen(
-                                      snapshot.data?.data[index].id,
-                                      snapshot.data?.data[index].name,
-                                      snapshot.data?.data[index].price,
-                                      snapshot.data?.data[index].stars,
-                                      AppUrl.baseUrlM + data[index].image,
-                                      snapshot.data?.data[index].specifications,
-                                      snapshot.data?.data[index].userId,
-                                      snapshot.data?.data[index].serviceAgreements,
-                                      snapshot.data?.data[index].isMessage,
-                                      snapshot.data?.data[index].delivery_charges,
-                                      ));
+                                  print("PRODUCT ID : ======> ${snapshot.data?.data[index].id}");
+                                  Get.to(
+                                      routeName: "PD",
+                                      () => ProductDetailScreen(
+                                            snapshot.data?.data[index].id,
+                                            snapshot.data?.data[index].name,
+                                            snapshot.data?.data[index].price,
+                                            snapshot.data?.data[index].stars,
+                                            AppUrl.baseUrlM + data[index].image,
+                                            snapshot.data?.data[index].specifications,
+                                            snapshot.data?.data[index].userId,
+                                            snapshot.data?.data[index].serviceAgreements,
+                                            snapshot.data?.data[index].isMessage,
+                                            snapshot.data?.data[index].delivery_charges,
+                                          ));
                                 },
                                 child: Container(
                                   width: res_width * 0.65,
@@ -132,49 +127,69 @@ class _Electronics2State extends State<Electronics2> {
                                     padding: const EdgeInsets.all(13.0),
                                     child: Column(
                                       mainAxisAlignment: MainAxisAlignment.end,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Container(
                                           height: res_height * 0.2,
-                                          width: res_width,
-                                          decoration: BoxDecoration(
-                                              image: DecorationImage(
-                                                  image: NetworkImage(
-                                                      AppUrl.baseUrlM +
-                                                          data[index]
-                                                              .image
-                                                              .toString()))),
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.all(
-                                              Radius.circular(10),
+                                          child: Center(
+                                            child: CachedNetworkImage(
+                                              imageUrl: AppUrl.baseUrlM + data[index].image.toString(),
+                                              fit: BoxFit.cover,
+                                              placeholder: (context, url) => Center(
+                                                child: CircularProgressIndicator(), // Loading spinner
+                                              ),
+                                              errorWidget: (context, url, error) => Icon(
+                                                Icons.error,
+                                                color: Colors.red,
+                                              ), // Display an error icon
                                             ),
                                           ),
                                         ),
-                                        SizedBox(
-                                          height: res_height * 0.005,
-                                        ),
+                                        // Container(
+                                        //   height: res_height * 0.2,
+                                        //   width: res_width,
+                                        //   decoration: BoxDecoration(
+                                        //       image: DecorationImage(
+                                        //           image: NetworkImage(
+                                        //               AppUrl.baseUrlM +
+                                        //                   data[index]
+                                        //                       .image
+                                        //                       .toString()))
+                                        //                       ),
+                                        //   child: ClipRRect(
+                                        //     borderRadius: BorderRadius.all(
+                                        //       Radius.circular(10),
+                                        //     ),
+                                        //   ),
+                                        // ),
                                         Container(
                                           child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
+                                              SizedBox(
+                                                height: res_height * 0.01,
+                                              ),
                                               Text(
-                                                " ${data?[index].name}",
-                                                style: TextStyle(fontSize: 11),
+                                                "${data?[index].name}",
+                                                style: TextStyle(
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
                                               SizedBox(
                                                 height: res_height * 0.006,
                                               ),
                                               Text(
                                                 "\$${data?[index]?.price.toString()}",
-                                                style: TextStyle(fontSize: 11),
+                                                style: TextStyle(fontSize: 13),
                                                 textAlign: TextAlign.left,
+                                              ),
+                                               SizedBox(
+                                                height: res_height * 0.006,
                                               ),
                                               RatingBarIndicator(
                                                 rating: stars,
-                                                itemBuilder:
-                                                    (context, index) => Icon(
+                                                itemBuilder: (context, index) => Icon(
                                                   Icons.star,
                                                   color: Colors.amber,
                                                 ),
@@ -350,8 +365,7 @@ class _Electronics2State extends State<Electronics2> {
                           return Center(
                               child: Text(
                             "No Data Availible",
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 18),
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                           ));
                         }
                       }

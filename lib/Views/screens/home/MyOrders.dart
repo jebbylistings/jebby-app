@@ -150,10 +150,11 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: GestureDetector(
+        leading: InkWell(
             onTap: () {
               Get.back();
             },
+            borderRadius: BorderRadius.circular(50),
             child: Icon(
               Icons.arrow_back,
               color: Colors.black,

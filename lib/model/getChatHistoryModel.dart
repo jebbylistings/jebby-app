@@ -30,6 +30,7 @@ class Data {
   String? image;
   int? count;
   String? lastMessage;
+  String? lastMessageTime;
 
   Data({this.id, this.name, this.image, this.count, this.lastMessage});
 
@@ -39,6 +40,7 @@ class Data {
     image = json['image'];
     count = json['count'];
     lastMessage = json['last_message'];
+    lastMessageTime = json['last_message_time'];
   }
 
   Map<String, dynamic> toJson() {
@@ -48,6 +50,7 @@ class Data {
     data['image'] = this.image;
     data['count'] = this.count;
     data['last_message'] = this.lastMessage;
+    data['last_message_time'] = this.lastMessageTime;
     return data;
   }
 }

@@ -22,6 +22,7 @@ import 'package:jared/view_model/auth_view_model.dart';
 import 'package:jared/view_model/category_get_View_model.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../model/user_model.dart';
 import '../../../res/app_url.dart';
@@ -30,7 +31,7 @@ import '../../../view_model/apiServices.dart';
 import '../../../view_model/user_view_model.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({Key? key, num? activeIndex}) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -235,10 +236,11 @@ class _HomeScreenState extends State<HomeScreen> {
             'Home',
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
           ),
-          leading: GestureDetector(
+          leading: InkWell(
             onTap: () {
               _key.currentState!.openDrawer();
             },
+            borderRadius: BorderRadius.circular(50),
             child: Padding(
               padding: const EdgeInsets.all(17.0),
               child: Container(
@@ -258,8 +260,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                     child: Padding(
                       padding: const EdgeInsets.only(top: 18.0, bottom: 18.0, right: 7),
-                      child: Container(
-                        child: Image.asset('assets/slicing/notification.png'),
+                      child: Icon(
+                        Icons.notifications_none,
+                        color: Colors.black,
                       ),
                     ),
                   ),
@@ -307,10 +310,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   Get.to(() => MyProfileScreen());
                 },
                 child: Padding(
-                  padding: const EdgeInsets.all(19.0),
-                  child: Container(
-                    child: Image.asset('assets/slicing/avatar.png'),
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 19.0, vertical: 18.0),
+                  child: Icon(Icons.person_outline, color: Colors.black, size: 25),
                 ),
               ),
             ),
@@ -332,7 +333,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: TextFormField(
                         onChanged: (value) {},
                         controller: searchController,
-                        style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+                        style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                         decoration: InputDecoration(
                           suffixIcon: InkWell(
                             onTap: () {
@@ -363,7 +364,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             borderRadius: const BorderRadius.all(Radius.circular(15)),
                           ),
                           filled: true,
-                          hintStyle: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+                          hintStyle: const TextStyle(color: Colors.grey, fontSize: 15),
                           hintText: "Product Name",
                           fillColor: Colors.white,
                         ),
@@ -532,11 +533,17 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: ClipOval(
-                  child: Image.network(
-                    '$img',
-                    fit: BoxFit.cover,
+                    child: CachedNetworkImage(
+                  imageUrl: '$img',
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Center(
+                    child: CircularProgressIndicator(), // Loading spinner
                   ),
-                ),
+                  errorWidget: (context, url, error) => Icon(
+                    Icons.error,
+                    color: Colors.red,
+                  ), // Display an error icon
+                )),
               ),
             ),
             SizedBox(
@@ -577,9 +584,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.all(
                     Radius.circular(10),
                   ),
-                  child: Image.network(
-                    AppUrl.baseUrlM + img,
+                  child: CachedNetworkImage(
+                    imageUrl: AppUrl.baseUrlM + img,
                     fit: BoxFit.cover,
+                    placeholder: (context, url) => Center(
+                      child: CircularProgressIndicator(), // Loading spinner
+                    ),
+                    errorWidget: (context, url, error) => Icon(
+                      Icons.error,
+                      color: Colors.red,
+                    ), // Display an error icon
                   )),
             ),
             SizedBox(
@@ -592,14 +606,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Text(
                     '$tx',
-                    style: TextStyle(fontSize: 11),
+                    style: TextStyle(fontSize: 15),
                   ),
                   SizedBox(
-                    height: res_height * 0.006,
+                    height: res_height * 0.003,
                   ),
                   Text(
                     '${dx.toString()} \$',
-                    style: TextStyle(fontSize: 11),
+                    style: TextStyle(fontSize: 13),
                     textAlign: TextAlign.left,
                   ),
                   Row(
@@ -613,7 +627,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         '$rv',
                         style: TextStyle(
-                          fontSize: 9,
+                          fontSize: 11,
                           color: Colors.grey,
                         ),
                       ),

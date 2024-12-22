@@ -34,10 +34,11 @@ class _ElectronicsScreenState extends State<ElectronicsScreen> {
         backgroundColor: Colors.transparent,
         automaticallyImplyLeading: false,
         elevation: 0,
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             Get.back();
           },
+          borderRadius: BorderRadius.circular(50),
           child: Icon(
             Icons.arrow_back,
             color: Colors.black,
@@ -84,50 +85,57 @@ class _ElectronicsScreenState extends State<ElectronicsScreen> {
                                   SizedBox(
                                     height: 10,
                                   ),
-                                  Container(
-                                    width: 400,
-                                    height: 1,
-                                    color: Colors.grey.withOpacity(0.3),
-                                  ),
-                                  SizedBox(
-                                    height: 10,
-                                  ),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      GestureDetector(
-                                        onTap: () {
-                                          Get.to(() => Electronics2(widget.categoryname, data![index].id.toString()));
-                                        },
-                                        child: Container(
-                                          child: Text(
-                                            "${data![index].name}",
-                                            style: TextStyle(fontSize: 16),
-                                          ),
+                                  InkWell(
+                                    onTap: () {
+                                      Get.to(() => Electronics2(widget.categoryname, data![index].id.toString()));
+                                    },
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          width: 400,
+                                          height: 1,
+                                          color: Colors.grey.withOpacity(0.3),
                                         ),
-                                      ),
-                                      Container(
-                                        child: Icon(
-                                          Icons.arrow_forward_ios,
-                                          size: 15,
+                                        SizedBox(
+                                          height: 10,
                                         ),
-                                      )
-                                    ],
-                                  ),
-                                  SizedBox(
-                                    height: 10,
-                                  ),
-                                  Container(
-                                    width: 400,
-                                    height: 1,
-                                    color: Colors.grey.withOpacity(0.3),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Container(
+                                              child: Text(
+                                                "${data![index].name}",
+                                                style: TextStyle(fontSize: 16),
+                                              ),
+                                            ),
+                                            Container(
+                                              child: Icon(
+                                                Icons.arrow_forward_ios,
+                                                size: 15,
+                                              ),
+                                            )
+                                          ],
+                                        ),
+                                        SizedBox(
+                                          height: 10,
+                                        ),
+                                        Container(
+                                          width: 400,
+                                          height: 1,
+                                          color: Colors.grey.withOpacity(0.3),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               );
                             },
                           );
                         } else {
-                          return Container();
+                          return Padding(
+                            padding: const EdgeInsets.all(3.0),
+                            child: Text("No data available", style: TextStyle(fontSize: 14)),
+                          );
                         }
                       }
                     },

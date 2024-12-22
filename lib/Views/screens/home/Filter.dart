@@ -321,11 +321,12 @@ class _FilterScreeenState extends State<FilterScreeen> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           automaticallyImplyLeading: false,
-          leading: GestureDetector(
+          leading: InkWell(
             onTap: () {
               bottomctrl.navBarChange(0);
               Get.back();
             },
+            borderRadius: BorderRadius.circular(50),
             child: Icon(
               Icons.arrow_back,
               color: Colors.black,
@@ -369,6 +370,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
                           selectedDate1 = DateTime.now();
                         });
                       },
+                      borderRadius: BorderRadius.circular(50),
                       child: Icon(
                         Icons.close,
                         color: Colors.black,
@@ -789,6 +791,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
                               setState(() {
                                 filteredData = true;
                               });
+                              print('latt : $Latitiude long : $Longitude radius : $radius price : $price fromDate : $fromDate toDate : $toDate selected_sub_id : $selected_sub_id');
                                String Url = dotenv.env['baseUrlM'] ?? 'No url found';
                               if(DateTime.parse(selectedDate.toString()).compareTo(DateTime.parse(selectedDate1.toString())) > 0){
                                 var snackBar = new SnackBar(

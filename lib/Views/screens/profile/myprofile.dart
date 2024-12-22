@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -30,7 +31,7 @@ class MyProfileScreen extends StatefulWidget {
 class _MyProfileScreenState extends State<MyProfileScreen> {
   ///Instance of Provider Get
   //HomeViewViewModel homeViewViewModel = HomeViewViewModel();
-   String Url = dotenv.env['baseUrlM'] ?? 'No url found';
+  String Url = dotenv.env['baseUrlM'] ?? 'No url found';
 
   Future getData() async {
     final sp = context.read<SignInProvider>();
@@ -57,7 +58,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
       getProductsApi(id);
       fullname = value.name.toString();
       print("fullname ${fullname}");
-      
+
       email = value.email.toString();
       role = value.role.toString();
     }).onError((error, stackTrace) {
@@ -69,7 +70,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    
     // change read to watch!!!!
     //
     final sp = context.watch<SignInProvider>();
@@ -86,10 +86,11 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
           'My Profile',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
         ),
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             Get.to(() => MainScreen());
           },
+          borderRadius: BorderRadius.circular(50),
           child: Icon(
             Icons.arrow_back,
             color: Colors.black,
@@ -135,10 +136,27 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                               child: imagesapi == "null"
                                   ? sp.imageUrl.toString() == "null"
                                       ? Image.asset("assets/slicing/blankuser.jpeg", fit: BoxFit.cover)
-                                      : Image.network("${sp.imageUrl}", fit: BoxFit.cover)
-                                  : Image.network(
-                                      "${Url}${back_image_api}",
+                                      : CachedNetworkImage(
+                                          imageUrl: "${sp.imageUrl}",
+                                          fit: BoxFit.cover,
+                                          placeholder: (context, url) => Center(
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                          errorWidget: (context, url, error) => Icon(
+                                            Icons.error,
+                                            color: Colors.red,
+                                          ),
+                                        )
+                                  : CachedNetworkImage(
+                                      imageUrl: "${Url}${back_image_api}",
                                       fit: BoxFit.cover,
+                                      placeholder: (context, url) => Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                      errorWidget: (context, url, error) => Icon(
+                                        Icons.error,
+                                        color: Colors.red,
+                                      ),
                                     )
                               //  imagesapi == "null"
                               //     ? Image.asset(
@@ -157,12 +175,32 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                               child: imagesapi == "null"
                                   ? sp.imageUrl.toString() == "null"
                                       ? CircleAvatar(radius: 40, backgroundImage: AssetImage("assets/slicing/blankuser.jpeg"))
-                                      : CircleAvatar(radius: 40, backgroundImage: NetworkImage("${sp.imageUrl}"))
+                                      : CircleAvatar(
+                                          radius: 40,
+                                          backgroundColor: Colors.grey[200],
+                                          child: CachedNetworkImage(
+                                            imageUrl: "${sp.imageUrl}",
+                                            imageBuilder: (context, imageProvider) => CircleAvatar(
+                                              radius: 40,
+                                              backgroundImage: imageProvider,
+                                            ),
+                                            placeholder: (context, url) => CircularProgressIndicator(), // Placeholder widget
+                                            errorWidget: (context, url, error) => Icon(Icons.error, size: 40), // Error widget
+                                          ),
+                                        )
                                   : CircleAvatar(
                                       radius: 40,
-                                      backgroundImage: NetworkImage(
-                                        "${Url}${imagesapi}",
-                                      )),
+                                      backgroundColor: Colors.grey[200],
+                                      child: CachedNetworkImage(
+                                        imageUrl: "${Url}${imagesapi}",
+                                        imageBuilder: (context, imageProvider) => CircleAvatar(
+                                          radius: 40,
+                                          backgroundImage: imageProvider,
+                                        ),
+                                        placeholder: (context, url) => CircularProgressIndicator(), // Placeholder widget
+                                        errorWidget: (context, url, error) => Icon(Icons.error, size: 40), // Error widget
+                                      ),
+                                    ),
                             ),
                           )
                         ],
@@ -179,14 +217,17 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                 onTap: () {
                                   getProductsApi(id);
                                 },
-                                child: Text(
-                                  // fullname.toString()
-                                  nameapi == "null"
-                                      ? sp.name.toString() == "null"
-                                          ? fullname.toString()
-                                          : sp.name.toString()
-                                      : nameapi.toString(),
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
+                                child: Container(
+                                  width: res_width * 0.9,
+                                  child: Text(
+                                    // fullname.toString(),
+                                    nameapi == "null"
+                                        ? sp.name.toString() == "null"
+                                            ? fullname.toString()
+                                            : sp.name.toString()
+                                        : nameapi.toString(),
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
+                                  ),
                                 ),
                               ),
                               SizedBox(
@@ -214,19 +255,16 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                         alignment: WrapAlignment.start,
                         runSpacing: 20,
                         spacing: 5,
-                        
                         children: [
                           Wraper(
                             "assets/slicing/Path 180@3x.png",
                             "My Wishlist",
-                            
                             () {
                               Get.to(() => FavouriteScreen());
                               // final bottomcontroller = Get.put(BottomController());
                               // bottomcontroller.navBarChange(1);
                               // Get.to(() => MainScreen());
                             },
-                            
                           ),
                           // Wraper(
                           //   "assets/slicing/Group 352@3x.png",
@@ -482,21 +520,23 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 88,
-        height: 84,
+        width: 100,
+        height: 90,
         decoration: BoxDecoration(color: Color(0xFF4285F4), borderRadius: BorderRadius.all(Radius.circular(5))),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Image.asset(
               img,
               scale: 3,
             ),
             SizedBox(
-              height: 5,
+              height: 10,
             ),
             Text(
               txt,
+              textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white),
             ),
           ],
@@ -513,8 +553,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   Future getProductsApi(id) async {
     final response = await http.get(Uri.parse('${Url}/UserProfileGetById/${id}'));
     var data = jsonDecode(response.body.toString());
-    if (data["data"].length != 0) {
-    }
+    if (data["data"].length != 0) {}
     setState(() {
       if (data["data"].length != 0) {
         imagesapi = data["data"][0]["image"].toString();

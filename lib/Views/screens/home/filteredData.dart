@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:get/get.dart';
@@ -35,11 +36,12 @@ class _FilteredDataState extends State<FilteredData> {
               fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
         ),
         automaticallyImplyLeading: false,
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             Get.back();
             // _key.currentState!.openDrawer();
           },
+          borderRadius: BorderRadius.circular(50),
           child: Icon(
             Icons.arrow_back,
             color: Colors.black,
@@ -108,22 +110,41 @@ class _FilteredDataState extends State<FilteredData> {
                                       children: [
                                         Container(
                                           height: res_height * 0.2,
-                                          width: res_width,
-                                          decoration: BoxDecoration(
-                                              image: DecorationImage(
-                                                  image: NetworkImage(
-                                                      AppUrl.baseUrlM +
+                                          child: Center(
+                                            child: CachedNetworkImage(
+                                              imageUrl:  AppUrl.baseUrlM +
                                                           data
                                                               .image
-                                                              .toString()))),
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.all(
-                                              Radius.circular(10),
+                                                              .toString(),
+                                              fit: BoxFit.cover,
+                                              placeholder: (context, url) => Center(
+                                                child: CircularProgressIndicator(), // Loading spinner
+                                              ),
+                                              errorWidget: (context, url, error) => Icon(
+                                                Icons.error,
+                                                color: Colors.red,
+                                              ), // Display an error icon
                                             ),
                                           ),
                                         ),
+                                        // Container(
+                                        //   height: res_height * 0.2,
+                                        //   width: res_width,
+                                        //   decoration: BoxDecoration(
+                                        //       image: DecorationImage(
+                                        //           image: NetworkImage(
+                                        //               AppUrl.baseUrlM +
+                                        //                   data
+                                        //                       .image
+                                        //                       .toString()))),
+                                        //   child: ClipRRect(
+                                        //     borderRadius: BorderRadius.all(
+                                        //       Radius.circular(10),
+                                        //     ),
+                                        //   ),
+                                        // ),
                                         SizedBox(
-                                          height: res_height * 0.005,
+                                          height: res_height * 0.01,
                                         ),
                                         Container(
                                           child: Column(
@@ -132,15 +153,19 @@ class _FilteredDataState extends State<FilteredData> {
                                             children: [
                                               Text(
                                                 data.name.toString(),
-                                                style: TextStyle(fontSize: 11),
+                                                style: TextStyle(fontSize: 15,
+                                                  fontWeight: FontWeight.bold,),
                                               ),
                                               SizedBox(
                                                 height: res_height * 0.006,
                                               ),
                                               Text(
                                                 "${data.price.toString()} \$",
-                                                style: TextStyle(fontSize: 11),
+                                                style: TextStyle(fontSize: 13),
                                                 textAlign: TextAlign.left,
+                                              ),
+                                              SizedBox(
+                                                height: res_height * 0.006,
                                               ),
                                               RatingBarIndicator(
                                                 rating: stars,

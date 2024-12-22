@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -68,8 +69,7 @@ class _ChatState extends State<Chat> {
   TextEditingController _sendMessageController = TextEditingController();
 
   void getMessageApi() {
-    ApiRepository.shared.getMessagesApi(
-        sourceId.toString(), widget.targetID.toString(), (List) {
+    ApiRepository.shared.getMessagesApi(sourceId.toString(), widget.targetID.toString(), (List) {
       if (this.mounted) {
         if (List.data!.length == 0) {
           setState(() {
@@ -100,13 +100,8 @@ class _ChatState extends State<Chat> {
   }
 
   void sendMessage(msg, sender_id, recipient_id) {
-    var data = {
-      "msg": msg,
-      "sender_id": sender_id,
-      "recipient_id": recipient_id
-    };
-    ApiRepository.shared.postMessage(
-        msg.toString(), sourceId.toString(), widget.targetID.toString());
+    var data = {"msg": msg, "sender_id": sender_id, "recipient_id": recipient_id};
+    ApiRepository.shared.postMessage(msg.toString(), sourceId.toString(), widget.targetID.toString());
   }
 
   bool userLoader = false;
@@ -135,9 +130,7 @@ class _ChatState extends State<Chat> {
                         userError = false;
                         userLoader = false;
                         userEmpty = false;
-                        userImage = ApiRepository
-                            .shared.getUserCredentialModelList!.data![0].image
-                            .toString();
+                        userImage = ApiRepository.shared.getUserCredentialModelList!.data![0].image.toString();
                       })
                     }
                 }
@@ -183,9 +176,7 @@ class _ChatState extends State<Chat> {
                         targetError = false;
                         targetLoader = false;
                         targetEmpty = false;
-                        targetImage = ApiRepository
-                            .shared.getUserCredentialModelList!.data![0].image
-                            .toString();
+                        targetImage = ApiRepository.shared.getUserCredentialModelList!.data![0].image.toString();
                       })
                     }
                 }
@@ -230,25 +221,25 @@ class _ChatState extends State<Chat> {
         centerTitle: true,
         title: Text(
           'Messages',
-          style: TextStyle(
-              fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
         ),
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
-           Get.back();
-          Ctimer.cancel();
-          // Navigator.pop(context);
+            Get.back();
+            Ctimer.cancel();
+            // Navigator.pop(context);
             // Navigator.of(context)
             // .push(MaterialPageRoute(builder: ((context) => MessagesScreen())));
             // Navigator.pop(context);
             // Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>MessagesScreen()), (route) => false);
           },
+          borderRadius: BorderRadius.circular(50),
           child: Padding(
             padding: const EdgeInsets.all(17.0),
             child: Container(
               child: Icon(
                 Icons.arrow_back,
-            color: Colors.black,
+                color: Colors.black,
               ),
             ),
           ),
@@ -264,29 +255,18 @@ class _ChatState extends State<Chat> {
                   : ListView.builder(
                       physics: NeverScrollableScrollPhysics(),
                       shrinkWrap: true,
-                      itemCount: ApiRepository
-                          .shared.getAllMessagesModelList!.data!.length,
+                      itemCount: ApiRepository.shared.getAllMessagesModelList!.data!.length,
                       itemBuilder: (context, index) {
-                        var msg = ApiRepository.shared.getAllMessagesModelList!
-                            .data![index].content
-                            .toString();
-                        String formattedDate = DateFormat('yyyy-MM-dd').format(
-                            DateTime.parse(ApiRepository.shared
-                                .getAllMessagesModelList!.data![index].timeSent
-                                .toString()));
-                        String formattedTime = DateFormat('hh:mm a').format(
-                            DateTime.parse(ApiRepository.shared
-                                .getAllMessagesModelList!.data![index].timeSent
-                                .toString()));
+                        var msg = ApiRepository.shared.getAllMessagesModelList!.data![index].content.toString();
+                        String formattedDate = DateFormat('MMM dd, yyyy hh:mm a')
+                            .format(DateTime.parse(ApiRepository.shared.getAllMessagesModelList!.data![index].timeSent.toString()));
+                        String formattedTime = DateFormat('hh:mm a')
+                            .format(DateTime.parse(ApiRepository.shared.getAllMessagesModelList!.data![index].timeSent.toString()));
                         var time = formattedTime;
                         var date = formattedDate;
-                        var sender = ApiRepository.shared
-                            .getAllMessagesModelList!.data![index].senderId
-                            .toString();
+                        var sender = ApiRepository.shared.getAllMessagesModelList!.data![index].senderId.toString();
                         // return(Text(msg));
-                        return sender == sourceId
-                            ? usermsg(msg, time, date)
-                            : customersuppor(msg, time, date);
+                        return sender == sourceId ? usermsg(msg, time, date) : customersuppor(msg, time, date);
                       }),
           Container(
             height: res_height * 0.11,
@@ -314,29 +294,24 @@ class _ChatState extends State<Chat> {
                 children: <Widget>[
                   Container(
                     width: MediaQuery.of(context).size.width * 0.8,
-                    decoration: BoxDecoration(
-                        color: kprimaryColor,
-                        borderRadius: BorderRadius.circular(20)),
+                    decoration: BoxDecoration(color: kprimaryColor, borderRadius: BorderRadius.circular(20)),
                     child: Padding(
                       padding: const EdgeInsets.only(left: 12),
                       child: TextField(
-                        cursorColor: Colors.black,
+                        cursorColor: Colors.white,
+                        style: TextStyle(color: Colors.white),
                         controller: _sendMessageController,
                         keyboardType: TextInputType.multiline,
                         minLines: 1,
                         maxLines: 5,
-                        decoration: InputDecoration(
-                            border: InputBorder.none,
-                            hintText: "Type a message",
-                            hintStyle: TextStyle(color: Colors.white)),
+                        decoration: InputDecoration(border: InputBorder.none, hintText: "Type a message", hintStyle: TextStyle(color: Colors.white)),
                       ),
                     ),
                   ),
-                  GestureDetector(
+                  InkWell(
                     onTap: () {
                       if (_sendMessageController.text.isNotEmpty) {
-                        sendMessage(_sendMessageController.text, sourceId,
-                            widget.targetID);
+                        sendMessage(_sendMessageController.text, sourceId, widget.targetID);
                         _sendMessageController.clear();
                         //  getMessageApi();
                       }
@@ -358,68 +333,79 @@ class _ChatState extends State<Chat> {
 
   customersuppor(msg, time, date) {
     double res_width = MediaQuery.of(context).size.width;
-    return Container(
-      width: res_width * 0.9,
-      child: Row(
-        children: [
-          Container(
-            width: res_width * 0.2,
-            child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: targetImage == ""
-                    ? CircleAvatar(
-                        backgroundColor: Colors.grey,
-                        backgroundImage:
-                            AssetImage("assets/slicing/blankuser.jpeg"),
-                      )
-                    : CircleAvatar(
-                        backgroundImage: NetworkImage(
-                            AppUrl.baseUrlM + targetImage.toString()),
-                      )),
-          ),
-          SizedBox(
-            width: res_width * 0.03,
-          ),
-          Container(
-            width: res_width * 0.67,
-            child: Column(
-              children: [
-                Container(
-                  width: res_width * 0.7,
-                  decoration: BoxDecoration(
-                    color: kprimaryColor,
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(16),
-                      bottomRight: Radius.circular(16),
-                      bottomLeft: Radius.circular(16),
-                    ),
+    return Center(
+      child: Container(
+        width: res_width * 0.95,
+        child: Column(
+          children: [
+            Container(
+              width: res_width * 0.9,
+              decoration: BoxDecoration(
+                color: kprimaryColor,
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                  bottomLeft: Radius.circular(20),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: res_width * 0.2,
+                    child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: targetImage == ""
+                            ? CircleAvatar(
+                                backgroundColor: Colors.grey,
+                                backgroundImage: AssetImage("assets/slicing/blankuser.jpeg"),
+                              )
+                            : CachedNetworkImage(
+                                imageUrl: AppUrl.baseUrlM + targetImage.toString(),
+                                imageBuilder: (context, imageProvider) => CircleAvatar(
+                                  backgroundImage: imageProvider,
+                                ),
+                                placeholder: (context, url) => Center(
+                                  child: SizedBox(
+                                    width: 30,
+                                    height: 30,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.0,
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => Icon(Icons.error),
+                              )),
                   ),
-                  child: Padding(
+                  Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Container(
-                      child: Text(
-                        msg,
-                        style: TextStyle(color: Colors.white),
+                      child: Container(
+                        width: res_width * 0.6,
+                        child: Text(
+                          msg,
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      date,
-                      style: TextStyle(color: Color(0xffbfbab8)),
-                    ),
-                    Text(
-                      time,
-                     style: TextStyle(color: Color(0xffbfbab8)))
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20, top: 5, bottom: 15),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    date,
+                    style: TextStyle(color: Colors.black, fontSize: 12),
+                  ),
+                  // Text(time, style: TextStyle(color: Color(0xffbfbab8)))
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -428,65 +414,77 @@ class _ChatState extends State<Chat> {
     double res_width = MediaQuery.of(context).size.width;
     return Center(
       child: Container(
-        width: res_width * 0.9,
-        child: Row(
+        width: res_width * 0.95,
+        child: Column(
           children: [
             Container(
-              width: res_width * 0.67,
-              child: Column(
+              width: res_width * 0.9,
+              decoration: BoxDecoration(
+                color: Color(0xFF4285F4),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    width: res_width * 0.7,
-                    decoration: BoxDecoration(
-                      color: Color(0xFF4285F4),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        bottomLeft: Radius.circular(16),
-                        bottomRight: Radius.circular(16),
-                      ),
-                    ),
                     child: Padding(
-                      padding: const EdgeInsets.all(8.0),
+                      padding: const EdgeInsets.all(8),
                       child: Container(
+                        width: res_width * 0.6,
                         child: Text(
                           msg,
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        date,
-                        style: TextStyle(color: Color(0xffbfbab8)),
-                      ),
-                      Text(time, style: TextStyle(color: Color(0xffbfbab8)))
-                    ],
-                  ),
+                  Container(
+                    width: res_width * 0.2,
+                    child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: userImage == ""
+                            ? CircleAvatar(
+                                backgroundColor: Colors.grey,
+                                backgroundImage: AssetImage("assets/slicing/blankuser.jpeg"),
+                              )
+                            : CircleAvatar(
+                                backgroundColor: Colors.transparent, // Optional: Background color
+                                child: CachedNetworkImage(
+                                  imageUrl: AppUrl.baseUrlM + userImage.toString(),
+                                  imageBuilder: (context, imageProvider) => CircleAvatar(
+                                    backgroundImage: imageProvider,
+                                  ),
+                                  placeholder: (context, url) => Center(
+                                    child: SizedBox(
+                                      width: 30,
+                                      height: 30,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.0,
+                                      ),
+                                    ),
+                                  ),
+                                  errorWidget: (context, url, error) => Icon(Icons.error),
+                                ),
+                              )),
+                  )
                 ],
               ),
             ),
-            SizedBox(
-              width: res_width * 0.03,
-            ),
-            Align(
-              alignment: Alignment.topRight,
-              child: Container(
-                width: res_width * 0.2,
-                child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: userImage == ""
-                        ? CircleAvatar(
-                            backgroundColor: Colors.grey,
-                            backgroundImage:
-                                AssetImage("assets/slicing/blankuser.jpeg"),
-                          )
-                        : CircleAvatar(
-                            backgroundImage: NetworkImage(
-                                AppUrl.baseUrlM + userImage.toString()),
-                          )),
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20, top: 5, bottom: 15),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    date,
+                    style: TextStyle(color: Colors.black, fontSize: 12),
+                  ),
+                  // Text(time, style: TextStyle(color: Colors.black, fontSize: 12))
+                ],
               ),
             ),
           ],

@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -385,10 +386,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: GestureDetector(
+        leading: InkWell(
             onTap: () {
               Get.back();
             },
+            borderRadius: BorderRadius.circular(50),
             child: Icon(
               Icons.arrow_back,
               color: Colors.black,
@@ -458,8 +460,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ProdError
                             ? Text("Image not Found")
                             : ProdLoader
-                                ? SizedBox(
+                                ? Container(
                                     height: 150,
+                                    alignment: Alignment.center,
+                                    child: CircularProgressIndicator(),
                                   )
                                 : emptyProd
                                     ? Text("No Image Found")
@@ -483,11 +487,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                                               )));
                                                     },
                                                     child: Container(
-                                                      child: Image.network(
-                                                        AppUrl.baseUrlM + img.toString(),
-                                                        fit: BoxFit.fill,
+                                                        child: CachedNetworkImage(
+                                                      imageUrl: AppUrl.baseUrlM + img.toString(),
+                                                      fit: BoxFit.fill,
+                                                      placeholder: (context, url) => Center(
+                                                        child: CircularProgressIndicator(), // Loading spinner
                                                       ),
-                                                    ),
+                                                      errorWidget: (context, url, error) => Icon(
+                                                        Icons.error,
+                                                        color: Colors.red,
+                                                      ), // Display an error icon
+                                                    )),
                                                   );
                                                 }),
                                           )
@@ -577,27 +587,43 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           child: Row(
                             children: [
                               Container(
-                                  height: res_height * 0.05,
-                                  width: res_width * 0.125,
-                                  // child:
-                                  // Text("Image"),
-                                  child: userLoader
-                                      ? CircleAvatar(backgroundImage: AssetImage("assets/slicing/blankuser.jpeg"))
-                                      : userEmpty
-                                          ? CircleAvatar(
-                                              backgroundImage: AssetImage(
-                                              "assets/slicing/blankuser.jpeg",
-                                            ))
-                                          : ApiRepository.shared.getUserCredentialModelList!.data![0].image.toString() == null
-                                              ? CircleAvatar(
-                                                  backgroundImage: AssetImage(
-                                                  "assets/slicing/blankuser.jpeg",
-                                                ))
-                                              : CircleAvatar(
-                                                  backgroundImage: NetworkImage(
-                                                    AppUrl.baseUrlM + ApiRepository.shared.getUserCredentialModelList!.data![0].image.toString(),
+                                height: res_height * 0.05,
+                                width: res_width * 0.125,
+                                // child:
+                                // Text("Image"),
+                                child: userLoader
+                                    ? CircleAvatar(backgroundImage: AssetImage("assets/slicing/blankuser.jpeg"))
+                                    : userEmpty
+                                        ? CircleAvatar(
+                                            backgroundImage: AssetImage(
+                                            "assets/slicing/blankuser.jpeg",
+                                          ))
+                                        : ApiRepository.shared.getUserCredentialModelList!.data![0].image.toString() == null
+                                            ? CircleAvatar(
+                                                backgroundImage: AssetImage(
+                                                "assets/slicing/blankuser.jpeg",
+                                              ))
+                                            : CircleAvatar(
+                                                radius: 40,
+                                                backgroundColor: Colors.grey[200],
+                                                child: CachedNetworkImage(
+                                                  imageUrl:
+                                                      AppUrl.baseUrlM + ApiRepository.shared.getUserCredentialModelList!.data![0].image.toString(),
+                                                  imageBuilder: (context, imageProvider) => CircleAvatar(
+                                                    radius: 40,
+                                                    backgroundImage: imageProvider,
                                                   ),
-                                                )),
+                                                  placeholder: (context, url) => SizedBox(
+                                                    width: 24,
+                                                    height: 24,
+                                                    child: CircularProgressIndicator(
+                                                      strokeWidth: 2.0,
+                                                    ),
+                                                  ),
+                                                  errorWidget: (context, url, error) => Icon(Icons.error, size: 40),
+                                                ),
+                                              ),
+                              ),
                               SizedBox(
                                 width: 8,
                               ),

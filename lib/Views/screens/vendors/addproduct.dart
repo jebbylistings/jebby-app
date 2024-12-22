@@ -25,7 +25,7 @@ class AddProductScreen extends StatefulWidget {
 }
 
 class _AddProductScreenState extends State<AddProductScreen> {
-   String Url = dotenv.env['baseUrlM'] ?? 'No url found';
+  String Url = dotenv.env['baseUrlM'] ?? 'No url found';
   bool addBtn = false;
   final ImagePicker imagePicker = ImagePicker();
   List<XFile> imageFileList = [];
@@ -234,6 +234,17 @@ class _AddProductScreenState extends State<AddProductScreen> {
     }
   }
 
+  void reselectImage(int index) async {
+    final XFile? image = await imagePicker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        imagesPath[index] = File(image.path);
+        imageFileList[index] = image;
+      });
+    }
+  }
+
   vendorProducts(user_id) {
     ApiRepository.shared.getVendorProductList(
         (list) => {
@@ -274,7 +285,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
         rentPriceController.text.isNotEmpty &&
         selected_id != null &&
         selected_sub_id != null) {
-          
       for (int i = 0; i < imagesPath.length; i++) {
         String uniqueName = DateTime.now().millisecondsSinceEpoch.toString();
         String filename = p.basename(imageFileList[i].path);
@@ -355,10 +365,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
           'General Information',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
         ),
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             Get.back();
           },
+          borderRadius: BorderRadius.circular(50),
           child: Icon(
             Icons.arrow_back,
             color: Colors.black,
@@ -481,10 +492,41 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                 // physics: NeverScrollableScrollPhysics(),
                                 itemCount: imagesPath.length,
                                 itemBuilder: (context, int index) {
-                                  return Container(
-                                    child: Image.file(File(imageFileList[index].path)),
-                                    // Image.network(AppUrl.baseUrlM +
-                                    //     "/resources/static/assets/uploads/products/image_picker968263936832331487.jpg"),
+                                  return Stack(
+                                    children: [
+                                      InkWell(
+                                        onTap: () {
+                                          reselectImage(index);
+                                        },
+                                        child: Image.file(
+                                          File(imageFileList[index].path),
+                                          fit: BoxFit.cover,
+                                          width: 100, 
+                                          height: 100, 
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 5,
+                                        right: 5,
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              imagesPath.removeAt(index);
+                                              imageFileList.removeAt(index);
+                                            });
+                                          },
+                                          child: CircleAvatar(
+                                            radius: 12,
+                                            backgroundColor: Colors.red,
+                                            child: Icon(
+                                              Icons.close,
+                                              size: 15,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   );
                                 }),
                           ),
@@ -644,38 +686,41 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           ? Center(
                               child: SizedBox(height: 25, width: 25, child: CircularProgressIndicator()),
                             )
-                          : FutureBuilder(builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                              return DropdownButton<String>(
-                                value: dropdownValue,
-                                icon: const Icon(Icons.arrow_downward),
-                                elevation: 16,
-                                style: const TextStyle(color: Colors.deepPurple),
-                                underline: Container(
-                                  height: 2,
-                                  color: Colors.deepPurpleAccent,
-                                ),
-                                onChanged: (String? value) {
-                                  // This is called when the user selects an item.
-                                  setState(() {
-                                    dropdownValue = value!;
-                                    print(dropdownValue);
-                                    print(items_id[items.indexOf(dropdownValue)]);
-                                    selected_id = items_id[items.indexOf(dropdownValue)];
-                                    print("selected ID ${selected_id}");
-                                    sub_id = [];
-                                    sub_items = [];
-                                    getSubCategory(selected_id);
-                                  });
-                                },
-                                items: items.map<DropdownMenuItem<String>>((String value) {
-                                  return DropdownMenuItem<String>(
-                                    value: value,
-                                    child: Text(value),
-                                  );
-                                }).toList(),
-                              );
-                              ;
-                            }, future: null,),
+                          : FutureBuilder(
+                              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                                return DropdownButton<String>(
+                                  value: dropdownValue,
+                                  icon: const Icon(Icons.arrow_downward),
+                                  elevation: 16,
+                                  style: const TextStyle(color: Colors.deepPurple),
+                                  underline: Container(
+                                    height: 2,
+                                    color: Colors.deepPurpleAccent,
+                                  ),
+                                  onChanged: (String? value) {
+                                    // This is called when the user selects an item.
+                                    setState(() {
+                                      dropdownValue = value!;
+                                      print(dropdownValue);
+                                      print(items_id[items.indexOf(dropdownValue)]);
+                                      selected_id = items_id[items.indexOf(dropdownValue)];
+                                      print("selected ID ${selected_id}");
+                                      sub_id = [];
+                                      sub_items = [];
+                                      getSubCategory(selected_id);
+                                    });
+                                  },
+                                  items: items.map<DropdownMenuItem<String>>((String value) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(value),
+                                    );
+                                  }).toList(),
+                                );
+                                ;
+                              },
+                              future: null,
+                            ),
                     ),
                     SizedBox(
                       height: res_height * 0.01,
@@ -702,34 +747,37 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           ? SizedBox(height: 25, width: 25, child: Text("Please Select The Category"))
                           : Visibility(
                               visible: subCategoryVisibility,
-                              child: FutureBuilder(builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                                return DropdownButton<String>(
-                                  value: sub_dropdownvalue,
-                                  icon: const Icon(Icons.arrow_downward),
-                                  elevation: 16,
-                                  style: const TextStyle(color: Colors.deepPurple),
-                                  underline: Container(
-                                    height: 2,
-                                    color: Colors.deepPurpleAccent,
-                                  ),
-                                  onChanged: (String? value) {
-                                    // This is called when the user selects an item.
-                                    setState(() {
-                                      sub_dropdownvalue = value!;
-                                      print("SubDropDown --> ${sub_dropdownvalue}");
-                                      selected_sub_id = sub_items_id[sub_items.indexOf(sub_dropdownvalue)];
-                                      print("SelectedSubID --> ${selected_sub_id}");
-                                    });
-                                  },
-                                  items: sub_items.map<DropdownMenuItem<String>>((String value) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text(value),
-                                    );
-                                  }).toList(),
-                                );
-                                ;
-                              }, future: null,),
+                              child: FutureBuilder(
+                                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                                  return DropdownButton<String>(
+                                    value: sub_dropdownvalue,
+                                    icon: const Icon(Icons.arrow_downward),
+                                    elevation: 16,
+                                    style: const TextStyle(color: Colors.deepPurple),
+                                    underline: Container(
+                                      height: 2,
+                                      color: Colors.deepPurpleAccent,
+                                    ),
+                                    onChanged: (String? value) {
+                                      // This is called when the user selects an item.
+                                      setState(() {
+                                        sub_dropdownvalue = value!;
+                                        print("SubDropDown --> ${sub_dropdownvalue}");
+                                        selected_sub_id = sub_items_id[sub_items.indexOf(sub_dropdownvalue)];
+                                        print("SelectedSubID --> ${selected_sub_id}");
+                                      });
+                                    },
+                                    items: sub_items.map<DropdownMenuItem<String>>((String value) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(value),
+                                      );
+                                    }).toList(),
+                                  );
+                                  ;
+                                },
+                                future: null,
+                              ),
                             ),
                     ),
                     SizedBox(
@@ -978,39 +1026,42 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     Container(
                       child: vendorProductLoader
                           ? Center(child: SizedBox(height: 25, width: 25, child: CircularProgressIndicator()))
-                          : FutureBuilder(builder: (
-                              context,
-                              AsyncSnapshot<dynamic> snapshot,
-                            ) {
-                              return ListView.builder(
-                                  shrinkWrap: true,
-                                  physics: NeverScrollableScrollPhysics(),
-                                  itemCount: ApiRepository.shared.VendorProductList?.data?.length,
-                                  itemBuilder: (BuildContext context, index) {
-                                    var name = ApiRepository.shared.VendorProductList?.data?[index].name;
-                                    var product_id = ApiRepository.shared.VendorProductList?.data?[index].id;
-                                    return ListTile(
-                                      title: Text(name.toString()),
-                                      trailing: relatedProductsId.contains(product_id)
-                                          ? InkWell(
-                                              onTap: () {
-                                                setState(() {
-                                                  relatedProductsId.remove(product_id);
-                                                  print(relatedProductsId);
-                                                });
-                                              },
-                                              child: Icon(Icons.delete_outline))
-                                          : InkWell(
-                                              onTap: () {
-                                                setState(() {
-                                                  relatedProductsId.add(product_id);
-                                                  print(relatedProductsId);
-                                                });
-                                              },
-                                              child: Icon(Icons.add)),
-                                    );
-                                  });
-                            }, future: null,),
+                          : FutureBuilder(
+                              builder: (
+                                context,
+                                AsyncSnapshot<dynamic> snapshot,
+                              ) {
+                                return ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: NeverScrollableScrollPhysics(),
+                                    itemCount: ApiRepository.shared.VendorProductList?.data?.length,
+                                    itemBuilder: (BuildContext context, index) {
+                                      var name = ApiRepository.shared.VendorProductList?.data?[index].name;
+                                      var product_id = ApiRepository.shared.VendorProductList?.data?[index].id;
+                                      return ListTile(
+                                        title: Text(name.toString()),
+                                        trailing: relatedProductsId.contains(product_id)
+                                            ? InkWell(
+                                                onTap: () {
+                                                  setState(() {
+                                                    relatedProductsId.remove(product_id);
+                                                    print(relatedProductsId);
+                                                  });
+                                                },
+                                                child: Icon(Icons.delete_outline))
+                                            : InkWell(
+                                                onTap: () {
+                                                  setState(() {
+                                                    relatedProductsId.add(product_id);
+                                                    print(relatedProductsId);
+                                                  });
+                                                },
+                                                child: Icon(Icons.add)),
+                                      );
+                                    });
+                              },
+                              future: null,
+                            ),
                     ),
                     SizedBox(
                       height: res_height * 0.01,
@@ -1021,7 +1072,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       // },
                       child: GestureDetector(
                         onTap: () {
-                            addBtn ? null : addProduct();
+                          addBtn ? null : addProduct();
                         },
                         child: Container(
                           width: 398,

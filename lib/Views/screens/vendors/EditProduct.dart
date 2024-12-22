@@ -656,11 +656,12 @@ class _EditProductScreenState extends State<EditProductScreen> {
           'Edit Product',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
         ),
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             Get.back();
             // Get.to(() => ProductListScreen(side: false));
           },
+          borderRadius: BorderRadius.circular(50),
           child: Icon(
             Icons.arrow_back,
             color: Colors.black,

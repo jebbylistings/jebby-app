@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/get_navigation.dart';
@@ -24,10 +25,11 @@ class _CategoriesssScreenState extends State<CategoriesssScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () {
             Get.back();
           },
+          borderRadius: BorderRadius.circular(50),
           child: Icon(
             Icons.arrow_back,
             color: Colors.black,
@@ -130,10 +132,17 @@ class _CategoriesssScreenState extends State<CategoriesssScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: ClipOval(
-                  child: Image.network(
-                    '$img',
-                    fit: BoxFit.cover,
+                  child: CachedNetworkImage(
+                  imageUrl: '$img',
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Center(
+                    child: CircularProgressIndicator(), // Loading spinner
                   ),
+                  errorWidget: (context, url, error) => Icon(
+                    Icons.error,
+                    color: Colors.red,
+                  ), // Display an error icon
+                )
                 ),
               ),
             ),
