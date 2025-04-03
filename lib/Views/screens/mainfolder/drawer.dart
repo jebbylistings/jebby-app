@@ -1,8 +1,5 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dio/dio.dart' as d;
-import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';

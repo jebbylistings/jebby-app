@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:jebby/Views/helper/colors.dart';
-import 'package:jebby/Views/screens/vendors/ProductList.dart';
 import 'package:provider/provider.dart';
 import 'package:dio/dio.dart' as d;
 import '../../../Services/provider/sign_in_provider.dart';

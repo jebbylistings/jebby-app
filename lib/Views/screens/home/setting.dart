@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +16,6 @@ import '../../../view_model/apiServices.dart';
 import '../../../view_model/user_view_model.dart';
 import '../../helper/global.dart';
 import '../agreements/termsAndConditions.dart';
-import '../mainfolder/drawer.dart';
 
 class Settings extends StatefulWidget {
   const Settings({Key? key}) : super(key: key);

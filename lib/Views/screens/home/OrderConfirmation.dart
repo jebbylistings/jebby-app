@@ -6,7 +6,6 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:get/get.dart';
 import 'package:jebby/Views/helper/colors.dart';
-import 'package:jebby/Views/screens/home/reOrderPayment.dart';
 import 'package:jebby/res/app_url.dart';
 import 'package:jebby/view_model/getTax_modal.dart';
 import 'package:uuid/uuid.dart';
