@@ -1,20 +1,17 @@
 import 'dart:io';
-import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:jebby/Views/screens/mainfolder/homemain.dart';
-import 'package:path/path.dart' as p;
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:jebby/Views/helper/colors.dart';
-import 'package:dio/dio.dart' as d;
 
 class WriteReview extends StatefulWidget {
-  var stars;
-  var reviewsLenght;
-  var userID;
-  var prodID;
+  final dynamic stars;
+  final dynamic reviewsLenght;
+  final dynamic userID;
+  final dynamic prodID;
 
   WriteReview(this.stars, this.reviewsLenght, this.userID, this.prodID);
 
@@ -29,17 +26,18 @@ class _WriteReviewState extends State<WriteReview> {
 
   Future getGalleryImage() async {
     final picker = ImagePicker();
-    final pickedImage =
-        await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    final pickedImage = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
     setState(() {
       if (pickedImage != null) {
         _image = File(pickedImage.path);
-      } else {
-        print("no picked Image");
-      }
+      } else {}
     });
   }
-   String Url = dotenv.env['baseUrlM'] ?? 'No url found';
+
+  String Url = dotenv.env['baseUrlM'] ?? 'No url found';
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +52,10 @@ class _WriteReviewState extends State<WriteReview> {
         title: Text(
           'Write a Reviews',
           style: TextStyle(
-              fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 19,
+          ),
         ),
         leading: InkWell(
           onTap: () {
@@ -64,10 +65,7 @@ class _WriteReviewState extends State<WriteReview> {
           child: Padding(
             padding: const EdgeInsets.all(17.0),
             child: Container(
-              child: Icon(
-                Icons.arrow_back,
-            color: Colors.black,
-              ),
+              child: Icon(Icons.arrow_back, color: Colors.black),
             ),
           ),
         ),
@@ -82,17 +80,15 @@ class _WriteReviewState extends State<WriteReview> {
                 width: res_width * 0.9,
                 child: Column(
                   children: [
-                    SizedBox(
-                      height: res_height * 0.05,
-                    ),
+                    SizedBox(height: res_height * 0.05),
                     Text(
                       'Add Rating',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 37),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 37,
+                      ),
                     ),
-                    SizedBox(
-                      height: res_height * 0.02,
-                    ),
+                    SizedBox(height: res_height * 0.02),
                     RatingBar.builder(
                       initialRating: double.parse(widget.stars.toString()),
                       minRating: 1,
@@ -100,20 +96,15 @@ class _WriteReviewState extends State<WriteReview> {
                       allowHalfRating: true,
                       itemCount: 5,
                       itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
-                      itemBuilder: (context, _) => Icon(
-                        Icons.star,
-                        color: Colors.amber,
-                      ),
+                      itemBuilder:
+                          (context, _) => Icon(Icons.star, color: Colors.amber),
                       onRatingUpdate: (rating) {
                         setState(() {
                           ratings = rating;
                         });
-                        print(ratings);
                       },
                     ),
-                    SizedBox(
-                      height: res_height * 0.05,
-                    ),
+                    SizedBox(height: res_height * 0.05),
                     Row(
                       children: [
                         Text(
@@ -126,38 +117,33 @@ class _WriteReviewState extends State<WriteReview> {
                         ),
                       ],
                     ),
-                    SizedBox(
-                      height: res_height * 0.02,
-                    ),
+                    SizedBox(height: res_height * 0.02),
                     Container(
                       width: res_width * 0.9,
                       height: res_height * 0.2,
                       decoration: BoxDecoration(
-                        border: Border.all(
-                          color: kprimaryColor,
-                          width: 0.5,
-                        ),
+                        border: Border.all(color: kprimaryColor, width: 0.5),
                         borderRadius: BorderRadius.circular(15),
                       ),
                       child: Container(
-                          width: res_width * 0.2,
-                          height: res_height * 0.15,
-                          child: _image == null
-                              ? InkWell(
+                        width: res_width * 0.2,
+                        height: res_height * 0.15,
+                        child:
+                            _image == null
+                                ? InkWell(
                                   onTap: getGalleryImage,
                                   child: Icon(
                                     Icons.cloud_upload_rounded,
                                     size: 25,
                                   ),
                                 )
-                              : Image.file(
+                                : Image.file(
                                   File(_image!.path),
                                   fit: BoxFit.contain,
-                                )),
+                                ),
+                      ),
                     ),
-                    SizedBox(
-                      height: res_height * 0.02,
-                    ),
+                    SizedBox(height: res_height * 0.02),
                     Row(
                       children: [
                         Text(
@@ -170,9 +156,7 @@ class _WriteReviewState extends State<WriteReview> {
                         ),
                       ],
                     ),
-                    SizedBox(
-                      height: res_height * 0.02,
-                    ),
+                    SizedBox(height: res_height * 0.02),
                     Container(
                       constraints: BoxConstraints(
                         minWidth: MediaQuery.of(context).size.width * 0.85,
@@ -192,12 +176,16 @@ class _WriteReviewState extends State<WriteReview> {
                           ),
                           enabledBorder: const OutlineInputBorder(
                             borderSide: const BorderSide(
-                                color: kprimaryColor, width: 1),
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                           focusedBorder: const OutlineInputBorder(
                             borderSide: const BorderSide(
-                                color: kprimaryColor, width: 1),
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                         ),
@@ -222,50 +210,25 @@ class _WriteReviewState extends State<WriteReview> {
                     //     borderRadius: BorderRadius.circular(15),
                     //   ),
                     // ),
-                    SizedBox(
-                      height: res_height * 0.02,
-                    ),
+                    SizedBox(height: res_height * 0.02),
                     GestureDetector(
                       onTap: () async {
                         if (reviewController.text.toString().isNotEmpty &&
                             _image != null) {
                           try {
-                            late d.FormData formData;
-                            String fileName = p.basename(_image!.path);
-                            formData = new d.FormData.fromMap({
-                              "file": await d.MultipartFile.fromFile(
-                                  _image!.path,
-                                  filename: fileName),
-                              "user_id": widget.userID.toString(),
-                              "product_id": widget.prodID.toString(),
-                              "stars": ratings.toString(),
-                              "description": reviewController.text.toString(),
-                            });
-                            var data ={"file": await d.MultipartFile.fromFile(
-                                  _image!.path,
-                                  filename: fileName),
-                              "user_id": widget.userID.toString(),
-                              "product_id": widget.prodID.toString(),
-                              "stars": ratings.toString(),
-                              "description": reviewController.text.toString(),};
-                              print(data);
-                            d.Response response = await Dio().post(
-                                "${Url}/reviewInsert",
-                                data: formData);
-                            print("API HIT SUCESSFULL");
-                            print(response.data);
-                            final snackBar =
-                                new SnackBar(content: new Text("Uploaded"));
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(snackBar);
-                               await Get.offAll(() => MainScreen());
+                            final snackBar = new SnackBar(
+                              content: new Text("Uploaded"),
+                            );
+                            ScaffoldMessenger.of(
+                              context,
+                            ).showSnackBar(snackBar);
+                            await Get.offAll(() => MainScreen());
                             // Get.back();
-                          } catch (e) {
-                            print("error ${e.toString()}");
-                          }
+                          } catch (e) {}
                         } else {
                           final snackBar = new SnackBar(
-                              content: new Text("Fields Cannot Be Empty"));
+                            content: new Text("Fields Cannot Be Empty"),
+                          );
                           ScaffoldMessenger.of(context).showSnackBar(snackBar);
                         }
                       },
@@ -276,12 +239,15 @@ class _WriteReviewState extends State<WriteReview> {
                           child: Text(
                             'Submit',
                             style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 19),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 19,
+                            ),
                           ),
                         ),
                         decoration: BoxDecoration(
-                            color: kprimaryColor,
-                            borderRadius: BorderRadius.circular(14)),
+                          color: kprimaryColor,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                     ),
                   ],

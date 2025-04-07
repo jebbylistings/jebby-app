@@ -4,9 +4,11 @@
 
 import 'dart:convert';
 
-ProductDetailmodel productDetailmodelFromJson(String str) => ProductDetailmodel.fromJson(json.decode(str));
+ProductDetailmodel productDetailmodelFromJson(String str) =>
+    ProductDetailmodel.fromJson(json.decode(str));
 
-String productDetailmodelToJson(ProductDetailmodel data) => json.encode(data.toJson());
+String productDetailmodelToJson(ProductDetailmodel data) =>
+    json.encode(data.toJson());
 
 class ProductDetailmodel {
   ProductDetailmodel({
@@ -19,17 +21,18 @@ class ProductDetailmodel {
   List<Datum> data;
   String message;
 
-  factory ProductDetailmodel.fromJson(Map<String, dynamic> json) => ProductDetailmodel(
+  factory ProductDetailmodel.fromJson(Map<String, dynamic> json) =>
+      ProductDetailmodel(
         status: json["status"],
         data: List<Datum>.from(json["data"].map((x) => Datum.fromJson(x))),
         message: json["message"],
       );
 
   Map<String, dynamic> toJson() => {
-        "status": status,
-        "data": List<dynamic>.from(data.map((x) => x.toJson())),
-        "message": message,
-      };
+    "status": status,
+    "data": List<dynamic>.from(data.map((x) => x.toJson())),
+    "message": message,
+  };
 }
 
 class Datum {
@@ -66,39 +69,41 @@ class Datum {
   List<Image> images;
 
   factory Datum.fromJson(Map<String, dynamic> json) => Datum(
-        id: json["id"],
-        userId: json["user_id"],
-        categoryId: json["category_id"],
-        subcategoryId: json["subcategory_id"],
-        name: json["name"],
-        price: json["price"],
-        specifications: json["specifications"],
-        serviceAgreements: json["service_agreements"],
-        createdAt: json["created_at"],
-        updatedAt: json["updated_at"],
-        negotiation: json["negotiation"],
-        stars: json["stars"],
-        length: json["length"],
-        images: json["images"] == null ? [] : List<Image>.from(json["images"].map((x) => Image.fromJson(x))),
-      );
+    id: json["id"],
+    userId: json["user_id"],
+    categoryId: json["category_id"],
+    subcategoryId: json["subcategory_id"],
+    name: json["name"],
+    price: json["price"],
+    specifications: json["specifications"],
+    serviceAgreements: json["service_agreements"],
+    createdAt: json["created_at"],
+    updatedAt: json["updated_at"],
+    negotiation: json["negotiation"],
+    stars: json["stars"],
+    length: json["length"],
+    images:
+        json["images"] == null
+            ? []
+            : List<Image>.from(json["images"].map((x) => Image.fromJson(x))),
+  );
 
   Map<String, dynamic> toJson() => {
-        "id": id,
-        "user_id": userId,
-        "category_id": categoryId,
-        "subcategory_id": subcategoryId,
-        "name": name,
-        "price": price,
-        "specifications": specifications,
-        "service_agreements": serviceAgreements,
-        "created_at": createdAt,
-        "updated_at": updatedAt,
-        "negotiation": negotiation,
-        "stars": stars,
-        "length": length,
-        // ignore: unnecessary_null_comparison
-        "images": images == null ? [] : List<dynamic>.from(images.map((x) => x.toJson())),
-      };
+    "id": id,
+    "user_id": userId,
+    "category_id": categoryId,
+    "subcategory_id": subcategoryId,
+    "name": name,
+    "price": price,
+    "specifications": specifications,
+    "service_agreements": serviceAgreements,
+    "created_at": createdAt,
+    "updated_at": updatedAt,
+    "negotiation": negotiation,
+    "stars": stars,
+    "length": length,
+    "images": List<dynamic>.from(images.map((x) => x.toJson())),
+  };
 }
 
 class Image {
@@ -117,18 +122,18 @@ class Image {
   DateTime updatedAt;
 
   factory Image.fromJson(Map<String, dynamic> json) => Image(
-        id: json["id"],
-        productId: json["product_id"],
-        path: json["path"],
-        createdAt: DateTime.parse(json["created_at"]),
-        updatedAt: DateTime.parse(json["updated_at"]),
-      );
+    id: json["id"],
+    productId: json["product_id"],
+    path: json["path"],
+    createdAt: DateTime.parse(json["created_at"]),
+    updatedAt: DateTime.parse(json["updated_at"]),
+  );
 
   Map<String, dynamic> toJson() => {
-        "id": id,
-        "product_id": productId,
-        "path": path,
-        "created_at": createdAt.toIso8601String(),
-        "updated_at": updatedAt.toIso8601String(),
-      };
+    "id": id,
+    "product_id": productId,
+    "path": path,
+    "created_at": createdAt.toIso8601String(),
+    "updated_at": updatedAt.toIso8601String(),
+  };
 }

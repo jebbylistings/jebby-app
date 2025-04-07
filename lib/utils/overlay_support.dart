@@ -6,18 +6,12 @@ class Loader {
   static OverlaySupportEntry? _currentLoader;
 
   static void show() {
-    _currentLoader = showOverlay(
-      (context, t) {
-        return Opacity(
-          opacity: t,
-          child: Material(
-            color: Colors.black54,
-            child: LoaderWidget(),
-          ),
-        );
-      },
-      duration: Duration.zero,
-    );
+    _currentLoader = showOverlay((context, t) {
+      return Opacity(
+        opacity: t,
+        child: Material(color: Colors.black54, child: LoaderWidget()),
+      );
+    }, duration: Duration.zero);
   }
 
   static void hide() {

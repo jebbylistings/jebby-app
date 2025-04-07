@@ -27,7 +27,6 @@ class VendrosHomeScreen extends StatefulWidget {
 }
 
 class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
-  @override
   Future getData() async {
     final sp = context.read<SignInProvider>();
     final usp = context.read<UserViewModel>();
@@ -43,19 +42,17 @@ class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
   String? email;
   String? role;
   void profileData(BuildContext context) async {
-    getUserDate().then((value) async {
-      token = value.token.toString();
-      sourceId = value.id.toString();
-      fullname = value.name.toString();
-      email = value.email.toString();
-      role = value.role.toString();
-    
-    
-    }).onError((error, stackTrace) {
-      if (kDebugMode) {
-      
-      }
-    });
+    getUserDate()
+        .then((value) async {
+          token = value.token.toString();
+          sourceId = value.id.toString();
+          fullname = value.name.toString();
+          email = value.email.toString();
+          role = value.role.toString();
+        })
+        .onError((error, stackTrace) {
+          if (kDebugMode) {}
+        });
   }
 
   seenNotification() {
@@ -66,74 +63,76 @@ class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
   bool isError1 = false;
   bool isEmpty1 = false;
   getNotifications() {
-    ApiRepository.shared.notifications(sourceId, (List) {
-      if (this.mounted) {
-        if (List.data!.length == 0) {
-          setState(() {
-            isEmpty1 = true;
-            isLoading1 = false;
-            isError1 = false;
-          });
-        } else {
+    ApiRepository.shared.notifications(
+      sourceId,
+      (List) {
+        if (this.mounted) {
+          if (List.data!.length == 0) {
+            setState(() {
+              isEmpty1 = true;
+              isLoading1 = false;
+              isError1 = false;
+            });
+          } else {
+            setState(() {
+              isEmpty1 = false;
+              isLoading1 = false;
+              isError1 = false;
+            });
+          }
+        }
+      },
+      (error) {
+        if (error != null) {
           setState(() {
             isEmpty1 = false;
-            isLoading1 = false;
-            isError1 = false;
+            isLoading1 = true;
+            isError1 = true;
           });
         }
-      }
-    }, (error) {
-      if (error != null) {
-        setState(() {
-          isEmpty1 = false;
-          isLoading1 = true;
-          isError1 = true;
-        });
-      }
-    });
+      },
+    );
   }
 
   void check() async {
-  
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     prefs.getBool('time') == false
         ? notiTimer().timer?.cancel()
-        : notiTimer().timer = prefs.getBool('time') == false
-            ? notiTimer().timer?.cancel()
-            : new Timer.periodic(Duration(seconds: 5), (_) {
-              
-              
-                if (token == null || token == "" || role == "" || role == null || prefs.getBool('time') != true) {
-                
-                
-                  cancelTimer();
-                } else {
-                  prefs.getBool('notifiction') == true
-                      ? getNotifications()
-                      : prefs.getBool('notifiction') == null
-                          ? getNotifications()
-                          : null;
-                }
-              });
+        : notiTimer().timer =
+            prefs.getBool('time') == false
+                ? notiTimer().timer?.cancel()
+                : new Timer.periodic(Duration(seconds: 5), (_) {
+                  if (token == null ||
+                      token == "" ||
+                      role == "" ||
+                      role == null ||
+                      prefs.getBool('time') != true) {
+                    cancelTimer();
+                  } else {
+                    prefs.getBool('notifiction') == true
+                        ? getNotifications()
+                        : prefs.getBool('notifiction') == null
+                        ? getNotifications()
+                        : null;
+                  }
+                });
   }
 
   cancelTimer() {
     notiTimer().timer.cancel();
     notiTimer().timer = null;
-  
   }
 
   void dispose() {
     super.dispose();
-  
+
     timer.cancel();
   }
 
   void func() async {
-  
     SharedPreferences prefs = await SharedPreferences.getInstance();
-  
+
     prefs.setBool("time", true);
     check();
   }
@@ -144,21 +143,21 @@ class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
     profileData(context);
     func();
   }
-final GlobalKey<ScaffoldState> _key = GlobalKey();
+
+  final GlobalKey<ScaffoldState> _key = GlobalKey();
   @override
   Widget build(BuildContext context) {
     double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
-    
 
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-          // image: DecorationImage(
-          //   image: AssetImage("assets/slicing/bg2.jpg"),
-          //   fit: BoxFit.cover,
-          // ),
-          ),
+        // image: DecorationImage(
+        //   image: AssetImage("assets/slicing/bg2.jpg"),
+        //   fit: BoxFit.cover,
+        // ),
+      ),
       child: Scaffold(
         // backgroundColor: Colors.transparent,key: _key,
         key: _key,
@@ -170,7 +169,11 @@ final GlobalKey<ScaffoldState> _key = GlobalKey();
           centerTitle: true,
           title: Text(
             'Home',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+              fontSize: 19,
+            ),
           ),
           leading: InkWell(
             onTap: () {
@@ -193,11 +196,12 @@ final GlobalKey<ScaffoldState> _key = GlobalKey();
                     Get.to(() => VendorNotifications());
                   },
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 18.0, bottom: 18.0, right: 7),
-                    child: Icon(
-                        Icons.notifications_none,
-                        color: Colors.black,
-                      )
+                    padding: const EdgeInsets.only(
+                      top: 18.0,
+                      bottom: 18.0,
+                      right: 7,
+                    ),
+                    child: Icon(Icons.notifications_none, color: Colors.black),
                   ),
                 ),
                 // IconButton(
@@ -211,37 +215,44 @@ final GlobalKey<ScaffoldState> _key = GlobalKey();
                 // ),
                 isLoading1
                     ? SizedBox()
-                    : 
-                    ApiRepository.shared.getNotificationModelList!.unseen.toString() == "0"
-                        ? SizedBox()
-                        : Positioned(
-                            top: 4,
-                            right: 0,
-                            child: Container(
-                              padding: EdgeInsets.all(2),
-                              decoration: BoxDecoration(
-                                color: kprimaryColor,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              constraints: BoxConstraints(
-                                minWidth: 16,
-                                minHeight: 16,
-                              ),
-                              child: Text(
-                                isLoading1
-                                    ? ""
-                                    : ApiRepository.shared.getNotificationModelList!.unseen.toString() == "0"
-                                        ? ""
-                                        : ApiRepository.shared.getNotificationModelList!.unseen.toString(),
-                                // style: TextStyle(color: Colors.white),
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          )
+                    : ApiRepository.shared.getNotificationModelList!.unseen
+                            .toString() ==
+                        "0"
+                    ? SizedBox()
+                    : Positioned(
+                      top: 4,
+                      right: 0,
+                      child: Container(
+                        padding: EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: kprimaryColor,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        constraints: BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          isLoading1
+                              ? ""
+                              : ApiRepository
+                                      .shared
+                                      .getNotificationModelList!
+                                      .unseen
+                                      .toString() ==
+                                  "0"
+                              ? ""
+                              : ApiRepository
+                                  .shared
+                                  .getNotificationModelList!
+                                  .unseen
+                                  .toString(),
+                          // style: TextStyle(color: Colors.white),
+                          style: TextStyle(color: Colors.white, fontSize: 10),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
               ],
             ),
             GestureDetector(
@@ -249,10 +260,17 @@ final GlobalKey<ScaffoldState> _key = GlobalKey();
                 Get.to(() => RenterProfile());
               },
               child: Padding(
-                 padding: const EdgeInsets.symmetric(horizontal: 19.0, vertical: 18.0),
-                  child: Icon(Icons.person_outline, color: Colors.black, size: 25),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 19.0,
+                  vertical: 18.0,
+                ),
+                child: Icon(
+                  Icons.person_outline,
+                  color: Colors.black,
+                  size: 25,
+                ),
               ),
-            )
+            ),
           ],
         ),
 
@@ -261,9 +279,7 @@ final GlobalKey<ScaffoldState> _key = GlobalKey();
             width: double.infinity,
             child: Column(
               children: [
-                SizedBox(
-                  height: res_height * 0.015,
-                ),
+                SizedBox(height: res_height * 0.015),
                 Container(
                   width: res_width * 0.9,
                   child: Center(
@@ -271,14 +287,24 @@ final GlobalKey<ScaffoldState> _key = GlobalKey();
                       spacing: 15,
                       runSpacing: 15,
                       children: [
-                        contBox(txt: "Profile", img: 'assets/slicing/user_thick.png'),
-                        contBox(txt: "Product", img: 'assets/slicing/Icon awesome-shopping-basket@3x.png'),
+                        contBox(
+                          txt: "Profile",
+                          img: 'assets/slicing/user_thick.png',
+                        ),
+                        contBox(
+                          txt: "Product",
+                          img:
+                              'assets/slicing/Icon awesome-shopping-basket@3x.png',
+                        ),
                         contBox(txt: "Orders", img: 'assets/slicing/layer.png'),
-                        contBox(txt: "Transactions", img: 'assets/slicing/swap.png'),
+                        contBox(
+                          txt: "Transactions",
+                          img: 'assets/slicing/swap.png',
+                        ),
                       ],
                     ),
                   ),
-                )
+                ),
               ],
             ),
           ),
@@ -316,9 +342,7 @@ final GlobalKey<ScaffoldState> _key = GlobalKey();
             decoration: BoxDecoration(
               border: Border.all(color: Colors.white, width: 2),
               color: kprimaryColor,
-              borderRadius: BorderRadius.all(
-                Radius.circular(18),
-              ),
+              borderRadius: BorderRadius.all(Radius.circular(18)),
               boxShadow: [
                 BoxShadow(
                   color: Colors.grey,
@@ -341,13 +365,8 @@ final GlobalKey<ScaffoldState> _key = GlobalKey();
               ],
             ),
           ),
-          SizedBox(
-            height: 6,
-          ),
-          Text(
-            "$txt",
-            style: TextStyle(fontSize: 17),
-          )
+          SizedBox(height: 6),
+          Text("$txt", style: TextStyle(fontSize: 17)),
         ],
       ),
     );

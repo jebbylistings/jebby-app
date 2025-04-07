@@ -32,10 +32,7 @@ class _SetProfileScreenState extends State<SetProfileScreen> {
               Get.back();
             },
             borderRadius: BorderRadius.circular(50),
-            child: Icon(
-              Icons.arrow_back,
-              color: Colors.black,
-            ),
+            child: Icon(Icons.arrow_back, color: Colors.black),
           ),
         ),
         body: Container(
@@ -49,12 +46,14 @@ class _SetProfileScreenState extends State<SetProfileScreen> {
                   Container(
                     child: Text(
                       "Set Profile",
-                      style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: darkBlue),
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                        color: darkBlue,
+                      ),
                     ),
                   ),
-                  SizedBox(
-                    height: 10,
-                  ),
+                  SizedBox(height: 10),
                   Stack(
                     children: [
                       Container(
@@ -65,7 +64,9 @@ class _SetProfileScreenState extends State<SetProfileScreen> {
                           child: Padding(
                             padding: EdgeInsets.all(1),
                             child: Image(
-                              image: AssetImage("assets/slicing/blankuser_2.png"),
+                              image: AssetImage(
+                                "assets/slicing/blankuser_2.png",
+                              ),
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -85,7 +86,10 @@ class _SetProfileScreenState extends State<SetProfileScreen> {
                         child: Container(
                           width: 40,
                           height: 40,
-                          decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.transparent),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.transparent,
+                          ),
                           child: RawMaterialButton(
                             onPressed: () {},
                             elevation: 1,
@@ -102,9 +106,7 @@ class _SetProfileScreenState extends State<SetProfileScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(
-                    height: 40,
-                  ),
+                  SizedBox(height: 40),
                   // Row(
                   //   mainAxisAlignment: MainAxisAlignment.center,
                   //   children: [
@@ -127,9 +129,7 @@ class _SetProfileScreenState extends State<SetProfileScreen> {
                   //     ),
                   //   ],
                   // ),
-                  SizedBox(
-                    height: 30,
-                  ),
+                  SizedBox(height: 30),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -150,34 +150,46 @@ class _SetProfileScreenState extends State<SetProfileScreen> {
                           //   }
                           //   return null;
                           // },
-                          style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: darkBlue,
+                            fontWeight: FontWeight.bold,
+                          ),
                           decoration: InputDecoration(
-                              prefixIcon: Icon(
-                                Icons.person,
+                            prefixIcon: Icon(Icons.person, color: darkBlue),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                            ),
+                            enabledBorder: const OutlineInputBorder(
+                              borderSide: const BorderSide(
                                 color: darkBlue,
+                                width: 1,
                               ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15.0),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(15),
                               ),
-                              enabledBorder: const OutlineInputBorder(
-                                borderSide: const BorderSide(color: darkBlue, width: 1),
-                                borderRadius: BorderRadius.all(Radius.circular(15)),
+                            ),
+                            focusedBorder: const OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: darkBlue,
+                                width: 1,
                               ),
-                              focusedBorder: const OutlineInputBorder(
-                                borderSide: const BorderSide(color: darkBlue, width: 1),
-                                borderRadius: BorderRadius.all(Radius.circular(15)),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(15),
                               ),
-                              filled: true,
-                              hintStyle: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
-                              hintText: "Enter Name",
-                              fillColor: lightBlue),
+                            ),
+                            filled: true,
+                            hintStyle: TextStyle(
+                              color: darkBlue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            hintText: "Enter Name",
+                            fillColor: lightBlue,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(
-                    height: 25,
-                  ),
+                  SizedBox(height: 25),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -198,34 +210,49 @@ class _SetProfileScreenState extends State<SetProfileScreen> {
                           //   }
                           //   return null;
                           // },
-                          style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: darkBlue,
+                            fontWeight: FontWeight.bold,
+                          ),
                           decoration: InputDecoration(
-                              prefixIcon: Icon(
-                                Icons.location_pin,
+                            prefixIcon: Icon(
+                              Icons.location_pin,
+                              color: darkBlue,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                            ),
+                            enabledBorder: const OutlineInputBorder(
+                              borderSide: const BorderSide(
                                 color: darkBlue,
+                                width: 1,
                               ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15.0),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(15),
                               ),
-                              enabledBorder: const OutlineInputBorder(
-                                borderSide: const BorderSide(color: darkBlue, width: 1),
-                                borderRadius: BorderRadius.all(Radius.circular(15)),
+                            ),
+                            focusedBorder: const OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: darkBlue,
+                                width: 1,
                               ),
-                              focusedBorder: const OutlineInputBorder(
-                                borderSide: const BorderSide(color: darkBlue, width: 1),
-                                borderRadius: BorderRadius.all(Radius.circular(15)),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(15),
                               ),
-                              filled: true,
-                              hintStyle: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
-                              hintText: "Enter Location",
-                              fillColor: lightBlue),
+                            ),
+                            filled: true,
+                            hintStyle: TextStyle(
+                              color: darkBlue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            hintText: "Enter Location",
+                            fillColor: lightBlue,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(
-                    height: 25,
-                  ),
+                  SizedBox(height: 25),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -246,34 +273,46 @@ class _SetProfileScreenState extends State<SetProfileScreen> {
                           //   }
                           //   return null;
                           // },
-                          style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: darkBlue,
+                            fontWeight: FontWeight.bold,
+                          ),
                           decoration: InputDecoration(
-                              prefixIcon: Icon(
-                                Icons.phone,
+                            prefixIcon: Icon(Icons.phone, color: darkBlue),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                            ),
+                            enabledBorder: const OutlineInputBorder(
+                              borderSide: const BorderSide(
                                 color: darkBlue,
+                                width: 1,
                               ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15.0),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(15),
                               ),
-                              enabledBorder: const OutlineInputBorder(
-                                borderSide: const BorderSide(color: darkBlue, width: 1),
-                                borderRadius: BorderRadius.all(Radius.circular(15)),
+                            ),
+                            focusedBorder: const OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: darkBlue,
+                                width: 1,
                               ),
-                              focusedBorder: const OutlineInputBorder(
-                                borderSide: const BorderSide(color: darkBlue, width: 1),
-                                borderRadius: BorderRadius.all(Radius.circular(15)),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(15),
                               ),
-                              filled: true,
-                              hintStyle: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
-                              hintText: "Enter Phone Number",
-                              fillColor: lightBlue),
+                            ),
+                            filled: true,
+                            hintStyle: TextStyle(
+                              color: darkBlue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            hintText: "Enter Phone Number",
+                            fillColor: lightBlue,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(
-                    height: 50,
-                  ),
+                  SizedBox(height: 50),
                   InkWell(
                     onTap: () {
                       Get.to(() => MainScreen());
@@ -285,10 +324,17 @@ class _SetProfileScreenState extends State<SetProfileScreen> {
                       child: Center(
                         child: Text(
                           'Continue',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                      decoration: BoxDecoration(color: darkBlue, borderRadius: BorderRadius.circular(30)),
+                      decoration: BoxDecoration(
+                        color: darkBlue,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
                     ),
                   ),
                 ],

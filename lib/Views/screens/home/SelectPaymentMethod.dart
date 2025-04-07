@@ -4,27 +4,43 @@ import 'dart:math' as math;
 import 'package:awesome_card/awesome_card.dart';
 
 class SelectPaymentMethodScreen extends StatefulWidget {
-  var price;
-  var accountId;
-  var paypalMail;
-  var userId;
-  var prodId;
-  var rentStart;
-  var rentEnd;
-  var userName;
-  var email;
-  var location;
-  var lat;
-  var long;
-  var negoPrice;
-  var security_deposit;
-  var ApplicationFees;
+  final dynamic price;
+  final dynamic accountId;
+  final dynamic paypalMail;
+  final dynamic userId;
+  final dynamic prodId;
+  final dynamic rentStart;
+  final dynamic rentEnd;
+  final dynamic userName;
+  final dynamic email;
+  final dynamic location;
+  final dynamic lat;
+  final dynamic long;
+  final dynamic negoPrice;
+  final dynamic security_deposit;
+  final dynamic ApplicationFees;
 
-  SelectPaymentMethodScreen(this.price, this.accountId, this.paypalMail, this.userId, this.prodId, this.rentStart, this.rentEnd, this.userName,
-      this.email, this.location, this.lat, this.long, this.negoPrice, this.security_deposit, this.ApplicationFees);
+  SelectPaymentMethodScreen(
+    this.price,
+    this.accountId,
+    this.paypalMail,
+    this.userId,
+    this.prodId,
+    this.rentStart,
+    this.rentEnd,
+    this.userName,
+    this.email,
+    this.location,
+    this.lat,
+    this.long,
+    this.negoPrice,
+    this.security_deposit,
+    this.ApplicationFees,
+  );
 
   @override
-  State<SelectPaymentMethodScreen> createState() => _SelectPaymentMethodScreenState();
+  State<SelectPaymentMethodScreen> createState() =>
+      _SelectPaymentMethodScreenState();
 }
 
 class _SelectPaymentMethodScreenState extends State<SelectPaymentMethodScreen> {
@@ -40,10 +56,6 @@ class _SelectPaymentMethodScreenState extends State<SelectPaymentMethodScreen> {
 
   @override
   void initState() {
-    print("accountId ${widget.accountId}");
-    print("paypalEmail ${widget.paypalMail}");
-    print("negoPrice ${widget.negoPrice}");
-    print("ApplicationFees ${widget.ApplicationFees}");
     super.initState();
     _focusNode = FocusNode();
     _focusNode.addListener(() {
@@ -78,12 +90,7 @@ class _SelectPaymentMethodScreenState extends State<SelectPaymentMethodScreen> {
             Get.back();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Container(
-            child: Icon(
-              Icons.arrow_back,
-              color: Colors.black,
-            ),
-          ),
+          child: Container(child: Icon(Icons.arrow_back, color: Colors.black)),
         ),
         actions: [
           // GestureDetector(
@@ -104,9 +111,7 @@ class _SelectPaymentMethodScreenState extends State<SelectPaymentMethodScreen> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            SizedBox(
-              height: 40,
-            ),
+            SizedBox(height: 40),
             CreditCard(
               cardNumber: cardNumber,
               cardExpiry: expiryDate,
@@ -119,17 +124,13 @@ class _SelectPaymentMethodScreenState extends State<SelectPaymentMethodScreen> {
               showShadow: true,
               // mask: getCardTypeMask(cardType: CardType.americanExpress),
             ),
-            SizedBox(
-              height: 40,
-            ),
+            SizedBox(height: 40),
             Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Container(
-                  margin: EdgeInsets.symmetric(
-                    horizontal: 20,
-                  ),
+                  margin: EdgeInsets.symmetric(horizontal: 20),
                   child: TextFormField(
                     keyboardType: TextInputType.number,
                     controller: cardNumberCtrl,
@@ -141,7 +142,10 @@ class _SelectPaymentMethodScreenState extends State<SelectPaymentMethodScreen> {
                       final step = 4;
 
                       for (var i = 0; i < newCardNumber.length; i += step) {
-                        newStr += newCardNumber.substring(i, math.min(i + step, newCardNumber.length));
+                        newStr += newCardNumber.substring(
+                          i,
+                          math.min(i + step, newCardNumber.length),
+                        );
                         if (i + step < newCardNumber.length) newStr += ' ';
                       }
 
@@ -152,9 +156,7 @@ class _SelectPaymentMethodScreenState extends State<SelectPaymentMethodScreen> {
                   ),
                 ),
                 Container(
-                  margin: EdgeInsets.symmetric(
-                    horizontal: 20,
-                  ),
+                  margin: EdgeInsets.symmetric(horizontal: 20),
                   child: TextFormField(
                     keyboardType: TextInputType.number,
                     controller: expiryFieldCtrl,
@@ -162,15 +164,23 @@ class _SelectPaymentMethodScreenState extends State<SelectPaymentMethodScreen> {
                     maxLength: 5,
                     onChanged: (value) {
                       var newDateValue = value.trim();
-                      final isPressingBackspace = expiryDate.length > newDateValue.length;
+                      final isPressingBackspace =
+                          expiryDate.length > newDateValue.length;
                       final containsSlash = newDateValue.contains('/');
 
-                      if (newDateValue.length >= 2 && !containsSlash && !isPressingBackspace) {
-                        newDateValue = newDateValue.substring(0, 2) + '/' + newDateValue.substring(2);
+                      if (newDateValue.length >= 2 &&
+                          !containsSlash &&
+                          !isPressingBackspace) {
+                        newDateValue =
+                            newDateValue.substring(0, 2) +
+                            '/' +
+                            newDateValue.substring(2);
                       }
                       setState(() {
                         expiryFieldCtrl.text = newDateValue;
-                        expiryFieldCtrl.selection = TextSelection.fromPosition(TextPosition(offset: newDateValue.length));
+                        expiryFieldCtrl.selection = TextSelection.fromPosition(
+                          TextPosition(offset: newDateValue.length),
+                        );
                         expiryDate = newDateValue;
                       });
                     },
@@ -206,13 +216,12 @@ class _SelectPaymentMethodScreenState extends State<SelectPaymentMethodScreen> {
               ],
             ),
             Center(
-                child: Text(
-              "Total : ${(widget.price + widget.security_deposit + widget.ApplicationFees).toString()} \$",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            )),
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.02,
+              child: Text(
+                "Total : ${(widget.price + widget.security_deposit + widget.ApplicationFees).toString()} \$",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
             ),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.02),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -220,19 +229,13 @@ class _SelectPaymentMethodScreenState extends State<SelectPaymentMethodScreen> {
                   child: MaterialButton(
                     color: Color.fromARGB(255, 1, 36, 65),
                     onPressed: () {
-                      if (cardNumber.isNotEmpty && expiryDate.isNotEmpty && cvv.isNotEmpty) {
-                        final snackBar = new SnackBar(content: new Text("Please Wait"));
+                      if (cardNumber.isNotEmpty &&
+                          expiryDate.isNotEmpty &&
+                          cvv.isNotEmpty) {
+                        final snackBar = new SnackBar(
+                          content: new Text("Please Wait"),
+                        );
                         ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                        var data = {
-                          "cardNumber": int.parse(cardNumber.replaceAll(' ', '')),
-                          "exp_month": expiryDate.toString().substring(0, 2),
-                          "exp_year": expiryDate.toString().substring(3),
-                          "cvc": int.parse(cvv.toString()),
-                          "amount": widget.price.runtimeType,
-                          "vendorAccountId": widget.accountId.toString(),
-                          "sales_tax" : widget.ApplicationFees
-                        };
-                        print(data);
                         // ApiRepository.shared.stripePayment(
                         //     int.parse(cardNumber.replaceAll(' ', '')),
                         //     expiryDate.toString().substring(0, 2),
@@ -255,34 +258,17 @@ class _SelectPaymentMethodScreenState extends State<SelectPaymentMethodScreen> {
                         //     widget.security_deposit,
                         //     widget.ApplicationFees,
                         //     );
-                            Map data1 = {
-                            "user_id": widget.userId,
-                            "product_id": widget.prodId,
-                            "rent_start": widget.rentStart,
-                            "original_return": widget.rentEnd,
-                            "name": widget.userName,
-                            "email": widget.email,
-                            "location": widget.location,
-                            "latitude": widget.lat,
-                            "longitude": widget.long,
-                            "nego_price": widget.negoPrice,
-                            "shipping_address": shipping_address
-                          };
-                          print("data1 ====> $data1");
                       } else {
-                        final snackBar = new SnackBar(content: new Text("Fileds Cant Be Empty"));
+                        final snackBar = new SnackBar(
+                          content: new Text("Fileds Cant Be Empty"),
+                        );
                         ScaffoldMessenger.of(context).showSnackBar(snackBar);
                       }
                     },
-                    child: Text(
-                      "Pay",
-                      style: TextStyle(color: Colors.white),
-                    ),
+                    child: Text("Pay", style: TextStyle(color: Colors.white)),
                   ),
                 ),
-                SizedBox(
-                  width: 5,
-                ),
+                SizedBox(width: 5),
                 // Text(
                 //   "or",
                 //   style: TextStyle(fontSize: 16),
@@ -527,20 +513,14 @@ class _SelectPaymentMethodScreenState extends State<SelectPaymentMethodScreen> {
   Conts(txt1, txt2, Img) {
     return Column(
       children: [
-        SizedBox(
-          height: 10,
-        ),
+        SizedBox(height: 10),
         Container(
           width: 387,
           height: 67,
           decoration: BoxDecoration(
             color: Colors.white,
-            border: Border.all(
-              color: Color(0xFF4285F4),
-            ),
-            borderRadius: BorderRadius.all(
-              Radius.circular(5),
-            ),
+            border: Border.all(color: Color(0xFF4285F4)),
+            borderRadius: BorderRadius.all(Radius.circular(5)),
           ),
           child: Row(
             children: [
@@ -549,14 +529,10 @@ class _SelectPaymentMethodScreenState extends State<SelectPaymentMethodScreen> {
                 child: Container(
                   width: 45,
                   height: 15,
-                  child: Image.asset(
-                    Img,
-                  ),
+                  child: Image.asset(Img),
                 ),
               ),
-              SizedBox(
-                width: 60,
-              ),
+              SizedBox(width: 60),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -567,7 +543,10 @@ class _SelectPaymentMethodScreenState extends State<SelectPaymentMethodScreen> {
                   ),
                   Text(
                     txt2,
-                    style: TextStyle(fontWeight: FontWeight.normal, fontSize: 12),
+                    style: TextStyle(
+                      fontWeight: FontWeight.normal,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),

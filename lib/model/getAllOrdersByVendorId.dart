@@ -45,26 +45,27 @@ class Data {
   String? cancelDate;
   int? negoPrice;
 
-  Data(
-      {this.id,
-      this.userId,
-      this.productId,
-      this.totalPrice,
-      this.rentStart,
-      this.originalReturn,
-      this.name,
-      this.email,
-      this.location,
-      this.latitude,
-      this.longitude,
-      this.createdAt,
-      this.updatedAt,
-      this.status,
-      this.vendorId,
-      this.approveDate,
-      this.completeDate,
-      this.cancelDate,
-      this.negoPrice});
+  Data({
+    this.id,
+    this.userId,
+    this.productId,
+    this.totalPrice,
+    this.rentStart,
+    this.originalReturn,
+    this.name,
+    this.email,
+    this.location,
+    this.latitude,
+    this.longitude,
+    this.createdAt,
+    this.updatedAt,
+    this.status,
+    this.vendorId,
+    this.approveDate,
+    this.completeDate,
+    this.cancelDate,
+    this.negoPrice,
+  });
 
   Data.fromJson(Map<String, dynamic> json) {
     id = json['id'];

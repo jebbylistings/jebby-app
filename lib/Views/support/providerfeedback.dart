@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:jebby/Views/screens/mainfolder/homemain.dart';
 import 'package:jebby/res/app_url.dart';
 import 'package:jebby/utils/utils.dart';
@@ -23,18 +22,17 @@ class _ProviderFeedbackState extends State<ProviderFeedback> {
   TextEditingController NameController = TextEditingController();
   TextEditingController EmailController = TextEditingController();
   TextEditingController FeedbackController = TextEditingController();
-  File? _image;
   var uid;
 
   Future getGalleryImage() async {
     final picker = ImagePicker();
-    final pickedImage = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    final pickedImage = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
     setState(() {
       if (pickedImage != null) {
-        _image = File(pickedImage.path);
-      } else {
-        print("no picked Image");
-      }
+      } else {}
     });
   }
 
@@ -62,7 +60,11 @@ class _ProviderFeedbackState extends State<ProviderFeedback> {
         centerTitle: true,
         title: Text(
           'Feedback',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 19,
+          ),
         ),
         leading: InkWell(
           onTap: () {
@@ -72,10 +74,7 @@ class _ProviderFeedbackState extends State<ProviderFeedback> {
           child: Padding(
             padding: const EdgeInsets.all(17.0),
             child: Container(
-              child: Icon(
-              Icons.arrow_back,
-              color: Colors.black,
-            ),
+              child: Icon(Icons.arrow_back, color: Colors.black),
             ),
           ),
         ),
@@ -90,9 +89,7 @@ class _ProviderFeedbackState extends State<ProviderFeedback> {
                 width: res_width * 0.9,
                 child: Column(
                   children: [
-                    SizedBox(
-                      height: res_height * 0.05,
-                    ),
+                    SizedBox(height: res_height * 0.05),
                     // Text(
                     //   'Add Rating',
                     //   style:
@@ -116,7 +113,6 @@ class _ProviderFeedbackState extends State<ProviderFeedback> {
                     //     setState(() {
                     //       ratings = rating;
                     //     });
-                    //     print(ratings);
                     //   },
                     // ),
                     // SizedBox(
@@ -178,9 +174,7 @@ class _ProviderFeedbackState extends State<ProviderFeedback> {
                         ),
                       ],
                     ),
-                    SizedBox(
-                      height: res_height * 0.01,
-                    ),
+                    SizedBox(height: res_height * 0.01),
                     Container(
                       // constraints: BoxConstraints(
                       //   minWidth: MediaQuery.of(context).size.width * 0.85,
@@ -194,25 +188,31 @@ class _ProviderFeedbackState extends State<ProviderFeedback> {
                         decoration: InputDecoration(
                           hintText: "Enter Name",
                           hintStyle: TextStyle(
-                            color: Colors.grey, // Set the desired hint text color here
+                            color:
+                                Colors
+                                    .grey, // Set the desired hint text color here
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15.0),
                           ),
                           enabledBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                           focusedBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(
-                      height: res_height * 0.02,
-                    ),
+                    SizedBox(height: res_height * 0.02),
                     Row(
                       children: [
                         Text(
@@ -225,9 +225,7 @@ class _ProviderFeedbackState extends State<ProviderFeedback> {
                         ),
                       ],
                     ),
-                    SizedBox(
-                      height: res_height * 0.01,
-                    ),
+                    SizedBox(height: res_height * 0.01),
                     Container(
                       // constraints: BoxConstraints(
                       //   minWidth: MediaQuery.of(context).size.width * 0.85,
@@ -241,25 +239,31 @@ class _ProviderFeedbackState extends State<ProviderFeedback> {
                         decoration: InputDecoration(
                           hintText: "Enter Email",
                           hintStyle: TextStyle(
-                            color: Colors.grey, // Set the desired hint text color here
+                            color:
+                                Colors
+                                    .grey, // Set the desired hint text color here
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15.0),
                           ),
                           enabledBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                           focusedBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(
-                      height: res_height * 0.02,
-                    ),
+                    SizedBox(height: res_height * 0.02),
                     Row(
                       children: [
                         Text(
@@ -272,9 +276,7 @@ class _ProviderFeedbackState extends State<ProviderFeedback> {
                         ),
                       ],
                     ),
-                    SizedBox(
-                      height: res_height * 0.01,
-                    ),
+                    SizedBox(height: res_height * 0.01),
                     Container(
                       // constraints: BoxConstraints(
                       //   minWidth: MediaQuery.of(context).size.width * 0.85,
@@ -290,28 +292,35 @@ class _ProviderFeedbackState extends State<ProviderFeedback> {
                         decoration: InputDecoration(
                           hintText: "Enter Comment",
                           hintStyle: TextStyle(
-                            color: Colors.grey, // Set the desired hint text color here
+                            color:
+                                Colors
+                                    .grey, // Set the desired hint text color here
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15.0),
                           ),
                           enabledBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                           focusedBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(
-                      height: res_height * 0.04,
-                    ),
+                    SizedBox(height: res_height * 0.04),
                     GestureDetector(
                       onTap: () async {
-                        final SharedPreferences s = await SharedPreferences.getInstance();
+                        final SharedPreferences s =
+                            await SharedPreferences.getInstance();
                         if (NameController.text.toString().isNotEmpty &&
                             EmailController.text.toString().isNotEmpty &&
                             FeedbackController.text.toString().isNotEmpty) {
@@ -321,10 +330,11 @@ class _ProviderFeedbackState extends State<ProviderFeedback> {
                             "email": EmailController.text,
                             "comments": FeedbackController.text,
                           };
-                          print(data);
                           FeedbackApi(data);
                         } else {
-                          final snackBar = new SnackBar(content: new Text("Fields Cannot Be Empty"));
+                          final snackBar = new SnackBar(
+                            content: new Text("Fields Cannot Be Empty"),
+                          );
                           ScaffoldMessenger.of(context).showSnackBar(snackBar);
                         }
                       },
@@ -334,10 +344,16 @@ class _ProviderFeedbackState extends State<ProviderFeedback> {
                         child: Center(
                           child: Text(
                             'Submit',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 19,
+                            ),
                           ),
                         ),
-                        decoration: BoxDecoration(color: kprimaryColor, borderRadius: BorderRadius.circular(14)),
+                        decoration: BoxDecoration(
+                          color: kprimaryColor,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                     ),
                   ],
@@ -355,170 +371,179 @@ class _ProviderFeedbackState extends State<ProviderFeedback> {
     try {
       final response = await http.post(
         Uri.parse(FeedbackUrl),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
         body: json.encode(data),
       );
       final responseBody = jsonDecode(response.body);
-      print(responseBody);
       if (responseBody["message"].toString() == 'Inserted') {
         showDialog(
           context: context,
-          builder: (_) => AlertDialog(
-            backgroundColor: Color(0xff000000B8),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            contentPadding: EdgeInsets.all(0),
-            actionsPadding: EdgeInsets.all(0),
-            actions: [
-              Stack(
-                clipBehavior: Clip.none,
-                alignment: AlignmentDirectional.center,
-                children: [
-                  Container(
-                    width: 320,
-                    height: 222,
-                    decoration: BoxDecoration(
-                        // border: Border.all(color: Colors.white),
-                        borderRadius: BorderRadius.circular(10),
-                        color: Color(0xffFEB038)),
-                    child: ListView(
-                      children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
+          builder:
+              (_) => AlertDialog(
+                backgroundColor: Color(0xff000000B8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                contentPadding: EdgeInsets.all(0),
+                actionsPadding: EdgeInsets.all(0),
+                actions: [
+                  Stack(
+                    clipBehavior: Clip.none,
+                    alignment: AlignmentDirectional.center,
+                    children: [
+                      Container(
+                        width: 320,
+                        height: 222,
+                        decoration: BoxDecoration(
+                          // border: Border.all(color: Colors.white),
+                          borderRadius: BorderRadius.circular(10),
+                          color: Color(0xffFEB038),
+                        ),
+                        child: ListView(
                           children: [
-                            SizedBox(
-                              height: 67,
-                            ),
-                            Text(
-                              "Feedback",
-                              style: TextStyle(fontFamily: "Inter, Bold", fontSize: 30, color: Colors.white),
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            Container(
-                              width: 250,
-                              child: Center(
-                                child: Text(
-                                  "Your feedback has been submitted",
-                                  style: TextStyle(fontFamily: "Inter, Regular", fontSize: 19, color: Colors.white),
-                                ),
-                              ),
-                            ),
-                            // 15.verticalSpace,
-                            // Container(
-                            //   width: 270.w,
-                            //   height: 50.h,
-                            //   child: Text(
-                            //     "You will be contacted by the Owner via direct message to confirm!",
-                            //     textAlign: TextAlign.center,
-                            //     style: TextStyle(
-                            //       fontFamily: "Inter, Regular",
-                                  // fontSize: 15.sp,
-                            //       color: Colors.white,
-                            //     ),
-                            //   ),
-                            // ),
-                            SizedBox(
-                              height: 18,
-                            ),
-                            Row(
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                SizedBox(
-                                  
+                                SizedBox(height: 67),
+                                Text(
+                                  "Feedback",
+                                  style: TextStyle(
+                                    fontFamily: "Inter, Bold",
+                                    fontSize: 30,
+                                    color: Colors.white,
+                                  ),
                                 ),
-                                // Container(
-                                //   width: 160,
-                                //   height: 51,
-                                //   decoration: BoxDecoration(
-                                //       borderRadius: BorderRadius.only(
-                                //         bottomLeft: Radius.circular(10),
-                                //         // bottomRight:
-                                //         //     Radius.circular(10.r),
-                                //       ),
-                                //       color: Colors.white),
-                                //   child: GestureDetector(
-                                //     onTap: () {
-                                //       Get.back();
-                                //     },
-                                //     child: Center(
-                                //       child: Text(
-                                //         "No",
-                                //         style: TextStyle(fontFamily: "Inter, Regular", fontSize: 14, color: Colors.black),
-                                //       ),
-                                //     ),
-                                //   ),
-                                // ),
+                                SizedBox(height: 10),
                                 Container(
-                                   width: 312,
-                                  height: 51,
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.only(
-                                        // bottomLeft:
-                                        //     Radius.circular(10.r),
-                                        bottomRight: Radius.circular(10),
-                                      ),
-                                      color: Colors.white),
+                                  width: 250,
                                   child: Center(
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        
-                                        setState(() {
-                                          // NameController.clear();
-                                          // EmailController.clear();
-                                          FeedbackController.clear();
-                                          // Get.back();
-                                          Get.to(() => MainScreen());
-                                          
-                                        });
-                                        // ApiRepository.shared.deleteProductsById(prodID);
-                                        // final bottomcontroller = Get.put(BottomController());
-                                        // bottomcontroller.navBarChange(1);
-                                        print("Navigated");
-                                      },
-                                      child: Container(
-                                        child: Text(
-                                          "Okay",
-                                          style: TextStyle(fontFamily: "Inter, Regular", fontSize: 14, color: Colors.black),
-                                        ),
+                                    child: Text(
+                                      "Your feedback has been submitted",
+                                      style: TextStyle(
+                                        fontFamily: "Inter, Regular",
+                                        fontSize: 19,
+                                        color: Colors.white,
                                       ),
                                     ),
                                   ),
                                 ),
+                                // 15.verticalSpace,
+                                // Container(
+                                //   width: 270.w,
+                                //   height: 50.h,
+                                //   child: Text(
+                                //     "You will be contacted by the Owner via direct message to confirm!",
+                                //     textAlign: TextAlign.center,
+                                //     style: TextStyle(
+                                //       fontFamily: "Inter, Regular",
+                                // fontSize: 15.sp,
+                                //       color: Colors.white,
+                                //     ),
+                                //   ),
+                                // ),
+                                SizedBox(height: 18),
+                                Row(
+                                  children: [
+                                    SizedBox(),
+                                    // Container(
+                                    //   width: 160,
+                                    //   height: 51,
+                                    //   decoration: BoxDecoration(
+                                    //       borderRadius: BorderRadius.only(
+                                    //         bottomLeft: Radius.circular(10),
+                                    //         // bottomRight:
+                                    //         //     Radius.circular(10.r),
+                                    //       ),
+                                    //       color: Colors.white),
+                                    //   child: GestureDetector(
+                                    //     onTap: () {
+                                    //       Get.back();
+                                    //     },
+                                    //     child: Center(
+                                    //       child: Text(
+                                    //         "No",
+                                    //         style: TextStyle(fontFamily: "Inter, Regular", fontSize: 14, color: Colors.black),
+                                    //       ),
+                                    //     ),
+                                    //   ),
+                                    // ),
+                                    Container(
+                                      width: 312,
+                                      height: 51,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.only(
+                                          // bottomLeft:
+                                          //     Radius.circular(10.r),
+                                          bottomRight: Radius.circular(10),
+                                        ),
+                                        color: Colors.white,
+                                      ),
+                                      child: Center(
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              // NameController.clear();
+                                              // EmailController.clear();
+                                              FeedbackController.clear();
+                                              // Get.back();
+                                              Get.to(() => MainScreen());
+                                            });
+                                            // ApiRepository.shared.deleteProductsById(prodID);
+                                            // final bottomcontroller = Get.put(BottomController());
+                                            // bottomcontroller.navBarChange(1);
+                                          },
+                                          child: Container(
+                                            child: Text(
+                                              "Okay",
+                                              style: TextStyle(
+                                                fontFamily: "Inter, Regular",
+                                                fontSize: 14,
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ],
                             ),
                           ],
-                        )
-                      ],
-                    ),
-                  ),
-                  Positioned(
-                      top: -20,
-                      // left: 100,
-                      child: Container(
+                        ),
+                      ),
+                      Positioned(
+                        top: -20,
+                        // left: 100,
+                        child: Container(
                           width: 90,
                           height: 90,
-                          decoration: BoxDecoration(shape: BoxShape.circle, color: Color(0xffFEB038)),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(0xffFEB038),
+                          ),
                           child: Center(
-                              child: Image.asset(
-                            "assets/slicing/smile@3x.png",
-                            scale: 5,
-                          ))))
+                            child: Image.asset(
+                              "assets/slicing/smile@3x.png",
+                              scale: 5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
-            ],
-          ),
         );
         // Utils.toastMessage('Feedback form has been submitted');
       } else {
         Utils.flushBarErrorMessage(responseBody["message"].toString(), context);
       }
     } catch (err) {
-      print(err);
-      Utils.flushBarErrorMessage('Something went wrong plz check your internet connection', context);
+      Utils.flushBarErrorMessage(
+        'Something went wrong plz check your internet connection',
+        context,
+      );
     }
   }
 }

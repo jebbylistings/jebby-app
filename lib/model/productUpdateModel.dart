@@ -10,17 +10,18 @@ class ProductUpdateModel {
   int? id;
   List<int>? array;
 
-  ProductUpdateModel(
-      {this.userId,
-      this.categoryId,
-      this.subcategoryId,
-      this.name,
-      this.price,
-      this.specifications,
-      this.serviceAgreements,
-      this.negotiation,
-      this.id,
-      this.array});
+  ProductUpdateModel({
+    this.userId,
+    this.categoryId,
+    this.subcategoryId,
+    this.name,
+    this.price,
+    this.specifications,
+    this.serviceAgreements,
+    this.negotiation,
+    this.id,
+    this.array,
+  });
 
   ProductUpdateModel.fromJson(Map<String, dynamic> json) {
     userId = json['user_id'];

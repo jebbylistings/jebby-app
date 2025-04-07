@@ -14,54 +14,53 @@ class TransportAndInstallationPolicy extends StatefulWidget {
 
 class _TransportAndInstallationPolicyState
     extends State<TransportAndInstallationPolicy> {
-
-       bool isLoading = true;
+  bool isLoading = true;
   bool isError = false;
   bool emptyData = false;
 
-  getTransport(){
+  getTransport() {
     ApiRepository.shared.transport(
-      (List)=>{
-         if (this.mounted)
-                {
-                  if (List.status == 0)
-                    {
-                      setState((){
-                        isLoading = false;
-                        emptyData = true;
-                        isError = false;
-                      })
-                    }
-                  else
-                    {
-                     setState((){
-                        isLoading = false;
-                        emptyData = false;
-                        isError = false;
-                      })
-                    }
-                }
-      }, 
-      (error)=>{
-          if (error != null)
-                {
-                  setState(() {
-                   isLoading = false;
-                   isError = true;
-                   emptyData = false;
-                  }),
-                },
-      });
+      (List) => {
+        if (this.mounted)
+          {
+            if (List.status == 0)
+              {
+                setState(() {
+                  isLoading = false;
+                  emptyData = true;
+                  isError = false;
+                }),
+              }
+            else
+              {
+                setState(() {
+                  isLoading = false;
+                  emptyData = false;
+                  isError = false;
+                }),
+              },
+          },
+      },
+      (error) => {
+        if (error != null)
+          {
+            setState(() {
+              isLoading = false;
+              isError = true;
+              emptyData = false;
+            }),
+          },
+      },
+    );
   }
 
-  void initState(){
+  void initState() {
     getTransport();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
@@ -71,7 +70,10 @@ class _TransportAndInstallationPolicyState
         title: Text(
           'Transportation & Installation \n Policy ',
           style: TextStyle(
-              fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 19,
+          ),
         ),
         leading: InkWell(
           onTap: () {
@@ -81,10 +83,7 @@ class _TransportAndInstallationPolicyState
           child: Padding(
             padding: const EdgeInsets.all(17.0),
             child: Container(
-              child: Icon(
-                Icons.arrow_back,
-            color: Colors.black,
-              ),
+              child: Icon(Icons.arrow_back, color: Colors.black),
             ),
           ),
         ),
@@ -94,11 +93,19 @@ class _TransportAndInstallationPolicyState
         child: SingleChildScrollView(
           child: Column(
             children: [
-              isLoading ?
-              Container(child: Text('Loading'),) :
-              Container(
-                child: 
-          Html(data: ApiRepository.shared.getTransportModelList!.data![0].description.toString(),)),
+              isLoading
+                  ? Container(child: Text('Loading'))
+                  : Container(
+                    child: Html(
+                      data:
+                          ApiRepository
+                              .shared
+                              .getTransportModelList!
+                              .data![0]
+                              .description
+                              .toString(),
+                    ),
+                  ),
               // Container(
               //   child: Text(
               //     isLoading ? "Loading" : ApiRepository.shared.getTransportModelList!.data![0].description.toString(),

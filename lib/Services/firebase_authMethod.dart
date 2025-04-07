@@ -1,4 +1,3 @@
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -7,17 +6,15 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 import '../utils/show_snackbar.dart';
 
-class FirebaseAuthMethods with ChangeNotifier{
+class FirebaseAuthMethods with ChangeNotifier {
   final FirebaseAuth auth;
 
   FirebaseAuthMethods(this.auth);
 
-  User get user=> auth.currentUser!;
-
+  User get user => auth.currentUser!;
 
   //StateMAnagement
   Stream<User?> get authState => FirebaseAuth.instance.authStateChanges();
-  
 
   //Email SignUp
 
@@ -69,8 +66,9 @@ class FirebaseAuthMethods with ChangeNotifier{
     try {
       if (kIsWeb) {
         GoogleAuthProvider googleProvider = GoogleAuthProvider();
-        googleProvider
-            .addScope("https://www.googleapis.com/auth/contacts.readonly");
+        googleProvider.addScope(
+          "https://www.googleapis.com/auth/contacts.readonly",
+        );
         await auth.signInWithPopup(googleProvider);
       } else {
         final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
@@ -79,12 +77,12 @@ class FirebaseAuthMethods with ChangeNotifier{
         if (googleAuth?.accessToken != null || googleAuth?.idToken != null) {
           //create a new Credential
 
-          final credential = GoogleAuthProvider.credential(
-            idToken: googleAuth?.idToken,
-            accessToken: googleAuth?.accessToken,
-          );
-          UserCredential usercredential =
-              await auth.signInWithCredential(credential);
+          // final credential = GoogleAuthProvider.credential(
+          //   idToken: googleAuth?.idToken,
+          //   accessToken: googleAuth?.accessToken,
+          // );
+          // UserCredential usercredential =
+          //     await auth.signInWithCredential(credential);
 
           //This is For SignUp
           // if (usercredential.user!=null) {
@@ -102,14 +100,12 @@ class FirebaseAuthMethods with ChangeNotifier{
   }
 
   //Firebase SignIn
- Future<void> signInWithFacebook(BuildContext context) async {
+  Future<void> signInWithFacebook(BuildContext context) async {
     try {
       final LoginResult loginResult = await FacebookAuth.instance.login();
-          print("loginResult.toString() ${loginResult.toString()}");
 
       final OAuthCredential facebookAuthCredential =
           FacebookAuthProvider.credential(loginResult.accessToken!.tokenString);
-
 
       await auth.signInWithCredential(facebookAuthCredential);
     } on FirebaseAuthException catch (e) {
@@ -170,37 +166,22 @@ class FirebaseAuthMethods with ChangeNotifier{
   //   }
   // }
 
-//   Future<void> signOut(BuildContext context)async{
-//     try {
-//       await auth.signOut();
-//     }on FirebaseAuthException catch (e) {
-//       showSnackBar(context, e.message!);
-//     }
-//   }
-//   Future<void> deleteAccount(BuildContext context)async{
-//     try {
-//       await auth.currentUser!.delete();
-//     }on FirebaseAuthException catch (e) {
-//       showSnackBar(context, e.message!);
-//     }
-//   }
+  //   Future<void> signOut(BuildContext context)async{
+  //     try {
+  //       await auth.signOut();
+  //     }on FirebaseAuthException catch (e) {
+  //       showSnackBar(context, e.message!);
+  //     }
+  //   }
+  //   Future<void> deleteAccount(BuildContext context)async{
+  //     try {
+  //       await auth.currentUser!.delete();
+  //     }on FirebaseAuthException catch (e) {
+  //       showSnackBar(context, e.message!);
+  //     }
+  //   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- final GoogleSignIn googleSignIn = GoogleSignIn();
+  final GoogleSignIn googleSignIn = GoogleSignIn();
 
   bool _isSignedIn = false;
   bool get isSignedIn => _isSignedIn;
@@ -226,6 +207,4 @@ class FirebaseAuthMethods with ChangeNotifier{
 
   String? _imageUrl;
   String? get imageUrl => _imageUrl;
-
-  
 }

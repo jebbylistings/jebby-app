@@ -45,7 +45,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   TextEditingController searchController = TextEditingController();
 
-  @override
   Future getData() async {
     final sp = context.read<SignInProvider>();
     final usp = context.read<UserViewModel>();
@@ -62,15 +61,17 @@ class _HomeScreenState extends State<HomeScreen> {
   String? role;
 
   void profileData(BuildContext context) async {
-    getUserDate().then((value) async {
-      token = value.token.toString();
-      sourceId = value.id.toString();
-      fullname = value.name.toString();
-      email = value.email.toString();
-      role = value.role.toString();
-    }).onError((error, stackTrace) {
-      if (kDebugMode) {}
-    });
+    getUserDate()
+        .then((value) async {
+          token = value.token.toString();
+          sourceId = value.id.toString();
+          fullname = value.name.toString();
+          email = value.email.toString();
+          role = value.role.toString();
+        })
+        .onError((error, stackTrace) {
+          if (kDebugMode) {}
+        });
   }
 
   bool isLoading = true;
@@ -78,60 +79,67 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isEmpty = false;
 
   getFeaturedProducts() {
-    ApiRepository.shared.featuredProducts((List) {
-      if (this.mounted) {
-        if (List.data!.length == 0) {
-          setState(() {
-            isLoading = false;
-            isError = false;
-            isEmpty = true;
-          });
-        } else {
-          setState(() {
-            isLoading = false;
-            isError = false;
-            isEmpty = false;
-          });
+    ApiRepository.shared.featuredProducts(
+      (List) {
+        if (this.mounted) {
+          if (List.data!.length == 0) {
+            setState(() {
+              isLoading = false;
+              isError = false;
+              isEmpty = true;
+            });
+          } else {
+            setState(() {
+              isLoading = false;
+              isError = false;
+              isEmpty = false;
+            });
+          }
         }
-      }
-    }, (error) {
-      setState(() {
-        isLoading = true;
-        isError = false;
-        isEmpty = true;
-      });
-    });
+      },
+      (error) {
+        setState(() {
+          isLoading = true;
+          isError = false;
+          isEmpty = true;
+        });
+      },
+    );
   }
 
   bool isLoading1 = true;
   bool isError1 = false;
   bool isEmpty1 = false;
   getNotifications() {
-    ApiRepository.shared.notifications(sourceId, (List) {
-      if (this.mounted) {
-        if (List.data!.length == 0) {
-          setState(() {
-            isEmpty1 = true;
-            isLoading1 = false;
-            isError1 = false;
-          });
-        } else {
+    ApiRepository.shared.notifications(
+      sourceId,
+      (List) {
+        if (this.mounted) {
+          if (List.data!.length == 0) {
+            setState(() {
+              isEmpty1 = true;
+              isLoading1 = false;
+              isError1 = false;
+            });
+          } else {
+            setState(() {
+              isEmpty1 = false;
+              isLoading1 = false;
+              isError1 = false;
+            });
+          }
+        }
+      },
+      (error) {
+        if (error != null) {
           setState(() {
             isEmpty1 = false;
-            isLoading1 = false;
-            isError1 = false;
+            isLoading1 = true;
+            isError1 = true;
           });
         }
-      }
-    }, (error) {
-      if (error != null) {
-        setState(() {
-          isEmpty1 = false;
-          isLoading1 = true;
-          isError1 = true;
-        });
-      }
-    });
+      },
+    );
   }
 
   seenNotification() {
@@ -143,19 +151,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
     prefs.getBool('time') == false
         ? notiTimer().timer?.cancel()
-        : notiTimer().timer = prefs.getBool('time') == false
-            ? notiTimer().timer?.cancel()
-            : new Timer.periodic(Duration(seconds: 5), (_) {
-                if (token == null || token == "" || role == "" || role == null || prefs.getBool('time') != true) {
-                  cancelTimer();
-                } else {
-                  prefs.getBool('notifiction') == true
-                      ? getNotifications()
-                      : prefs.getBool('notifiction') == null
-                          ? getNotifications()
-                          : null;
-                }
-              });
+        : notiTimer().timer =
+            prefs.getBool('time') == false
+                ? notiTimer().timer?.cancel()
+                : new Timer.periodic(Duration(seconds: 5), (_) {
+                  if (token == null ||
+                      token == "" ||
+                      role == "" ||
+                      role == null ||
+                      prefs.getBool('time') != true) {
+                    cancelTimer();
+                  } else {
+                    prefs.getBool('notifiction') == true
+                        ? getNotifications()
+                        : prefs.getBool('notifiction') == null
+                        ? getNotifications()
+                        : null;
+                  }
+                });
   }
 
   cancelTimer() {
@@ -188,36 +201,13 @@ class _HomeScreenState extends State<HomeScreen> {
     func();
   }
 
-  Future<void> _selectDate1(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: selectedDate,
-      firstDate: DateTime(2015, 8),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null && picked != selectedDate) {
-      setState(() {
-        selectedDate1 = picked;
-      });
-    }
-  }
-
   var myFormat = DateFormat('MM/dd/yyyy');
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked =
-        await showDatePicker(context: context, initialDate: selectedDate, firstDate: DateTime(2015, 8), lastDate: DateTime(2101));
-    if (picked != null && picked != selectedDate) {
-      setState(() {
-        selectedDate = picked;
-      });
-    }
-  }
 
   double starss = 0.0;
   final GlobalKey<ScaffoldState> _key = GlobalKey();
   @override
   Widget build(BuildContext context) {
-    final userName = context.watch<AuthViewModel>();
+    context.watch<AuthViewModel>();
     double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
     GetAPiFromModel getAPiFromModel = GetAPiFromModel();
@@ -233,7 +223,11 @@ class _HomeScreenState extends State<HomeScreen> {
           centerTitle: true,
           title: Text(
             'Home',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+              fontSize: 19,
+            ),
           ),
           leading: InkWell(
             onTap: () {
@@ -258,7 +252,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       Get.to(() => MessageScreen());
                     },
                     child: Padding(
-                      padding: const EdgeInsets.only(top: 18.0, bottom: 18.0, right: 7),
+                      padding: const EdgeInsets.only(
+                        top: 18.0,
+                        bottom: 18.0,
+                        right: 7,
+                      ),
                       child: Icon(
                         Icons.notifications_none,
                         color: Colors.black,
@@ -268,38 +266,46 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 isLoading1
                     ? SizedBox()
-                    : ApiRepository.shared.getNotificationModelList!.unseen.toString() == "0"
-                        ? SizedBox()
-                        : Visibility(
-                            visible: role != null && role != "Guest",
-                            child: Positioned(
-                              top: 4,
-                              right: 0,
-                              child: Container(
-                                padding: EdgeInsets.all(2),
-                                decoration: BoxDecoration(
-                                  color: kprimaryColor,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                constraints: BoxConstraints(
-                                  minWidth: 16,
-                                  minHeight: 16,
-                                ),
-                                child: Text(
-                                  isLoading1
-                                      ? ""
-                                      : ApiRepository.shared.getNotificationModelList!.unseen.toString() == "0"
-                                          ? ""
-                                          : ApiRepository.shared.getNotificationModelList!.unseen.toString(),
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-                          )
+                    : ApiRepository.shared.getNotificationModelList!.unseen
+                            .toString() ==
+                        "0"
+                    ? SizedBox()
+                    : Visibility(
+                      visible: role != null && role != "Guest",
+                      child: Positioned(
+                        top: 4,
+                        right: 0,
+                        child: Container(
+                          padding: EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: kprimaryColor,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          constraints: BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            isLoading1
+                                ? ""
+                                : ApiRepository
+                                        .shared
+                                        .getNotificationModelList!
+                                        .unseen
+                                        .toString() ==
+                                    "0"
+                                ? ""
+                                : ApiRepository
+                                    .shared
+                                    .getNotificationModelList!
+                                    .unseen
+                                    .toString(),
+                            style: TextStyle(color: Colors.white, fontSize: 10),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ),
               ],
             ),
             Visibility(
@@ -309,8 +315,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   Get.to(() => MyProfileScreen());
                 },
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 19.0, vertical: 18.0),
-                  child: Icon(Icons.person_outline, color: Colors.black, size: 25),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 19.0,
+                    vertical: 18.0,
+                  ),
+                  child: Icon(
+                    Icons.person_outline,
+                    color: Colors.black,
+                    size: 25,
+                  ),
                 ),
               ),
             ),
@@ -322,9 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  height: 20,
-                ),
+                SizedBox(height: 20),
                 Row(
                   children: [
                     Container(
@@ -332,38 +343,52 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: TextFormField(
                         onChanged: (value) {},
                         controller: searchController,
-                        style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
                         decoration: InputDecoration(
                           suffixIcon: InkWell(
                             onTap: () {
                               if (searchController.text.isNotEmpty) {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
-                                    builder: (context) => SearchData(
-                                      word: searchController.text,
-                                    ),
+                                    builder:
+                                        (context) => SearchData(
+                                          word: searchController.text,
+                                        ),
                                   ),
                                 );
                               }
                             },
-                            child: Icon(
-                              Icons.search,
-                              color: kprimaryColor,
-                            ),
+                            child: Icon(Icons.search, color: kprimaryColor),
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15.0),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: kprimaryColor, width: 1),
-                            borderRadius: const BorderRadius.all(Radius.circular(15)),
+                            borderSide: BorderSide(
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(15),
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: kprimaryColor, width: 1),
-                            borderRadius: const BorderRadius.all(Radius.circular(15)),
+                            borderSide: BorderSide(
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(15),
+                            ),
                           ),
                           filled: true,
-                          hintStyle: const TextStyle(color: Colors.grey, fontSize: 15),
+                          hintStyle: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 15,
+                          ),
                           hintText: "Product Name",
                           fillColor: Colors.white,
                         ),
@@ -371,9 +396,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ],
                 ),
-                SizedBox(
-                  height: res_height * 0.03,
-                ),
+                SizedBox(height: res_height * 0.03),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Row(
@@ -382,47 +405,52 @@ class _HomeScreenState extends State<HomeScreen> {
                       Container(
                         child: Text(
                           'Discover!',
-                          style: TextStyle(fontSize: 29, color: Colors.black, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 29,
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                      SizedBox(
-                        height: 10,
-                      ),
+                      SizedBox(height: 10),
                       GestureDetector(
                         onTap: () {
                           Get.to(() => CategoriesssScreen());
                         },
-                        child: Container(
-                          child: Text("See All"),
-                        ),
+                        child: Container(child: Text("See All")),
                       ),
                     ],
                   ),
                 ),
                 FutureBuilder(
                   future: getAPiFromModel.getCategoryList(),
-                  builder: (BuildContext context, AsyncSnapshot<CategoryList> snapshot) {
+                  builder: (
+                    BuildContext context,
+                    AsyncSnapshot<CategoryList> snapshot,
+                  ) {
                     if (!snapshot.hasData) {
-                      return Center(
-                        child: CircularProgressIndicator(),
-                      );
+                      return Center(child: CircularProgressIndicator());
                     } else {
                       final data = snapshot.data!.data;
                       return Wrap(
                         spacing: 1,
                         runSpacing: 5,
-                        children: List.generate(snapshot.data!.data!.length, (index) {
+                        children: List.generate(snapshot.data!.data!.length, (
+                          index,
+                        ) {
                           return data![index].status == 0
                               ? Text("")
-                              : contBox(txt: data[index].name, img: '${AppUrl.baseUrlM}${data[index].image}', id: data[index].id.toString());
+                              : contBox(
+                                txt: data[index].name,
+                                img: '${AppUrl.baseUrlM}${data[index].image}',
+                                id: data[index].id.toString(),
+                              );
                         }),
                       );
                     }
                   },
                 ),
-                SizedBox(
-                  height: res_height * 0.02,
-                ),
+                SizedBox(height: res_height * 0.02),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 10),
                   child: Row(
@@ -431,7 +459,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       Container(
                         child: Text(
                           'Featured Items!',
-                          style: TextStyle(fontSize: 29, color: Colors.black, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 29,
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                         ),
@@ -442,52 +474,62 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
-                SizedBox(
-                  height: 20,
-                ),
+                SizedBox(height: 20),
                 isLoading
                     ? Text("")
                     : isEmpty
-                        ? Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 10),
-                            child: Text("No items available currently"),
-                          )
-                        : GridView.builder(
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2, crossAxisSpacing: 2.0, mainAxisSpacing: 30.0, childAspectRatio: 1),
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            itemCount: ApiRepository.shared.getFeaturedProductsModelList!.data!.length,
-                            itemBuilder: (context, int index) {
-                              var data = ApiRepository.shared.getFeaturedProductsModelList!.data![index];
-                              var price = data.price;
-                              var reviews = data.isReview.toString();
-                              var name = data.name.toString();
-                              var id = data.id.toString();
-                              var specs = data.specifications.toString();
-                              var desc = data.serviceAgreements.toString();
-                              var userId = data.userId.toString();
-                              var msg = data.isMessage;
-                              var image = data.image.toString();
-                              var stars = data.stars.toString();
-                              var delivery_charges = data.delivery_charges.toString();
-                              return itmBox(
-                                img: image,
-                                dx: price,
-                                rv: '(${reviews} Reveiws)',
-                                tx: '${name}',
-                                rt: stars,
-                                id: id,
-                                specs: specs,
-                                userId: userId,
-                                desc: desc,
-                                msg: msg,
-                                delivery_charges: delivery_charges,
-                              );
-                            }),
-                SizedBox(
-                  height: res_height * 0.12,
-                )
+                    ? Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      child: Text("No items available currently"),
+                    )
+                    : GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 2.0,
+                        mainAxisSpacing: 30.0,
+                        childAspectRatio: 1,
+                      ),
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount:
+                          ApiRepository
+                              .shared
+                              .getFeaturedProductsModelList!
+                              .data!
+                              .length,
+                      itemBuilder: (context, int index) {
+                        var data =
+                            ApiRepository
+                                .shared
+                                .getFeaturedProductsModelList!
+                                .data![index];
+                        var price = data.price;
+                        var reviews = data.isReview.toString();
+                        var name = data.name.toString();
+                        var id = data.id.toString();
+                        var specs = data.specifications.toString();
+                        var desc = data.serviceAgreements.toString();
+                        var userId = data.userId.toString();
+                        var msg = data.isMessage;
+                        var image = data.image.toString();
+                        var stars = data.stars.toString();
+                        var delivery_charges = data.delivery_charges.toString();
+                        return itmBox(
+                          img: image,
+                          dx: price,
+                          rv: '(${reviews} Reveiws)',
+                          tx: '${name}',
+                          rt: stars,
+                          id: id,
+                          specs: specs,
+                          userId: userId,
+                          desc: desc,
+                          msg: msg,
+                          delivery_charges: delivery_charges,
+                        );
+                      },
+                    ),
+                SizedBox(height: res_height * 0.12),
               ],
             ),
           ),
@@ -502,10 +544,7 @@ class _HomeScreenState extends State<HomeScreen> {
     double responsiveFontSize = res_width * 0.035;
     return GestureDetector(
       onTap: () {
-        Get.to(() => ElectronicsScreen(
-              categoryname: txt,
-              id: id,
-            ));
+        Get.to(() => ElectronicsScreen(categoryname: txt, id: id));
       },
       child: Padding(
         padding: const EdgeInsets.all(5.5),
@@ -518,9 +557,7 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.white, width: 2),
                 color: kprimaryColor,
-                borderRadius: BorderRadius.all(
-                  Radius.circular(18),
-                ),
+                borderRadius: BorderRadius.all(Radius.circular(18)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.grey,
@@ -532,22 +569,23 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: ClipOval(
-                    child: CachedNetworkImage(
-                  imageUrl: '$img',
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Center(
-                    child: CircularProgressIndicator(), // Loading spinner
+                  child: CachedNetworkImage(
+                    imageUrl: '$img',
+                    fit: BoxFit.cover,
+                    placeholder:
+                        (context, url) => Center(
+                          child: CircularProgressIndicator(), // Loading spinner
+                        ),
+                    errorWidget:
+                        (context, url, error) => Icon(
+                          Icons.error,
+                          color: Colors.red,
+                        ), // Display an error icon
                   ),
-                  errorWidget: (context, url, error) => Icon(
-                    Icons.error,
-                    color: Colors.red,
-                  ), // Display an error icon
-                )),
+                ),
               ),
             ),
-            SizedBox(
-              height: 6,
-            ),
+            SizedBox(height: 6),
             SizedBox(
               width: res_width * 0.27,
               child: Center(
@@ -558,19 +596,44 @@ class _HomeScreenState extends State<HomeScreen> {
                   maxLines: 1,
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),
     );
   }
 
-  itmBox({img, tx, dx, rt, rv, id, specs, userId, desc, msg, delivery_charges}) {
-    double res_width = MediaQuery.of(context).size.width;
+  itmBox({
+    img,
+    tx,
+    dx,
+    rt,
+    rv,
+    id,
+    specs,
+    userId,
+    desc,
+    msg,
+    delivery_charges,
+  }) {
     double res_height = MediaQuery.of(context).size.height;
     return GestureDetector(
       onTap: () {
-        Get.to(routeName: "PD", () => ProductDetailScreen(id, tx, int.parse(dx.toString()), rt, img, specs, userId, desc, msg, delivery_charges));
+        Get.to(
+          routeName: "PD",
+          () => ProductDetailScreen(
+            id,
+            tx,
+            int.parse(dx.toString()),
+            rt,
+            img,
+            specs,
+            userId,
+            desc,
+            msg,
+            delivery_charges,
+          ),
+        );
       },
       child: Padding(
         padding: const EdgeInsets.only(top: 5, bottom: 0, left: 10, right: 10),
@@ -580,36 +643,30 @@ class _HomeScreenState extends State<HomeScreen> {
               height: res_height * 0.20,
               decoration: BoxDecoration(),
               child: ClipRRect(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(10),
-                  ),
-                  child: CachedNetworkImage(
-                    imageUrl: AppUrl.baseUrlM + img,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Center(
-                      child: CircularProgressIndicator(), // Loading spinner
-                    ),
-                    errorWidget: (context, url, error) => Icon(
-                      Icons.error,
-                      color: Colors.red,
-                    ), // Display an error icon
-                  )),
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+                child: CachedNetworkImage(
+                  imageUrl: AppUrl.baseUrlM + img,
+                  fit: BoxFit.cover,
+                  placeholder:
+                      (context, url) => Center(
+                        child: CircularProgressIndicator(), // Loading spinner
+                      ),
+                  errorWidget:
+                      (context, url, error) => Icon(
+                        Icons.error,
+                        color: Colors.red,
+                      ), // Display an error icon
+                ),
+              ),
             ),
-            SizedBox(
-              height: res_height * 0.005,
-            ),
+            SizedBox(height: res_height * 0.005),
             Container(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    '$tx',
-                    style: TextStyle(fontSize: 15),
-                  ),
-                  SizedBox(
-                    height: res_height * 0.003,
-                  ),
+                  Text('$tx', style: TextStyle(fontSize: 15)),
+                  SizedBox(height: res_height * 0.003),
                   Text(
                     '${dx.toString()} \$',
                     style: TextStyle(fontSize: 13),
@@ -619,28 +676,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        '$rt ',
-                        style: TextStyle(fontSize: 11),
-                      ),
+                      Text('$rt ', style: TextStyle(fontSize: 11)),
                       Text(
                         '$rv',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey,
-                        ),
+                        style: TextStyle(fontSize: 11, color: Colors.grey),
                       ),
                     ],
                   ),
-                  SizedBox(
-                    height: res_height * 0.001,
-                  )
+                  SizedBox(height: res_height * 0.001),
                 ],
               ),
             ),
-            SizedBox(
-              height: res_height * 0.001,
-            )
+            SizedBox(height: res_height * 0.001),
           ],
         ),
       ),

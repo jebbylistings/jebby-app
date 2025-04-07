@@ -33,44 +33,36 @@ import '../res/app_url.dart';
 import 'package:http/http.dart' as http;
 
 class GetAPiFromModel {
-  Future<CategoryList> getCategoryList () async {
+  Future<CategoryList> getCategoryList() async {
+    final response = await http.get(Uri.parse(AppUrl.categoryGetUrl));
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body);
 
-     final response = await http.get(Uri.parse(AppUrl.categoryGetUrl));  
-     if(response.statusCode == 200){ 
-     var data = jsonDecode(response.body);
-
-       return CategoryList.fromJson(data);
-     }else {
-       throw Exception("Error");
-
-     }
+      return CategoryList.fromJson(data);
+    } else {
+      throw Exception("Error");
+    }
   }
 
+  Future<SubCategoryList> getSubCategoryList(String id) async {
+    final response = await http.get(Uri.parse(AppUrl.subcategoryGetUrl + id));
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body);
 
-  Future<SubCategoryList> getSubCategoryList (String id) async {
-
-     final response = await http.get(Uri.parse(AppUrl.subcategoryGetUrl+id));  
-     if(response.statusCode == 200){ 
-     var data = jsonDecode(response.body);
-
-       return SubCategoryList.fromJson(data);
-     }else {
-       throw Exception("Error");
-
-     }
+      return SubCategoryList.fromJson(data);
+    } else {
+      throw Exception("Error");
+    }
   }
 
-  Future<GetFeaturedModel>getFeaturedList () async {
+  Future<GetFeaturedModel> getFeaturedList() async {
+    final response = await http.get(Uri.parse(AppUrl.featuredGetUrl));
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body);
 
-     final response = await http.get(Uri.parse(AppUrl.featuredGetUrl));  
-     if(response.statusCode == 200){ 
-     var data = jsonDecode(response.body);
-
-       return GetFeaturedModel.fromJson(data);
-     }else {
-       throw Exception("Error");
-
-     }
+      return GetFeaturedModel.fromJson(data);
+    } else {
+      throw Exception("Error");
+    }
   }
-
 }

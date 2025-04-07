@@ -49,58 +49,62 @@ class _ProductListScreenState extends State<ProductListScreen> {
   String? email;
   String? role;
   void profileData(BuildContext context) async {
-    getUserDate().then((value) async {
-      token = value.token.toString();
-      id = value.id.toString();
-      fullname = value.name.toString();
-      email = value.email.toString();
-      role = value.role.toString();
-      getUserData();
-      getVendorProducts(id);
-      getProductsApi(id);
-    }).onError((error, stackTrace) {
-      if (kDebugMode) {
-        print(error.toString());
-      }
-    });
+    getUserDate()
+        .then((value) async {
+          token = value.token.toString();
+          id = value.id.toString();
+          fullname = value.name.toString();
+          email = value.email.toString();
+          role = value.role.toString();
+          getUserData();
+          getVendorProducts(id);
+          getProductsApi(id);
+        })
+        .onError((error, stackTrace) {
+          if (kDebugMode) {}
+        });
   }
 
   var profile = [];
   Future getProductsApi(id) async {
-    final response = await http.get(Uri.parse('${Url}/UserProfileGetById/${id}'));
+    final response = await http.get(
+      Uri.parse('${Url}/UserProfileGetById/${id}'),
+    );
     var data = jsonDecode(response.body.toString());
     profile = data['data'];
-    print("data ${data['data'].toString()}");
   }
 
   getVendorProducts(id) {
-    ApiRepository.shared.getAllVendorProductsByID((list) {
-      if (this.mounted) {
-        if (list.data!.length == 0) {
-          setState(() {
-            emptyData = true;
-            isLoading = false;
-            isError = false;
-          });
-        } else {
-          setState(() {
-            emptyData = false;
-            isLoading = false;
-            isError = false;
-          });
+    ApiRepository.shared.getAllVendorProductsByID(
+      (list) {
+        if (this.mounted) {
+          if (list.data!.length == 0) {
+            setState(() {
+              emptyData = true;
+              isLoading = false;
+              isError = false;
+            });
+          } else {
+            setState(() {
+              emptyData = false;
+              isLoading = false;
+              isError = false;
+            });
+          }
         }
-      }
-    }, (error) {
-      if (this.mounted) {
-        if (error != null) {
-          setState(() {
-            isLoading = true;
-            isError = true;
-            print("Error:  ${error}");
-          });
+      },
+      (error) {
+        if (this.mounted) {
+          if (error != null) {
+            setState(() {
+              isLoading = true;
+              isError = true;
+            });
+          }
         }
-      }
-    }, id);
+      },
+      id,
+    );
   }
 
   late var vendorAccountMail;
@@ -108,25 +112,29 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
   void getUserData() {
     ApiRepository.shared.userCredential(
-        (List) => {
-              if (this.mounted)
-                {
-                  if (List.data!.length == 0)
-                    {}
-                  else
-                    {
-                      setState(() {
-                        isULoading = false;
-                        vendorAccountMail = ApiRepository.shared.getUserCredentialModelList!.data![0].stripeEmail.toString();
-                        print("venodor account mail ${vendorAccountMail}");
-                      })
-                    }
-                }
-            },
-        (error) => {
-              if (error != null) {},
-            },
-        id.toString());
+      (List) => {
+        if (this.mounted)
+          {
+            if (List.data!.length == 0)
+              {}
+            else
+              {
+                setState(() {
+                  isULoading = false;
+                  vendorAccountMail =
+                      ApiRepository
+                          .shared
+                          .getUserCredentialModelList!
+                          .data![0]
+                          .stripeEmail
+                          .toString();
+                }),
+              },
+          },
+      },
+      (error) => {if (error != null) {}},
+      id.toString(),
+    );
   }
 
   void initState() {
@@ -137,11 +145,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
-
-    final sp = context.watch<SignInProvider>();
-    final usp = context.watch<UserViewModel>();
 
     return Scaffold(
       key: _key,
@@ -152,37 +156,41 @@ class _ProductListScreenState extends State<ProductListScreen> {
         centerTitle: true,
         title: Text(
           'Products List',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 19,
+          ),
         ),
-        leading: widget.side
-            ? GestureDetector(
-                onTap: () {
-                  _key.currentState!.openDrawer();
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(17.0),
+        leading:
+            widget.side
+                ? GestureDetector(
+                  onTap: () {
+                    _key.currentState!.openDrawer();
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(17.0),
+                    child: Container(
+                      child: Image.asset('assets/slicing/hamburger.png'),
+                    ),
+                  ),
+                )
+                : InkWell(
+                  onTap: () {
+                    Get.back();
+                  },
+                  borderRadius: BorderRadius.circular(50),
                   child: Container(
-                    child: Image.asset('assets/slicing/hamburger.png'),
+                    child: Icon(Icons.arrow_back, color: Colors.black),
                   ),
                 ),
-              )
-            : InkWell(
-                onTap: () {
-                  Get.back();
-                },
-                borderRadius: BorderRadius.circular(50),
-                child: Container(
-                  child: Icon(
-                    Icons.arrow_back,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
         actions: [
           GestureDetector(
             onTap: () {
               if (profile.length == 0) {
-                final snackBar = new SnackBar(content: new Text("Complete Your Profile"));
+                final snackBar = new SnackBar(
+                  content: new Text("Complete Your Profile"),
+                );
                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
               } else {
                 Get.off(() => AddProductScreen());
@@ -193,16 +201,14 @@ class _ProductListScreenState extends State<ProductListScreen> {
               child: Container(
                 width: 25,
                 height: 25,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: kprimaryColor),
-                child: Center(
-                  child: Icon(
-                    Icons.add,
-                    color: Colors.black,
-                  ),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: kprimaryColor,
                 ),
+                child: Center(child: Icon(Icons.add, color: Colors.black)),
               ),
             ),
-          )
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -211,54 +217,90 @@ class _ProductListScreenState extends State<ProductListScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              SizedBox(
-                height: res_height * 0.03,
-              ),
+              SizedBox(height: res_height * 0.03),
               isError
                   ? Center(child: Text("Some error occured while loading data"))
                   : isLoading
-                      ? Center(child: CircularProgressIndicator())
-                      : emptyData
-                          ? profile.length == 0
-                              ? Center(child: Text("Complete Your Profile"))
-                              : Center(child: Text("No Product Added"))
-                          : FutureBuilder(
-                              builder: (context, snapshot) {
-                                return GridView.builder(
-                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 2, crossAxisSpacing: 2.0, mainAxisSpacing: 1.0, childAspectRatio: 0.7),
-                                  shrinkWrap: true,
-                                  physics: NeverScrollableScrollPhysics(),
-                                  itemCount: ApiRepository.shared.vendorProductsByIdList?.data?.length,
-                                  itemBuilder: (context, int index) {
-                                    var id = ApiRepository.shared.vendorProductsByIdList?.data?[index].id;
-                                    var name = ApiRepository.shared.vendorProductsByIdList?.data?[index].name;
-                                    var price = ApiRepository.shared.vendorProductsByIdList?.data?[index].price;
-                                    var stars = ApiRepository.shared.vendorProductsByIdList?.data?[index].stars;
-                                    var reviews = ApiRepository.shared.vendorProductsByIdList?.data?[index].length;
-                                    var specs = ApiRepository.shared.vendorProductsByIdList?.data?[index].specifications;
-                                    var image = ApiRepository.shared.vendorProductsByIdList?.data?[index].image;
-                                    var length = ApiRepository.shared.vendorProductsByIdList?.data?[index].length;
-                                    return Container(
-                                      child: Wrap(
-                                        spacing: 1,
-                                        runSpacing: 5,
-                                        children: [
-                                          itmBox(
-                                              img: AppUrl.baseUrlM + image.toString(),
-                                              dx: '\$${price}',
-                                              rv: length.toString(),
-                                              tx: name,
-                                              rt: stars,
-                                              id: id),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
-                              future: null,
+                  ? Center(child: CircularProgressIndicator())
+                  : emptyData
+                  ? profile.length == 0
+                      ? Center(child: Text("Complete Your Profile"))
+                      : Center(child: Text("No Product Added"))
+                  : FutureBuilder(
+                    builder: (context, snapshot) {
+                      return GridView.builder(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 2.0,
+                          mainAxisSpacing: 1.0,
+                          childAspectRatio: 0.7,
+                        ),
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount:
+                            ApiRepository
+                                .shared
+                                .vendorProductsByIdList
+                                ?.data
+                                ?.length,
+                        itemBuilder: (context, int index) {
+                          var id =
+                              ApiRepository
+                                  .shared
+                                  .vendorProductsByIdList
+                                  ?.data?[index]
+                                  .id;
+                          var name =
+                              ApiRepository
+                                  .shared
+                                  .vendorProductsByIdList
+                                  ?.data?[index]
+                                  .name;
+                          var price =
+                              ApiRepository
+                                  .shared
+                                  .vendorProductsByIdList
+                                  ?.data?[index]
+                                  .price;
+                          var stars =
+                              ApiRepository
+                                  .shared
+                                  .vendorProductsByIdList
+                                  ?.data?[index]
+                                  .stars;
+                          var image =
+                              ApiRepository
+                                  .shared
+                                  .vendorProductsByIdList
+                                  ?.data?[index]
+                                  .image;
+                          var length =
+                              ApiRepository
+                                  .shared
+                                  .vendorProductsByIdList
+                                  ?.data?[index]
+                                  .length;
+                          return Container(
+                            child: Wrap(
+                              spacing: 1,
+                              runSpacing: 5,
+                              children: [
+                                itmBox(
+                                  img: AppUrl.baseUrlM + image.toString(),
+                                  dx: '\$${price}',
+                                  rv: length.toString(),
+                                  tx: name,
+                                  rt: stars,
+                                  id: id,
+                                ),
+                              ],
                             ),
+                          );
+                        },
+                      );
+                    },
+                    future: null,
+                  ),
               // Container(
               //   height: 100,
               //   width: 100,
@@ -277,9 +319,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
       padding: const EdgeInsets.only(left: 10),
       child: GestureDetector(
         onTap: () {
-          Get.off(() => ProductDetail2Screen(
-                id: id,
-              ));
+          Get.off(() => ProductDetail2Screen(id: id));
         },
         child: Container(
           decoration: BoxDecoration(
@@ -297,24 +337,24 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   height: res_height * 0.2,
                   decoration: BoxDecoration(),
                   child: ClipRRect(
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(10),
-                      ),
-                      child: CachedNetworkImage(
-                    imageUrl: img.toString(),
-                    fit: BoxFit.fill,
-                    placeholder: (context, url) => Center(
-                      child: CircularProgressIndicator(), // Loading spinner
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                    child: CachedNetworkImage(
+                      imageUrl: img.toString(),
+                      fit: BoxFit.fill,
+                      placeholder:
+                          (context, url) => Center(
+                            child:
+                                CircularProgressIndicator(), // Loading spinner
+                          ),
+                      errorWidget:
+                          (context, url, error) => Icon(
+                            Icons.error,
+                            color: Colors.red,
+                          ), // Display an error icon
                     ),
-                    errorWidget: (context, url, error) => Icon(
-                      Icons.error,
-                      color: Colors.red,
-                    ), // Display an error icon
-                  )),
+                  ),
                 ),
-                SizedBox(
-                  height: res_height * 0.005,
-                ),
+                SizedBox(height: res_height * 0.005),
                 Container(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -324,12 +364,13 @@ class _ProductListScreenState extends State<ProductListScreen> {
                         width: res_width * 0.5,
                         child: Text(
                           '$tx',
-                          style: TextStyle(fontSize: 15, overflow: TextOverflow.ellipsis),
+                          style: TextStyle(
+                            fontSize: 15,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ),
-                      SizedBox(
-                        height: res_height * 0.006,
-                      ),
+                      SizedBox(height: res_height * 0.006),
                       Text(
                         '$dx',
                         style: TextStyle(fontSize: 13),
@@ -339,20 +380,16 @@ class _ProductListScreenState extends State<ProductListScreen> {
                         children: [
                           RatingBarIndicator(
                             rating: double.parse(rt),
-                            itemBuilder: (context, index) => Icon(
-                              Icons.star,
-                              color: Colors.amber,
-                            ),
+                            itemBuilder:
+                                (context, index) =>
+                                    Icon(Icons.star, color: Colors.amber),
                             itemCount: 5,
                             itemSize: 15,
                             direction: Axis.horizontal,
                           ),
                           Text(
                             '($rv) Reviews',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey,
-                            ),
+                            style: TextStyle(fontSize: 11, color: Colors.grey),
                           ),
                         ],
                       ),

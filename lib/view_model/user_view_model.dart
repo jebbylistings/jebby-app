@@ -49,18 +49,18 @@ class UserViewModel with ChangeNotifier {
 
   Future<bool> updateUser(UpdatedModel user) async {
     final SharedPreferences sp = await SharedPreferences.getInstance();
-    var updatedUser ;//= user.data![0];
-    if( user.data!.length!=0){
-       updatedUser = user.data![0];
-    
-    sp.setString('fullname', updatedUser.name.toString());
-    sp.setString('email', updatedUser.email.toString());
-    sp.setString('phoneNumber', updatedUser.phoneNumber.toString());
-    sp.setString('image', updatedUser.image.toString());
-    sp.setString('address', updatedUser.address.toString());
-    sp.setString('latitude', updatedUser.latitude.toString());
-    sp.setString('longitude', updatedUser.longitude.toString());
-    sp.setString('number', updatedUser.number.toString());
+    var updatedUser; //= user.data![0];
+    if (user.data!.length != 0) {
+      updatedUser = user.data![0];
+
+      sp.setString('fullname', updatedUser.name.toString());
+      sp.setString('email', updatedUser.email.toString());
+      sp.setString('phoneNumber', updatedUser.phoneNumber.toString());
+      sp.setString('image', updatedUser.image.toString());
+      sp.setString('address', updatedUser.address.toString());
+      sp.setString('latitude', updatedUser.latitude.toString());
+      sp.setString('longitude', updatedUser.longitude.toString());
+      sp.setString('number', updatedUser.number.toString());
     }
     notifyListeners();
     return true;
@@ -82,24 +82,24 @@ class UserViewModel with ChangeNotifier {
     _image = sp.getString('image');
 
     notifyListeners();
-   
 
     return UpdatedModel(
       data: [
- Data(
-        image: image.toString(),
-        name: name.toString(),
-        phoneNumber: phoneNumber.toString(),
-        email: email.toString(),
-        number: number.toString(),
-        address: address.toString(),
-        userId: id.toString(),
-        latitude: latitude.toString(),
-        longitude: longitude.toString())
-      ]
+        Data(
+          image: image.toString(),
+          name: name.toString(),
+          phoneNumber: phoneNumber.toString(),
+          email: email.toString(),
+          number: number.toString(),
+          address: address.toString(),
+          userId: id.toString(),
+          latitude: latitude.toString(),
+          longitude: longitude.toString(),
+        ),
+      ],
     );
 
-   //return UpdatedModel(data: data?);
+    //return UpdatedModel(data: data?);
   }
 
   Future<UserModel> getUser() async {
@@ -111,15 +111,25 @@ class UserViewModel with ChangeNotifier {
     _email = sp.getString('email');
     _phoneNumber = sp.getString('phoneNumber');
     _role = sp.getString('role');
-    String? isGuestUserString  = sp.getString('isGuest') ;
-    bool isGuest  = (isGuestUserString != null && isGuestUserString == 'true')? true : false;
+    String? isGuestUserString = sp.getString('isGuest');
+    bool isGuest =
+        (isGuestUserString != null && isGuestUserString == 'true')
+            ? true
+            : false;
 
     notifyListeners();
-    return UserModel(token: token.toString(), id: id.toString(), name: name, email: email, phoneNumber: phoneNumber, role: role.toString(), isGuest : isGuest );
+    return UserModel(
+      token: token.toString(),
+      id: id.toString(),
+      name: name,
+      email: email,
+      phoneNumber: phoneNumber,
+      role: role.toString(),
+      isGuest: isGuest,
+    );
   }
 
   Future<bool> remove() async {
-    print("removed /////");
     final SharedPreferences sp = await SharedPreferences.getInstance();
     sp.remove('token');
     sp.remove('id');

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jebby/Views/helper/colors.dart';
@@ -16,7 +15,8 @@ class ForgetPasswordOtpScreen extends StatefulWidget {
   const ForgetPasswordOtpScreen({super.key, this.email});
 
   @override
-  State<ForgetPasswordOtpScreen> createState() => _ForgetPasswordOtpScreenState();
+  State<ForgetPasswordOtpScreen> createState() =>
+      _ForgetPasswordOtpScreenState();
 }
 
 class _ForgetPasswordOtpScreenState extends State<ForgetPasswordOtpScreen> {
@@ -43,10 +43,7 @@ class _ForgetPasswordOtpScreenState extends State<ForgetPasswordOtpScreen> {
               Get.back();
             },
             borderRadius: BorderRadius.circular(50),
-            child: Icon(
-              Icons.arrow_back,
-              color: Colors.black,
-            ),
+            child: Icon(Icons.arrow_back, color: Colors.black),
           ),
           elevation: 0,
           backgroundColor: Colors.transparent,
@@ -63,28 +60,36 @@ class _ForgetPasswordOtpScreenState extends State<ForgetPasswordOtpScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Lottie.asset('assets/lottie/otp.json', width: res_width * 0.9, height: 200),
-                    SizedBox(
-                      height: res_height * 0.02,
+                    Lottie.asset(
+                      'assets/lottie/otp.json',
+                      width: res_width * 0.9,
+                      height: 200,
                     ),
+                    SizedBox(height: res_height * 0.02),
                     Center(
                       child: Text(
                         'OTP',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30, color: darkBlue),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 30,
+                          color: darkBlue,
+                        ),
                       ),
                     ),
                     Align(
                       child: Text(
                         "Enter OTP for recovery",
-                        style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),
-              SizedBox(
-                height: res_height * 0.05,
-              ),
+              SizedBox(height: res_height * 0.05),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 35),
                 child: Row(
@@ -92,15 +97,16 @@ class _ForgetPasswordOtpScreenState extends State<ForgetPasswordOtpScreen> {
                     Container(
                       child: Text(
                         "Email: " + widget.email.toString(),
-                        style: TextStyle(fontWeight: FontWeight.bold, color: darkBlue),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: darkBlue,
+                        ),
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),
-              SizedBox(
-                height: res_height * 0.02,
-              ),
+              SizedBox(height: res_height * 0.02),
               OTPTextField(
                 controller: otpController,
                 length: 4,
@@ -117,17 +123,12 @@ class _ForgetPasswordOtpScreenState extends State<ForgetPasswordOtpScreen> {
                 ),
                 outlineBorderRadius: 8,
                 style: TextStyle(fontSize: 29, color: darkBlue),
-                onChanged: (pin) {
-                  print("Changed: " + pin);
-                },
+                onChanged: (pin) {},
                 onCompleted: (pin) {
-                  print("Completed: " + pin);
                   OtpValue = pin;
                 },
               ),
-              SizedBox(
-                height: res_height * 0.04,
-              ),
+              SizedBox(height: res_height * 0.04),
               InkWell(
                 onTap: () {
                   if (otpController.toString() == "null") {
@@ -147,21 +148,23 @@ class _ForgetPasswordOtpScreenState extends State<ForgetPasswordOtpScreen> {
                   child: Center(
                     child: Text(
                       'Continue',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-                  decoration: BoxDecoration(color: darkBlue, borderRadius: BorderRadius.circular(30)),
+                  decoration: BoxDecoration(
+                    color: darkBlue,
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                 ),
               ),
-              SizedBox(
-                height: res_height * 0.01,
-              ),
+              SizedBox(height: res_height * 0.01),
               InkWell(
                 onTap: () {
-                  print("resend otp invoked");
-                  Map data = {
-                    'email': widget.email.toString(),
-                  };
+                  Map data = {'email': widget.email.toString()};
                   authViewMode.forgetPasswordApi(data, context, "forgot");
                 },
                 child: Container(
@@ -170,7 +173,11 @@ class _ForgetPasswordOtpScreenState extends State<ForgetPasswordOtpScreen> {
                   child: Center(
                     child: Text(
                       'Resend OTP',
-                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, decoration: TextDecoration.underline),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                        decoration: TextDecoration.underline,
+                      ),
                     ),
                   ),
                   // decoration: BoxDecoration(

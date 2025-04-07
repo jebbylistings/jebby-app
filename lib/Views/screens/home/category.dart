@@ -7,8 +7,6 @@ import 'package:get/get.dart';
 import 'package:jebby/Views/screens/profile/myprofile.dart';
 import 'package:jebby/model/categoryList_model.dart';
 import 'package:jebby/view_model/apiServices.dart';
-import 'package:jebby/view_model/auth_view_model.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../res/app_url.dart';
 import '../../../view_model/category_get_View_model.dart';
@@ -32,55 +30,58 @@ class _CategoryState extends State<Category> {
 
   getProducts() {
     ApiRepository.shared.getCategoryList(
-        (List) => {
-              if (this.mounted)
-                {
-                  if (List.data!.length == 0)
-                    {
-                      setState(() {
-                        isLoading = false;
-                        isError = false;
-                        emptyData = true;
-                        _categoryList = List;
-                      })
-                    }
-                  else
-                    {
-                      setState(() {
-                        _categoryList = List;
-                        print("GetAllProducts");
-                        print(_categoryList!.data);
-                        // print(widget.word);
-                        // runFilter(widget.word.toString());
-                        // print(results[0].price.toString());
-                        isLoading = false;
-                        isError = false;
-                        emptyData = false;
-                      })
-                    }
-                }
-            },
-        (error) => {
-              if (this.mounted)
-                {
-                  if (error != null)
-                    {
-                      setState(() {
-                        isError = true;
-                        isLoading = false;
-                        emptyData = false;
-                        print("Error:  ${error}");
-                      })
-                    }
-                }
-            });
+      (List) => {
+        if (this.mounted)
+          {
+            if (List.data!.length == 0)
+              {
+                setState(() {
+                  isLoading = false;
+                  isError = false;
+                  emptyData = true;
+                  _categoryList = List;
+                }),
+              }
+            else
+              {
+                setState(() {
+                  _categoryList = List;
+                  // runFilter(widget.word.toString());
+                  isLoading = false;
+                  isError = false;
+                  emptyData = false;
+                }),
+              },
+          },
+      },
+      (error) => {
+        if (this.mounted)
+          {
+            if (error != null)
+              {
+                setState(() {
+                  isError = true;
+                  isLoading = false;
+                  emptyData = false;
+                }),
+              },
+          },
+      },
+    );
   }
 
   void runFilter() {
     if (searchController.text.isEmpty) {
       results = _categoryList!.data!;
     } else {
-      results = _categoryList!.data!.where((product) => product.name!.toLowerCase().contains(searchController.text.toLowerCase())).toList();
+      results =
+          _categoryList!.data!
+              .where(
+                (product) => product.name!.toLowerCase().contains(
+                  searchController.text.toLowerCase(),
+                ),
+              )
+              .toList();
     }
   }
 
@@ -89,7 +90,6 @@ class _CategoryState extends State<Category> {
   void getRole() async {
     final SharedPreferences sp = await SharedPreferences.getInstance();
     role = sp.getString("role").toString();
-    print("role $role ");
   }
 
   void initState() {
@@ -100,10 +100,8 @@ class _CategoryState extends State<Category> {
 
   @override
   Widget build(BuildContext context) {
-    double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
     GetAPiFromModel getAPiFromModel = GetAPiFromModel();
-    final userName = context.watch<AuthViewModel>();
     final bottomctrl = Get.put(BottomController());
 
     return Scaffold(
@@ -115,7 +113,11 @@ class _CategoryState extends State<Category> {
         centerTitle: true,
         title: Text(
           'Categories',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 19,
+          ),
         ),
         leading: InkWell(
           onTap: () {
@@ -124,10 +126,7 @@ class _CategoryState extends State<Category> {
             // _key.currentState!.openDrawer();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-          ),
+          child: Icon(Icons.arrow_back, color: Colors.black),
         ),
         actions: [
           Visibility(
@@ -139,13 +138,13 @@ class _CategoryState extends State<Category> {
               child: Padding(
                 padding: const EdgeInsets.all(19.0),
                 child: Icon(
-                        Icons.person_outline,
-                        color: Colors.black,
-                        size: 25
-                      )
+                  Icons.person_outline,
+                  color: Colors.black,
+                  size: 25,
+                ),
               ),
             ),
-          )
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -166,7 +165,6 @@ class _CategoryState extends State<Category> {
               //       suffixIcon: IconButton(
               //         onPressed: () {
               //           if (searchController.text.isNotEmpty) {
-              //             print(searchController.text);
               //             runFilter();
               //           }
               //         },
@@ -211,9 +209,15 @@ class _CategoryState extends State<Category> {
                     return Wrap(
                       spacing: 1,
                       runSpacing: 5,
-                      children: List.generate(snapshot.data!.data!.length, (index) {
+                      children: List.generate(snapshot.data!.data!.length, (
+                        index,
+                      ) {
                         return data[index].status == 1
-                            ? contBox(txt: data[index].name, img: '${AppUrl.baseUrlM}${data[index].image}', id: data[index].id.toString())
+                            ? contBox(
+                              txt: data[index].name,
+                              img: '${AppUrl.baseUrlM}${data[index].image}',
+                              id: data[index].id.toString(),
+                            )
                             : SizedBox.shrink(); // Use SizedBox.shrink() to render nothing
                       }),
                     );
@@ -240,9 +244,7 @@ class _CategoryState extends State<Category> {
         padding: const EdgeInsets.all(5.5),
         child: Column(
           children: [
-            SizedBox(
-              height: 10,
-            ),
+            SizedBox(height: 10),
             Container(
               margin: EdgeInsets.only(left: 5, top: 5),
               width: res_width * 0.25,
@@ -250,9 +252,7 @@ class _CategoryState extends State<Category> {
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.white, width: 2),
                 color: kprimaryColor,
-                borderRadius: BorderRadius.all(
-                  Radius.circular(18),
-                ),
+                borderRadius: BorderRadius.all(Radius.circular(18)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.grey,
@@ -267,20 +267,20 @@ class _CategoryState extends State<Category> {
                   child: CachedNetworkImage(
                     imageUrl: '$img',
                     fit: BoxFit.cover,
-                    placeholder: (context, url) => Center(
-                      child: CircularProgressIndicator(), // Loading spinner
-                    ),
-                    errorWidget: (context, url, error) => Icon(
-                      Icons.error,
-                      color: Colors.red,
-                    ), // Display an error icon
+                    placeholder:
+                        (context, url) => Center(
+                          child: CircularProgressIndicator(), // Loading spinner
+                        ),
+                    errorWidget:
+                        (context, url, error) => Icon(
+                          Icons.error,
+                          color: Colors.red,
+                        ), // Display an error icon
                   ),
-                )
+                ),
               ),
             ),
-            SizedBox(
-              height: 6,
-            ),
+            SizedBox(height: 6),
             SizedBox(
               width: res_width * 0.27,
               child: Center(
@@ -291,7 +291,7 @@ class _CategoryState extends State<Category> {
                   maxLines: 1, // Limit to a single line
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -310,9 +310,7 @@ class _CategoryState extends State<Category> {
         padding: const EdgeInsets.all(5.5),
         child: Column(
           children: [
-            SizedBox(
-              height: 10,
-            ),
+            SizedBox(height: 10),
             Container(
               margin: EdgeInsets.only(left: 5, top: 5),
               width: res_width * 0.25,
@@ -320,9 +318,7 @@ class _CategoryState extends State<Category> {
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.white, width: 2),
                 color: kprimaryColor,
-                borderRadius: BorderRadius.all(
-                  Radius.circular(18),
-                ),
+                borderRadius: BorderRadius.all(Radius.circular(18)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.grey,
@@ -333,14 +329,10 @@ class _CategoryState extends State<Category> {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
-                child: Image.network(
-                  '$img',
-                ),
+                child: Image.network('$img'),
               ),
             ),
-            SizedBox(
-              height: 6,
-            ),
+            SizedBox(height: 6),
             SizedBox(
               width: res_width * 0.27,
               child: Center(
@@ -351,7 +343,7 @@ class _CategoryState extends State<Category> {
                   maxLines: 1, // Limit to a single line
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),

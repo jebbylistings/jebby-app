@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/get_navigation.dart';
@@ -38,10 +37,7 @@ class _ElectronicsScreenState extends State<ElectronicsScreen> {
             Get.back();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-          ),
+          child: Icon(Icons.arrow_back, color: Colors.black),
         ),
       ),
       body: Container(
@@ -52,28 +48,27 @@ class _ElectronicsScreenState extends State<ElectronicsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  height: 20,
-                ),
+                SizedBox(height: 20),
                 Container(
                   child: Text(
                     "${widget.categoryname}",
                     style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
                   ),
                 ),
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: 10),
                 SizedBox(
                   height: 600,
                   child: FutureBuilder(
-                    future: getAPiFromModel.getSubCategoryList(widget.id.toString()),
-                    builder: (context, AsyncSnapshot<SubCategoryList> snapshot) {
+                    future: getAPiFromModel.getSubCategoryList(
+                      widget.id.toString(),
+                    ),
+                    builder: (
+                      context,
+                      AsyncSnapshot<SubCategoryList> snapshot,
+                    ) {
                       final data = snapshot.data?.data;
                       if (!snapshot.hasData) {
-                        return Center(
-                          child: CircularProgressIndicator(),
-                        );
+                        return Center(child: CircularProgressIndicator());
                       } else {
                         if (snapshot.data!.data!.length != 0) {
                           return ListView.builder(
@@ -81,12 +76,15 @@ class _ElectronicsScreenState extends State<ElectronicsScreen> {
                             itemBuilder: (context, index) {
                               return Column(
                                 children: [
-                                  SizedBox(
-                                    height: 10,
-                                  ),
+                                  SizedBox(height: 10),
                                   InkWell(
                                     onTap: () {
-                                      Get.to(() => Electronics2(widget.categoryname, data[index].id.toString()));
+                                      Get.to(
+                                        () => Electronics2(
+                                          widget.categoryname,
+                                          data[index].id.toString(),
+                                        ),
+                                      );
                                     },
                                     child: Column(
                                       children: [
@@ -95,11 +93,10 @@ class _ElectronicsScreenState extends State<ElectronicsScreen> {
                                           height: 1,
                                           color: Colors.grey.withOpacity(0.3),
                                         ),
-                                        SizedBox(
-                                          height: 10,
-                                        ),
+                                        SizedBox(height: 10),
                                         Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
                                           children: [
                                             Container(
                                               child: Text(
@@ -112,12 +109,10 @@ class _ElectronicsScreenState extends State<ElectronicsScreen> {
                                                 Icons.arrow_forward_ios,
                                                 size: 15,
                                               ),
-                                            )
+                                            ),
                                           ],
                                         ),
-                                        SizedBox(
-                                          height: 10,
-                                        ),
+                                        SizedBox(height: 10),
                                         Container(
                                           width: 400,
                                           height: 1,
@@ -133,13 +128,16 @@ class _ElectronicsScreenState extends State<ElectronicsScreen> {
                         } else {
                           return Padding(
                             padding: const EdgeInsets.all(3.0),
-                            child: Text("No data available", style: TextStyle(fontSize: 14)),
+                            child: Text(
+                              "No data available",
+                              style: TextStyle(fontSize: 14),
+                            ),
                           );
                         }
                       }
                     },
                   ),
-                )
+                ),
               ],
             ),
           ),

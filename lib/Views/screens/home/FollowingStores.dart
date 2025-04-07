@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:jebby/Views/helper/colors.dart';
 import 'package:jebby/Views/screens/home/StoreProfile.dart';
 
-
 class FollowingStoresScreen extends StatefulWidget {
   const FollowingStoresScreen({super.key});
 
@@ -21,7 +20,10 @@ class _FollowingStoresScreenState extends State<FollowingStoresScreen> {
         title: Text(
           "Following Stores",
           style: TextStyle(
-              color: Colors.black, fontWeight: FontWeight.bold, fontSize: 22),
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
         ),
         elevation: 0,
         centerTitle: true,
@@ -30,23 +32,13 @@ class _FollowingStoresScreenState extends State<FollowingStoresScreen> {
             Get.back();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Container(
-            child: Icon(
-              Icons.arrow_back,
-              color: Colors.black,
-            ),
-          ),
+          child: Container(child: Icon(Icons.arrow_back, color: Colors.black)),
         ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(left: 10),
-            child: Container(
-              child: Icon(
-                Icons.share,
-                color: Colors.black,
-              ),
-            ),
-          )
+            child: Container(child: Icon(Icons.share, color: Colors.black)),
+          ),
         ],
       ),
       body: Container(
@@ -56,9 +48,7 @@ class _FollowingStoresScreenState extends State<FollowingStoresScreen> {
             padding: EdgeInsets.symmetric(horizontal: 10),
             child: Column(
               children: [
-                SizedBox(
-                  height: 20,
-                ),
+                SizedBox(height: 20),
                 Row(
                   children: [
                     GestureDetector(
@@ -72,9 +62,7 @@ class _FollowingStoresScreenState extends State<FollowingStoresScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(
-                      width: 10,
-                    ),
+                    SizedBox(width: 10),
                     GestureDetector(
                       onTap: () {
                         Get.to(() => StoreProfileScreen());
@@ -85,19 +73,21 @@ class _FollowingStoresScreenState extends State<FollowingStoresScreen> {
                           Text(
                             "JB Store",
                             style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 25),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 25,
+                            ),
                           ),
                           Text(
                             "Verified Store",
                             style: TextStyle(
-                                fontWeight: FontWeight.normal, fontSize: 15),
+                              fontWeight: FontWeight.normal,
+                              fontSize: 15,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                    SizedBox(
-                      width: 80,
-                    ),
+                    SizedBox(width: 80),
                     Container(
                       height: 34,
                       width: 113,
@@ -105,18 +95,19 @@ class _FollowingStoresScreenState extends State<FollowingStoresScreen> {
                         child: Text(
                           'Unfollow',
                           style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 12),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                       decoration: BoxDecoration(
-                          color: kprimaryColor,
-                          borderRadius: BorderRadius.circular(5)),
+                        color: kprimaryColor,
+                        borderRadius: BorderRadius.circular(5),
+                      ),
                     ),
                   ],
                 ),
-                SizedBox(
-                  height: 20,
-                ),
+                SizedBox(height: 20),
                 Container(
                   width: 370,
                   height: 1,
@@ -140,9 +131,7 @@ class _FollowingStoresScreenState extends State<FollowingStoresScreen> {
   boxx() {
     return Column(
       children: [
-        SizedBox(
-          height: 10,
-        ),
+        SizedBox(height: 10),
         Row(
           children: [
             Container(
@@ -151,9 +140,7 @@ class _FollowingStoresScreenState extends State<FollowingStoresScreen> {
                 scale: 3.8,
               ),
             ),
-            SizedBox(
-              width: 10,
-            ),
+            SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -167,9 +154,7 @@ class _FollowingStoresScreenState extends State<FollowingStoresScreen> {
                 ),
               ],
             ),
-            SizedBox(
-              width: 80,
-            ),
+            SizedBox(width: 80),
             Container(
               height: 34,
               width: 113,
@@ -180,18 +165,14 @@ class _FollowingStoresScreenState extends State<FollowingStoresScreen> {
                 ),
               ),
               decoration: BoxDecoration(
-                  color: kprimaryColor, borderRadius: BorderRadius.circular(5)),
+                color: kprimaryColor,
+                borderRadius: BorderRadius.circular(5),
+              ),
             ),
           ],
         ),
-        SizedBox(
-          height: 20,
-        ),
-        Container(
-          width: 370,
-          height: 1,
-          color: Colors.grey.withOpacity(0.5),
-        )
+        SizedBox(height: 20),
+        Container(width: 370, height: 1, color: Colors.grey.withOpacity(0.5)),
       ],
     );
   }

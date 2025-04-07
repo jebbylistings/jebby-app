@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jebby/Views/helper/colors.dart';
@@ -10,7 +9,8 @@ import '../../../view_model/auth_view_model.dart';
 
 class RegisterScreen extends StatefulWidget {
   final bool isGuestUserFlow;
-  const RegisterScreen({Key? key, this.isGuestUserFlow = false}) : super(key: key);
+  const RegisterScreen({Key? key, this.isGuestUserFlow = false})
+    : super(key: key);
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -49,10 +49,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Get.back();
             },
             borderRadius: BorderRadius.circular(50),
-            child: Icon(
-              Icons.arrow_back,
-              color: Colors.black,
-            ),
+            child: Icon(Icons.arrow_back, color: Colors.black),
           ),
           elevation: 0,
           backgroundColor: Colors.transparent,
@@ -81,15 +78,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         Center(
                           child: Text(
                             'Create account!',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30, color: darkBlue),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 30,
+                              color: darkBlue,
+                            ),
                           ),
                         ),
                         Align(
                           child: Text(
                             'Signup now to get started',
-                            style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -198,9 +203,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   //     ),
                   //   ],
                   // ),
-                  SizedBox(
-                    height: res_height * 0.03,
-                  ),
+                  SizedBox(height: res_height * 0.03),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -215,39 +218,53 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           autocorrect: false,
                           // controller: userEmailController,
                           validator: (text) {
-                            if (text == null || text.isEmpty || !text.contains("@")) {
+                            if (text == null ||
+                                text.isEmpty ||
+                                !text.contains("@")) {
                               return 'Enter correct email';
                             }
                             return null;
                           },
-                          style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: darkBlue,
+                            fontWeight: FontWeight.bold,
+                          ),
                           decoration: InputDecoration(
-                              prefixIcon: Icon(
-                                Icons.person_2,
+                            prefixIcon: Icon(Icons.person_2, color: darkBlue),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                            ),
+                            enabledBorder: const OutlineInputBorder(
+                              borderSide: const BorderSide(
                                 color: darkBlue,
+                                width: 1,
                               ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15.0),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(15),
                               ),
-                              enabledBorder: const OutlineInputBorder(
-                                borderSide: const BorderSide(color: darkBlue, width: 1),
-                                borderRadius: BorderRadius.all(Radius.circular(15)),
+                            ),
+                            focusedBorder: const OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: darkBlue,
+                                width: 1,
                               ),
-                              focusedBorder: const OutlineInputBorder(
-                                borderSide: const BorderSide(color: darkBlue, width: 1),
-                                borderRadius: BorderRadius.all(Radius.circular(15)),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(15),
                               ),
-                              filled: true,
-                              hintStyle: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
-                              hintText: "Name",
-                              fillColor: lightBlue),
+                            ),
+                            filled: true,
+                            hintStyle: TextStyle(
+                              color: darkBlue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            hintText: "Name",
+                            fillColor: lightBlue,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(
-                    height: res_height * 0.02,
-                  ),
+                  SizedBox(height: res_height * 0.02),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -262,39 +279,53 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           autocorrect: false,
                           // controller: userEmailController,
                           validator: (text) {
-                            if (text == null || text.isEmpty || !text.contains("@")) {
+                            if (text == null ||
+                                text.isEmpty ||
+                                !text.contains("@")) {
                               return 'Enter correct email';
                             }
                             return null;
                           },
-                          style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: darkBlue,
+                            fontWeight: FontWeight.bold,
+                          ),
                           decoration: InputDecoration(
-                              prefixIcon: Icon(
-                                Icons.email,
+                            prefixIcon: Icon(Icons.email, color: darkBlue),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                            ),
+                            enabledBorder: const OutlineInputBorder(
+                              borderSide: const BorderSide(
                                 color: darkBlue,
+                                width: 1,
                               ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15.0),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(15),
                               ),
-                              enabledBorder: const OutlineInputBorder(
-                                borderSide: const BorderSide(color: darkBlue, width: 1),
-                                borderRadius: BorderRadius.all(Radius.circular(15)),
+                            ),
+                            focusedBorder: const OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: darkBlue,
+                                width: 1,
                               ),
-                              focusedBorder: const OutlineInputBorder(
-                                borderSide: const BorderSide(color: darkBlue, width: 1),
-                                borderRadius: BorderRadius.all(Radius.circular(15)),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(15),
                               ),
-                              filled: true,
-                              hintStyle: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
-                              hintText: "Email Address",
-                              fillColor: lightBlue),
+                            ),
+                            filled: true,
+                            hintStyle: TextStyle(
+                              color: darkBlue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            hintText: "Email Address",
+                            fillColor: lightBlue,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(
-                    height: res_height * 0.02,
-                  ),
+                  SizedBox(height: res_height * 0.02),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -311,49 +342,66 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           // obscureText: true,
                           // controller: userEmailController,
                           validator: (text) {
-                            if (text == null || text.isEmpty || !text.contains("@")) {
+                            if (text == null ||
+                                text.isEmpty ||
+                                !text.contains("@")) {
                               return 'Enter correct email';
                             }
                             return null;
                           },
-                          style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: darkBlue,
+                            fontWeight: FontWeight.bold,
+                          ),
                           decoration: InputDecoration(
-                              prefixIcon: Icon(
-                                Icons.lock,
+                            prefixIcon: Icon(Icons.lock, color: darkBlue),
+                            suffixIcon: InkWell(
+                              onTap: () {
+                                setState(() {
+                                  obscureText = !obscureText;
+                                });
+                              },
+                              child: Icon(
+                                obscureText
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
                                 color: darkBlue,
                               ),
-                              suffixIcon: InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      obscureText = !obscureText;
-                                    });
-                                  },
-                                  child: Icon(
-                                    obscureText ? Icons.visibility_off : Icons.visibility,
-                                    color: darkBlue,
-                                  )),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15.0),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                            ),
+                            enabledBorder: const OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: darkBlue,
+                                width: 1,
                               ),
-                              enabledBorder: const OutlineInputBorder(
-                                borderSide: const BorderSide(color: darkBlue, width: 1),
-                                borderRadius: BorderRadius.all(Radius.circular(15)),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(15),
                               ),
-                              focusedBorder: const OutlineInputBorder(
-                                borderSide: const BorderSide(color: darkBlue, width: 1),
-                                borderRadius: BorderRadius.all(Radius.circular(15)),
+                            ),
+                            focusedBorder: const OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: darkBlue,
+                                width: 1,
                               ),
-                              filled: true,
-                              hintStyle: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
-                              hintText: "Password",
-                              fillColor: lightBlue),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(15),
+                              ),
+                            ),
+                            filled: true,
+                            hintStyle: TextStyle(
+                              color: darkBlue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            hintText: "Password",
+                            fillColor: lightBlue,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(
-                    height: res_height * 0.02,
-                  ),
+                  SizedBox(height: res_height * 0.02),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -370,105 +418,158 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           // obscureText: true,
                           // controller: userEmailController,
                           validator: (text) {
-                            if (text == null || text.isEmpty || !text.contains("@")) {
+                            if (text == null ||
+                                text.isEmpty ||
+                                !text.contains("@")) {
                               return 'Enter correct email';
                             }
                             return null;
                           },
-                          style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: darkBlue,
+                            fontWeight: FontWeight.bold,
+                          ),
                           decoration: InputDecoration(
-                              prefixIcon: Icon(
-                                Icons.lock,
+                            prefixIcon: Icon(Icons.lock, color: darkBlue),
+                            suffixIcon: InkWell(
+                              onTap: () {
+                                setState(() {
+                                  obscureText1 = !obscureText1;
+                                });
+                              },
+                              child: Icon(
+                                obscureText1
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
                                 color: darkBlue,
                               ),
-                              suffixIcon: InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      obscureText1 = !obscureText1;
-                                    });
-                                  },
-                                  child: Icon(
-                                    obscureText1 ? Icons.visibility_off : Icons.visibility,
-                                    color: darkBlue,
-                                  )),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15.0),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                            ),
+                            enabledBorder: const OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: darkBlue,
+                                width: 1,
                               ),
-                              enabledBorder: const OutlineInputBorder(
-                                borderSide: const BorderSide(color: darkBlue, width: 1),
-                                borderRadius: BorderRadius.all(Radius.circular(15)),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(15),
                               ),
-                              focusedBorder: const OutlineInputBorder(
-                                borderSide: const BorderSide(color: darkBlue, width: 1),
-                                borderRadius: BorderRadius.all(Radius.circular(15)),
+                            ),
+                            focusedBorder: const OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                color: darkBlue,
+                                width: 1,
                               ),
-                              filled: true,
-                              hintStyle: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
-                              hintText: "Confirm Password",
-                              fillColor: lightBlue),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(15),
+                              ),
+                            ),
+                            filled: true,
+                            hintStyle: TextStyle(
+                              color: darkBlue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            hintText: "Confirm Password",
+                            fillColor: lightBlue,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(
-                    height: res_height * 0.015,
+                  SizedBox(height: res_height * 0.015),
+                  Obx(
+                    () => CheckboxListTile(
+                      title: Text(
+                        "I agree to the Terms of Services and Privacy Policy",
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      value: termscontroller.termsValue.value,
+                      activeColor: darkBlue,
+                      onChanged: (newValue) {
+                        if (termscontroller.termsValue == true) {
+                          termscontroller.chanegValue(false);
+                        } else {
+                          termscontroller.chanegValue(true);
+                        }
+                      },
+                      controlAffinity:
+                          ListTileControlAffinity
+                              .leading, //  <-- leading Checkbox
+                    ),
                   ),
-                  Obx(() => CheckboxListTile(
-                        title:
-                            Text("I agree to the Terms of Services and Privacy Policy", style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-                        value: termscontroller.termsValue.value,
-                        activeColor: darkBlue,
-                        onChanged: (newValue) {
-                          if (termscontroller.termsValue == true) {
-                            termscontroller.chanegValue(false);
-                          } else {
-                            termscontroller.chanegValue(true);
-                          }
-                        },
-                        controlAffinity: ListTileControlAffinity.leading, //  <-- leading Checkbox
-                      )),
-                  SizedBox(
-                    height: res_height * 0.02,
-                  ),
+                  SizedBox(height: res_height * 0.02),
                   InkWell(
                     onTap: () {
                       if (_userNameController.text.isEmpty &&
                           _emailController.text.isEmpty &&
                           _passwordController.text.isEmpty &&
                           _confirmpasswordController.text.isEmpty) {
-                        Utils.flushBarErrorMessage('Please fill all the required fields', context);
+                        Utils.flushBarErrorMessage(
+                          'Please fill all the required fields',
+                          context,
+                        );
                         return;
                       }
 
-                      final bool emailValid =
-                          RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.(com)").hasMatch(_emailController.text);
+                      final bool emailValid = RegExp(
+                        r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.(com)",
+                      ).hasMatch(_emailController.text);
                       if (_userNameController.text.isEmpty) {
-                        Utils.flushBarErrorMessage('Please enter your name', context);
-                      } else if (_emailController.text.isEmpty || !emailValid) {
-                        Utils.flushBarErrorMessage('Please enter valid email', context);
-                      } else if (_passwordController.text.isEmpty) {
-                        Utils.flushBarErrorMessage('Please enter password', context);
-                      } else if ((!_passwordController.text.contains(RegExp(r'^(?=.*?[A-Z])(?=.*?[!@#\$&*~]).{8,}$')))) {
                         Utils.flushBarErrorMessage(
-                            'Password should be minimum of 8 characters and contain small letter, capital letter and special character', context);
+                          'Please enter your name',
+                          context,
+                        );
+                      } else if (_emailController.text.isEmpty || !emailValid) {
+                        Utils.flushBarErrorMessage(
+                          'Please enter valid email',
+                          context,
+                        );
+                      } else if (_passwordController.text.isEmpty) {
+                        Utils.flushBarErrorMessage(
+                          'Please enter password',
+                          context,
+                        );
+                      } else if ((!_passwordController.text.contains(
+                        RegExp(r'^(?=.*?[A-Z])(?=.*?[!@#\$&*~]).{8,}$'),
+                      ))) {
+                        Utils.flushBarErrorMessage(
+                          'Password should be minimum of 8 characters and contain small letter, capital letter and special character',
+                          context,
+                        );
                       } else if (_confirmpasswordController.text.isEmpty) {
-                        Utils.flushBarErrorMessage('Please enter confirm password', context);
-                      } else if (_passwordController.text != _confirmpasswordController.text) {
-                        Utils.flushBarErrorMessage('Password doesn\'t match ', context);
+                        Utils.flushBarErrorMessage(
+                          'Please enter confirm password',
+                          context,
+                        );
+                      } else if (_passwordController.text !=
+                          _confirmpasswordController.text) {
+                        Utils.flushBarErrorMessage(
+                          'Password doesn\'t match ',
+                          context,
+                        );
                       } else if (!termscontroller.termsValue.value) {
-                        Utils.flushBarErrorMessage('Please accept our Terms of services & Privacy Policy', context);
+                        Utils.flushBarErrorMessage(
+                          'Please accept our Terms of services & Privacy Policy',
+                          context,
+                        );
                       } else {
                         Map data = {
                           "full_name": _userNameController.text,
                           "email": _emailController.text.toString(),
                           "password": _passwordController.text.toString(),
                           "source": "simple",
-                          "role": _value.toString()
+                          "role": _value.toString(),
                         };
-                        authViewMode.signUpApi(data, context, isFromGuestFlow: widget.isGuestUserFlow);
+                        authViewMode.signUpApi(
+                          data,
+                          context,
+                          isFromGuestFlow: widget.isGuestUserFlow,
+                        );
                       }
-
-                      print('api hit');
 
                       //Get.to(() => SetProfileScreen());
                     },
@@ -479,21 +580,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: Center(
                         child: Text(
                           'Sign Up',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                      decoration: BoxDecoration(color: darkBlue, borderRadius: BorderRadius.circular(30)),
+                      decoration: BoxDecoration(
+                        color: darkBlue,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
                     ),
                   ),
-                  SizedBox(
-                    height: res_height * 0.02,
-                  ),
+                  SizedBox(height: res_height * 0.02),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         "Already have an account? ",
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
                       ),
                       InkWell(
                         onTap: () {
@@ -502,18 +611,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: Text(
                           'Signin',
                           style: TextStyle(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 18,
-                              decoration: TextDecoration.underline,
-                              decorationColor: darkBlue,
-                              color: darkBlue),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 18,
+                            decoration: TextDecoration.underline,
+                            decorationColor: darkBlue,
+                            color: darkBlue,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(
-                    height: res_height * 0.08,
-                  ),
+                  SizedBox(height: res_height * 0.08),
                 ],
               ),
             ),

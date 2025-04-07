@@ -13,7 +13,6 @@ class _RecorderScreenState extends State<RecorderScreen> {
   @override
   Widget build(BuildContext context) {
     double res_width = MediaQuery.of(context).size.width;
-    double res_height = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -22,17 +21,17 @@ class _RecorderScreenState extends State<RecorderScreen> {
         title: Text(
           'recorder',
           style: TextStyle(
-              fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 19,
+          ),
         ),
         leading: InkWell(
           onTap: () {
             Get.back();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-          ),
+          child: Icon(Icons.arrow_back, color: Colors.black),
         ),
         // actions: [
         //   Padding(
@@ -52,52 +51,59 @@ class _RecorderScreenState extends State<RecorderScreen> {
                 width: res_width * 0.9,
                 child: TextField(
                   decoration: InputDecoration(
-                      enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15.0),
-                          borderSide:
-                              BorderSide(color: kprimaryColor, width: 0.5)),
-                      filled: true,
-                      hintStyle: TextStyle(color: Colors.grey),
-                      suffixIcon: Icon(Icons.search_outlined),
-                      hintText: "Search",
-                      fillColor: Colors.white),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15.0),
+                      borderSide: BorderSide(color: kprimaryColor, width: 0.5),
+                    ),
+                    filled: true,
+                    hintStyle: TextStyle(color: Colors.grey),
+                    suffixIcon: Icon(Icons.search_outlined),
+                    hintText: "Search",
+                    fillColor: Colors.white,
+                  ),
                 ),
               ),
-              SizedBox(
-                height: 10,
+              SizedBox(height: 10),
+              recrdBox(
+                img: 'assets/slicing/h.jpg',
+                txt: 'Apple 10.9-inch',
+                price: '7000',
               ),
               recrdBox(
-                  img: 'assets/slicing/h.jpg',
-                  txt: 'Apple 10.9-inch',
-                  price: '7000'),
+                img: 'assets/slicing/h.jpg',
+                txt: 'Apple 10.9-inch',
+                price: '7000',
+              ),
               recrdBox(
-                  img: 'assets/slicing/h.jpg',
-                  txt: 'Apple 10.9-inch',
-                  price: '7000'),
+                img: 'assets/slicing/h.jpg',
+                txt: 'Apple 10.9-inch',
+                price: '7000',
+              ),
               recrdBox(
-                  img: 'assets/slicing/h.jpg',
-                  txt: 'Apple 10.9-inch',
-                  price: '7000'),
+                img: 'assets/slicing/h.jpg',
+                txt: 'Apple 10.9-inch',
+                price: '7000',
+              ),
               recrdBox(
-                  img: 'assets/slicing/h.jpg',
-                  txt: 'Apple 10.9-inch',
-                  price: '7000'),
+                img: 'assets/slicing/h.jpg',
+                txt: 'Apple 10.9-inch',
+                price: '7000',
+              ),
               recrdBox(
-                  img: 'assets/slicing/h.jpg',
-                  txt: 'Apple 10.9-inch',
-                  price: '7000'),
+                img: 'assets/slicing/h.jpg',
+                txt: 'Apple 10.9-inch',
+                price: '7000',
+              ),
               recrdBox(
-                  img: 'assets/slicing/h.jpg',
-                  txt: 'Apple 10.9-inch',
-                  price: '7000'),
+                img: 'assets/slicing/h.jpg',
+                txt: 'Apple 10.9-inch',
+                price: '7000',
+              ),
               recrdBox(
-                  img: 'assets/slicing/h.jpg',
-                  txt: 'Apple 10.9-inch',
-                  price: '7000'),
-              recrdBox(
-                  img: 'assets/slicing/h.jpg',
-                  txt: 'Apple 10.9-inch',
-                  price: '7000'),
+                img: 'assets/slicing/h.jpg',
+                txt: 'Apple 10.9-inch',
+                price: '7000',
+              ),
 
               // Container(
               //   width: res_width * 0.9,
@@ -156,35 +162,33 @@ class _RecorderScreenState extends State<RecorderScreen> {
       child: Row(
         //mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            width: res_height * 0.12,
-            child: Image.asset('$img'),
-          ),
+          Container(width: res_height * 0.12, child: Image.asset('$img')),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('$txt',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.normal,
-                      )),
-                  Text('\$' '$price',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.normal,
-                      )),
+                  Text(
+                    '$txt',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+                  Text(
+                    '\$'
+                    '$price',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
                 ],
               ),
-              SizedBox(
-                width: res_width * 0.3,
-              ),
+              SizedBox(width: res_width * 0.3),
               ImageIcon(
-                AssetImage(
-                  "assets/slicing/refresh-ccw.png",
-                ),
+                AssetImage("assets/slicing/refresh-ccw.png"),
                 size: 20,
                 color: Colors.black,
               ),

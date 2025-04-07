@@ -5,12 +5,13 @@ class GetFeaturedModel {
   List<RelatedProducts>? relatedProducts;
   List<Reviews>? reviews;
 
-  GetFeaturedModel(
-      {this.message,
-      this.data,
-      this.images,
-      this.relatedProducts,
-      this.reviews});
+  GetFeaturedModel({
+    this.message,
+    this.data,
+    this.images,
+    this.relatedProducts,
+    this.reviews,
+  });
 
   GetFeaturedModel.fromJson(Map<String, dynamic> json) {
     message = json['message'];
@@ -78,23 +79,24 @@ class Data {
   String? length;
   String? image;
 
-  Data(
-      {this.id,
-      this.userId,
-      this.categoryId,
-      this.subcategoryId,
-      this.name,
-      this.price,
-      this.specifications,
-      this.serviceAgreements,
-      this.createdAt,
-      this.updatedAt,
-      this.negotiation,
-      this.isMessage,
-      this.isReview,
-      this.stars,
-      this.length,
-      this.image});
+  Data({
+    this.id,
+    this.userId,
+    this.categoryId,
+    this.subcategoryId,
+    this.name,
+    this.price,
+    this.specifications,
+    this.serviceAgreements,
+    this.createdAt,
+    this.updatedAt,
+    this.negotiation,
+    this.isMessage,
+    this.isReview,
+    this.stars,
+    this.length,
+    this.image,
+  });
 
   Data.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -172,12 +174,13 @@ class RelatedProducts {
   String? createdAt;
   String? updatedAt;
 
-  RelatedProducts(
-      {this.id,
-      this.productId,
-      this.relatedProductId,
-      this.createdAt,
-      this.updatedAt});
+  RelatedProducts({
+    this.id,
+    this.productId,
+    this.relatedProductId,
+    this.createdAt,
+    this.updatedAt,
+  });
 
   RelatedProducts.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -209,16 +212,17 @@ class Reviews {
   String? updatedAt;
   int? vendorId;
 
-  Reviews(
-      {this.id,
-      this.userId,
-      this.productId,
-      this.stars,
-      this.image,
-      this.description,
-      this.createdAt,
-      this.updatedAt,
-      this.vendorId});
+  Reviews({
+    this.id,
+    this.userId,
+    this.productId,
+    this.stars,
+    this.image,
+    this.description,
+    this.createdAt,
+    this.updatedAt,
+    this.vendorId,
+  });
 
   Reviews.fromJson(Map<String, dynamic> json) {
     id = json['id'];

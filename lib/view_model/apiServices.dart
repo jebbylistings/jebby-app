@@ -107,7 +107,7 @@ class ApiRepository extends ChangeNotifier {
 
   var notificationTimer;
   static var Url = dotenv.env['baseUrlM'] ?? 'No url found';
-  
+
   checkApiStatus(status, apiName) {
     if (apiName == "categoryList") {
       getCategoryListApiStatus = status;
@@ -119,10 +119,8 @@ class ApiRepository extends ChangeNotifier {
       getProductsListApiStatus = status;
     } else if (apiName == "getNotifications") {
       getNotificationModelListApiStatus = status;
-     
     } else if (apiName == "getAllOrdersByVenodrId") {
       getAllOrdersByVenodrIdListApiStatus = status;
-     
     }
   }
 
@@ -230,7 +228,6 @@ class ApiRepository extends ChangeNotifier {
 
   getAllMessages(data) {
     getAllMessagesModelList = data;
-   
   }
 
   getChatHistory(data) {
@@ -251,11 +248,11 @@ class ApiRepository extends ChangeNotifier {
   var unseenMessages = "";
 
   getNotifications(data) {
-   
     getNotificationModelList = data;
     notificationLoader = true;
-    unseenMessages = ApiRepository.shared.getNotificationModelList!.unseen.toString();
-   
+    unseenMessages =
+        ApiRepository.shared.getNotificationModelList!.unseen.toString();
+
     notifyListeners();
   }
 
@@ -284,150 +281,149 @@ class ApiRepository extends ChangeNotifier {
     notifyListeners();
   }
 
-  getNegoById(data){
+  getNegoById(data) {
     getNegoByIdModelList = data;
     notifyListeners();
   }
 
-  Future<CategoryList> getCategoryList(onResponse(CategoryList List), onError(error)) async {
-    final response = await http.get(Uri.parse(AppUrl.categoryGetUrl), headers: {
-      'Content-type': "application/json",
-    });
-   
+  Future<CategoryList> getCategoryList(
+    onResponse(CategoryList List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.categoryGetUrl),
+      headers: {'Content-type': "application/json"},
+    );
+
     if (response.statusCode == 200) {
       try {
         var data = CategoryList.fromJson(jsonDecode(response.body));
-       
 
         getCategory(data);
         onResponse(data);
-       
+
         return data;
       } catch (error) {
-       
         onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-     
     }
 
     return CategoryList();
   }
 
-  Future<SubCategoryList> getSubCategoryList(onResponse(SubCategoryList List), onError(error), id) async {
-    final response = await http.get(Uri.parse(AppUrl.subcategoryGetUrl + id), headers: {
-      'Content-type': "application/json",
-    });
+  Future<SubCategoryList> getSubCategoryList(
+    onResponse(SubCategoryList List),
+    onError(error),
+    id,
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.subcategoryGetUrl + id),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
         var data = SubCategoryList.fromJson(jsonDecode(response.body));
-       
 
         getSubCategory(data);
         onResponse(data);
-       
+
         return data;
       } catch (error) {
-       
         onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-     
     }
 
     return SubCategoryList();
   }
 
-  Future<GetVendorProductsModel> getVendorProductList(onResponse(GetVendorProductsModel list), onError(error), id) async {
-    final response = await http.get(Uri.parse(AppUrl.vendorProduct + id), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetVendorProductsModel> getVendorProductList(
+    onResponse(GetVendorProductsModel list),
+    onError(error),
+    id,
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.vendorProduct + id),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
         var data = GetVendorProductsModel.fromJson(jsonDecode(response.body));
-       
 
         getVendorProduct(data);
         onResponse(data);
-       
+
         return data;
       } catch (error) {
-       
         onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-     
     }
 
     return GetVendorProductsModel();
   }
 
-  Future<LastProductByVendorIdModel> getLastProductByVendorId(onResponse(LastProductByVendorIdModel list), onError(error), id) async {
-    final response = await http.get(Uri.parse("${Url}/LastProductByVendorId/${id}"), headers: {
-      'Content-type': "application/json",
-    });
+  Future<LastProductByVendorIdModel> getLastProductByVendorId(
+    onResponse(LastProductByVendorIdModel list),
+    onError(error),
+    id,
+  ) async {
+    final response = await http.get(
+      Uri.parse("${Url}/LastProductByVendorId/${id}"),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
-        var data = LastProductByVendorIdModel.fromJson(jsonDecode(response.body));
-       
+        var data = LastProductByVendorIdModel.fromJson(
+          jsonDecode(response.body),
+        );
 
         // getVendorProduct(data);
         getLastVendorProductList(data);
         onResponse(data);
-       
+
         return data;
       } catch (error) {
-       
         onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-     
     }
 
     return LastProductByVendorIdModel();
   }
 
-  Future<ProductInfoInsert> postProductInfo(prodID, userID, price, sub_category, fp, ibd, pastart, paend, dastart, daend, price1, discount, lat, long, security_deposit,
-      onResponse(ProductInfoInsert list), onError(error)) async {
-    var pData = {
-      "product_id": prodID,
-      "user_id": userID,
-      "price": price,
-      "per": 0,
-      "subcat_id": sub_category,
-      "fp": fp,
-      "lbd": ibd,
-      "pastart": pastart,
-      "paend": paend,
-      "dastart": dastart,
-      "daend": daend,
-      "price1": price1,
-      "discount": discount,
-      "latitude": lat,
-      "longitude": long,
-      "security_deposit": security_deposit,
-    };
-   
+  Future<ProductInfoInsert> postProductInfo(
+    prodID,
+    userID,
+    price,
+    sub_category,
+    fp,
+    ibd,
+    pastart,
+    paend,
+    dastart,
+    daend,
+    price1,
+    discount,
+    lat,
+    long,
+    security_deposit,
+    onResponse(ProductInfoInsert list),
+    onError(error),
+  ) async {
     final request = json.encode(<String, dynamic>{
       "product_id": prodID,
       "user_id": userID,
@@ -450,15 +446,12 @@ class ApiRepository extends ChangeNotifier {
     final response = await http.post(
       Uri.parse("${Url}/productInfoInsert"),
       body: request,
-      headers: {
-        'Content-type': "application/json",
-      },
+      headers: {'Content-type': "application/json"},
     );
     if (response.statusCode == 200) {
       try {
         // ProductInfoInsert data = ProductInfoInsert.fromJson(json.decode(response.body));
 
-       
         Get.off(() => ProductListScreen(side: false));
 
         // if (data != null) {
@@ -469,104 +462,98 @@ class ApiRepository extends ChangeNotifier {
         //   // onError(data.message.toString());
         // return data;
       } catch (error) {
-       
         // onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-     
     }
     return ProductInfoInsert();
   }
 
-  Future<GetAllProductsByVendorId> getAllVendorProductsByID(onResponse(GetAllProductsByVendorId list), onError(error), id) async {
-    final response = await http.get(Uri.parse(AppUrl.allVendorProductById + id), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetAllProductsByVendorId> getAllVendorProductsByID(
+    onResponse(GetAllProductsByVendorId list),
+    onError(error),
+    id,
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.allVendorProductById + id),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
         var data = GetAllProductsByVendorId.fromJson(jsonDecode(response.body));
-       
 
         getVendorProductsById(data);
         onResponse(data);
-       
+
         return data;
       } catch (error) {
-       
         onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
-     
       onError("Internal Server Error");
-     
     }
 
     return GetAllProductsByVendorId();
   }
 
-  Future<GetProductsByProductId> getProductsById(onResponse(GetProductsByProductId List), onError(error), id) async {
-    final response = await http.get(Uri.parse(AppUrl.getProductsByID + id), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetProductsByProductId> getProductsById(
+    onResponse(GetProductsByProductId List),
+    onError(error),
+    id,
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.getProductsByID + id),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
         var data = GetProductsByProductId.fromJson(jsonDecode(response.body));
-       
 
         getProductByProductId(data);
         onResponse(data);
-       
+
         return data;
       } catch (error) {
-       
         onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-     
     }
 
     return GetProductsByProductId();
   }
 
-  Future<GetRelatedProducts> getRelatedProducts(onResponse(GetRelatedProducts List), onError(error), id) async {
-   
-    final response = await http.get(Uri.parse(AppUrl.getRelatedProduct + id), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetRelatedProducts> getRelatedProducts(
+    onResponse(GetRelatedProducts List),
+    onError(error),
+    id,
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.getRelatedProduct + id),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
         var data = GetRelatedProducts.fromJson(jsonDecode(response.body));
-       
 
         getRelatedProductsByProductId(data);
         onResponse(data);
-       
+
         return data;
       } catch (error) {
-       
         onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-     
     }
 
     return GetRelatedProducts();
@@ -574,26 +561,21 @@ class ApiRepository extends ChangeNotifier {
 
   Future<DeleteProduct> deleteProductsById(id) async {
     final request = json.encode(<String, dynamic>{"id": id});
-    final response = await http.post(Uri.parse(AppUrl.deleteProduct), body: request, headers: {
-      'Content-type': "application/json",
-    });
+    final response = await http.post(
+      Uri.parse(AppUrl.deleteProduct),
+      body: request,
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
-        var data = GetProductsByProductId.fromJson(jsonDecode(response.body));
-        //
-       
         Get.to(() => ProductListScreen(side: false));
       } catch (error) {
-       
         // onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-     
     }
 
     return DeleteProduct();
@@ -601,26 +583,21 @@ class ApiRepository extends ChangeNotifier {
 
   Future<ProductDeleteImageModel> deleteProductImage(id) async {
     final request = json.encode(<String, dynamic>{"id": id});
-    final response = await http.post(Uri.parse(AppUrl.productDeleteImage), body: request, headers: {
-      'Content-type': "application/json",
-    });
+    final response = await http.post(
+      Uri.parse(AppUrl.productDeleteImage),
+      body: request,
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
-        var data = ProductDeleteImageModel.fromJson(jsonDecode(response.body));
-        //
-       
         getdeletedProductImage(true);
       } catch (error) {
-       
         // onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-     
     }
 
     return ProductDeleteImageModel();
@@ -682,51 +659,19 @@ class ApiRepository extends ChangeNotifier {
       "price1": price1,
       "discount": discount,
       "isMessage": message,
-      "delivery_charges":delivery_charges,
-      "security_deposit":security_deposit,
+      "delivery_charges": delivery_charges,
+      "security_deposit": security_deposit,
     });
 
-    var data = {
-      "user_id": user_id,
-      "category_id": category_id,
-      "subcategory_id": subcategory_id,
-      "name": name,
-      "price": price,
-      "specifications": specifications,
-      "service_agreements": service_agreements,
-      "negotiation": negotiation,
-      "id": id,
-      "array": array,
-      "product_id": prodID,
-      "user_id1": user_id1,
-      "price2": price2,
-      "per": per,
-      "subcat_id": subcat_id,
-      "fp": fp,
-      "lbd": lbd,
-      "pastart": pastart,
-      "paend": paend,
-      "dastart": dastart,
-      "daend": daend,
-      "price1": price1,
-      "discount": discount,
-      "isMessage": message,
-      "delivery_charges":delivery_charges,
-      "security_deposit":security_deposit,
-    };
-   
     final response = await http.post(
       Uri.parse("${Url}/productUpdate"),
       body: request,
-      headers: {
-        'Content-type': "application/json",
-      },
+      headers: {'Content-type': "application/json"},
     );
     if (response.statusCode == 200) {
       try {
         // ProductInfoInsert data = ProductInfoInsert.fromJson(json.decode(response.body));
 
-       
         Get.off(() => ProductListScreen(side: false));
 
         // if (data != null) {
@@ -737,495 +682,480 @@ class ApiRepository extends ChangeNotifier {
         //   // onError(data.message.toString());
         // return data;
       } catch (error) {
-       
         // onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-     
     }
     return ProductUpdateModel();
   }
 
-  Future<GetCategoryByIdModel> CategoryId(onResponse(GetCategoryByIdModel List), onError(error), id) async {
-   
-    final response = await http.get(Uri.parse(AppUrl.categoryID + id), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetCategoryByIdModel> CategoryId(
+    onResponse(GetCategoryByIdModel List),
+    onError(error),
+    id,
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.categoryID + id),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
         var data = GetCategoryByIdModel.fromJson(jsonDecode(response.body));
-       
 
         getCategoryById(data);
         onResponse(data);
-       
+
         return data;
       } catch (error) {
-       
         onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-     
     }
 
     return GetCategoryByIdModel();
   }
 
-  Future<GetSubCategoryByIdModel> SubCategoryId(onResponse(GetSubCategoryByIdModel List), onError(error), id) async {
-   
-    final response = await http.get(Uri.parse(AppUrl.subCategoryID + id), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetSubCategoryByIdModel> SubCategoryId(
+    onResponse(GetSubCategoryByIdModel List),
+    onError(error),
+    id,
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.subCategoryID + id),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
         var data = GetSubCategoryByIdModel.fromJson(jsonDecode(response.body));
-       
 
         getSubCategoryById(data);
         onResponse(data);
-       
+
         return data;
       } catch (error) {
-       
         onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-     
     }
 
     return GetSubCategoryByIdModel();
   }
 
-  Future<GetFilteredProductDataModel> filteredData(onResponse(GetFilteredProductDataModel List), onError(error), url) async {
-   
-    final response = await http.get(Uri.parse(url), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetFilteredProductDataModel> filteredData(
+    onResponse(GetFilteredProductDataModel List),
+    onError(error),
+    url,
+  ) async {
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
-        var data = GetFilteredProductDataModel.fromJson(jsonDecode(response.body));
-       
+        var data = GetFilteredProductDataModel.fromJson(
+          jsonDecode(response.body),
+        );
 
         getFilteredProduct(data);
         onResponse(data);
-       
+
         return data;
       } catch (error) {
-       
         onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-     
     }
 
     return GetFilteredProductDataModel();
   }
 
-  Future<GetPrivacyPolicyModel> privacyPolicy(onResponse(GetPrivacyPolicyModel List), onError(error)) async {
-    final response = await http.get(Uri.parse(AppUrl.privacyPolicy), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetPrivacyPolicyModel> privacyPolicy(
+    onResponse(GetPrivacyPolicyModel List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.privacyPolicy),
+      headers: {'Content-type': "application/json"},
+    );
 
     if (response.statusCode == 200) {
       try {
         var data = GetPrivacyPolicyModel.fromJson(jsonDecode(response.body));
-       
 
         getPrivacyPolicy(data);
         onResponse(data);
-       
+
         return data;
       } catch (error) {
-       
         onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-     
     }
 
     return GetPrivacyPolicyModel();
   }
 
-  Future<GetTermsAndConditionsModel> termsAndConditons(onResponse(GetTermsAndConditionsModel List), onError(error)) async {
-    final response = await http.get(Uri.parse(AppUrl.termsAndConditions), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetTermsAndConditionsModel> termsAndConditons(
+    onResponse(GetTermsAndConditionsModel List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.termsAndConditions),
+      headers: {'Content-type': "application/json"},
+    );
 
     if (response.statusCode == 200) {
       try {
-        var data = GetTermsAndConditionsModel.fromJson(jsonDecode(response.body));
-       
+        var data = GetTermsAndConditionsModel.fromJson(
+          jsonDecode(response.body),
+        );
 
         getTermsAndConditions(data);
         onResponse(data);
-       
+
         return data;
       } catch (error) {
-       
         onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-     
     }
 
     return GetTermsAndConditionsModel();
   }
 
-  Future<GetAboutAppModel> aboutApp(onResponse(GetAboutAppModel List), onError(error)) async {
-    final response = await http.get(Uri.parse(AppUrl.aboutApp), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetAboutAppModel> aboutApp(
+    onResponse(GetAboutAppModel List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.aboutApp),
+      headers: {'Content-type': "application/json"},
+    );
 
     if (response.statusCode == 200) {
       try {
         var data = GetAboutAppModel.fromJson(jsonDecode(response.body));
-       
 
         getAboutApp(data);
         onResponse(data);
-       
+
         return data;
       } catch (error) {
-       
         onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-     
     }
 
     return GetAboutAppModel();
   }
 
-  Future<GetTermLengthModel> termLength(onResponse(GetTermLengthModel List), onError(error)) async {
-    final response = await http.get(Uri.parse(AppUrl.termLength), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetTermLengthModel> termLength(
+    onResponse(GetTermLengthModel List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.termLength),
+      headers: {'Content-type': "application/json"},
+    );
 
     if (response.statusCode == 200) {
       try {
         var data = GetTermLengthModel.fromJson(jsonDecode(response.body));
-       
 
         getTermLength(data);
         onResponse(data);
-       
+
         return data;
       } catch (error) {
-       
         onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-     
     }
 
     return GetTermLengthModel();
   }
 
-  Future<GetUserCredentialModel> userCredential(onResponse(GetUserCredentialModel List), onError(error), id) async {
-   
-    final response = await http.get(Uri.parse(AppUrl.userCredential + id.toString()), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetUserCredentialModel> userCredential(
+    onResponse(GetUserCredentialModel List),
+    onError(error),
+    id,
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.userCredential + id.toString()),
+      headers: {'Content-type': "application/json"},
+    );
 
     if (response.statusCode == 200) {
       try {
-       
         var data = GetUserCredentialModel.fromJson(jsonDecode(response.body));
-       
+
         getUserCredential(data);
         onResponse(data);
-       
+
         return data;
       } catch (error) {
-       
         onError(error.toString());
-       
       }
-     
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-     
     }
 
     return GetUserCredentialModel();
   }
 
-  Future<GetRentalAgreementModel> rentalAgreement(onResponse(GetRentalAgreementModel List), onError(error)) async {
-    final response = await http.get(Uri.parse(AppUrl.rentalAgreement), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetRentalAgreementModel> rentalAgreement(
+    onResponse(GetRentalAgreementModel List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.rentalAgreement),
+      headers: {'Content-type': "application/json"},
+    );
 
     if (response.statusCode == 200) {
       try {
         var data = GetRentalAgreementModel.fromJson(jsonDecode(response.body));
-       
 
         getRentalAgreement(data);
         onResponse(data);
-       
+
         return data;
       } catch (error) {
-       
         onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-     
     }
 
     return GetRentalAgreementModel();
   }
 
-  Future<GetUsagePolicyModel> usagePolicy(onResponse(GetUsagePolicyModel List), onError(error)) async {
-    final response = await http.get(Uri.parse(AppUrl.usagePolicy), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetUsagePolicyModel> usagePolicy(
+    onResponse(GetUsagePolicyModel List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.usagePolicy),
+      headers: {'Content-type': "application/json"},
+    );
 
     if (response.statusCode == 200) {
       try {
         var data = GetUsagePolicyModel.fromJson(jsonDecode(response.body));
-       
 
         getUsagePolicy(data);
         onResponse(data);
-       
+
         return data;
       } catch (error) {
-       
         onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-     
     }
 
     return GetUsagePolicyModel();
   }
 
-  Future<GetInsuranceModel> insurance(onResponse(GetInsuranceModel List), onError(error)) async {
-    final response = await http.get(Uri.parse(AppUrl.insurance), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetInsuranceModel> insurance(
+    onResponse(GetInsuranceModel List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.insurance),
+      headers: {'Content-type': "application/json"},
+    );
 
     if (response.statusCode == 200) {
       try {
         var data = GetInsuranceModel.fromJson(jsonDecode(response.body));
-       
 
         getInsurance(data);
         onResponse(data);
-       
+
         return data;
       } catch (error) {
-       
         onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-     
     }
 
     return GetInsuranceModel();
   }
 
-  Future<GetTransportModel> transport(onResponse(GetTransportModel List), onError(error)) async {
-    final response = await http.get(Uri.parse(AppUrl.transport), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetTransportModel> transport(
+    onResponse(GetTransportModel List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.transport),
+      headers: {'Content-type': "application/json"},
+    );
 
     if (response.statusCode == 200) {
       try {
         var data = GetTransportModel.fromJson(jsonDecode(response.body));
-       
 
         getTransport(data);
         onResponse(data);
-       
+
         return data;
       } catch (error) {
-       
         onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      
     }
 
     return GetTransportModel();
   }
 
-  Future<GetMaintanenceModel> maintenance(onResponse(GetMaintanenceModel List), onError(error)) async {
-    final response = await http.get(Uri.parse(AppUrl.miantenance), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetMaintanenceModel> maintenance(
+    onResponse(GetMaintanenceModel List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.miantenance),
+      headers: {'Content-type': "application/json"},
+    );
 
     if (response.statusCode == 200) {
       try {
         var data = GetMaintanenceModel.fromJson(jsonDecode(response.body));
-        
 
         getMaintainence(data);
         onResponse(data);
-        
+
         return data;
       } catch (error) {
-        
         onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      
     }
 
     return GetMaintanenceModel();
   }
 
-  Future<GetTerminationModel> termination(onResponse(GetTerminationModel List), onError(error)) async {
-    final response = await http.get(Uri.parse(AppUrl.termination), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetTerminationModel> termination(
+    onResponse(GetTerminationModel List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.termination),
+      headers: {'Content-type': "application/json"},
+    );
 
     if (response.statusCode == 200) {
       try {
         var data = GetTerminationModel.fromJson(jsonDecode(response.body));
-        
 
         getTermination(data);
         onResponse(data);
-        
+
         return data;
       } catch (error) {
-        
         onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      
     }
 
     return GetTerminationModel();
   }
 
-  Future<GetAllProductsModel> allProducts(onResponse(GetAllProductsModel List), onError(error)) async {
-    final response = await http.get(Uri.parse(AppUrl.allProducts), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetAllProductsModel> allProducts(
+    onResponse(GetAllProductsModel List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.allProducts),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
         var data = GetAllProductsModel.fromJson(jsonDecode(response.body));
-        
 
         getAllProducts(data);
         onResponse(data);
-        
+
         return data;
       } catch (error) {
-        
         onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      
     }
 
     return GetAllProductsModel();
   }
 
-  Future<GetAllMessagesModel> getMessagesApi(String sourceID, String targetID, onResponse(GetAllMessagesModel List), onError(error)) async {
-    final response = await http.get(Uri.parse("${Url}/GetMessagesByIds/${sourceID}/${targetID}"), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetAllMessagesModel> getMessagesApi(
+    String sourceID,
+    String targetID,
+    onResponse(GetAllMessagesModel List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse("${Url}/GetMessagesByIds/${sourceID}/${targetID}"),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
         var data = GetAllMessagesModel.fromJson(jsonDecode(response.body));
-        
 
         getAllMessages(data);
         onResponse(data);
-        
+
         return data;
       } catch (error) {
-        
         onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      
     }
 
     return GetAllMessagesModel();
@@ -1236,12 +1166,6 @@ class ApiRepository extends ChangeNotifier {
     String sender_id,
     String recipient_id,
   ) async {
-    var data = {
-      "content": content.toString(),
-      "sender_id": sender_id.toString(),
-      "recipient_id": recipient_id.toString(),
-    };
-    
     final request = json.encode(<String, dynamic>{
       "content": content.toString(),
       "sender_id": sender_id.toString(),
@@ -1251,61 +1175,65 @@ class ApiRepository extends ChangeNotifier {
     final response = await http.post(
       Uri.parse("${Url}/InsertMessage"),
       body: request,
-      headers: {
-        'Content-type': "application/json",
-      },
+      headers: {'Content-type': "application/json"},
     );
     if (response.statusCode == 200) {
-      try {
-        
-      } catch (error) {
-        
-        
-      }
+      try {} catch (error) {}
     } else if (response.statusCode == 400) {
-      
-    } else if (response.statusCode == 500) {
-      
-    }
+    } else if (response.statusCode == 500) {}
     return PostlMessagesModel();
   }
 
-  Future<GetChatHistoryModel> chatsHistory(String sourceID, onResponse(GetChatHistoryModel List), onError(error)) async {
-    final response = await http.get(Uri.parse("${Url}/getMessageVendorsProfile/${sourceID}"), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetChatHistoryModel> chatsHistory(
+    String sourceID,
+    onResponse(GetChatHistoryModel List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse("${Url}/getMessageVendorsProfile/${sourceID}"),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
         var data = GetChatHistoryModel.fromJson(jsonDecode(response.body));
-        
 
         getChatHistory(data);
         onResponse(data);
-        
+
         return data;
       } catch (error) {
-        
         onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      
     }
 
     return GetChatHistoryModel();
   }
 
-  Future<PayWithStripeModel> stripePayment(/*cardNumber, expiryMonth, expiryYear, cvv,*/ amount, accountId, context, userid, productId, rentStart,
-      originalReturn, name, email, location, lat, long, negoPrice, shipping_address, security_deposit, ApplicationFees
-      // onResponse(PayWithStripeModel  list),
-      // onError(error))
+  Future<PayWithStripeModel> stripePayment(
+    /*cardNumber, expiryMonth, expiryYear, cvv,*/ amount,
+    accountId,
+    context,
+    userid,
+    productId,
+    rentStart,
+    originalReturn,
+    name,
+    email,
+    location,
+    lat,
+    long,
+    negoPrice,
+    shipping_address,
+    security_deposit,
+    ApplicationFees,
 
-      ) async {
-
+    // onResponse(PayWithStripeModel  list),
+    // onError(error))
+  ) async {
     // final request = json.encode(<String, dynamic>{
     //   "cardNumber": cardNumber,
     //   "exp_month": expiryMonth,
@@ -1315,47 +1243,58 @@ class ApiRepository extends ChangeNotifier {
     //   "vendorAccountId": accountId,
     //   "sales_tax" : ApplicationFees.toInt()
     // });
-   
-     final request = json.encode(<String, dynamic>{
+
+    final request = json.encode(<String, dynamic>{
       "amount": amount,
       "vendorAccountId": accountId,
       "sales_tax": ApplicationFees.toInt(),
     });
 
-
     final response = await http.post(
       Uri.parse("${Url}/payByStripe"),
       body: request,
-      headers: {
-        'Content-type': "application/json",
-      },
+      headers: {'Content-type': "application/json"},
     );
     if (response.statusCode == 200) {
       try {
         final responseData = json.decode(response.body);
 
-      // Assuming your backend returns the client secret
-      final clientSecret = responseData['client_secret'];
+        // Assuming your backend returns the client secret
+        final clientSecret = responseData['client_secret'];
 
-      await Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: SetupPaymentSheetParameters(
-          paymentIntentClientSecret: clientSecret,
-          merchantDisplayName: 'Jebby LLC',
-          customerId: userid, // Optional
-          // Optionally, configure Google Pay and Apple Pay here:
-          // style: ThemeMode.light, // Customize as needed
-        ),
-      );
+        await Stripe.instance.initPaymentSheet(
+          paymentSheetParameters: SetupPaymentSheetParameters(
+            paymentIntentClientSecret: clientSecret,
+            merchantDisplayName: 'Jebby LLC',
+            customerId: userid, // Optional
+            // Optionally, configure Google Pay and Apple Pay here:
+            // style: ThemeMode.light, // Customize as needed
+          ),
+        );
 
-      // 3. Present PaymentSheet
-      await Stripe.instance.presentPaymentSheet();
-
+        // 3. Present PaymentSheet
+        await Stripe.instance.presentPaymentSheet();
 
         // final snackBar = new SnackBar(content: new Text("Placing order please wait"));
         // ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        // 
+        //
         // ChargeBack(context, userid, productId, rentStart, originalReturn, name, email, location, lat, long, negoPrice,shipping_address, cardNumber, expiryMonth, expiryYear, cvv, amount, security_deposit);
-        ApiRepository.shared.postOrder(context, userid, productId, rentStart, originalReturn, name, email, location, lat, long, negoPrice,shipping_address,security_deposit,responseData['payment_intent_id']);
+        ApiRepository.shared.postOrder(
+          context,
+          userid,
+          productId,
+          rentStart,
+          originalReturn,
+          name,
+          email,
+          location,
+          lat,
+          long,
+          negoPrice,
+          shipping_address,
+          security_deposit,
+          responseData['payment_intent_id'],
+        );
         // ApiRepository.shared.postOrder(context, userid, productId, rentStart, originalReturn, name, email, location, lat, long, negoPrice,shipping_address);
         // Get.to(() => ProductListScreen());
 
@@ -1367,48 +1306,78 @@ class ApiRepository extends ChangeNotifier {
         //   // onError(data.message.toString());
         // return data;
       } catch (error) {
-        
         // onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
-      
-      
       // ApiRepository.shared.postOrder(context, userid, productId, rentStart, originalReturn, name, email, location, lat, long);
-      final snackBar = new SnackBar(content: new Text("Error in placing order ${response.body.toString()}"));
+      final snackBar = new SnackBar(
+        content: new Text("Error in placing order ${response.body.toString()}"),
+      );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
       // onError("Internal Server Error");
     }
     return PayWithStripeModel();
   }
 
-  void ChargeBack(context, userid, productId, rentStart, originalReturn, name, email, location, lat, long, negoPrice,shipping_address, cardNumber, expiryMonth, expiryYear, cvv, amount, security_deposit) async {
+  void ChargeBack(
+    context,
+    userid,
+    productId,
+    rentStart,
+    originalReturn,
+    name,
+    email,
+    location,
+    lat,
+    long,
+    negoPrice,
+    shipping_address,
+    cardNumber,
+    expiryMonth,
+    expiryYear,
+    cvv,
+    amount,
+    security_deposit,
+  ) async {
     final String SeenMessageUrl = "${Url}/PyaByStripeSecurityDeposit";
     var data = {
-    "cardNumber":cardNumber,
-    "exp_month":expiryMonth,
-    "exp_year":expiryYear,
-    "cvc":cvv,
-    "amount":security_deposit
+      "cardNumber": cardNumber,
+      "exp_month": expiryMonth,
+      "exp_year": expiryYear,
+      "cvc": cvv,
+      "amount": security_deposit,
     };
-    
+
     try {
       final response = await http.post(
         Uri.parse(SeenMessageUrl),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
         body: json.encode(data),
       );
       final responseBody = jsonDecode(response.body);
-      
-      
-      final snackBar = new SnackBar(content: new Text("Placing payment please wait"));
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      ApiRepository.shared.postOrder(context, userid, productId, rentStart, originalReturn, name, email, location, lat, long, negoPrice,shipping_address,security_deposit,responseBody["paymentIntent"]["id"]);
+
+      final snackBar = new SnackBar(
+        content: new Text("Placing payment please wait"),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      ApiRepository.shared.postOrder(
+        context,
+        userid,
+        productId,
+        rentStart,
+        originalReturn,
+        name,
+        email,
+        location,
+        lat,
+        long,
+        negoPrice,
+        shipping_address,
+        security_deposit,
+        responseBody["paymentIntent"]["id"],
+      );
       // if (responseBody["message"].toString() == 'updated') {
       //   if(prefs.getInt('type') == 1){
       //     name == "leave" ?  Get.to(() => Requests())
@@ -1418,18 +1387,36 @@ class ApiRepository extends ChangeNotifier {
       //      : Get.to(() => EmplSchedule());
       //       // Utils.flushBarMessage(responseBody["message"].toString(), context);
       //      }
-      // } 
+      // }
       // else{
       //   Utils.flushBarErrorMessage(responseBody["message"].toString(), context);
       // }
     } catch (err) {
-      
-      final snackBar = new SnackBar(content: new Text('Something went wrong plz check your internet connection'));
+      final snackBar = new SnackBar(
+        content: new Text(
+          'Something went wrong plz check your internet connection',
+        ),
+      );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
-}
+  }
 
-  Future<PostOrderModel> postOrder(context, userid, productId, rentStart, originalReturn, name, email, location, lat, long, negoPrice, shipping_address,security_deposit,deposit_id) async {
+  Future<PostOrderModel> postOrder(
+    context,
+    userid,
+    productId,
+    rentStart,
+    originalReturn,
+    name,
+    email,
+    location,
+    lat,
+    long,
+    negoPrice,
+    shipping_address,
+    security_deposit,
+    deposit_id,
+  ) async {
     final request = json.encode(<String, dynamic>{
       "user_id": userid,
       "product_id": productId,
@@ -1440,115 +1427,110 @@ class ApiRepository extends ChangeNotifier {
       "location": location,
       "latitude": lat,
       "longitude": long,
-      "nego_price" : negoPrice,
-      "shipping_address" :shipping_address,
-      "sucurity_deposit" :security_deposit,
-      "deposit_payment_id" :deposit_id,
+      "nego_price": negoPrice,
+      "shipping_address": shipping_address,
+      "sucurity_deposit": security_deposit,
+      "deposit_payment_id": deposit_id,
     });
-
-    
 
     final response = await http.post(
       Uri.parse("${Url}/rentProductInsert"),
       body: request,
-      headers: {
-        'Content-type': "application/json",
-      },
+      headers: {'Content-type': "application/json"},
     );
 
     if (response.statusCode == 200) {
       // try {
-        // ProductInfoInsert data = ProductInfoInsert.fromJson(json.decode(response.body));
+      // ProductInfoInsert data = ProductInfoInsert.fromJson(json.decode(response.body));
 
-        
-        final snackBar = new SnackBar(content: new Text("Order placed sucessfully"));
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        Get.off(() => MainScreen());
+      final snackBar = new SnackBar(
+        content: new Text("Order placed sucessfully"),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      Get.off(() => MainScreen());
 
-        // if (data != null) {
-        //   // onResponse(data);
-        //   // return data;
-        // } else
+      // if (data != null) {
+      //   // onResponse(data);
+      //   // return data;
+      // } else
 
-        //   // onError(data.message.toString());
-        // return data;
+      //   // onError(data.message.toString());
+      // return data;
       // } catch (error) {
-        
+
       //   // onError(error.toString());
-        
+
       // }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       final snackBar = new SnackBar(content: new Text("Error in saving order"));
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
       // onError("Internal Server Error");
-      
     }
     return PostOrderModel();
   }
 
-  Future<GetFavouriteProductsModel> getFavourites(String id, onResponse(GetFavouriteProductsModel List), onError(error)) async {
-    final response = await http.get(Uri.parse(AppUrl.getFromFavorite + id), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetFavouriteProductsModel> getFavourites(
+    String id,
+    onResponse(GetFavouriteProductsModel List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.getFromFavorite + id),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
-        var data = GetFavouriteProductsModel.fromJson(jsonDecode(response.body));
-        
+        var data = GetFavouriteProductsModel.fromJson(
+          jsonDecode(response.body),
+        );
 
         getFavouriteProduct(data);
         onResponse(data);
-        
+
         return data;
       } catch (error) {
-        
         onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      
     }
 
     return GetFavouriteProductsModel();
   }
 
-  Future<AddFavouriteModel> addFavorite(userId, prodID, fav
-      // onResponse(PayWithStripeModel  list),
-      // onError(error))
-      ) async {
-    final request = json.encode(<String, dynamic>{"user_id": userId, "product_id": prodID, "fav": fav});
-
-    
+  Future<AddFavouriteModel> addFavorite(
+    userId,
+    prodID,
+    fav,
+    // onResponse(PayWithStripeModel  list),
+    // onError(error))
+  ) async {
+    final request = json.encode(<String, dynamic>{
+      "user_id": userId,
+      "product_id": prodID,
+      "fav": fav,
+    });
 
     final response = await http.post(
       Uri.parse(AppUrl.addToFavourite),
-      headers: {
-        'Content-Type': "application/json",
-      },
+      headers: {'Content-Type': "application/json"},
       body: request,
     );
-    
+
     if (response.statusCode == 200) {
       try {
-        
         // ApiRepository.shared.getFavourites(userId, (List) => {}, (error) => {});
       } catch (error) {
-        
         // onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      
     }
     return AddFavouriteModel();
   }
@@ -1561,193 +1543,177 @@ class ApiRepository extends ChangeNotifier {
       "PayerID": payerID,
     });
 
-    
-
     final response = await http.post(
       Uri.parse("http://192.168.18.39:7000/payByPayPal"),
       body: request,
-      headers: {
-        'Content-type': "application/json",
-      },
+      headers: {'Content-type': "application/json"},
     );
     if (response.statusCode == 200) {
-      try {
-        
-      } catch (error) {
-        
+      try {} catch (error) {
         // onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      
     }
     return PayByPayPalModel();
   }
 
-  Future<GetNotificationModel> notifications(id, onResponse(GetNotificationModel List), onError(error)) async {
-    
-    final response = await http.get(Uri.parse(AppUrl.getAllNotificationForApp + id.toString()), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetNotificationModel> notifications(
+    id,
+    onResponse(GetNotificationModel List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.getAllNotificationForApp + id.toString()),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
         ApiRepository.shared.checkApiStatus(true, "getNotifications");
         var data = GetNotificationModel.fromJson(jsonDecode(response.body));
-        
+
         //${data.data.toString()}
         getNotifications(data);
         // ApiRepository.shared.getNotificationModelListApiStatus == true ?
         // "" :
         // if (unseenMessages == "") {
-        //   
+        //
         //   getNotifications(data);
         // } else {
         //   if (unseenMessages.toString() == data.unseen.toString().toString()) {
-        //     
+        //
         //   } else {
-        //     
+        //
         //     getNotifications(data);
         //   }
         // }
 
-        
         onResponse(data);
 
-        
         return data;
       } catch (error) {
-        
         onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      
     }
 
     return GetNotificationModel();
   }
 
-  Future<GetAllReviewsByProductId> reviewsByProductId(String id, onResponse(GetAllReviewsByProductId List), onError(error)) async {
-    final response = await http.get(Uri.parse(AppUrl.getReviewsByProductId + id), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetAllReviewsByProductId> reviewsByProductId(
+    String id,
+    onResponse(GetAllReviewsByProductId List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.getReviewsByProductId + id),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
         var data = GetAllReviewsByProductId.fromJson(jsonDecode(response.body));
-        
 
         getReviewsByProductId(data);
         onResponse(data);
-        
+
         return data;
       } catch (error) {
-        
         onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      
     }
 
     return GetAllReviewsByProductId();
   }
 
-  Future<GetAllReviewsByVendorId> reviewsByVendorId(String id, onResponse(GetAllReviewsByVendorId List), onError(error)) async {
-    final response = await http.get(Uri.parse(AppUrl.getAllReviewsByVendorId + id), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetAllReviewsByVendorId> reviewsByVendorId(
+    String id,
+    onResponse(GetAllReviewsByVendorId List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.getAllReviewsByVendorId + id),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
         var data = GetAllReviewsByVendorId.fromJson(jsonDecode(response.body));
-        
 
         getAllReviewsByVendorId(data);
         onResponse(data);
-        
+
         return data;
       } catch (error) {
-        
         onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      
     }
 
     return GetAllReviewsByVendorId();
   }
 
-  Future<GetVendorProductsByReveiwsModel> reviewsByVenodorProduct(String id, onResponse(GetVendorProductsByReveiwsModel List), onError(error)) async {
-    final response = await http.get(Uri.parse(AppUrl.getVendorProductsByReviews + id), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetVendorProductsByReveiwsModel> reviewsByVenodorProduct(
+    String id,
+    onResponse(GetVendorProductsByReveiwsModel List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.getVendorProductsByReviews + id),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
-        var data = GetVendorProductsByReveiwsModel.fromJson(jsonDecode(response.body));
-        
+        var data = GetVendorProductsByReveiwsModel.fromJson(
+          jsonDecode(response.body),
+        );
+
         getVenodrProductsByReviews(data);
         onResponse(data);
-        
+
         return data;
       } catch (error) {
-        
         onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      
     }
     return GetVendorProductsByReveiwsModel();
   }
 
   Future<DeleteNotificationModel> deleteNotification(id) async {
     final request = json.encode(<String, dynamic>{"id": id});
-    
 
     final response = await http.post(
       Uri.parse(AppUrl.deleteNotification),
       body: request,
-      headers: {
-        'Content-type': "application/json",
-      },
+      headers: {'Content-type': "application/json"},
     );
 
     if (response.statusCode == 201) {
       try {
         unseenMessages = "";
-        
+
         ApiRepository.shared.notifications(id, (List) {}, (error) {});
       } catch (error) {
-        
         // onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      
     }
     return DeleteNotificationModel();
   }
@@ -1755,151 +1721,142 @@ class ApiRepository extends ChangeNotifier {
   Future<GetNotificationSeenModel> seenNotification(id) async {
     final request = json.encode(<String, dynamic>{"user_id": id});
 
-    
-
     final response = await http.post(
       Uri.parse(AppUrl.postSeenNotification),
       body: request,
-      headers: {
-        'Content-type': "application/json",
-      },
+      headers: {'Content-type': "application/json"},
     );
     if (response.statusCode == 201) {
       try {
-        
         ApiRepository.shared.notifications(id, (List) {}, (error) {});
       } catch (error) {
-        
         // onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      
     }
     return GetNotificationSeenModel();
   }
 
-    Future<GetNotificationSeenOneModel> seenoneNotification(id) async {
+  Future<GetNotificationSeenOneModel> seenoneNotification(id) async {
     final request = json.encode(<String, dynamic>{"id": id});
-
-    
 
     final response = await http.post(
       Uri.parse(AppUrl.postSeenoneNotification),
       body: request,
-      headers: {
-        'Content-type': "application/json",
-      },
+      headers: {'Content-type': "application/json"},
     );
-    
+
     if (response.statusCode == 201) {
       try {
-        
         ApiRepository.shared.notifications(id, (List) {}, (error) {});
       } catch (error) {
-        
         // onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      
     }
     return GetNotificationSeenOneModel();
   }
 
-  Future<GetAllOrderByVendorIdModel>getVenodorOrders(String id, onResponse(GetAllOrderByVendorIdModel List), onError(error)) async {
-    final response = await http.get(Uri.parse(AppUrl.getAllVendorOrders + id), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetAllOrderByVendorIdModel> getVenodorOrders(
+    String id,
+    onResponse(GetAllOrderByVendorIdModel List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.getAllVendorOrders + id),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
-        var data = GetAllOrderByVendorIdModel.fromJson(jsonDecode(response.body));
-        
+        var data = GetAllOrderByVendorIdModel.fromJson(
+          jsonDecode(response.body),
+        );
 
         getAllOrdersByVenodrId(data);
         onResponse(data);
-        
+
         return data;
       } catch (error) {
-        
         onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      
     }
 
     return GetAllOrderByVendorIdModel();
   }
 
-  Future<PostOrderStatusUpdateModel> orderStatusUpdate(id, status, desc, vendorID, route) async {
-    final request = json.encode(<String, dynamic>{"id": id, "status": status, "description": desc});
+  Future<PostOrderStatusUpdateModel> orderStatusUpdate(
+    id,
+    status,
+    desc,
+    vendorID,
+    route,
+  ) async {
+    final request = json.encode(<String, dynamic>{
+      "id": id,
+      "status": status,
+      "description": desc,
+    });
 
-    
     final response = await http.post(
       Uri.parse(AppUrl.orderStatusById),
       body: request,
-      headers: {
-        'Content-type': "application/json",
-      },
+      headers: {'Content-type': "application/json"},
     );
     if (response.statusCode == 200) {
       try {
-        
-        ApiRepository.shared.getVenodorOrders(vendorID.toString(), (List) {}, (error) {});
+        ApiRepository.shared.getVenodorOrders(
+          vendorID.toString(),
+          (List) {},
+          (error) {},
+        );
       } catch (error) {
-        
         // onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      
     }
     return PostOrderStatusUpdateModel();
   }
 
-  Future<GetAllOrdersByUserIdModel> getAllOrdersByUserId(String id, onResponse(GetAllOrdersByUserIdModel List), onError(error)) async {
-    
-    final response = await http.get(Uri.parse(AppUrl.getAllUserOrders + id), headers: {
-      'Content-type': "application/json",
-    });
-    
+  Future<GetAllOrdersByUserIdModel> getAllOrdersByUserId(
+    String id,
+    onResponse(GetAllOrdersByUserIdModel List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.getAllUserOrders + id),
+      headers: {'Content-type': "application/json"},
+    );
+
     if (response.statusCode == 200) {
       try {
-        var data = GetAllOrdersByUserIdModel.fromJson(jsonDecode(response.body));
-        
+        var data = GetAllOrdersByUserIdModel.fromJson(
+          jsonDecode(response.body),
+        );
 
         getAllUserOrders(data);
         onResponse(data);
-        
+
         return data;
       } catch (error) {
-        
         onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      
     }
 
     return GetAllOrdersByUserIdModel();
@@ -1911,31 +1868,26 @@ class ApiRepository extends ChangeNotifier {
       "location": location,
     });
 
-    
     final response = await http.post(
       Uri.parse(AppUrl.reOrder),
       body: request,
-      headers: {
-        'Content-type': "application/json",
-      },
+      headers: {'Content-type': "application/json"},
     );
     if (response.statusCode == 200) {
       try {
-        final snackBar = new SnackBar(content: new Text("Order Placed Sucessfully"));
+        final snackBar = new SnackBar(
+          content: new Text("Order Placed Sucessfully"),
+        );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        
-         Get.offAll(() => MainScreen());
+
+        Get.offAll(() => MainScreen());
       } catch (error) {
-        
         // onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      
     }
     return ReOrderModel();
   }
@@ -1962,7 +1914,7 @@ class ApiRepository extends ChangeNotifier {
     //   "sales_tax" : applicationFee,
     // });
 
-     final request = json.encode(<String, dynamic>{
+    final request = json.encode(<String, dynamic>{
       "amount": amount,
       "vendorAccountId": accountId,
       "sales_tax": applicationFee,
@@ -1971,177 +1923,170 @@ class ApiRepository extends ChangeNotifier {
     final response = await http.post(
       Uri.parse("${Url}/payByStripe"),
       body: request,
-      headers: {
-        'Content-type': "application/json",
-      },
+      headers: {'Content-type': "application/json"},
     );
     if (response.statusCode == 200) {
       try {
         final responseData = json.decode(response.body);
         // Assuming your backend returns the client secret
-      final clientSecret = responseData['client_secret'];
+        final clientSecret = responseData['client_secret'];
 
-      await Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: SetupPaymentSheetParameters(
-          paymentIntentClientSecret: clientSecret,
-          merchantDisplayName: 'Jebby LLC',
-          // Optionally, configure Google Pay and Apple Pay here:
-          // style: ThemeMode.light, // Customize as needed
-        ),
-      );
+        await Stripe.instance.initPaymentSheet(
+          paymentSheetParameters: SetupPaymentSheetParameters(
+            paymentIntentClientSecret: clientSecret,
+            merchantDisplayName: 'Jebby LLC',
+            // Optionally, configure Google Pay and Apple Pay here:
+            // style: ThemeMode.light, // Customize as needed
+          ),
+        );
 
-      // 3. Present PaymentSheet
-      await Stripe.instance.presentPaymentSheet();
+        // 3. Present PaymentSheet
+        await Stripe.instance.presentPaymentSheet();
 
-        final snackBar = new SnackBar(content: new Text("Amount debited, placing order please wait"));
+        final snackBar = new SnackBar(
+          content: new Text("Amount debited, placing order please wait"),
+        );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        
+
         ApiRepository.shared.reOrder(orderId, location, context);
       } catch (error) {
-        
         // onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
-      
-      
-      final snackBar = new SnackBar(content: new Text("Seller Payment Method Invalid, Cannot Place Order"));
+      final snackBar = new SnackBar(
+        content: new Text("Seller Payment Method Invalid, Cannot Place Order"),
+      );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
       // onError("Internal Server Error");
     }
     return PayWithStripeModel();
   }
 
-  Future<GetFeaturedModel> featuredProducts(onResponse(GetFeaturedModel List), onError(error)) async {
-    final response = await http.get(Uri.parse(AppUrl.featuredGetUrl), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetFeaturedModel> featuredProducts(
+    onResponse(GetFeaturedModel List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.featuredGetUrl),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
         var data = GetFeaturedModel.fromJson(jsonDecode(response.body));
-        
 
         getFeaturedProducts(data);
         onResponse(data);
-        
+
         return data;
       } catch (error) {
         onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      
     }
 
     return GetFeaturedModel();
   }
 
-  Future<PostNegotiationRequestModel> negotiationRequest(prodId, userId, price, context) async {
-    final request = json.encode(<String, dynamic>{"product_id": prodId, "user_id": userId, "price": price});
-
-    
+  Future<PostNegotiationRequestModel> negotiationRequest(
+    prodId,
+    userId,
+    price,
+    context,
+  ) async {
+    final request = json.encode(<String, dynamic>{
+      "product_id": prodId,
+      "user_id": userId,
+      "price": price,
+    });
 
     final response = await http.post(
       Uri.parse(AppUrl.negoRequest),
       body: request,
-      headers: {
-        'Content-type': "application/json",
-      },
+      headers: {'Content-type': "application/json"},
     );
 
     if (response.statusCode == 201) {
       try {
-        
-        final snackBar1 = new SnackBar(content: new Text("Your request has been send"));
+        final snackBar1 = new SnackBar(
+          content: new Text("Your request has been send"),
+        );
         ScaffoldMessenger.of(context).showSnackBar(snackBar1);
-      } catch (error) {
-        
-        
-      }
+      } catch (error) {}
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      
     }
     return PostNegotiationRequestModel();
   }
 
-  Future<OrderRequestStatusUpdateModel>negotiationRequestUpdate(status, id, context) async {
+  Future<OrderRequestStatusUpdateModel> negotiationRequestUpdate(
+    status,
+    id,
+    context,
+  ) async {
     final request = json.encode(<String, dynamic>{"status": status, "id": id});
-
-    
 
     final response = await http.post(
       Uri.parse(AppUrl.negoRequestUpdate),
       body: request,
-      headers: {
-        'Content-type': "application/json",
-      },
+      headers: {'Content-type': "application/json"},
     );
 
     if (response.statusCode == 201) {
       try {
-        
-        
-        final snackBar1 = new SnackBar(content: new Text(status == 1 ? "Order Request Approved" : "Order Request Canclled"));
+        final snackBar1 = new SnackBar(
+          content: new Text(
+            status == 1 ? "Order Request Approved" : "Order Request Canclled",
+          ),
+        );
         ScaffoldMessenger.of(context).showSnackBar(snackBar1);
         Get.offAll(() => MainScreen());
-      } catch (error) {
-        
-        
-      }
+      } catch (error) {}
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      
     }
     return OrderRequestStatusUpdateModel();
   }
 
-  Future<GetNegoByIdModel> negoById(onResponse(GetNegoByIdModel  List), onError(error), id) async {
-    final response = await http.get(Uri.parse(AppUrl.negoById + id), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetNegoByIdModel> negoById(
+    onResponse(GetNegoByIdModel List),
+    onError(error),
+    id,
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.negoById + id),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
         var data = GetNegoByIdModel.fromJson(jsonDecode(response.body));
-        
 
         getNegoById(data);
         onResponse(data);
-        
+
         return data;
       } catch (error) {
-        
         onError(error.toString());
-        
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      
     }
 
     return GetNegoByIdModel();
   }
 }
 
-class notiTimer with ChangeNotifier{
-
+class notiTimer with ChangeNotifier {
   late var timer;
   notifyListeners();
-
 }

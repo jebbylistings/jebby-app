@@ -14,8 +14,6 @@ class _MyCartState extends State<MyCart> {
   bool _value = true;
   @override
   Widget build(BuildContext context) {
-    double res_width = MediaQuery.of(context).size.width;
-    double res_height = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -29,18 +27,17 @@ class _MyCartState extends State<MyCart> {
           child: Padding(
             padding: const EdgeInsets.all(17.0),
             child: Container(
-              child: Icon(
-                Icons.arrow_back,
-                color: Colors.black,
-                size: 20,
-              ),
+              child: Icon(Icons.arrow_back, color: Colors.black, size: 20),
             ),
           ),
         ),
         title: Text(
           "My Carts",
           style: TextStyle(
-              fontSize: 22, color: Colors.black, fontFamily: "My Carts"),
+            fontSize: 22,
+            color: Colors.black,
+            fontFamily: "My Carts",
+          ),
         ),
       ),
       body: Container(
@@ -49,21 +46,13 @@ class _MyCartState extends State<MyCart> {
           child: Column(
             children: [
               mycartwidget(),
-              SizedBox(
-                height: 15,
-              ),
+              SizedBox(height: 15),
               mycartwidget(),
-              SizedBox(
-                height: 15,
-              ),
+              SizedBox(height: 15),
               mycartwidget(),
-              SizedBox(
-                height: 15,
-              ),
+              SizedBox(height: 15),
               mycartwidget(),
-              SizedBox(
-                height: 20,
-              ),
+              SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -77,10 +66,12 @@ class _MyCartState extends State<MyCart> {
                       height: 19,
                       width: 19,
                       decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                              color: _value ? Color(0xff303030) : Colors.black,
-                              width: 3)),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: _value ? Color(0xff303030) : Colors.black,
+                          width: 3,
+                        ),
+                      ),
                       child: Icon(
                         Icons.circle_rounded,
                         color: _value ? Colors.white : Colors.amber,
@@ -91,9 +82,10 @@ class _MyCartState extends State<MyCart> {
                   Text(
                     "All",
                     style: TextStyle(
-                        fontSize: 21,
-                        fontFamily: "Inter, Light",
-                        color: Colors.black),
+                      fontSize: 21,
+                      fontFamily: "Inter, Light",
+                      color: Colors.black,
+                    ),
                   ),
                   GestureDetector(
                     onTap: () {
@@ -103,24 +95,24 @@ class _MyCartState extends State<MyCart> {
                       width: 310,
                       height: 58,
                       decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          color: Colors.amber),
+                        borderRadius: BorderRadius.circular(16),
+                        color: Colors.amber,
+                      ),
                       child: Center(
                         child: Text(
                           "Checkout",
                           style: TextStyle(
-                              fontSize: 17,
-                              color: Colors.black,
-                              fontFamily: "Inter, Bold"),
+                            fontSize: 17,
+                            color: Colors.black,
+                            fontFamily: "Inter, Bold",
+                          ),
                         ),
                       ),
                     ),
-                  )
+                  ),
                 ],
               ),
-              SizedBox(
-                height: 20,
-              ),
+              SizedBox(height: 20),
             ],
           ),
         ),
@@ -154,13 +146,7 @@ class _MyCartState extends State<MyCart> {
               padding: EdgeInsets.only(right: 10, top: 5),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Icon(
-                    Icons.close,
-                    color: Colors.black,
-                    size: 15,
-                  )
-                ],
+                children: [Icon(Icons.close, color: Colors.black, size: 15)],
               ),
             ),
             Row(
@@ -185,31 +171,30 @@ class _MyCartState extends State<MyCart> {
                       ),
                       child: Image.asset("assets/slicing/Layer 4@3x.png"),
                     ),
-                    SizedBox(
-                      width: 20,
-                    ),
+                    SizedBox(width: 20),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                            width: 162,
-                            height: 34,
-                            child: Text(
-                              "Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB",
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontFamily: "Inter, Regular",
-                                  color: Colors.black),
-                            )),
-                        SizedBox(
-                          height: 5,
+                          width: 162,
+                          height: 34,
+                          child: Text(
+                            "Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontFamily: "Inter, Regular",
+                              color: Colors.black,
+                            ),
+                          ),
                         ),
+                        SizedBox(height: 5),
                         Text(
                           "\$ 7,000",
                           style: TextStyle(
-                              fontSize: 17,
-                              color: Colors.black,
-                              fontFamily: "Inter, Regular"),
+                            fontSize: 17,
+                            color: Colors.black,
+                            fontFamily: "Inter, Regular",
+                          ),
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
@@ -223,28 +208,27 @@ class _MyCartState extends State<MyCart> {
                               direction: Axis.horizontal,
                               allowHalfRating: true,
                               itemCount: 5,
-                              itemPadding:
-                                  EdgeInsets.symmetric(horizontal: 4.0),
-                              itemBuilder: (context, _) => Icon(
-                                Icons.star_purple500_outlined,
-                                color: Colors.amber,
+                              itemPadding: EdgeInsets.symmetric(
+                                horizontal: 4.0,
                               ),
-                              onRatingUpdate: (rating) {
-                                print(rating);
-                              },
+                              itemBuilder:
+                                  (context, _) => Icon(
+                                    Icons.star_purple500_outlined,
+                                    color: Colors.amber,
+                                  ),
+                              onRatingUpdate: (rating) {},
                             ),
                             Text(
                               "(2.5k Reviews)",
                               style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.black,
-                                  fontFamily: "Inter, Regular"),
-                            )
+                                fontSize: 10,
+                                color: Colors.black,
+                                fontFamily: "Inter, Regular",
+                              ),
+                            ),
                           ],
                         ),
-                        SizedBox(
-                          height: 5,
-                        ),
+                        SizedBox(height: 5),
                         Row(
                           children: [
                             Container(
@@ -252,48 +236,54 @@ class _MyCartState extends State<MyCart> {
                               height: 19,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                border:
-                                    Border.all(width: 1.5, color: Colors.black),
+                                border: Border.all(
+                                  width: 1.5,
+                                  color: Colors.black,
+                                ),
                               ),
                               child: Center(
                                 child: Text(
                                   "-",
                                   style: TextStyle(
-                                      fontSize: 15, color: Colors.black),
+                                    fontSize: 15,
+                                    color: Colors.black,
+                                  ),
                                 ),
                               ),
                             ),
-                            SizedBox(
-                              width: 5,
-                            ),
+                            SizedBox(width: 5),
                             Text(
                               "6",
-                              style:
-                                  TextStyle(fontSize: 14, color: Colors.black),
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.black,
+                              ),
                             ),
-                            SizedBox(
-                              width: 5,
-                            ),
+                            SizedBox(width: 5),
                             Container(
                               width: 19,
                               height: 19,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                border:
-                                    Border.all(width: 1.5, color: Colors.black),
+                                border: Border.all(
+                                  width: 1.5,
+                                  color: Colors.black,
+                                ),
                               ),
                               child: Center(
                                 child: Text(
                                   "+",
                                   style: TextStyle(
-                                      fontSize: 15, color: Colors.black),
+                                    fontSize: 15,
+                                    color: Colors.black,
+                                  ),
                                 ),
                               ),
                             ),
                           ],
-                        )
+                        ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ],

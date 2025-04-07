@@ -10,7 +10,9 @@ class UserProfileRepository {
 
   Future<ChangeProfileModel> changeProfileDataWithModel(id) async {
     try {
-      dynamic response = await _apiServices.getGetApiResponse(AppUrl.UserProfileGetByIdUrl+"$id");
+      dynamic response = await _apiServices.getGetApiResponse(
+        AppUrl.UserProfileGetByIdUrl + "$id",
+      );
       return response = ChangeProfileModel.fromJson(response);
     } catch (e) {
       throw e;
@@ -19,7 +21,9 @@ class UserProfileRepository {
 
   Future changeProfileData() async {
     try {
-      dynamic response = await _apiServices.getGetApiResponse(AppUrl.UserProfileGetByIdUrl);
+      dynamic response = await _apiServices.getGetApiResponse(
+        AppUrl.UserProfileGetByIdUrl,
+      );
       return response;
     } catch (e) {
       throw e;
@@ -28,17 +32,21 @@ class UserProfileRepository {
 
   Future<MovieListModel> fetchMoviesList() async {
     try {
-      dynamic response = await _apiServices.getGetApiResponse(AppUrl.moviesListEndPoint);
+      dynamic response = await _apiServices.getGetApiResponse(
+        AppUrl.moviesListEndPoint,
+      );
       return response = MovieListModel.fromJson(response);
     } catch (e) {
       throw e;
     }
   }
 
-   Future<void> fetchCategoryList() async {
+  Future<void> fetchCategoryList() async {
     try {
-      dynamic response = await _apiServices.getGetApiResponse(AppUrl.categoryGetUrl);
-      return response ;//= MovieListModel.fromJson(response);
+      dynamic response = await _apiServices.getGetApiResponse(
+        AppUrl.categoryGetUrl,
+      );
+      return response; //= MovieListModel.fromJson(response);
     } catch (e) {
       throw e;
     }

@@ -32,15 +32,14 @@ class _HomeScreenState extends State<HomeScreen> {
         automaticallyImplyLeading: false,
         actions: [
           InkWell(
-              onTap: () {
-                userPrefernece.remove().then((value) {
-                  Get.offAll(()=> LoginScreen()) ;
-                });
-              },
-              child: Center(child: Text('Logout'))),
-          SizedBox(
-            width: 20,
-          )
+            onTap: () {
+              userPrefernece.remove().then((value) {
+                Get.offAll(() => LoginScreen());
+              });
+            },
+            child: Center(child: Text('Logout')),
+          ),
+          SizedBox(width: 20),
         ],
       ),
       body: ChangeNotifierProvider<HomeViewViewModel>(
@@ -49,38 +48,47 @@ class _HomeScreenState extends State<HomeScreen> {
           builder: (context, value, child) {
             switch (value.movieslist.status) {
               case Status.LOADING:
-                return const Center(child: CircularProgressIndicator(),);
+                return const Center(child: CircularProgressIndicator());
               case Status.ERROR:
-                return  Center(child: Text(value.movieslist.message.toString()),);
+                return Center(child: Text(value.movieslist.message.toString()));
               case Status.COMPLETED:
-                 return ListView.builder(
-                      itemCount: value.movieslist.data!.movies!.length,
-                      itemBuilder: (context,index){
+                return ListView.builder(
+                  itemCount: value.movieslist.data!.movies!.length,
+                  itemBuilder: (context, index) {
                     return Card(
                       child: ListTile(
-
                         leading: Image.network(
-
-                            value.movieslist.data!.movies![index].posterurl.toString(),
-                        errorBuilder: (context, error, stack){
-                              return Icon(Icons.error, color: Colors.red,);
-                        },
+                          value.movieslist.data!.movies![index].posterurl
+                              .toString(),
+                          errorBuilder: (context, error, stack) {
+                            return Icon(Icons.error, color: Colors.red);
+                          },
                           height: 40,
                           width: 40,
                           fit: BoxFit.cover,
                         ),
-                        title: Text(value.movieslist.data!.movies![index].title.toString()),
-                        subtitle: Text(value.movieslist.data!.movies![index].year.toString()),
+                        title: Text(
+                          value.movieslist.data!.movies![index].title
+                              .toString(),
+                        ),
+                        subtitle: Text(
+                          value.movieslist.data!.movies![index].year.toString(),
+                        ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(Utils.averageRating(value.movieslist.data!.movies![index].ratings!).toStringAsFixed(1)),
-                            Icon(Icons.star , color: Colors.yellow,)
+                            Text(
+                              Utils.averageRating(
+                                value.movieslist.data!.movies![index].ratings!,
+                              ).toStringAsFixed(1),
+                            ),
+                            Icon(Icons.star, color: Colors.yellow),
                           ],
                         ),
                       ),
                     );
-                  });
+                  },
+                );
               default:
             }
             return Container();
@@ -90,4 +98,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-

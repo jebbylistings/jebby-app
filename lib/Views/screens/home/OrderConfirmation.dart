@@ -13,23 +13,35 @@ import 'package:http/http.dart' as http;
 import '../../../view_model/apiServices.dart';
 
 class OrderConfirmationScreen extends StatefulWidget {
-  var image;
-  var name;
-  var price;
-  var orderId;
-  var prodId;
-  var location;
-  var long;
-  var lat;
-  var username;
-  var userid;
-  var vendorID;
+  final dynamic image;
+  final dynamic name;
+  final dynamic price;
+  final dynamic orderId;
+  final dynamic prodId;
+  final dynamic location;
+  final dynamic long;
+  final dynamic lat;
+  final dynamic username;
+  final dynamic userid;
+  final dynamic vendorID;
 
-  OrderConfirmationScreen(
-      {this.image, this.name, this.price, this.orderId, this.prodId, this.location, this.long, this.lat, this.username, this.userid, this.vendorID});
+  OrderConfirmationScreen({
+    this.image,
+    this.name,
+    this.price,
+    this.orderId,
+    this.prodId,
+    this.location,
+    this.long,
+    this.lat,
+    this.username,
+    this.userid,
+    this.vendorID,
+  });
 
   @override
-  State<OrderConfirmationScreen> createState() => _OrderConfirmationScreenState();
+  State<OrderConfirmationScreen> createState() =>
+      _OrderConfirmationScreenState();
 }
 
 class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
@@ -39,35 +51,36 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
 
   getProducts() {
     ApiRepository.shared.getProductsById(
-        (list) => {
-              if (this.mounted)
-                {
-                  if (list.data!.length == 0)
-                    {
-                      setState(() {
-                        isLoading = false;
-                        isError = false;
-                      }),
-                    }
-                  else
-                    {
-                      setState(() {
-                        isLoading = false;
-                        isError = false;
-                      }),
-                    }
-                }
-            },
-        (error) => {
-              if (error != null)
-                {
-                  setState(() {
-                    isLoading = false;
-                    isError = true;
-                  })
-                }
-            },
-        widget.prodId.toString());
+      (list) => {
+        if (this.mounted)
+          {
+            if (list.data!.length == 0)
+              {
+                setState(() {
+                  isLoading = false;
+                  isError = false;
+                }),
+              }
+            else
+              {
+                setState(() {
+                  isLoading = false;
+                  isError = false;
+                }),
+              },
+          },
+      },
+      (error) => {
+        if (error != null)
+          {
+            setState(() {
+              isLoading = false;
+              isError = true;
+            }),
+          },
+      },
+      widget.prodId.toString(),
+    );
   }
 
   late var vendorAccountId;
@@ -79,28 +92,38 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
 
   void getUserData() {
     ApiRepository.shared.userCredential(
-        (List) => {
-              if (this.mounted)
-                {
-                  if (List.data!.length == 0)
-                    {}
-                  else
-                    {
-                      setState(() {
-                        vendorAccountId = ApiRepository.shared.getUserCredentialModelList!.data![0].accountId.toString();
-                        vendorPPEmail = ApiRepository.shared.getUserCredentialModelList!.data![0].paypalEmail.toString();
-                        orderVisibility = true;
-                      })
-                    }
-                }
-            },
-        (error) => {
-              if (error != null)
-                {
-                  setState(() {}),
-                },
-            },
-        widget.vendorID.toString());
+      (List) => {
+        if (this.mounted)
+          {
+            if (List.data!.length == 0)
+              {}
+            else
+              {
+                setState(() {
+                  vendorAccountId =
+                      ApiRepository
+                          .shared
+                          .getUserCredentialModelList!
+                          .data![0]
+                          .accountId
+                          .toString();
+                  vendorPPEmail =
+                      ApiRepository
+                          .shared
+                          .getUserCredentialModelList!
+                          .data![0]
+                          .paypalEmail
+                          .toString();
+                  orderVisibility = true;
+                }),
+              },
+          },
+      },
+      (error) => {
+        if (error != null) {setState(() {})},
+      },
+      widget.vendorID.toString(),
+    );
   }
 
   var Latitiude = "";
@@ -119,14 +142,16 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
   }
 
   void getSuggestion(String input) async {
-    String kPLACES_API_KEY = dotenv.env['kPLACES_API_KEY'] ?? 'No secret key found';
-    String type = '(regions)';
+    String kPLACES_API_KEY =
+        dotenv.env['kPLACES_API_KEY'] ?? 'No secret key found';
 
     try {
-      String baseURL = 'https://maps.googleapis.com/maps/api/place/autocomplete/json';
-      String request = '$baseURL?input=$input&key=$kPLACES_API_KEY&sessiontoken=$_sessionToken';
+      String baseURL =
+          'https://maps.googleapis.com/maps/api/place/autocomplete/json';
+      String request =
+          '$baseURL?input=$input&key=$kPLACES_API_KEY&sessiontoken=$_sessionToken';
       var response = await http.get(Uri.parse(request));
-      var data = jsonDecode(response.body);
+      jsonDecode(response.body);
       // log('mydata');
       // log(response.body.toString());
       if (response.statusCode == 200) {
@@ -143,28 +168,29 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
 
   String? zipCode;
   String? countryCode;
-  Future<void> _getZipCodeFromCoordinates(double latitude, double longitude) async {
+  Future<void> _getZipCodeFromCoordinates(
+    double latitude,
+    double longitude,
+  ) async {
     try {
-      List<Placemark> placemarks = await placemarkFromCoordinates(latitude, longitude);
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        latitude,
+        longitude,
+      );
       if (placemarks.isNotEmpty) {
         Placemark placemark = placemarks.first;
         zipCode = placemark.postalCode ?? '';
         countryCode = placemark.isoCountryCode ?? '';
         getSalesTax(placemark.postalCode ?? '');
-        print("Country Code: $countryCode");
-        print("ZIP Code: $zipCode");
-      } else {
-        print("ZIP Code not found.");
-      }
-    } catch (e) {
-      print("Error getting ZIP Code: $e");
-    }
+      } else {}
+    } catch (e) {}
   }
 
   double taxValue = 0;
   Future<void> getSalesTax(zipcode) async {
     String apiKey = dotenv.env['apiKey'] ?? 'No secret key found';
-    final apiUrl = 'https://api.taxjar.com/v2/rates?zip=${zipcode}'; // API endpoint URL
+    final apiUrl =
+        'https://api.taxjar.com/v2/rates?zip=${zipcode}'; // API endpoint URL
 
     final response = await http.get(
       Uri.parse(apiUrl),
@@ -173,8 +199,6 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
         'Content-Type': 'application/json',
       },
     );
-
-    // print("response ${response.body}");
 
     if (response.statusCode == 200) {
       // Parse the JSON response
@@ -186,10 +210,8 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
         // taxRate = double.parse(taxRates);
         taxValue = double.parse(taxRates);
       });
-      print("taxRates $taxValue");
     } else {
       // Handle errors here
-      print('Error: ${response.statusCode} - ${response.reasonPhrase}');
     }
   }
 
@@ -204,11 +226,9 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
         _data = data;
         array = _data['data'];
       });
-      JebbyFee = array.length > 0 ? int.parse(array[0]['jebby_fees'].toString()) : 0;
-      print("array ===>  ${JebbyFee}");
-    } catch (e) {
-      print('error $e');
-    }
+      JebbyFee =
+          array.length > 0 ? int.parse(array[0]['jebby_fees'].toString()) : 0;
+    } catch (e) {}
   }
 
   bool locationVisibility = false;
@@ -227,23 +247,18 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
       appBar: AppBar(
         title: Text(
           "Order Confirmation",
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: InkWell(
-            onTap: () {
-              Get.back();
-            },
-            borderRadius: BorderRadius.circular(50),
-            child: Icon(
-              Icons.arrow_back,
-              color: Colors.black,
-            )),
+          onTap: () {
+            Get.back();
+          },
+          borderRadius: BorderRadius.circular(50),
+          child: Icon(Icons.arrow_back, color: Colors.black),
+        ),
       ),
       body: Container(
         width: double.infinity,
@@ -253,9 +268,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
             child: Column(
               children: [
                 Contbox(),
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: 10),
                 Container(
                   width: 390,
                   height: MediaQuery.of(context).size.height * 0.35,
@@ -263,45 +276,44 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
                     color: Colors.white,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withOpacity(0.2),
+                        color: Colors.grey.withAlpha(51), // 0.2 * 255 = ~51
                         spreadRadius: 5,
                         blurRadius: 7,
                         offset: Offset(0, 3), // changes position of shadow
                       ),
                     ],
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(
-                        5,
-                      ),
-                    ),
+                    borderRadius: BorderRadius.all(Radius.circular(5)),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: Column(
                       children: [
-                        SizedBox(
-                          height: 10,
-                        ),
+                        SizedBox(height: 10),
                         Row(
                           children: [
                             Container(
                               child: Text(
                                 widget.username,
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            )
+                            ),
                           ],
                         ),
-                        SizedBox(
-                          height: 10,
-                        ),
+                        SizedBox(height: 10),
                         Row(
                           children: [
                             Container(
                               width: 300,
                               child: Text(
                                 widget.location,
-                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: Colors.grey),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.normal,
+                                  color: Colors.grey,
+                                ),
                               ),
                             ),
                           ],
@@ -322,67 +334,98 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
                               child: Container(
                                 child: Text(
                                   "Change",
-                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.normal, color: Colors.black),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.normal,
+                                    color: Colors.black,
+                                  ),
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        locationVisibility ? TxtfldforLocation("Location", _locationController) : Text(""),
+                        locationVisibility
+                            ? TxtfldforLocation("Location", _locationController)
+                            : Text(""),
                         SizedBox(
                           height: MediaQuery.of(context).size.height * .1,
                           child: ListView.builder(
-                              shrinkWrap: true,
-                              physics: NeverScrollableScrollPhysics(),
-                              itemCount: _placeList.length,
-                              itemBuilder: ((context, index) {
-                                String name = _placeList[index]["description"];
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemCount: _placeList.length,
+                            itemBuilder: ((context, index) {
+                              String name = _placeList[index]["description"];
 
-                                if (_locationController.text.isEmpty) {
-                                  return Text("");
-                                } else if (name.toLowerCase().contains(_locationController.text.toLowerCase())) {
-                                  return ListTile(
-                                    onTap: () async {
-                                      _locationController.text = _placeList[index]["description"];
-                                      List<Location> location = await locationFromAddress(_placeList[index]["description"]);
+                              if (_locationController.text.isEmpty) {
+                                return Text("");
+                              } else if (name.toLowerCase().contains(
+                                _locationController.text.toLowerCase(),
+                              )) {
+                                return ListTile(
+                                  onTap: () async {
+                                    _locationController.text =
+                                        _placeList[index]["description"];
+                                    List<Location> location =
+                                        await locationFromAddress(
+                                          _placeList[index]["description"],
+                                        );
 
-                                      setState(() {
-                                        _locationController.removeListener(() {});
-                                        Latitiude = location.last.latitude.toString();
-                                        Longitude = location.last.longitude.toString();
-                                        print("Latitude: ${location.last.latitude.toString()}");
-                                        print("Longitude: ${location.last.longitude.toString()}");
-                                        _getZipCodeFromCoordinates(location.last.latitude, location.last.longitude);
-                                        _placeList = [];
-                                      });
-                                    },
-                                    leading: CircleAvatar(child: Icon(Icons.pin_drop, color: Colors.white)),
-                                    title: Text(_placeList[index]["description"]),
-                                  );
-                                } else {
-                                  return Container();
-                                }
-                              })),
+                                    setState(() {
+                                      _locationController.removeListener(() {});
+                                      Latitiude =
+                                          location.last.latitude.toString();
+                                      Longitude =
+                                          location.last.longitude.toString();
+                                      _getZipCodeFromCoordinates(
+                                        location.last.latitude,
+                                        location.last.longitude,
+                                      );
+                                      _placeList = [];
+                                    });
+                                  },
+                                  leading: CircleAvatar(
+                                    child: Icon(
+                                      Icons.pin_drop,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  title: Text(_placeList[index]["description"]),
+                                );
+                              } else {
+                                return Container();
+                              }
+                            }),
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
-                SizedBox(
-                  height: 90,
-                ),
+                SizedBox(height: 90),
                 subs("Sub Total", "${widget.price} \$"),
                 subs("Sales Tax", "${taxValue * 100} \$"),
-                subs("Jebby Fee", "${int.parse(widget.price) * JebbyFee / 100} \$"),
-                subs("Total", "${(int.parse(widget.price) + (int.parse(widget.price) * JebbyFee / 100) + (taxValue * 100)).round()} \$"),
-                SizedBox(
-                  height: 40,
+                subs(
+                  "Jebby Fee",
+                  "${int.parse(widget.price) * JebbyFee / 100} \$",
                 ),
+                subs(
+                  "Total",
+                  "${(int.parse(widget.price) + (int.parse(widget.price) * JebbyFee / 100) + (taxValue * 100)).round()} \$",
+                ),
+                SizedBox(height: 40),
                 GestureDetector(
                   onTap: () {
                     if (orderVisibility) {
-                      ApiRepository.shared.reOrderStripePayment(widget.price, vendorAccountId, context, widget.orderId,
-                          newLocation == "" ? widget.location : newLocation, ((int.parse(widget.price) * JebbyFee / 100) + (taxValue * 100)).round());
+                      ApiRepository.shared.reOrderStripePayment(
+                        widget.price,
+                        vendorAccountId,
+                        context,
+                        widget.orderId,
+                        newLocation == "" ? widget.location : newLocation,
+                        ((int.parse(widget.price) * JebbyFee / 100) +
+                                (taxValue * 100))
+                            .round(),
+                      );
                       //  Get.to(() => ReOrderPayment(
                       //           accountId: vendorAccountId,
                       //           paypalMail: vendorPPEmail,
@@ -399,16 +442,22 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
                     child: Center(
                       child: Text(
                         'Pay Now',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 19,
+                        ),
                       ),
                     ),
                     decoration: BoxDecoration(
-                        color: orderVisibility ? kprimaryColor : kprimaryColor.withOpacity(0.5), borderRadius: BorderRadius.circular(15)),
+                      color:
+                          orderVisibility
+                              ? kprimaryColor
+                              : kprimaryColor.withAlpha(128),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
                   ),
                 ),
-                SizedBox(
-                  height: 50,
-                ),
+                SizedBox(height: 50),
               ],
             ),
           ),
@@ -427,7 +476,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
             color: Colors.white,
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.2),
+                color: Colors.grey.withAlpha(51), // 0.2 * 255 = ~51
                 spreadRadius: 5,
                 blurRadius: 7,
                 offset: Offset(0, 3), // changes position of shadow
@@ -439,9 +488,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -452,32 +499,31 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
                         color: Colors.white,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.grey.withOpacity(0.2),
+                            color: Colors.grey.withAlpha(51), // 0.2 * 255 = ~51
                             spreadRadius: 5,
                             blurRadius: 7,
                             offset: Offset(0, 3), // changes position of shadow
                           ),
                         ],
                       ),
-                      child: Image.network(AppUrl.baseUrlM + widget.image.toString()),
+                      child: Image.network(
+                        AppUrl.baseUrlM + widget.image.toString(),
+                      ),
                     ),
-                    SizedBox(
-                      width: 10,
-                    ),
+                    SizedBox(width: 10),
                     Container(
                       height: 119,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                              width: 159,
-                              child: Text(
-                                widget.name,
-                                style: TextStyle(fontSize: 14),
-                              )),
-                          SizedBox(
-                            height: 10,
+                            width: 159,
+                            child: Text(
+                              widget.name,
+                              style: TextStyle(fontSize: 14),
+                            ),
                           ),
+                          SizedBox(height: 10),
                           Text(
                             "${widget.price} \$",
                             style: TextStyle(fontSize: 14),
@@ -485,34 +531,38 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
                           isLoading
                               ? Container()
                               : Row(
-                                  children: [
-                                    RatingBarIndicator(
-                                      rating: double.parse(ApiRepository.shared.getProductsByIdList!.data![0].stars.toString()),
-                                      itemBuilder: (context, index) => Icon(
-                                        Icons.star,
-                                        color: Colors.amber,
-                                      ),
-                                      itemCount: 5,
-                                      itemSize: 15,
-                                      direction: Axis.horizontal,
+                                children: [
+                                  RatingBarIndicator(
+                                    rating: double.parse(
+                                      ApiRepository
+                                          .shared
+                                          .getProductsByIdList!
+                                          .data![0]
+                                          .stars
+                                          .toString(),
                                     ),
-                                    Text(
-                                      "(${ApiRepository.shared.getProductsByIdList!.data![0].length.toString()}) Reviews",
-                                      style: TextStyle(fontSize: 14),
-                                    ),
-                                  ],
-                                ),
-                          SizedBox(
-                            height: 10,
-                          ),
+                                    itemBuilder:
+                                        (context, index) => Icon(
+                                          Icons.star,
+                                          color: Colors.amber,
+                                        ),
+                                    itemCount: 5,
+                                    itemSize: 15,
+                                    direction: Axis.horizontal,
+                                  ),
+                                  Text(
+                                    "(${ApiRepository.shared.getProductsByIdList!.data![0].length.toString()}) Reviews",
+                                    style: TextStyle(fontSize: 14),
+                                  ),
+                                ],
+                              ),
+                          SizedBox(height: 10),
                         ],
                       ),
-                    )
+                    ),
                   ],
                 ),
-                SizedBox(
-                  height: 16,
-                ),
+                SizedBox(height: 16),
                 // Row(
                 //   mainAxisAlignment: MainAxisAlignment.spaceAround,
                 //   children: [
@@ -554,34 +604,16 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
     );
   }
 
-  subs(
-    txt,
-    txt2,
-  ) {
+  subs(txt, txt2) {
     return Column(
       children: [
-        SizedBox(
-          height: 25,
-        ),
+        SizedBox(height: 25),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              txt,
-            ),
-            Text(
-              txt2,
-            ),
-          ],
+          children: [Text(txt), Text(txt2)],
         ),
-        SizedBox(
-          height: 20,
-        ),
-        Container(
-          width: 399,
-          height: 1,
-          color: Colors.grey,
-        )
+        SizedBox(height: 20),
+        Container(width: 399, height: 1, color: Colors.grey),
       ],
     );
   }
@@ -593,13 +625,9 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            height: res_height * 0.02,
-          ),
+          SizedBox(height: res_height * 0.02),
           Text(txt),
-          SizedBox(
-            height: res_height * 0.005,
-          ),
+          SizedBox(height: res_height * 0.005),
           Container(
             height: 70,
             width: res_width * 0.9,

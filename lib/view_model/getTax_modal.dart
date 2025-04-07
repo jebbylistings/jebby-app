@@ -9,7 +9,6 @@ class GetJebbyfee {
     final response = await http.get(Uri.parse("${Url}/GetValues"));
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      // print('data ${response.body}');
       return data;
     } else {
       throw Exception('Failed to fetch data');
@@ -17,18 +16,15 @@ class GetJebbyfee {
   }
 }
 
-class GetreturnProduct{
+class GetreturnProduct {
   static Future<Map<String, dynamic>> fetchData() async {
     String Url = dotenv.env['baseUrlM'] ?? 'No url found';
-     final SharedPreferences s = await SharedPreferences.getInstance();
-     var id;
-     id = "${Url}/getAllExpiryOrdersByUserId/${s.getString('id')}";
-    final response = await http.get(Uri.parse("${Url}/getAllExpiryOrdersByUserId/${s.getString('id')}"));
-    print("id =====> $id");
-    print(response);
+    final SharedPreferences s = await SharedPreferences.getInstance();
+    final response = await http.get(
+      Uri.parse("${Url}/getAllExpiryOrdersByUserId/${s.getString('id')}"),
+    );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      // print('data ${response.body}');
       return data;
     } else {
       throw Exception('Failed to fetch data');
@@ -36,17 +32,15 @@ class GetreturnProduct{
   }
 }
 
-class GetreturnProduct2{
+class GetreturnProduct2 {
   static Future<Map<String, dynamic>> fetchData() async {
     String Url = dotenv.env['baseUrlM'] ?? 'No url found';
-     final SharedPreferences s = await SharedPreferences.getInstance();
-     var id;
-    final response = await http.get(Uri.parse("${Url}/getAllExpiryOrdersByVendorId/${s.getString('id')}"));
-    print("id ${s.getString('id')}");
-    print(response);
+    final SharedPreferences s = await SharedPreferences.getInstance();
+    final response = await http.get(
+      Uri.parse("${Url}/getAllExpiryOrdersByVendorId/${s.getString('id')}"),
+    );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      // print('data ${response.body}');
       return data;
     } else {
       throw Exception('Failed to fetch data');

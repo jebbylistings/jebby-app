@@ -10,24 +10,26 @@ Future<T?> showGenericDialog<T>({
 }) {
   final options = optionBuilder();
   return showDialog<T>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(content),
-          actions: options.keys.map((optionsTitle) {
-            final value = options[optionsTitle];
-            return TextButton(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions:
+            options.keys.map((optionsTitle) {
+              final value = options[optionsTitle];
+              return TextButton(
                 onPressed: () {
                   if (value != null) {
                     Navigator.of(context).pop(value);
                   } else {
                     Navigator.of(context).pop();
-
                   }
                 },
-                child: Text(optionsTitle));
-          }).toList(),
-        );
-      });
+                child: Text(optionsTitle),
+              );
+            }).toList(),
+      );
+    },
+  );
 }

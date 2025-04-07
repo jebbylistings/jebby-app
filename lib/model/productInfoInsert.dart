@@ -13,20 +13,21 @@ class ProductInfoInsert {
   int? price1;
   int? discount;
 
-  ProductInfoInsert(
-      {this.productId,
-      this.userId,
-      this.price,
-      this.per,
-      this.subcatId,
-      this.fp,
-      this.lbd,
-      this.pastart,
-      this.paend,
-      this.dastart,
-      this.daend,
-      this.price1,
-      this.discount});
+  ProductInfoInsert({
+    this.productId,
+    this.userId,
+    this.price,
+    this.per,
+    this.subcatId,
+    this.fp,
+    this.lbd,
+    this.pastart,
+    this.paend,
+    this.dastart,
+    this.daend,
+    this.price1,
+    this.discount,
+  });
 
   ProductInfoInsert.fromJson(Map<String, dynamic> json) {
     productId = json['product_id'];

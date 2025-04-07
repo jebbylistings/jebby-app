@@ -43,21 +43,22 @@ class Data {
   String? stripeAccountType;
   String? accountId;
 
-  Data(
-      {this.id,
-      this.image,
-      this.name,
-      this.email,
-      this.number,
-      this.address,
-      this.userId,
-      this.latitude,
-      this.longitude,
-      this.backImage,
-      this.paypalEmail,
-      this.stripeEmail,
-      this.stripeAccountType,
-      this.accountId});
+  Data({
+    this.id,
+    this.image,
+    this.name,
+    this.email,
+    this.number,
+    this.address,
+    this.userId,
+    this.latitude,
+    this.longitude,
+    this.backImage,
+    this.paypalEmail,
+    this.stripeEmail,
+    this.stripeAccountType,
+    this.accountId,
+  });
 
   Data.fromJson(Map<String, dynamic> json) {
     id = json['id'];

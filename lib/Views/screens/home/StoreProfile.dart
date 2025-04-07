@@ -19,7 +19,11 @@ class _StoreProfileScreenState extends State<StoreProfileScreen> {
         automaticallyImplyLeading: false,
         title: Text(
           "Store Profile",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 22),
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
         ),
         elevation: 0,
         centerTitle: true,
@@ -28,23 +32,13 @@ class _StoreProfileScreenState extends State<StoreProfileScreen> {
             Get.back();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Container(
-            child: Icon(
-              Icons.arrow_back,
-              color: Colors.black,
-            ),
-          ),
+          child: Container(child: Icon(Icons.arrow_back, color: Colors.black)),
         ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(left: 10),
-            child: Container(
-              child: Icon(
-                Icons.share,
-                color: Colors.black,
-              ),
-            ),
-          )
+            child: Container(child: Icon(Icons.share, color: Colors.black)),
+          ),
         ],
       ),
       body: Container(
@@ -54,9 +48,7 @@ class _StoreProfileScreenState extends State<StoreProfileScreen> {
             padding: EdgeInsets.symmetric(horizontal: 12),
             child: Column(
               children: [
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: 10),
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -70,14 +62,17 @@ class _StoreProfileScreenState extends State<StoreProfileScreen> {
                       left: 15,
                       bottom: -20,
                       child: Container(
-                        child: CircleAvatar(radius: 40, child: Image.asset("assets/slicing/Ellipse 67@3x.png")),
+                        child: CircleAvatar(
+                          radius: 40,
+                          child: Image.asset(
+                            "assets/slicing/Ellipse 67@3x.png",
+                          ),
+                        ),
                       ),
-                    )
+                    ),
                   ],
                 ),
-                SizedBox(
-                  height: 40,
-                ),
+                SizedBox(height: 40),
                 Row(
                   children: [
                     Column(
@@ -85,32 +80,38 @@ class _StoreProfileScreenState extends State<StoreProfileScreen> {
                       children: [
                         Text(
                           "Jackson",
-                          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 32),
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 32,
+                          ),
                         ),
-                        SizedBox(
-                          height: 5,
-                        ),
+                        SizedBox(height: 5),
                         Text(
                           "City,ST",
-                          style: TextStyle(color: Colors.grey, fontWeight: FontWeight.normal, fontSize: 16),
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontWeight: FontWeight.normal,
+                            fontSize: 16,
+                          ),
                         ),
-                        SizedBox(
-                          height: 15,
-                        ),
+                        SizedBox(height: 15),
                         Container(
                           width: 380,
                           child: Text(
                             "Lorem ipsum dolor sit amet consectetur adipiscing elit suscipit commodo enim tellus et nascetur at leo accumsan, odio habitanLorem ipsum dolor sit amet consectetur adipiscing elit suscipit commodo enim tellus et nascetur at leo accumsan, odio habitan",
-                            style: TextStyle(color: Colors.grey, fontWeight: FontWeight.normal, fontSize: 14),
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontWeight: FontWeight.normal,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
-                SizedBox(
-                  height: 15,
-                ),
+                SizedBox(height: 15),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -120,10 +121,16 @@ class _StoreProfileScreenState extends State<StoreProfileScreen> {
                       child: Center(
                         child: Text(
                           'Unfollow',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
-                      decoration: BoxDecoration(color: kprimaryColor, borderRadius: BorderRadius.circular(5)),
+                      decoration: BoxDecoration(
+                        color: kprimaryColor,
+                        borderRadius: BorderRadius.circular(5),
+                      ),
                     ),
                     Container(
                       height: 34,
@@ -131,25 +138,25 @@ class _StoreProfileScreenState extends State<StoreProfileScreen> {
                       child: Center(
                         child: Text(
                           'Message',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
-                      decoration:
-                          BoxDecoration(color: Colors.white, border: Border.all(color: Colors.orange), borderRadius: BorderRadius.circular(5)),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: Colors.orange),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
                     ),
                   ],
                 ),
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: 10),
                 Followesss(),
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: 10),
                 Reviewsss(),
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: 10),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -170,17 +177,13 @@ class _StoreProfileScreenState extends State<StoreProfileScreen> {
                     ),
                   ],
                 ),
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: 10),
                 Container(
                   width: 400,
                   height: 1,
-                  color: Colors.grey.withOpacity(0.5),
+                  color: Colors.grey.withAlpha(128),
                 ),
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: 10),
                 Row(
                   children: [
                     Column(
@@ -190,9 +193,7 @@ class _StoreProfileScreenState extends State<StoreProfileScreen> {
                           "New Arrivals",
                           style: TextStyle(color: Colors.black, fontSize: 19),
                         ),
-                        SizedBox(
-                          height: 5,
-                        ),
+                        SizedBox(height: 5),
                         Text(
                           "Top products incredible price",
                           style: TextStyle(color: Colors.grey, fontSize: 14),
@@ -205,22 +206,22 @@ class _StoreProfileScreenState extends State<StoreProfileScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     itmBox(
-                        img: 'assets/slicing/Layer 4@3x.png',
-                        dx: '\$ 7000',
-                        rv: '(2.9k Revews)',
-                        tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
-                        rt: '4.9'),
+                      img: 'assets/slicing/Layer 4@3x.png',
+                      dx: '\$ 7000',
+                      rv: '(2.9k Revews)',
+                      tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
+                      rt: '4.9',
+                    ),
                     itmBox(
-                        img: 'assets/slicing/Layer 4@3x.png',
-                        dx: '\$ 9000',
-                        rv: '(2.9k Revews)',
-                        tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
-                        rt: '4.9'),
+                      img: 'assets/slicing/Layer 4@3x.png',
+                      dx: '\$ 9000',
+                      rv: '(2.9k Revews)',
+                      tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
+                      rt: '4.9',
+                    ),
                   ],
                 ),
-                SizedBox(
-                  height: 50,
-                ),
+                SizedBox(height: 50),
               ],
             ),
           ),
@@ -233,7 +234,10 @@ class _StoreProfileScreenState extends State<StoreProfileScreen> {
     return Container(
       width: 391,
       height: 74,
-      decoration: BoxDecoration(color: Color(0xFF4285F4), borderRadius: BorderRadius.all(Radius.circular(5))),
+      decoration: BoxDecoration(
+        color: Color(0xFF4285F4),
+        borderRadius: BorderRadius.all(Radius.circular(5)),
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Row(
@@ -242,62 +246,28 @@ class _StoreProfileScreenState extends State<StoreProfileScreen> {
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  "0",
-                  style: TextStyle(color: kprimaryColor),
-                ),
-                Text(
-                  "Following",
-                  style: TextStyle(color: kprimaryColor),
-                ),
+                Text("0", style: TextStyle(color: kprimaryColor)),
+                Text("Following", style: TextStyle(color: kprimaryColor)),
               ],
             ),
-            SizedBox(
-              width: 20,
-            ),
-            Container(
-              width: 1,
-              height: 40,
-              color: kprimaryColor,
-            ),
-            SizedBox(
-              width: 20,
-            ),
+            SizedBox(width: 20),
+            Container(width: 1, height: 40, color: kprimaryColor),
+            SizedBox(width: 20),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  "2654",
-                  style: TextStyle(color: kprimaryColor),
-                ),
-                Text(
-                  "Followers",
-                  style: TextStyle(color: kprimaryColor),
-                ),
+                Text("2654", style: TextStyle(color: kprimaryColor)),
+                Text("Followers", style: TextStyle(color: kprimaryColor)),
               ],
             ),
-            SizedBox(
-              width: 20,
-            ),
-            Container(
-              width: 1,
-              height: 40,
-              color: kprimaryColor,
-            ),
-            SizedBox(
-              width: 20,
-            ),
+            SizedBox(width: 20),
+            Container(width: 1, height: 40, color: kprimaryColor),
+            SizedBox(width: 20),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  "265",
-                  style: TextStyle(color: kprimaryColor),
-                ),
-                Text(
-                  "Products",
-                  style: TextStyle(color: kprimaryColor),
-                ),
+                Text("265", style: TextStyle(color: kprimaryColor)),
+                Text("Products", style: TextStyle(color: kprimaryColor)),
               ],
             ),
           ],
@@ -313,40 +283,19 @@ class _StoreProfileScreenState extends State<StoreProfileScreen> {
           "Reveiws",
           style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
         ),
-        SizedBox(
-          width: 5,
-        ),
-        Container(
-          child: Icon(
-            Icons.star,
-            color: kprimaryColor,
-          ),
-        ),
-        SizedBox(
-          width: 5,
-        ),
-        Text(
-          "4.9 (124)",
-          style: TextStyle(
-            fontSize: 16,
-          ),
-        ),
-        SizedBox(
-          width: 110,
-        ),
+        SizedBox(width: 5),
+        Container(child: Icon(Icons.star, color: kprimaryColor)),
+        SizedBox(width: 5),
+        Text("4.9 (124)", style: TextStyle(fontSize: 16)),
+        SizedBox(width: 110),
         GestureDetector(
           onTap: () {
             Get.to(() => ReviewTapScreen());
           },
           child: Container(
-            child: Text(
-              "See All",
-              style: TextStyle(
-                fontSize: 16,
-              ),
-            ),
+            child: Text("See All", style: TextStyle(fontSize: 16)),
           ),
-        )
+        ),
       ],
     );
   }
@@ -380,57 +329,24 @@ class _StoreProfileScreenState extends State<StoreProfileScreen> {
                     scale: 1.7,
                   ),
                 ),
-                SizedBox(
-                  width: 6,
-                ),
-                Container(
-                  child: Text("John Smith"),
-                )
+                SizedBox(width: 6),
+                Container(child: Text("John Smith")),
               ],
             ),
-            SizedBox(
-              height: 8,
-            ),
+            SizedBox(height: 8),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.star,
-                  color: kprimaryColor,
-                  size: 20,
-                ),
-                Icon(
-                  Icons.star,
-                  color: kprimaryColor,
-                  size: 20,
-                ),
-                Icon(
-                  Icons.star,
-                  color: kprimaryColor,
-                  size: 20,
-                ),
-                Icon(
-                  Icons.star,
-                  color: kprimaryColor,
-                  size: 20,
-                ),
-                Icon(
-                  Icons.star,
-                  color: kprimaryColor,
-                  size: 20,
-                ),
-                SizedBox(
-                  width: 5,
-                ),
-                Text(
-                  "5.0",
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
+                Icon(Icons.star, color: kprimaryColor, size: 20),
+                Icon(Icons.star, color: kprimaryColor, size: 20),
+                Icon(Icons.star, color: kprimaryColor, size: 20),
+                Icon(Icons.star, color: kprimaryColor, size: 20),
+                Icon(Icons.star, color: kprimaryColor, size: 20),
+                SizedBox(width: 5),
+                Text("5.0", style: TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
-            SizedBox(
-              height: 4,
-            ),
+            SizedBox(height: 4),
             Container(
               width: 200,
               child: Text(
@@ -469,29 +385,17 @@ class _StoreProfileScreenState extends State<StoreProfileScreen> {
                 height: res_height * 0.2,
                 decoration: BoxDecoration(),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(10),
-                  ),
-                  child: Image.asset(
-                    '$img',
-                    fit: BoxFit.fill,
-                  ),
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  child: Image.asset('$img', fit: BoxFit.fill),
                 ),
               ),
-              SizedBox(
-                height: res_height * 0.005,
-              ),
+              SizedBox(height: res_height * 0.005),
               Container(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '$tx',
-                      style: TextStyle(fontSize: 11),
-                    ),
-                    SizedBox(
-                      height: res_height * 0.006,
-                    ),
+                    Text('$tx', style: TextStyle(fontSize: 11)),
+                    SizedBox(height: res_height * 0.006),
                     Text(
                       '$dx',
                       style: TextStyle(fontSize: 11),
@@ -499,40 +403,18 @@ class _StoreProfileScreenState extends State<StoreProfileScreen> {
                     ),
                     Row(
                       children: [
-                        Icon(
-                          Icons.star,
-                          size: 11,
-                          color: kprimaryColor,
-                        ),
-                        Icon(
-                          Icons.star,
-                          size: 11,
-                          color: kprimaryColor,
-                        ),
-                        Icon(
-                          Icons.star,
-                          size: 11,
-                          color: kprimaryColor,
-                        ),
-                        Icon(
-                          Icons.star,
-                          size: 11,
-                          color: kprimaryColor,
-                        ),
+                        Icon(Icons.star, size: 11, color: kprimaryColor),
+                        Icon(Icons.star, size: 11, color: kprimaryColor),
+                        Icon(Icons.star, size: 11, color: kprimaryColor),
+                        Icon(Icons.star, size: 11, color: kprimaryColor),
                         Icon(Icons.star, size: 11),
-                        Text(
-                          '$rt ',
-                          style: TextStyle(fontSize: 11),
-                        ),
+                        Text('$rt ', style: TextStyle(fontSize: 11)),
                         Text(
                           '$rv',
-                          style: TextStyle(
-                            fontSize: 9,
-                            color: Colors.grey,
-                          ),
+                          style: TextStyle(fontSize: 9, color: Colors.grey),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),

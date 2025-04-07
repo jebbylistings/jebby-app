@@ -42,25 +42,33 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => AuthViewModel()..getUserName()),
-          Provider<FirebaseAuthMethods>(create: (_) => FirebaseAuthMethods(FirebaseAuth.instance)),
-          StreamProvider(create: (context) => context.read<FirebaseAuthMethods>().authState, initialData: null),
-          ChangeNotifierProvider(create: ((context) => SignInProvider())),
-          ChangeNotifierProvider(create: ((context) => InternetProvider())),
-          ChangeNotifierProvider(create: (_) => UserViewModel()),
-          ChangeNotifierProvider(create: (_) => UserNameProvider()),
-          ChangeNotifierProvider<ProductProvider>(create: (context) => ProductProvider()),
-          ChangeNotifierProvider<ProDetailProvider>(create: (context) => ProDetailProvider()),
-        ],
-        child: GetMaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Flutter Demo',
-          theme: ThemeData(
-            primarySwatch: Colors.blue,
-          ),
-          home: SplashScreen(),
-        ));
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthViewModel()..getUserName()),
+        Provider<FirebaseAuthMethods>(
+          create: (_) => FirebaseAuthMethods(FirebaseAuth.instance),
+        ),
+        StreamProvider(
+          create: (context) => context.read<FirebaseAuthMethods>().authState,
+          initialData: null,
+        ),
+        ChangeNotifierProvider(create: ((context) => SignInProvider())),
+        ChangeNotifierProvider(create: ((context) => InternetProvider())),
+        ChangeNotifierProvider(create: (_) => UserViewModel()),
+        ChangeNotifierProvider(create: (_) => UserNameProvider()),
+        ChangeNotifierProvider<ProductProvider>(
+          create: (context) => ProductProvider(),
+        ),
+        ChangeNotifierProvider<ProDetailProvider>(
+          create: (context) => ProDetailProvider(),
+        ),
+      ],
+      child: GetMaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Flutter Demo',
+        theme: ThemeData(primarySwatch: Colors.blue),
+        home: SplashScreen(),
+      ),
+    );
   }
 }
 
@@ -94,7 +102,7 @@ class _SplashScreenState extends State<SplashScreen> {
         // if (sharedPreferences.getString('role').toString() == "1") {
         //   Get.offAll(() => VendrosHomeScreen());
         // } else {
-          Get.offAll(() => MainScreen());
+        Get.offAll(() => MainScreen());
         // }
       });
     } else {
@@ -117,53 +125,62 @@ class _SplashScreenState extends State<SplashScreen> {
     double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
     return Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("assets/slicing/bg3.jpg"),
-            fit: BoxFit.cover,
-          ),
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage("assets/slicing/bg3.jpg"),
+          fit: BoxFit.cover,
         ),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          body: Container(
-            width: double.infinity,
-            child: Column(
-              // crossAxisAlignment: CrossAxisAlignment.center,
-              // mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  height: res_height * 0.38,
-                ),
-                Container(width: res_width * 0.7, child: Image.asset('assets/slicing/logo.png')),
-                SizedBox(
-                  height: res_height * 0.028,
-                ),
-                Text('Explore Renting At\n Your Fingertips',
-                    textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 23)),
-                SizedBox(
-                  height: res_height * 0.028,
-                ),
-                GestureDetector(
-                  onTap: () {
-                    // Get.to(() => LoginScreen());
-                    // Get.to(() => MainScreen());
-                  },
-                  child: Container(
-                    width: res_width * 0.5,
-                    decoration: BoxDecoration(color: darkBlue, borderRadius: BorderRadius.all(Radius.circular(13))),
-                    child: Padding(
-                      padding: const EdgeInsets.all(15.0),
-                      child: Center(
-                          child: Text(
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Container(
+          width: double.infinity,
+          child: Column(
+            // crossAxisAlignment: CrossAxisAlignment.center,
+            // mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(height: res_height * 0.38),
+              Container(
+                width: res_width * 0.7,
+                child: Image.asset('assets/slicing/logo.png'),
+              ),
+              SizedBox(height: res_height * 0.028),
+              Text(
+                'Explore Renting At\n Your Fingertips',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 23),
+              ),
+              SizedBox(height: res_height * 0.028),
+              GestureDetector(
+                onTap: () {
+                  // Get.to(() => LoginScreen());
+                  // Get.to(() => MainScreen());
+                },
+                child: Container(
+                  width: res_width * 0.5,
+                  decoration: BoxDecoration(
+                    color: darkBlue,
+                    borderRadius: BorderRadius.all(Radius.circular(13)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(15.0),
+                    child: Center(
+                      child: Text(
                         'Discover Now',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
-                      )),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
-                )
-              ],
-            ),
+                ),
+              ),
+            ],
           ),
-        ));
+        ),
+      ),
+    );
   }
 }

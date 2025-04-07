@@ -50,18 +50,19 @@ class Data {
   String? updatedAt;
   int? negotiation;
 
-  Data(
-      {this.id,
-      this.userId,
-      this.categoryId,
-      this.subcategoryId,
-      this.name,
-      this.price,
-      this.specifications,
-      this.serviceAgreements,
-      this.createdAt,
-      this.updatedAt,
-      this.negotiation});
+  Data({
+    this.id,
+    this.userId,
+    this.categoryId,
+    this.subcategoryId,
+    this.name,
+    this.price,
+    this.specifications,
+    this.serviceAgreements,
+    this.createdAt,
+    this.updatedAt,
+    this.negotiation,
+  });
 
   Data.fromJson(Map<String, dynamic> json) {
     id = json['id'];

@@ -23,7 +23,10 @@ class _RentalFeesAndDepositState extends State<RentalFeesAndDeposit> {
         title: Text(
           'Rental Fees & Deposit',
           style: TextStyle(
-              fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 19,
+          ),
         ),
         leading: InkWell(
           onTap: () {
@@ -33,10 +36,7 @@ class _RentalFeesAndDepositState extends State<RentalFeesAndDeposit> {
           child: Padding(
             padding: const EdgeInsets.all(17.0),
             child: Container(
-              child: Icon(
-                Icons.arrow_back,
-            color: Colors.black,
-              ),
+              child: Icon(Icons.arrow_back, color: Colors.black),
             ),
           ),
         ),
@@ -49,10 +49,7 @@ class _RentalFeesAndDepositState extends State<RentalFeesAndDeposit> {
               Container(
                 child: Text(
                   'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam in vehicula tortor, sollicitudin faucibus urna.Fusce ac felis nisl. Duis laoreet felis neque. Duis arcu orci, commodo quis mi a, elementum commodo sapien. Lorem ipsum dolor sit amet, consectetur adipiscing elit. In tristique at nulla sed auctor. Sed pharetra eros a lacus consequat malesuada. Etiam iaculis mi ornare mollis porta. Vivamus eget massa leo. Nulla ac mi vestibulum, molestie felis et, posuere quam. Nam eget nulla suscipit metus pulvinar ornare sed ut ante.In hac habitasse platea dictumst. Donec ultricies urna nunc, vel tristique enim suscipit non. Quisque vulputate quam vitae felis gravida, id ultrices turpis euismod. Donec ut interdum nisl, sed iaculis lacus. Duis porttitor neque ut lacus pulvinar elementum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque a ipsum dolor. Donec semper faucibus rhoncus. Ut neque felis, tincidunt vel aliquet eu, gravida ac nisi. Ut accumsan, ante ut pretium ultrices, erat odio scelerisque sem, a dapibus leo tortor et arcu.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam in vehicula tortor, sollicitudin faucibus urna.Fusce ac felis nisl. Duis laoreet felis neque. Duis arcu orci, commodo quis mi a, elementum commodo sapien. Lorem ipsum dolor sit amet, consectetur adipiscing elit. In tristique at nulla sed auctor. Sed pharetra eros a lacus consequat malesuada. Etiam iaculis mi ornare mollis porta. Vivamus eget massa leo. Nulla ac mi vestibulum, molestie felis et, posuere quam. Nam eget nulla suscipit metus pulvinar ornare sed ut ante.In hac habitasse platea dictumst. Donec ultricies urna nunc, vel tristique enim suscipit non. Quisque vulputate quam vitae felis gravida, id ultrices turpis euismod. Donec ut interdum nisl, sed iaculis lacus. Duis porttitor neque ut lacus pulvinar elementum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque a ipsum dolor. Donec semper faucibus rhoncus. Ut neque felis, tincidunt vel aliquet eu, gravida ac nisi. Ut accumsan, ante ut pretium ultrices, erat odio scelerisque sem, a dapibus leo tortor et arcu.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam in vehicula tortor, sollicitudin faucibus urna.Fusce ac felis nisl. Duis laoreet felis neque. Duis arcu orci, commodo quis mi a, elementum commodo sapien. Lorem ipsum dolor sit amet, consectetur adipiscing elit. In tristique at nulla sed auctor. Sed pharetra eros a lacus consequat malesuada. Etiam iaculis mi ornare mollis porta. Vivamus eget massa leo. Nulla ac mi vestibulum, molestie felis et, posuere quam. Nam eget nulla suscipit metus pulvinar ornare sed ut ante.In hac habitasse platea dictumst. Donec ultricies urna nunc, vel tristique enim suscipit non. Quisque vulputate quam vitae felis gravida, id ultrices turpis euismod. Donec ut interdum nisl, sed iaculis lacus. Duis porttitor neque ut lacus pulvinar elementum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque a ipsum dolor. Donec semper faucibus rhoncus. Ut neque felis, tincidunt vel aliquet eu, gravida ac nisi. Ut accumsan, ante ut pretium ultrices, erat odio scelerisque sem, a dapibus leo tortor et arcu.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam in vehicula tortor, sollicitudin faucibus urna.Fusce ac felis nisl. Duis laoreet felis neque. Duis arcu orci, commodo quis mi a, elementum commodo sapien. Lorem ipsum dolor sit amet, consectetur adipiscing elit. In tristique at nulla sed auctor. Sed pharetra eros a lacus consequat malesuada. Etiam iaculis mi ornare mollis porta. Vivamus eget massa leo. Nulla ac mi vestibulum, molestie felis et, posuere quam. Nam eget nulla suscipit metus pulvinar ornare sed ut ante.In hac habitasse platea dictumst. Donec ultricies urna nunc, vel tristique enim suscipit non. Quisque vulputate quam vitae felis gravida, id ultrices turpis euismod. Donec ut interdum nisl, sed iaculis lacus. Duis porttitor neque ut lacus pulvinar elementum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque a ipsum dolor. Donec semper faucibus rhoncus. Ut neque felis, tincidunt vel aliquet eu, gravida ac nisi. Ut accumsan, ante ut pretium ultrices, erat odio scelerisque sem, a dapibus leo tortor et arcu.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam in vehicula tortor, sollicitudin faucibus urna.Fusce ac felis nisl. Duis laoreet felis neque. Duis arcu orci, commodo quis mi a, elementum commodo sapien. Lorem ipsum dolor sit amet, consectetur adipiscing elit. In tristique at nulla sed auctor. Sed pharetra eros a lacus consequat malesuada. Etiam iaculis mi ornare mollis porta. Vivamus eget massa leo. Nulla ac mi vestibulum, molestie felis et, posuere quam. Nam eget nulla suscipit metus pulvinar ornare sed ut ante.In hac habitasse platea dictumst. Donec ultricies urna nunc, vel tristique enim suscipit non. Quisque vulputate quam vitae felis gravida, id ultrices turpis euismod. Donec ut interdum nisl, sed iaculis lacus. Duis porttitor neque ut lacus pulvinar elementum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque a ipsum dolor. Donec semper faucibus rhoncus. Ut neque felis, tincidunt vel aliquet eu, gravida ac nisi. Ut accumsan, ante ut pretium ultrices, erat odio scelerisque sem, a dapibus leo tortor et arcu..',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Color(0xff524034),
-                  ),
+                  style: TextStyle(fontSize: 16, color: Color(0xff524034)),
                   textAlign: TextAlign.justify,
                 ),
               ),
@@ -67,13 +64,16 @@ class _RentalFeesAndDepositState extends State<RentalFeesAndDeposit> {
                   child: Center(
                     child: Text(
                       'Agree',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 19),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 19,
+                      ),
                     ),
                   ),
                   decoration: BoxDecoration(
-                      color: kprimaryColor,
-                      borderRadius: BorderRadius.circular(14)),
+                    color: kprimaryColor,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
               ),
             ],

@@ -66,12 +66,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
             Get.back();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Container(
-            child: Icon(
-              Icons.arrow_back,
-              color: Colors.black,
-            ),
-          ),
+          child: Container(child: Icon(Icons.arrow_back, color: Colors.black)),
         ),
       ),
       body: Container(
@@ -101,7 +96,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
               //     color: Colors.amber,
               //   ),
               //   onRatingUpdate: (rating) {
-              //     print(rating);
               //   },
               // ),
               // SizedBox(
@@ -155,9 +149,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       "Reviews",
                       style: TextStyle(fontSize: 20, color: Colors.black),
                     ),
-                    SizedBox(
-                      width: 5,
-                    ),
+                    SizedBox(width: 5),
                     // Icon(
                     //   Icons.star,
                     //   color: Colors.amber,
@@ -180,20 +172,53 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   ],
                 ),
               ),
-              SizedBox(
-                height: 25,
-              ),
+              SizedBox(height: 25),
               ListView.builder(
-                  physics: NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount: ApiRepository.shared.getAllReviewsByVendorIdModelList!.data!.length,
-                  itemBuilder: (context, int index) {
-                    var image = ApiRepository.shared.getAllReviewsByVendorIdModelList!.data![index].image.toString();
-                    var stars = ApiRepository.shared.getAllReviewsByVendorIdModelList!.data![index].stars.toString();
-                    var desc = ApiRepository.shared.getAllReviewsByVendorIdModelList!.data![index].description.toString();
-                    var name = ApiRepository.shared.getAllReviewsByVendorIdModelList!.data![index].userName.toString();
-                    return reviewwidgetdart(image: image, name: name, stars: stars, desc: desc);
-                  })
+                physics: NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemCount:
+                    ApiRepository
+                        .shared
+                        .getAllReviewsByVendorIdModelList!
+                        .data!
+                        .length,
+                itemBuilder: (context, int index) {
+                  var image =
+                      ApiRepository
+                          .shared
+                          .getAllReviewsByVendorIdModelList!
+                          .data![index]
+                          .image
+                          .toString();
+                  var stars =
+                      ApiRepository
+                          .shared
+                          .getAllReviewsByVendorIdModelList!
+                          .data![index]
+                          .stars
+                          .toString();
+                  var desc =
+                      ApiRepository
+                          .shared
+                          .getAllReviewsByVendorIdModelList!
+                          .data![index]
+                          .description
+                          .toString();
+                  var name =
+                      ApiRepository
+                          .shared
+                          .getAllReviewsByVendorIdModelList!
+                          .data![index]
+                          .userName
+                          .toString();
+                  return reviewwidgetdart(
+                    image: image,
+                    name: name,
+                    stars: stars,
+                    desc: desc,
+                  );
+                },
+              ),
               // reviewwidgetdart(),
               // SizedBox(
               //   height: 20,
@@ -215,10 +240,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
 }
 
 class reviewwidgetdart extends StatelessWidget {
-  var image;
-  var name;
-  var stars;
-  var desc;
+  final dynamic image;
+  final dynamic name;
+  final dynamic stars;
+  final dynamic desc;
   reviewwidgetdart({this.image, this.name, this.stars, this.desc});
 
   @override
@@ -234,7 +259,7 @@ class reviewwidgetdart extends StatelessWidget {
             color: Colors.white,
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.2),
+                color: Colors.grey.withAlpha(51),
                 spreadRadius: 5,
                 blurRadius: 7,
                 offset: Offset(0, 3), // changes position of shadow
@@ -251,66 +276,58 @@ class reviewwidgetdart extends StatelessWidget {
                       radius: 20,
                       backgroundImage: NetworkImage(AppUrl.baseUrlM + image),
                     ),
-                    SizedBox(
-                      width: res_width * 0.02,
-                    ),
+                    SizedBox(width: res_width * 0.02),
                     SizedBox(
                       width: res_width * 0.8,
                       child: Text(
                         name,
-                        style: TextStyle(fontSize: 24, color: Colors.black, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 24,
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    )
+                    ),
                   ],
                 ),
-                SizedBox(
-                  height: res_height * 0.010,
-                ),
+                SizedBox(height: res_height * 0.010),
                 Container(
                   width: res_width * 0.73,
                   child: Row(
                     children: [
                       RatingBarIndicator(
                         rating: double.parse(stars.toString()),
-                        itemBuilder: (context, index) => Icon(
-                          Icons.star,
-                          color: Colors.amber,
-                        ),
+                        itemBuilder:
+                            (context, index) =>
+                                Icon(Icons.star, color: Colors.amber),
                         itemCount: 5,
                         itemSize: 15,
                         direction: Axis.horizontal,
                       ),
-                      SizedBox(
-                        width: 5,
-                      ),
+                      SizedBox(width: 5),
                       Text(
                         stars,
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.black,
-                        ),
+                        style: TextStyle(fontSize: 18, color: Colors.black),
                       ),
                     ],
                   ),
                 ),
-                SizedBox(
-                  height: 15,
-                ),
-                Container(width: res_width * 0.72, child: Text(desc))
+                SizedBox(height: 15),
+                Container(width: res_width * 0.72, child: Text(desc)),
               ],
             ),
           ),
         ),
-      SizedBox(height: res_height * 0.02),
+        SizedBox(height: res_height * 0.02),
       ],
     );
   }
 }
 
 class progresswidget extends StatelessWidget {
-  String variation;
-  final progressbarcolor;
-  double progressnumber;
+  final String variation;
+  final dynamic progressbarcolor;
+  final double progressnumber;
   progresswidget({
     required this.progressnumber,
     required this.variation,

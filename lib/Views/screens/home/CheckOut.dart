@@ -50,32 +50,33 @@ class CheckoutScreen extends StatefulWidget {
   var countryCode;
 
   CheckoutScreen(
-      this.userId,
-      this.productID,
-      this.rentStart,
-      this.rentEnd,
-      this.vendorName,
-      this.vendorAddress,
-      this.cell,
-      this.vendorImage,
-      this.vendorID,
-      this.pastart,
-      this.paend,
-      this.price,
-      this.vendorAccountId,
-      this.vendorPayPalEmail,
-      this.userName,
-      this.email,
-      this.location,
-      this.lat,
-      this.long,
-      this.negoPrice,
-      // this.route,
-      this.delivery_charges,
-      this.JebbyFee,
-      this.security_deposit,
-      this.zipCode,
-      this.countryCode);
+    this.userId,
+    this.productID,
+    this.rentStart,
+    this.rentEnd,
+    this.vendorName,
+    this.vendorAddress,
+    this.cell,
+    this.vendorImage,
+    this.vendorID,
+    this.pastart,
+    this.paend,
+    this.price,
+    this.vendorAccountId,
+    this.vendorPayPalEmail,
+    this.userName,
+    this.email,
+    this.location,
+    this.lat,
+    this.long,
+    this.negoPrice,
+    // this.route,
+    this.delivery_charges,
+    this.JebbyFee,
+    this.security_deposit,
+    this.zipCode,
+    this.countryCode,
+  );
 
   @override
   State<CheckoutScreen> createState() => _CheckoutScreenState();
@@ -98,7 +99,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   var _locationController = TextEditingController();
   double taxValue = 0;
   Future<void> getSalesTax() async {
-    print("zipCode ${widget.zipCode}");
     String apiKey = dotenv.env['apiKey'] ?? 'No secret key found';
     final apiUrl = 'https://api.taxjar.com/v2/rates?zip=${widget.zipCode}';
 
@@ -110,8 +110,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       },
     );
 
-    print("response ${response.body}");
-
     if (response.statusCode == 200) {
       // Parse the JSON response
       final jsonResponse = json.decode(response.body);
@@ -122,10 +120,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         // taxRate = double.parse(taxRates);
         taxValue = double.parse(taxRates);
       });
-      print("taxRates $taxValue");
     } else {
       // Handle errors here
-      print('Error: ${response.statusCode} - ${response.reasonPhrase}');
     }
   }
 
@@ -141,26 +137,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _locationController.text = widget.location;
     selectedDate = DateTime.parse(widget.rentStart);
     selectedDate1 = DateTime.parse(widget.rentEnd);
-    print("Product ID : ${widget.productID}");
-    print("customer Emaail : ${widget.email} ");
-    print("location : ${widget.location}");
-    print("price : ${widget.price}");
-    print("User ID : ${widget.vendorID}");
-    print("Acc Id : ${widget.vendorAccountId}");
-    print("Acc email : ${widget.vendorPayPalEmail}");
-    print("pastart: ${widget.pastart}");
-    print("paend : ${widget.paend}");
-    print("rentStart: ${widget.rentStart}");
-    print("rentEnd : ${widget.rentEnd}");
-    // print("negoPrice : ${widget.negoPrice}");
-    print('delivery_charges ${widget.delivery_charges}');
-    print('JebbyFee ${widget.JebbyFee}');
-    print('negoPrice ${widget.negoPrice}');
     diff = selectedDate1.difference(selectedDate).inDays;
-    print('diff ${diff}');
-    print('dc ${dc}');
-    dc = int.parse(widget.delivery_charges.replaceAll(new RegExp(r'[^0-9]'),''));
-    Jebby = int.parse(widget.JebbyFee.replaceAll(new RegExp(r'[^0-9]'),''));
+    dc = int.parse(
+      widget.delivery_charges.replaceAll(new RegExp(r'[^0-9]'), ''),
+    );
+    Jebby = int.parse(widget.JebbyFee.replaceAll(new RegExp(r'[^0-9]'), ''));
 
     super.initState();
   }
@@ -181,33 +162,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   String? phoneNumber;
   String? role;
   void profileData(BuildContext context) async {
-    getUserDate().then((value) async {
-      token = value.token.toString();
-      userID = value.id.toString();
-      fullname = value.name.toString();
-      email = value.email.toString();
-      phoneNumber = value.phoneNumber.toString();
-      role = value.role.toString();
-      print("User: ${userID}");
-      print("fullname: ${fullname}");
-      print("email: ${email}");
-    }).onError((error, stackTrace) {
-      if (kDebugMode) {
-        print(error.toString());
-      }
-    });
+    getUserDate()
+        .then((value) async {
+          token = value.token.toString();
+          userID = value.id.toString();
+          fullname = value.name.toString();
+          email = value.email.toString();
+          phoneNumber = value.phoneNumber.toString();
+          role = value.role.toString();
+        })
+        .onError((error, stackTrace) {
+          if (kDebugMode) {}
+        });
   }
 
-      int generateRandomNumber() {
+  int generateRandomNumber() {
     Random random = Random();
     return random.nextInt(1000000); // Adjust range as needed
   }
 
-
   @override
   Widget build(BuildContext context) {
-    double res_width = MediaQuery.of(context).size.width;
-    double res_height = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -221,11 +196,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           child: Padding(
             padding: const EdgeInsets.all(17.0),
             child: Container(
-              child: Icon(
-                Icons.arrow_back,
-                color: Colors.black,
-                size: 20,
-              ),
+              child: Icon(Icons.arrow_back, color: Colors.black, size: 20),
             ),
           ),
         ),
@@ -235,274 +206,322 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 20),
           child: SingleChildScrollView(
-            child: Column(children: [
-              Align(
-                alignment: Alignment.center,
-                child: ApiRepository.shared.getProductsByIdList!.data![1].images!.length > 0
-                    ? SizedBox(
-                        height: 150,
-                        child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            shrinkWrap: true,
-                            separatorBuilder: (context, index) => SizedBox(
-                                  width: 10,
-                                ),
-                            itemCount: ApiRepository.shared.getProductsByIdList!.data![1].images!.length,
-                            itemBuilder: (context, int index) {
-                              var img = ApiRepository.shared.getProductsByIdList?.data?[1].images?[index].path;
-                              return Container(
-                                child: Image.network(
-                                  AppUrl.baseUrlM + img.toString(),
-                                  fit: BoxFit.fill,
-                                ),
-                              );
-                            }),
-                      )
-                    : Text("No Images"),
-              ),
-              SizedBox(
-                height: 30,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    ApiRepository.shared.getProductsByIdList!.data![0].name.toString(),
-                    style: TextStyle(fontSize: 28, color: Colors.black, fontFamily: "Inter, Regular"),
-                  ),
-                ],
-              ),
-              SizedBox(
-                height: 30,
-              ),
-              Container(
-                child: Row(
+            child: Column(
+              children: [
+                Align(
+                  alignment: Alignment.center,
+                  child:
+                      ApiRepository
+                                  .shared
+                                  .getProductsByIdList!
+                                  .data![1]
+                                  .images!
+                                  .length >
+                              0
+                          ? SizedBox(
+                            height: 150,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              shrinkWrap: true,
+                              separatorBuilder:
+                                  (context, index) => SizedBox(width: 10),
+                              itemCount:
+                                  ApiRepository
+                                      .shared
+                                      .getProductsByIdList!
+                                      .data![1]
+                                      .images!
+                                      .length,
+                              itemBuilder: (context, int index) {
+                                var img =
+                                    ApiRepository
+                                        .shared
+                                        .getProductsByIdList
+                                        ?.data?[1]
+                                        .images?[index]
+                                        .path;
+                                return Container(
+                                  child: Image.network(
+                                    AppUrl.baseUrlM + img.toString(),
+                                    fit: BoxFit.fill,
+                                  ),
+                                );
+                              },
+                            ),
+                          )
+                          : Text("No Images"),
+                ),
+                SizedBox(height: 30),
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "Rental Price",
-                      style: TextStyle(fontSize: 20, color: Colors.black, fontFamily: "Inter, Regular"),
-                    ),
-                    Text(
-                      " \$${widget.price} / day",
-                      style: TextStyle(fontSize: 25, color: Colors.black, fontFamily: "Inter, ExtraBold"),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(
-                height: 10,
-              ),
-              Divider(
-                color: Colors.grey,
-                thickness: 1,
-              ),
-              SizedBox(
-                height: 10,
-              ),
-              Container(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Renting Total",
-                      style: TextStyle(fontSize: 20, color: Colors.black, fontFamily: "Inter, Regular"),
-                    ),
-                    Text(
-                      " \$${widget.price * (diff + 1)}",
-                      style: TextStyle(fontSize: 25, color: Colors.black, fontFamily: "Inter, ExtraBold"),
+                      ApiRepository.shared.getProductsByIdList!.data![0].name
+                          .toString(),
+                      style: TextStyle(
+                        fontSize: 28,
+                        color: Colors.black,
+                        fontFamily: "Inter, Regular",
+                      ),
                     ),
                   ],
                 ),
-              ),
-              SizedBox(
-                height: 10,
-              ),
-              Divider(
-                color: Colors.grey,
-                thickness: 1,
-              ),
-              SizedBox(
-                height: 10,
-              ),
-              Container(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Jebby Fees",
-                      style: TextStyle(fontSize: 20, color: Colors.black, fontFamily: "Inter, Regular"),
-                    ),
-                    Text(
-                      " \$${(widget.price * (diff + 1)) * Jebby / 100}",
-                      style: TextStyle(fontSize: 25, color: Colors.black, fontFamily: "Inter, ExtraBold"),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(
-                height: 10,
-              ),
-              Divider(
-                color: Colors.grey,
-                thickness: 1,
-              ),
-              SizedBox(
-                height: 10,
-              ),
-              Container(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Security Deposit",
-                      style: TextStyle(fontSize: 20, color: Colors.black, fontFamily: "Inter, Regular"),
-                    ),
-                    Text(
-                      " \$${widget.security_deposit}",
-                      style: TextStyle(fontSize: 25, color: Colors.black, fontFamily: "Inter, ExtraBold"),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(
-                height: 10,
-              ),
-              Divider(
-                color: Colors.grey,
-                thickness: 1,
-              ),
-              SizedBox(
-                height: 10,
-              ),
-              Container(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Delivery Charges",
-                      style: TextStyle(fontSize: 20, color: Colors.black, fontFamily: "Inter, Regular"),
-                    ),
-                    Text(
-                      "\$${widget.delivery_charges == '' ? 0 : widget.delivery_charges}",
-                      style: TextStyle(fontSize: 25, color: Colors.black, fontFamily: "Inter, ExtraBold"),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(
-                height: 10,
-              ),
-              Divider(
-                color: Colors.grey,
-                thickness: 1,
-              ),
-              SizedBox(
-                height: 10,
-              ),
-
-              Container(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Sales Tax",
-                      style: TextStyle(fontSize: 20, color: Colors.black, fontFamily: "Inter, Regular"),
-                    ),
-                    Text(
-                      "${(taxValue * 100).toStringAsFixed(2)}\%",
-                      style: TextStyle(fontSize: 25, color: Colors.black, fontFamily: "Inter, ExtraBold"),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(
-                height: 10,
-              ),
-              Divider(
-                color: Colors.grey,
-                thickness: 1,
-              ),
-              SizedBox(
-                height: 30,
-              ),
-              Container(
-                decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
+                SizedBox(height: 30),
+                Container(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Grand Total",
-                        style: TextStyle(fontSize: 20, color: Colors.black, fontFamily: "Inter, Regular", fontWeight: FontWeight.bold),
+                        "Rental Price",
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.black,
+                          fontFamily: "Inter, Regular",
+                        ),
                       ),
                       Text(
-                        "\$${(((widget.price * (diff + 1)) + dc + ((widget.price * (diff + 1)) * Jebby / 100) + int.parse(widget.security_deposit)) + ((widget.price * (diff + 1)) * taxValue)).toStringAsFixed(2)}",
-                        style: TextStyle(fontSize: 25, color: Colors.black, fontFamily: "Inter, ExtraBold", fontWeight: FontWeight.bold),
+                        " \$${widget.price} / day",
+                        style: TextStyle(
+                          fontSize: 25,
+                          color: Colors.black,
+                          fontFamily: "Inter, ExtraBold",
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ),
+                SizedBox(height: 10),
+                Divider(color: Colors.grey, thickness: 1),
+                SizedBox(height: 10),
+                Container(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Renting Total",
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.black,
+                          fontFamily: "Inter, Regular",
+                        ),
+                      ),
+                      Text(
+                        " \$${widget.price * (diff + 1)}",
+                        style: TextStyle(
+                          fontSize: 25,
+                          color: Colors.black,
+                          fontFamily: "Inter, ExtraBold",
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 10),
+                Divider(color: Colors.grey, thickness: 1),
+                SizedBox(height: 10),
+                Container(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Jebby Fees",
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.black,
+                          fontFamily: "Inter, Regular",
+                        ),
+                      ),
+                      Text(
+                        " \$${(widget.price * (diff + 1)) * Jebby / 100}",
+                        style: TextStyle(
+                          fontSize: 25,
+                          color: Colors.black,
+                          fontFamily: "Inter, ExtraBold",
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 10),
+                Divider(color: Colors.grey, thickness: 1),
+                SizedBox(height: 10),
+                Container(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Security Deposit",
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.black,
+                          fontFamily: "Inter, Regular",
+                        ),
+                      ),
+                      Text(
+                        " \$${widget.security_deposit}",
+                        style: TextStyle(
+                          fontSize: 25,
+                          color: Colors.black,
+                          fontFamily: "Inter, ExtraBold",
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 10),
+                Divider(color: Colors.grey, thickness: 1),
+                SizedBox(height: 10),
+                Container(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Delivery Charges",
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.black,
+                          fontFamily: "Inter, Regular",
+                        ),
+                      ),
+                      Text(
+                        "\$${widget.delivery_charges == '' ? 0 : widget.delivery_charges}",
+                        style: TextStyle(
+                          fontSize: 25,
+                          color: Colors.black,
+                          fontFamily: "Inter, ExtraBold",
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 10),
+                Divider(color: Colors.grey, thickness: 1),
+                SizedBox(height: 10),
 
-                SizedBox(
-                height: 10,
-              ),
+                Container(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Sales Tax",
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.black,
+                          fontFamily: "Inter, Regular",
+                        ),
+                      ),
+                      Text(
+                        "${(taxValue * 100).toStringAsFixed(2)}\%",
+                        style: TextStyle(
+                          fontSize: 25,
+                          color: Colors.black,
+                          fontFamily: "Inter, ExtraBold",
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 10),
+                Divider(color: Colors.grey, thickness: 1),
+                SizedBox(height: 30),
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Grand Total",
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.black,
+                            fontFamily: "Inter, Regular",
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          "\$${(((widget.price * (diff + 1)) + dc + ((widget.price * (diff + 1)) * Jebby / 100) + int.parse(widget.security_deposit)) + ((widget.price * (diff + 1)) * taxValue)).toStringAsFixed(2)}",
+                          style: TextStyle(
+                            fontSize: 25,
+                            color: Colors.black,
+                            fontFamily: "Inter, ExtraBold",
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
 
-              Obx(() => CheckboxListTile(
-                        title: Text("I agree to the Terms of Service and Privacy Policy", style: TextStyle(fontSize: 17)),
-                        value: termscontroller.termsValue.value,
-                        activeColor: kprimaryColor,
-                        onChanged: (newValue) {
-                          if (termscontroller.termsValue == true) {
-                            termscontroller.chanegValue(false);
-                          } else {
-                            termscontroller.chanegValue(true);
-                          }
-                        },
-                        controlAffinity: ListTileControlAffinity.leading, //  <-- leading Checkbox
-                      )),
+                SizedBox(height: 10),
 
-              SizedBox(
-                height: 30,
-              ),
-              GestureDetector(
-                onTap: () {
-                  int diff = selectedDate1.difference(selectedDate).inDays;
-                  var amount = (widget.price * (diff + 1)) + dc ;
-                  var JebbyFees = ((widget.price * (diff + 1)) * Jebby / 100);
-                  var Totaltax = (widget.price * (diff + 1)) * taxValue;
-                  var ApplicationFees = JebbyFees + Totaltax;
-                  // (int.parse(widget.price.toString()) * diff);
-                  print("Totaltax $Totaltax");
-                  print("JebbyFees $JebbyFees");
-                  print("ApplicationFees ${ApplicationFees}");
-
-                  print(amount);
-                  if (!termscontroller.termsValue.value) {
-                        Utils.flushBarErrorMessage('You must agree to Terms of Service and Privacy Policy', context);
+                Obx(
+                  () => CheckboxListTile(
+                    title: Text(
+                      "I agree to the Terms of Service and Privacy Policy",
+                      style: TextStyle(fontSize: 17),
+                    ),
+                    value: termscontroller.termsValue.value,
+                    activeColor: kprimaryColor,
+                    onChanged: (newValue) {
+                      if (termscontroller.termsValue == true) {
+                        termscontroller.chanegValue(false);
+                      } else {
+                        termscontroller.chanegValue(true);
                       }
-                      else{
-                         ApiRepository.shared.stripePayment(
-                            // amount,
-                            num.parse((((widget.price * (diff + 1)) + dc + ((widget.price * (diff + 1)) * Jebby / 100) + int.parse(widget.security_deposit)) + ((widget.price * (diff + 1)) * taxValue)).toStringAsFixed(2)),
-                            widget.vendorAccountId.toString(),
-                            context,
-                            widget.userId,
-                            widget.productID,
-                            widget.rentStart,
-                            widget.rentEnd,
-                            widget.userName,
-                            widget.email,
-                            widget.location,
-                            widget.lat,
-                            widget.long,
-                            widget.negoPrice,
-                            '',
-                            widget.security_deposit.toString(),
-                            ApplicationFees,
-                            );
+                    },
+                    controlAffinity:
+                        ListTileControlAffinity
+                            .leading, //  <-- leading Checkbox
+                  ),
+                ),
+
+                SizedBox(height: 30),
+                GestureDetector(
+                  onTap: () {
+                    int diff = selectedDate1.difference(selectedDate).inDays;
+                    var JebbyFees = ((widget.price * (diff + 1)) * Jebby / 100);
+                    var Totaltax = (widget.price * (diff + 1)) * taxValue;
+                    var ApplicationFees = JebbyFees + Totaltax;
+                    // (int.parse(widget.price.toString()) * diff);
+
+                    if (!termscontroller.termsValue.value) {
+                      Utils.flushBarErrorMessage(
+                        'You must agree to Terms of Service and Privacy Policy',
+                        context,
+                      );
+                    } else {
+                      ApiRepository.shared.stripePayment(
+                        // amount,
+                        num.parse(
+                          (((widget.price * (diff + 1)) +
+                                      dc +
+                                      ((widget.price * (diff + 1)) *
+                                          Jebby /
+                                          100) +
+                                      int.parse(widget.security_deposit)) +
+                                  ((widget.price * (diff + 1)) * taxValue))
+                              .toStringAsFixed(2),
+                        ),
+                        widget.vendorAccountId.toString(),
+                        context,
+                        widget.userId,
+                        widget.productID,
+                        widget.rentStart,
+                        widget.rentEnd,
+                        widget.userName,
+                        widget.email,
+                        widget.location,
+                        widget.lat,
+                        widget.long,
+                        widget.negoPrice,
+                        '',
+                        widget.security_deposit.toString(),
+                        ApplicationFees,
+                      );
                       //    Get.to(() => SelectPaymentMethodScreen(
                       // amount,
                       // widget.vendorAccountId,
@@ -519,29 +538,31 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       // widget.negoPrice,
                       // int.parse(widget.security_deposit),
                       // ApplicationFees));
-                      }
-                 
-                },
-                child: Container(
-                  width: 310,
-                  height: 58,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    color: Color(0xffFEB038),
-                  ),
-                  child: Center(
-                    child: Text(
-                      "Check Out",
-                      style: TextStyle(fontSize: 17, color: Colors.black, fontFamily: "Inter, Bold"),
+                    }
+                  },
+                  child: Container(
+                    width: 310,
+                    height: 58,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      color: Color(0xffFEB038),
+                    ),
+                    child: Center(
+                      child: Text(
+                        "Check Out",
+                        style: TextStyle(
+                          fontSize: 17,
+                          color: Colors.black,
+                          fontFamily: "Inter, Bold",
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              SizedBox(
-                height: 20,
-              ),
-            ]),
+                SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
       ),

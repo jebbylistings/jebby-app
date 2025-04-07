@@ -30,10 +30,9 @@ class RenterProfile extends StatefulWidget {
 }
 
 class _RenterProfileState extends State<RenterProfile> {
-   String Url = dotenv.env['baseUrlM'] ?? 'No url found';
+  String Url = dotenv.env['baseUrlM'] ?? 'No url found';
   TextEditingController _emailController = TextEditingController();
   TextEditingController _nameController = TextEditingController();
-  var _locationController = TextEditingController();
   var Latitiude;
   var Longitude;
 
@@ -59,20 +58,20 @@ class _RenterProfileState extends State<RenterProfile> {
   String? email;
   String? role;
   void profileData(BuildContext context) async {
-    getUserDate().then((value) async {
-      token = value.token.toString();
-      id = value.id.toString();
-      getProductsApi(id);
-      fullname = value.name.toString();
-      email = value.email.toString();
-      role = value.role.toString();
-      getReviews();
-      getProducts();
-    }).onError((error, stackTrace) {
-      if (kDebugMode) {
-        print(error.toString());
-      }
-    });
+    getUserDate()
+        .then((value) async {
+          token = value.token.toString();
+          id = value.id.toString();
+          getProductsApi(id);
+          fullname = value.name.toString();
+          email = value.email.toString();
+          role = value.role.toString();
+          getReviews();
+          getProducts();
+        })
+        .onError((error, stackTrace) {
+          if (kDebugMode) {}
+        });
   }
 
   bool isLoading = true;
@@ -80,31 +79,35 @@ class _RenterProfileState extends State<RenterProfile> {
   bool isEmpty = false;
 
   getReviews() {
-    ApiRepository.shared.reviewsByVendorId(id.toString(), (List) {
-      if (this.mounted) {
-        if (List.data!.length == 0) {
-          setState(() {
-            isEmpty = true;
-            isLoading = false;
-            isError = false;
-          });
-        } else {
+    ApiRepository.shared.reviewsByVendorId(
+      id.toString(),
+      (List) {
+        if (this.mounted) {
+          if (List.data!.length == 0) {
+            setState(() {
+              isEmpty = true;
+              isLoading = false;
+              isError = false;
+            });
+          } else {
+            setState(() {
+              isEmpty = false;
+              isLoading = false;
+              isError = false;
+            });
+          }
+        }
+      },
+      (error) {
+        if (error != null) {
           setState(() {
             isEmpty = false;
             isLoading = false;
-            isError = false;
+            isError = true;
           });
         }
-      }
-    }, (error) {
-      if (error != null) {
-        setState(() {
-          isEmpty = false;
-          isLoading = false;
-          isError = true;
-        });
-      }
-    });
+      },
+    );
   }
 
   bool isPLoading = true;
@@ -112,31 +115,35 @@ class _RenterProfileState extends State<RenterProfile> {
   bool isPEmpty = false;
 
   getProducts() {
-    ApiRepository.shared.reviewsByVenodorProduct(id.toString(), (List) {
-      if (this.mounted) {
-        if (List.data!.length == 0) {
-          setState(() {
-            isPEmpty = true;
-            isPLoading = false;
-            isPError = false;
-          });
-        } else {
+    ApiRepository.shared.reviewsByVenodorProduct(
+      id.toString(),
+      (List) {
+        if (this.mounted) {
+          if (List.data!.length == 0) {
+            setState(() {
+              isPEmpty = true;
+              isPLoading = false;
+              isPError = false;
+            });
+          } else {
+            setState(() {
+              isPEmpty = false;
+              isPLoading = false;
+              isPError = false;
+            });
+          }
+        }
+      },
+      (error) {
+        if (error != null) {
           setState(() {
             isPEmpty = false;
             isPLoading = false;
-            isPError = false;
+            isPError = true;
           });
         }
-      }
-    }, (error) {
-      if (error != null) {
-        setState(() {
-          isPEmpty = false;
-          isPLoading = false;
-          isPError = true;
-        });
-      }
-    });
+      },
+    );
   }
 
   final bottomctrl = Get.put(BottomController());
@@ -152,28 +159,27 @@ class _RenterProfileState extends State<RenterProfile> {
         automaticallyImplyLeading: false,
         title: Text(
           "My Profile",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 19),
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 19,
+          ),
         ),
         elevation: 0,
         centerTitle: true,
         leading: InkWell(
           onTap: () {
             setState(() {
-            //   Navigator.push(
-            //   context,
-            //   MaterialPageRoute(builder: (context) => MainScreen()),
-            // );
-            bottomctrl.navBarChange(0);
+              //   Navigator.push(
+              //   context,
+              //   MaterialPageRoute(builder: (context) => MainScreen()),
+              // );
+              bottomctrl.navBarChange(0);
               Get.back();
             });
           },
           borderRadius: BorderRadius.circular(50),
-          child: Container(
-            child: Icon(
-              Icons.arrow_back,
-              color: Colors.black,
-            ),
-          ),
+          child: Container(child: Icon(Icons.arrow_back, color: Colors.black)),
         ),
         actions: [
           Padding(
@@ -186,7 +192,7 @@ class _RenterProfileState extends State<RenterProfile> {
                 child: Image.asset('assets/slicing/Group 63@3x.png'),
               ),
             ),
-          )
+          ),
         ],
       ),
       body: Container(
@@ -196,9 +202,7 @@ class _RenterProfileState extends State<RenterProfile> {
             padding: EdgeInsets.symmetric(horizontal: 12),
             child: Column(
               children: [
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: 10),
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -206,31 +210,37 @@ class _RenterProfileState extends State<RenterProfile> {
                       width: 400,
                       height: 136,
                       decoration: BoxDecoration(),
-                      child: imagesapi == "null"
-                          ? sp.imageUrl.toString() == "null"
-                              ? Image.asset("assets/slicing/blankuser.jpeg", fit: BoxFit.cover)
+                      child:
+                          imagesapi == "null"
+                              ? sp.imageUrl.toString() == "null"
+                                  ? Image.asset(
+                                    "assets/slicing/blankuser.jpeg",
+                                    fit: BoxFit.cover,
+                                  )
+                                  : CachedNetworkImage(
+                                    imageUrl: "${sp.imageUrl}",
+                                    fit: BoxFit.cover,
+                                    placeholder:
+                                        (context, url) => Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                    errorWidget:
+                                        (context, url, error) => Icon(
+                                          Icons.error,
+                                          color: Colors.red,
+                                        ),
+                                  )
                               : CachedNetworkImage(
-                                          imageUrl: "${sp.imageUrl}",
-                                          fit: BoxFit.cover,
-                                          placeholder: (context, url) => Center(
-                                            child: CircularProgressIndicator(),
-                                          ),
-                                          errorWidget: (context, url, error) => Icon(
-                                            Icons.error,
-                                            color: Colors.red,
-                                          ),
-                                        )
-                          : CachedNetworkImage(
-                                      imageUrl: "${Url}${back_image_api}",
-                                      fit: BoxFit.cover,
-                                      placeholder: (context, url) => Center(
-                                        child: CircularProgressIndicator(),
-                                      ),
-                                      errorWidget: (context, url, error) => Icon(
-                                        Icons.error,
-                                        color: Colors.red,
-                                      ),
+                                imageUrl: "${Url}${back_image_api}",
+                                fit: BoxFit.cover,
+                                placeholder:
+                                    (context, url) => Center(
+                                      child: CircularProgressIndicator(),
                                     ),
+                                errorWidget:
+                                    (context, url, error) =>
+                                        Icon(Icons.error, color: Colors.red),
+                              ),
                     ),
                     Positioned(
                       left: 15,
@@ -250,36 +260,55 @@ class _RenterProfileState extends State<RenterProfile> {
                             //               )),)
                             usp.image.toString() == "null"
                                 ? sp.imageUrl.toString() == "null"
-                                    ? CircleAvatar(radius: 40, backgroundImage: AssetImage("assets/slicing/blankuser.jpeg"))
+                                    ? CircleAvatar(
+                                      radius: 40,
+                                      backgroundImage: AssetImage(
+                                        "assets/slicing/blankuser.jpeg",
+                                      ),
+                                    )
                                     : CachedNetworkImage(
-                                            imageUrl: "${sp.imageUrl}",
-                                            imageBuilder: (context, imageProvider) => CircleAvatar(
+                                      imageUrl: "${sp.imageUrl}",
+                                      imageBuilder:
+                                          (context, imageProvider) =>
+                                              CircleAvatar(
+                                                radius: 40,
+                                                backgroundImage: imageProvider,
+                                              ),
+                                      placeholder:
+                                          (context, url) =>
+                                              CircularProgressIndicator(), // Placeholder widget
+                                      errorWidget:
+                                          (context, url, error) => Icon(
+                                            Icons.error,
+                                            size: 40,
+                                          ), // Error widget
+                                    )
+                                : CircleAvatar(
+                                  radius: 40,
+                                  backgroundColor: Colors.grey[200],
+                                  child: CachedNetworkImage(
+                                    imageUrl: "${Url}${usp.image}",
+                                    imageBuilder:
+                                        (context, imageProvider) =>
+                                            CircleAvatar(
                                               radius: 40,
                                               backgroundImage: imageProvider,
                                             ),
-                                            placeholder: (context, url) => CircularProgressIndicator(), // Placeholder widget
-                                            errorWidget: (context, url, error) => Icon(Icons.error, size: 40), // Error widget
-                                          )
-                                : CircleAvatar(
-                                      radius: 40,
-                                      backgroundColor: Colors.grey[200],
-                                      child: CachedNetworkImage(
-                                        imageUrl: "${Url}${usp.image}",
-                                        imageBuilder: (context, imageProvider) => CircleAvatar(
-                                          radius: 40,
-                                          backgroundImage: imageProvider,
-                                        ),
-                                        placeholder: (context, url) => CircularProgressIndicator(), // Placeholder widget
-                                        errorWidget: (context, url, error) => Icon(Icons.error, size: 40), // Error widget
-                                      ),
-                                    )
+                                    placeholder:
+                                        (context, url) =>
+                                            CircularProgressIndicator(), // Placeholder widget
+                                    errorWidget:
+                                        (context, url, error) => Icon(
+                                          Icons.error,
+                                          size: 40,
+                                        ), // Error widget
+                                  ),
+                                ),
                       ),
-                    )
+                    ),
                   ],
                 ),
-                SizedBox(
-                  height: 40,
-                ),
+                SizedBox(height: 40),
                 Row(
                   children: [
                     Column(
@@ -291,21 +320,25 @@ class _RenterProfileState extends State<RenterProfile> {
                                   ? fullname.toString()
                                   : nameapi.toString()
                               : sp.name.toString(),
-                          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 32),
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 32,
+                          ),
                         ),
-                        SizedBox(
-                          height: 5,
-                        ),
+                        SizedBox(height: 5),
                         Container(
                           width: 300,
                           child: Text(
                             address == "null" ? "City,ST" : address.toString(),
-                            style: TextStyle(color: Colors.grey, fontWeight: FontWeight.normal, fontSize: 16),
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontWeight: FontWeight.normal,
+                              fontSize: 16,
+                            ),
                           ),
                         ),
-                        SizedBox(
-                          height: 15,
-                        ),
+                        SizedBox(height: 15),
                         // Container(
                         //   width: 380,
                         //   child: Text(
@@ -314,12 +347,10 @@ class _RenterProfileState extends State<RenterProfile> {
                         //   ),
                         // ),
                       ],
-                    )
+                    ),
                   ],
                 ),
-                SizedBox(
-                  height: 15,
-                ),
+                SizedBox(height: 15),
                 // Row(
                 //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 //   children: [
@@ -373,34 +404,60 @@ class _RenterProfileState extends State<RenterProfile> {
                 isPLoading
                     ? Text("")
                     : isPEmpty
-                        ? Container(height: 100, child: Center(child: Text("No Review Product")))
-                        : GridView.builder(
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2, crossAxisSpacing: 2.0, mainAxisSpacing: 30.0, childAspectRatio: 0.75),
-                            physics: NeverScrollableScrollPhysics(),
-                            shrinkWrap: true,
-                            itemCount: ApiRepository.shared.getVendorProductsByReviewsModelList!.data!.length,
-                            itemBuilder: (context, int index) {
-                              var data = ApiRepository.shared.getVendorProductsByReviewsModelList!.data![index];
-                              var image = data.image.toString();
-                              var price = data.price.toString();
-                              var length = data.length.toString();
-                              var name = data.name.toString();
-                              var id = data.id.toString();
-                              var stars = data.stars;
-                              return itmBox(img: image, dx: price, rv: length, tx: name, rt: stars, id: id);
-                            }),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.02,
-                ),
+                    ? Container(
+                      height: 100,
+                      child: Center(child: Text("No Review Product")),
+                    )
+                    : GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 2.0,
+                        mainAxisSpacing: 30.0,
+                        childAspectRatio: 0.75,
+                      ),
+                      physics: NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount:
+                          ApiRepository
+                              .shared
+                              .getVendorProductsByReviewsModelList!
+                              .data!
+                              .length,
+                      itemBuilder: (context, int index) {
+                        var data =
+                            ApiRepository
+                                .shared
+                                .getVendorProductsByReviewsModelList!
+                                .data![index];
+                        var image = data.image.toString();
+                        var price = data.price.toString();
+                        var length = data.length.toString();
+                        var name = data.name.toString();
+                        var id = data.id.toString();
+                        var stars = data.stars;
+                        return itmBox(
+                          img: image,
+                          dx: price,
+                          rv: length,
+                          tx: name,
+                          rt: stars,
+                          id: id,
+                        );
+                      },
+                    ),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                 isLoading
                     ? Text("")
                     : isEmpty
-                        ? Text("")
-                        : Reviewsss(ApiRepository.shared.getAllReviewsByVendorIdModelList!.totalreviews.toString()),
-                SizedBox(
-                  height: 10,
-                ),
+                    ? Text("")
+                    : Reviewsss(
+                      ApiRepository
+                          .shared
+                          .getAllReviewsByVendorIdModelList!
+                          .totalreviews
+                          .toString(),
+                    ),
+                SizedBox(height: 10),
                 // SingleChildScrollView(
                 //   scrollDirection: Axis.horizontal,
                 //   child: Row(
@@ -416,23 +473,53 @@ class _RenterProfileState extends State<RenterProfile> {
                 isLoading
                     ? Text("")
                     : isEmpty
-                        ? Text("")
-                        : SizedBox(
-                            width: double.infinity,
-                            height: res_height * 0.1,
-                            child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                // physics: NeverScrollableScrollPhysics(),
-                                shrinkWrap: true,
-                                itemCount: ApiRepository.shared.getAllReviewsByVendorIdModelList!.data!.length,
-                                itemBuilder: (context, int index) {
-                                  var image = ApiRepository.shared.getAllReviewsByVendorIdModelList!.data![index].image.toString();
-                                  var stars = ApiRepository.shared.getAllReviewsByVendorIdModelList!.data![index].stars.toString();
-                                  var desc = ApiRepository.shared.getAllReviewsByVendorIdModelList!.data![index].description.toString();
-                                  var name = ApiRepository.shared.getAllReviewsByVendorIdModelList!.data![index].userName.toString();
-                                  return scrollss(image, stars, desc, name);
-                                }),
-                          ),
+                    ? Text("")
+                    : SizedBox(
+                      width: double.infinity,
+                      height: res_height * 0.1,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        // physics: NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount:
+                            ApiRepository
+                                .shared
+                                .getAllReviewsByVendorIdModelList!
+                                .data!
+                                .length,
+                        itemBuilder: (context, int index) {
+                          var image =
+                              ApiRepository
+                                  .shared
+                                  .getAllReviewsByVendorIdModelList!
+                                  .data![index]
+                                  .image
+                                  .toString();
+                          var stars =
+                              ApiRepository
+                                  .shared
+                                  .getAllReviewsByVendorIdModelList!
+                                  .data![index]
+                                  .stars
+                                  .toString();
+                          var desc =
+                              ApiRepository
+                                  .shared
+                                  .getAllReviewsByVendorIdModelList!
+                                  .data![index]
+                                  .description
+                                  .toString();
+                          var name =
+                              ApiRepository
+                                  .shared
+                                  .getAllReviewsByVendorIdModelList!
+                                  .data![index]
+                                  .userName
+                                  .toString();
+                          return scrollss(image, stars, desc, name);
+                        },
+                      ),
+                    ),
                 // Row(
                 //   children: [
                 //     Text(
@@ -441,17 +528,14 @@ class _RenterProfileState extends State<RenterProfile> {
                 //     ),
                 //   ],
                 // ),
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: 10),
                 Container(
                   width: 400,
                   height: 1,
-                  color: Colors.grey.withOpacity(0.5),
+                  color: Colors.grey.withAlpha(128),
                 ),
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: 10),
+
                 // Row(
                 //   children: [
                 //     Column(
@@ -472,10 +556,7 @@ class _RenterProfileState extends State<RenterProfile> {
                 //     ),
                 //   ],
                 // ),
-
-                SizedBox(
-                  height: 50,
-                ),
+                SizedBox(height: 50),
               ],
             ),
           ),
@@ -488,7 +569,10 @@ class _RenterProfileState extends State<RenterProfile> {
     return Container(
       width: 391,
       height: 74,
-      decoration: BoxDecoration(color: Color(0xFF4285F4), borderRadius: BorderRadius.all(Radius.circular(5))),
+      decoration: BoxDecoration(
+        color: Color(0xFF4285F4),
+        borderRadius: BorderRadius.all(Radius.circular(5)),
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Row(
@@ -497,62 +581,28 @@ class _RenterProfileState extends State<RenterProfile> {
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  "0",
-                  style: TextStyle(color: kprimaryColor),
-                ),
-                Text(
-                  "Following",
-                  style: TextStyle(color: kprimaryColor),
-                ),
+                Text("0", style: TextStyle(color: kprimaryColor)),
+                Text("Following", style: TextStyle(color: kprimaryColor)),
               ],
             ),
-            SizedBox(
-              width: 20,
-            ),
-            Container(
-              width: 1,
-              height: 40,
-              color: kprimaryColor,
-            ),
-            SizedBox(
-              width: 20,
-            ),
+            SizedBox(width: 20),
+            Container(width: 1, height: 40, color: kprimaryColor),
+            SizedBox(width: 20),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  "2654",
-                  style: TextStyle(color: kprimaryColor),
-                ),
-                Text(
-                  "Followers",
-                  style: TextStyle(color: kprimaryColor),
-                ),
+                Text("2654", style: TextStyle(color: kprimaryColor)),
+                Text("Followers", style: TextStyle(color: kprimaryColor)),
               ],
             ),
-            SizedBox(
-              width: 20,
-            ),
-            Container(
-              width: 1,
-              height: 40,
-              color: kprimaryColor,
-            ),
-            SizedBox(
-              width: 20,
-            ),
+            SizedBox(width: 20),
+            Container(width: 1, height: 40, color: kprimaryColor),
+            SizedBox(width: 20),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  "265",
-                  style: TextStyle(color: kprimaryColor),
-                ),
-                Text(
-                  "Products",
-                  style: TextStyle(color: kprimaryColor),
-                ),
+                Text("265", style: TextStyle(color: kprimaryColor)),
+                Text("Products", style: TextStyle(color: kprimaryColor)),
               ],
             ),
           ],
@@ -578,29 +628,19 @@ class _RenterProfileState extends State<RenterProfile> {
         // ),
         SizedBox(
           width: res_width * 0.55,
-          child: Text(
-            review,
-            style: TextStyle(
-              fontSize: 16,
-            ),
-          ),
+          child: Text(review, style: TextStyle(fontSize: 16)),
         ),
         // SizedBox(
-          
+
         // ),
         GestureDetector(
           onTap: () {
             Get.to(() => ReviewScreen());
           },
           child: Container(
-            child: Text(
-              "See All",
-              style: TextStyle(
-                fontSize: 16,
-              ),
-            ),
+            child: Text("See All", style: TextStyle(fontSize: 16)),
           ),
-        )
+        ),
       ],
     );
   }
@@ -609,14 +649,14 @@ class _RenterProfileState extends State<RenterProfile> {
     double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
     return Container(
-      width: res_width * 0.58, 
+      width: res_width * 0.58,
       height: res_height * 0.145,
       margin: EdgeInsets.only(right: res_width * 0.05),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withAlpha(51),
             spreadRadius: 5,
             blurRadius: 7,
             offset: Offset(0, 3), // changes position of shadow
@@ -641,31 +681,20 @@ class _RenterProfileState extends State<RenterProfile> {
                 //     fit: BoxFit.fill,
                 //   ),
                 // ),
-                SizedBox(
-                  width: res_width * 0.02,
-                ),
-                SizedBox(
-                  width: res_width * 0.38,
-                  child: Text(name),
-                )
+                SizedBox(width: res_width * 0.02),
+                SizedBox(width: res_width * 0.38, child: Text(name)),
               ],
             ),
-            SizedBox(
-              height: res_height * 0.01,
-            ),
+            SizedBox(height: res_height * 0.01),
             RatingBarIndicator(
               rating: double.parse(stars.toString()),
-              itemBuilder: (context, index) => Icon(
-                Icons.star,
-                color: Colors.amber,
-              ),
+              itemBuilder:
+                  (context, index) => Icon(Icons.star, color: Colors.amber),
               itemCount: 5,
               itemSize: 15,
               direction: Axis.horizontal,
             ),
-            SizedBox(
-              height: res_height * 0.005,
-            ),
+            SizedBox(height: res_height * 0.005),
             SizedBox(
               width: res_width * 0.5,
               child: Text(
@@ -684,9 +713,7 @@ class _RenterProfileState extends State<RenterProfile> {
     double res_height = MediaQuery.of(context).size.height;
     return GestureDetector(
       onTap: () {
-        Get.to(() => ProductDetail2Screen(
-              id: id,
-            ));
+        Get.to(() => ProductDetail2Screen(id: id));
       },
       child: Container(
         width: res_width * 0.44,
@@ -702,24 +729,18 @@ class _RenterProfileState extends State<RenterProfile> {
                 height: res_height * 0.2,
                 decoration: BoxDecoration(),
                 child: ClipRRect(
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(10),
-                    ),
-                    child: Image.network(
-                      AppUrl.baseUrlM + img.toString(),
-                      fit: BoxFit.cover,
-                    )),
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  child: Image.network(
+                    AppUrl.baseUrlM + img.toString(),
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
-              SizedBox(
-                height: res_height * 0.005,
-              ),
+              SizedBox(height: res_height * 0.005),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '$tx',
-                    style: TextStyle(fontSize: 11),
-                  ),
+                  Text('$tx', style: TextStyle(fontSize: 11)),
                   // SizedBox(
                   //   height: res_height * 0.006,
                   // ),
@@ -732,35 +753,24 @@ class _RenterProfileState extends State<RenterProfile> {
                     children: [
                       RatingBarIndicator(
                         rating: double.parse(rt.toString()),
-                        itemBuilder: (context, index) => Icon(
-                          Icons.star,
-                          color: Colors.amber,
-                        ),
+                        itemBuilder:
+                            (context, index) =>
+                                Icon(Icons.star, color: Colors.amber),
                         itemCount: 5,
                         itemSize: 15,
                         direction: Axis.horizontal,
                       ),
-                      Text(
-                        '$rt ',
-                        style: TextStyle(fontSize: 11),
-                      ),
+                      Text('$rt ', style: TextStyle(fontSize: 11)),
                       Text(
                         '( $rv reviews)',
-                        style: TextStyle(
-                          fontSize: 9,
-                          color: Colors.grey,
-                        ),
+                        style: TextStyle(fontSize: 9, color: Colors.grey),
                       ),
                     ],
                   ),
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.01,
-                  )
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.01),
                 ],
               ),
-              SizedBox(
-                height: MediaQuery.of(context).size.height * 0.01,
-              )
+              SizedBox(height: MediaQuery.of(context).size.height * 0.01),
             ],
           ),
         ),
@@ -777,10 +787,11 @@ class _RenterProfileState extends State<RenterProfile> {
 
   ////////
   Future getProductsApi(id) async {
-    final response = await http.get(Uri.parse('${Url}/UserProfileGetById/${id}'));
+    final response = await http.get(
+      Uri.parse('${Url}/UserProfileGetById/${id}'),
+    );
     var data = jsonDecode(response.body.toString());
-    if (data["data"].length != 0) {
-    }
+    if (data["data"].length != 0) {}
 
     setState(() {
       if (data["data"].length != 0) {
@@ -797,16 +808,38 @@ class _RenterProfileState extends State<RenterProfile> {
     });
     if (response.statusCode == 200) {
       if (data["data"].length != 0) {
-        SharedPreferences updatePrefrences = await SharedPreferences.getInstance();
+        SharedPreferences updatePrefrences =
+            await SharedPreferences.getInstance();
 
         setState(() {
-          updatePrefrences.setString('fullname', data["data"][0]["name"].toString());
-          updatePrefrences.setString('email', data["data"][0]["email"].toString());
-          updatePrefrences.setString('image', data["data"][0]["image"].toString());
-          updatePrefrences.setString('address', data["data"][0]["address"].toString());
-          updatePrefrences.setString('latitude', data["data"][0]["latitude"].toString());
-          updatePrefrences.setString('longitude', data["data"][0]["longitude"].toString());
-          updatePrefrences.setString('number', data["data"][0]["number"].toString());
+          updatePrefrences.setString(
+            'fullname',
+            data["data"][0]["name"].toString(),
+          );
+          updatePrefrences.setString(
+            'email',
+            data["data"][0]["email"].toString(),
+          );
+          updatePrefrences.setString(
+            'image',
+            data["data"][0]["image"].toString(),
+          );
+          updatePrefrences.setString(
+            'address',
+            data["data"][0]["address"].toString(),
+          );
+          updatePrefrences.setString(
+            'latitude',
+            data["data"][0]["latitude"].toString(),
+          );
+          updatePrefrences.setString(
+            'longitude',
+            data["data"][0]["longitude"].toString(),
+          );
+          updatePrefrences.setString(
+            'number',
+            data["data"][0]["number"].toString(),
+          );
         });
         return data;
       } else {

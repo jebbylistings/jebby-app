@@ -9,15 +9,17 @@ class UserModel {
   String? token;
   bool? isGuest;
 
-  UserModel(
-      {this.status,
-      this.name,
-      this.email,
-      this.id,
-      this.role,
-      this.source,
-      this.token,
-      this.isGuest = false, this.phoneNumber});
+  UserModel({
+    this.status,
+    this.name,
+    this.email,
+    this.id,
+    this.role,
+    this.source,
+    this.token,
+    this.isGuest = false,
+    this.phoneNumber,
+  });
 
   UserModel.fromJson(Map<String, dynamic> json) {
     status = json['status'];
@@ -27,7 +29,7 @@ class UserModel {
     role = json['role'];
     source = json['source'];
     token = json['token'];
-    isGuest= false;
+    isGuest = false;
   }
 
   Map<String, dynamic> toJson() {
@@ -43,7 +45,6 @@ class UserModel {
     return data;
   }
 }
-
 
 class UpdatedModel {
   int? status;
@@ -85,16 +86,18 @@ class Data {
   String? latitude;
   String? longitude;
 
-  Data(
-     {this.id,
-      this.image,
-      this.name,
-      this.email,
-      this.number,
-      this.address,
-      this.userId,
-      this.latitude,
-      this.longitude, required String phoneNumber});
+  Data({
+    this.id,
+    this.image,
+    this.name,
+    this.email,
+    this.number,
+    this.address,
+    this.userId,
+    this.latitude,
+    this.longitude,
+    required String phoneNumber,
+  });
 
   Data.fromJson(Map<String, dynamic> json) {
     id = json['id'];

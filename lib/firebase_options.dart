@@ -69,7 +69,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '369111140699',
     projectId: 'jebby-525d6',
     storageBucket: 'jebby-525d6.appspot.com',
-    iosClientId: '369111140699-jda16p6mepbjftlcs9ibcb7tfh7q0b4p.apps.googleusercontent.com',
+    iosClientId:
+        '369111140699-jda16p6mepbjftlcs9ibcb7tfh7q0b4p.apps.googleusercontent.com',
     iosBundleId: 'com.jebbylistings.jebby',
   );
 }

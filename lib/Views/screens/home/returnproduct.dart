@@ -19,13 +19,11 @@ class ReturnProductScreen extends StatefulWidget {
 }
 
 class _ReturnProductScreenState extends State<ReturnProductScreen> {
-
   bool isLoading = true;
   bool isError = false;
   bool isEmpty = false;
 
-  
-   dynamic filterarray = [];
+  dynamic filterarray = [];
   dynamic array = [];
   late Map<String, dynamic> _data;
 
@@ -37,12 +35,9 @@ class _ReturnProductScreenState extends State<ReturnProductScreen> {
         filterarray = _data['data'];
         isLoading = false;
       });
-      array = filterarray.where((data) => data['complete_date'] != '0').toList();
-      print("filterarray ===>  ${filterarray}");
-      print("array ===>  ${array}");
-    } catch (e) {
-      print('error $e');
-    }
+      array =
+          filterarray.where((data) => data['complete_date'] != '0').toList();
+    } catch (e) {}
   }
 
   void initState() {
@@ -62,60 +57,64 @@ class _ReturnProductScreenState extends State<ReturnProductScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: InkWell(
-            onTap: () {
-              Get.back();
-            },
-            borderRadius: BorderRadius.circular(50),
-            child: Icon(
-              Icons.arrow_back,
-              color: Colors.black,
-            )),
+          onTap: () {
+            Get.back();
+          },
+          borderRadius: BorderRadius.circular(50),
+          child: Icon(Icons.arrow_back, color: Colors.black),
+        ),
       ),
-      body: 
-      // isError
-      //     ? Center(child: Text("Some Error Occured While Loading Data"))
-      //     : 
+      body:
+          // isError
+          //     ? Center(child: Text("Some Error Occured While Loading Data"))
+          //     :
           isLoading
               ? Center(child: Text("Loading"))
               : array.length == 0
-                  ? Center(child: Text("No Return Product Found"))
-                  : Container(
-                      width: double.infinity,
-                      child: SingleChildScrollView(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // SizedBox(height: 20),
-                              Container(
-                                child: ListView.builder(
-                                    shrinkWrap: true,
-                                    physics: ScrollPhysics(),
-                                    itemCount: array.length,
-                                    itemBuilder: (context, int index) {
-                                      var name = array[index]['product_name'];
-                                      var date = array[index]['complete_date'].isEmpty ? "" : DateFormat('yyyy-MM-dd').format(DateTime.parse(array?[index]?['complete_date']));
-                                      var id = array[index]['id'];
-                                      var image = array[index]['product_image'];
-                                      var Return = array[index]['retrurn'];
-                                      return Gesture1(name, date, id, image, Return);
-                                    }),
-                              )
-                            ],
+              ? Center(child: Text("No Return Product Found"))
+              : Container(
+                width: double.infinity,
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // SizedBox(height: 20),
+                        Container(
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            physics: ScrollPhysics(),
+                            itemCount: array.length,
+                            itemBuilder: (context, int index) {
+                              var name = array[index]['product_name'];
+                              var date =
+                                  array[index]['complete_date'].isEmpty
+                                      ? ""
+                                      : DateFormat('yyyy-MM-dd').format(
+                                        DateTime.parse(
+                                          array?[index]?['complete_date'],
+                                        ),
+                                      );
+                              var id = array[index]['id'];
+                              var image = array[index]['product_image'];
+                              var Return = array[index]['retrurn'];
+                              return Gesture1(name, date, id, image, Return);
+                            },
                           ),
                         ),
-                      ),
+                      ],
                     ),
+                  ),
+                ),
+              ),
     );
   }
 
   Gesture1(name, date, id, image, Return) {
     return Column(
       children: [
-        SizedBox(
-          height: 10,
-        ),
+        SizedBox(height: 10),
         Container(
           width: 391,
           height: 195,
@@ -123,7 +122,7 @@ class _ReturnProductScreenState extends State<ReturnProductScreen> {
             color: Colors.white,
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.2),
+                color: Colors.grey.withAlpha(51),
                 spreadRadius: 5,
                 blurRadius: 7,
                 offset: Offset(0, 3), // changes position of shadow
@@ -134,95 +133,96 @@ class _ReturnProductScreenState extends State<ReturnProductScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Column(
               children: [
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Container(
-                        width: 120,
-                        height: 119,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.2),
-                              spreadRadius: 5,
-                              blurRadius: 7,
-                              offset: Offset(0, 3), // changes position of shadow
-                            ),
-                          ],
-                        ),
-                        child: Image.network(AppUrl.baseUrlM + image)),
+                      width: 120,
+                      height: 119,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withAlpha(51),
+                            spreadRadius: 5,
+                            blurRadius: 7,
+                            offset: Offset(0, 3), // changes position of shadow
+                          ),
+                        ],
+                      ),
+                      child: Image.network(AppUrl.baseUrlM + image),
+                    ),
                     Container(
                       height: 119,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(
-                            height: 50,
-                          ),
+                          SizedBox(height: 50),
                           Container(
-                              width: 159,
-                              child: Text(
-                                name,
-                                style: TextStyle(fontSize: 14),
-                              )),
-                          Text(
-                            date.toString(),
-                            style: TextStyle(fontSize: 14),
+                            width: 159,
+                            child: Text(name, style: TextStyle(fontSize: 14)),
                           ),
-                          SizedBox(
-                            height: 10,
-                          ),
+                          Text(date.toString(), style: TextStyle(fontSize: 14)),
+                          SizedBox(height: 10),
                         ],
                       ),
-                    )
+                    ),
                   ],
                 ),
-                SizedBox(
-                  height: 16,
-                ),
+                SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     SizedBox(width: 8),
                     Return == 0
                         ? Expanded(
-                            child: GestureDetector(
-                              onTap: () {
-                                ReturnProduct(id);
-                              },
-                              child: Container(
-                                height: 44,
-                                child: Center(
-                                  child: Text(
-                                    'Return',
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19),
+                          child: GestureDetector(
+                            onTap: () {
+                              ReturnProduct(id);
+                            },
+                            child: Container(
+                              height: 44,
+                              child: Center(
+                                child: Text(
+                                  'Return',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 19,
                                   ),
                                 ),
-                                decoration: BoxDecoration(color: kprimaryColor, borderRadius: BorderRadius.circular(5)),
+                              ),
+                              decoration: BoxDecoration(
+                                color: kprimaryColor,
+                                borderRadius: BorderRadius.circular(5),
                               ),
                             ),
-                          )
+                          ),
+                        )
                         : Expanded(
-                            child: GestureDetector(
-                              onTap: () {
-                                null;
-                              },
-                              child: Container(
-                                height: 44,
-                                child: Center(
-                                  child: Text(
-                                    'Return',
-                                    style: TextStyle(color: Colors.black54, fontWeight: FontWeight.bold, fontSize: 19),
+                          child: GestureDetector(
+                            onTap: () {
+                              null;
+                            },
+                            child: Container(
+                              height: 44,
+                              child: Center(
+                                child: Text(
+                                  'Return',
+                                  style: TextStyle(
+                                    color: Colors.black54,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 19,
                                   ),
                                 ),
-                                decoration: BoxDecoration(color: Colors.grey, borderRadius: BorderRadius.circular(5)),
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.grey,
+                                borderRadius: BorderRadius.circular(5),
                               ),
                             ),
-                          )
+                          ),
+                        ),
                     // : Center(child: Text("Negotiated Product"))
                   ],
                 ),
@@ -235,29 +235,24 @@ class _ReturnProductScreenState extends State<ReturnProductScreen> {
   }
 
   void ReturnProduct(id) async {
-     String Url = dotenv.env['baseUrlM'] ?? 'No url found';
+    String Url = dotenv.env['baseUrlM'] ?? 'No url found';
     setState(() {
       isLoading = true;
     });
-    print(id);
     final String SeenMessageUrl = "${Url}/orderReturn";
-    var data = {
-      "id": id,
-    };
-    print(data);
+    var data = {"id": id};
     try {
       final response = await http.post(
         Uri.parse(SeenMessageUrl),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
         body: json.encode(data),
       );
       final responseBody = jsonDecode(response.body);
-      print("response ${responseBody["message"]}");
 
       if (responseBody["message"].toString() == 'product has been returned') {
-        final snackBar = new SnackBar(content: new Text("product has been returned"));
+        final snackBar = new SnackBar(
+          content: new Text("product has been returned"),
+        );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         setState(() {
           _loadData();
@@ -268,7 +263,9 @@ class _ReturnProductScreenState extends State<ReturnProductScreen> {
         //   MaterialPageRoute(builder: (context) => ReturnProductScreen()),
         // );
       } else {
-        final snackBar = new SnackBar(content: new Text(responseBody["message"].toString()));
+        final snackBar = new SnackBar(
+          content: new Text(responseBody["message"].toString()),
+        );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         setState(() {
           isLoading = false;
@@ -276,10 +273,13 @@ class _ReturnProductScreenState extends State<ReturnProductScreen> {
       }
     } catch (err) {
       setState(() {
-          isLoading = false;
-        });
-      print(err);
-      final snackBar = new SnackBar(content: new Text('Something went wrong plz check your internet connection'));
+        isLoading = false;
+      });
+      final snackBar = new SnackBar(
+        content: new Text(
+          'Something went wrong plz check your internet connection',
+        ),
+      );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
   }

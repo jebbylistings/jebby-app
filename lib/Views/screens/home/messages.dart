@@ -26,7 +26,6 @@ class MessageScreen extends StatefulWidget {
 }
 
 class _MessageScreenState extends State<MessageScreen> {
-  @override
   Future getData() async {
     final sp = context.read<SignInProvider>();
     final usp = context.read<UserViewModel>();
@@ -42,22 +41,20 @@ class _MessageScreenState extends State<MessageScreen> {
   String? email;
   String? role;
   void profileData(BuildContext context) async {
-    getUserDate().then((value) async {
-      token = value.token.toString();
-      sourceId = value.id.toString();
-      fullname = value.name.toString();
-      email = value.email.toString();
-      role = value.role.toString();
-      // seenNotification();
-     
-     
-     
-      getNotifications();
-    }).onError((error, stackTrace) {
-      if (kDebugMode) {
-       
-      }
-    });
+    getUserDate()
+        .then((value) async {
+          token = value.token.toString();
+          sourceId = value.id.toString();
+          fullname = value.name.toString();
+          email = value.email.toString();
+          role = value.role.toString();
+          // seenNotification();
+
+          getNotifications();
+        })
+        .onError((error, stackTrace) {
+          if (kDebugMode) {}
+        });
   }
 
   bool isLoading = true;
@@ -65,94 +62,90 @@ class _MessageScreenState extends State<MessageScreen> {
   bool isEmpty = false;
 
   getNotifications() {
-    ApiRepository.shared.notifications(sourceId, (List) {
-      if (this.mounted) {
-        if (List.data!.length == 0) {
-          setState(() {
-            isEmpty = true;
-            isLoading = false;
-            isError = false;
-          });
-        } else {
+    ApiRepository.shared.notifications(
+      sourceId,
+      (List) {
+        if (this.mounted) {
+          if (List.data!.length == 0) {
+            setState(() {
+              isEmpty = true;
+              isLoading = false;
+              isError = false;
+            });
+          } else {
+            setState(() {
+              isEmpty = false;
+              isLoading = false;
+              isError = false;
+            });
+          }
+        }
+      },
+      (error) {
+        if (error != null) {
           setState(() {
             isEmpty = false;
-            isLoading = false;
-            isError = false;
+            isLoading = true;
+            isError = true;
           });
         }
-      }
-    }, (error) {
-      if (error != null) {
-        setState(() {
-          isEmpty = false;
-          isLoading = true;
-          isError = true;
-        });
-      }
-    });
+      },
+    );
   }
 
-  Future<GetNotificationModel> notifications(id, onResponse(GetNotificationModel List), onError(error)) async {
-   
-    final response = await http.get(Uri.parse(AppUrl.getAllNotificationForApp + sourceId.toString()), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetNotificationModel> notifications(
+    id,
+    onResponse(GetNotificationModel List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.getAllNotificationForApp + sourceId.toString()),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
         // ApiRepository.shared.checkApiStatus(true, "getNotifications");
         var data = GetNotificationModel.fromJson(jsonDecode(response.body));
-       
+
         ApiRepository.shared.getNotifications(data);
-       
+
         onResponse(data);
-       
+
         return data;
       } catch (error) {
-       
         onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-     
     }
     return GetNotificationModel();
   }
 
   Future<DeleteNotificationModel> deleteNotification(id, ind) async {
     final request = json.encode(<String, dynamic>{"id": id});
-   
 
     final response = await http.post(
       Uri.parse(AppUrl.deleteNotification),
       body: request,
-      headers: {
-        'Content-type': "application/json",
-      },
+      headers: {'Content-type': "application/json"},
     );
 
     if (response.statusCode == 201) {
       try {
-       
         notifications(id, (List) {
           if (this.mounted) {
             setState(() {});
           }
         }, (error) {});
       } catch (error) {
-       
         // onError(error.toString());
-       
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-     
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-     
     }
     return DeleteNotificationModel();
   }
@@ -169,8 +162,6 @@ class _MessageScreenState extends State<MessageScreen> {
 
   @override
   Widget build(BuildContext context) {
-    double res_width = MediaQuery.of(context).size.width;
-    double res_height = MediaQuery.of(context).size.height;
     final GlobalKey<ScaffoldState> _key = GlobalKey();
 
     return Scaffold(
@@ -184,7 +175,11 @@ class _MessageScreenState extends State<MessageScreen> {
         centerTitle: true,
         title: Text(
           'Notifications',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 19,
+          ),
         ),
         leading: InkWell(
           onTap: () {
@@ -192,10 +187,7 @@ class _MessageScreenState extends State<MessageScreen> {
             // _key.currentState!.openDrawer();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-          ),
+          child: Icon(Icons.arrow_back, color: Colors.black),
         ),
         actions: [
           GestureDetector(
@@ -204,13 +196,9 @@ class _MessageScreenState extends State<MessageScreen> {
             },
             child: Padding(
               padding: const EdgeInsets.all(19.0),
-              child: Icon(
-                        Icons.person_outline,
-                        color: Colors.black,
-                        size: 25
-                      )
+              child: Icon(Icons.person_outline, color: Colors.black, size: 25),
             ),
-          )
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -222,98 +210,171 @@ class _MessageScreenState extends State<MessageScreen> {
               //     ? Text("Error occured in loading data")
               isLoading
                   // ApiRepository.shared.getNotificationModelListApiStatus == false
-                  ? Center(child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator()))
+                  ? Center(
+                    child: SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
                   : ListView.separated(
-                      physics: NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      itemCount: ApiRepository.shared.getNotificationModelList!.data!.length,
-                      itemBuilder: (context, index) {
-                        var name = ApiRepository.shared.getNotificationModelList!.data![index].name.toString();
-                        var count = ApiRepository.shared.getNotificationModelList!.data![index].seen.toString();
-                        var desc = ApiRepository.shared.getNotificationModelList!.data![index].description.toString();
-                        var date = ApiRepository.shared.getNotificationModelList!.data![index].createdAt.toString();
-                        var formattedDate = DateFormat('dd-MM-yy').format(DateTime.parse(date));
-                        var id = ApiRepository.shared.getNotificationModelList!.data![index].id.toString();
-                        var ind = index;
-                        var seen = ApiRepository.shared.getNotificationModelList!.data![index].seen.toString();
-                        var seen_one = ApiRepository.shared.getNotificationModelList!.data![index].seen_one.toString();
-                        var prodId = ApiRepository.shared.getNotificationModelList!.data![index].productId.toString();
-                        var status = ApiRepository.shared.getNotificationModelList!.data![index].status;
-                        var price = ApiRepository.shared.getNotificationModelList!.data![index].price;
-                        var negoId = ApiRepository.shared.getNotificationModelList!.data![index].negoId.toString();
-                        var userId = ApiRepository.shared.getNotificationModelList!.data![index].userId.toString();
-                       
-                        //
-                        // return card(name, count, desc, date, id, ind);
-                        return name == "order"
-                            ? SizedBox(
-                                height: 0,
-                                width: 0,
-                              )
-                            : GestureDetector(
-                                onTap: () {
-                                   seenNotification(id);
-                                   getNotifications();
-                                  name == "message"
-                                      ? Get.to(() => MessagesScreen())
-                                      : name == "negotiation"
-                                          ? 
-                                          Get.to(() => NegotiationScreen(
-                                                prodId: prodId,
-                                                status: status,
-                                                price: price,
-                                                negoId: negoId,
-                                                userId: userId,
-                                              ))
-                                          : null;
-                                },
-                                child: Container(
-                                  width: double.infinity,
-                                  height: MediaQuery.of(context).size.height * 0.08,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    physics: NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount:
+                        ApiRepository
+                            .shared
+                            .getNotificationModelList!
+                            .data!
+                            .length,
+                    itemBuilder: (context, index) {
+                      var name =
+                          ApiRepository
+                              .shared
+                              .getNotificationModelList!
+                              .data![index]
+                              .name
+                              .toString();
+                      var desc =
+                          ApiRepository
+                              .shared
+                              .getNotificationModelList!
+                              .data![index]
+                              .description
+                              .toString();
+                      var date =
+                          ApiRepository
+                              .shared
+                              .getNotificationModelList!
+                              .data![index]
+                              .createdAt
+                              .toString();
+                      var formattedDate = DateFormat(
+                        'dd-MM-yy',
+                      ).format(DateTime.parse(date));
+                      var id =
+                          ApiRepository
+                              .shared
+                              .getNotificationModelList!
+                              .data![index]
+                              .id
+                              .toString();
+                      var ind = index;
+                      var seen_one =
+                          ApiRepository
+                              .shared
+                              .getNotificationModelList!
+                              .data![index]
+                              .seen_one
+                              .toString();
+                      var prodId =
+                          ApiRepository
+                              .shared
+                              .getNotificationModelList!
+                              .data![index]
+                              .productId
+                              .toString();
+                      var status =
+                          ApiRepository
+                              .shared
+                              .getNotificationModelList!
+                              .data![index]
+                              .status;
+                      var price =
+                          ApiRepository
+                              .shared
+                              .getNotificationModelList!
+                              .data![index]
+                              .price;
+                      var negoId =
+                          ApiRepository
+                              .shared
+                              .getNotificationModelList!
+                              .data![index]
+                              .negoId
+                              .toString();
+                      var userId =
+                          ApiRepository
+                              .shared
+                              .getNotificationModelList!
+                              .data![index]
+                              .userId
+                              .toString();
+
+                      //
+                      // return card(name, count, desc, date, id, ind);
+                      return name == "order"
+                          ? SizedBox(height: 0, width: 0)
+                          : GestureDetector(
+                            onTap: () {
+                              seenNotification(id);
+                              getNotifications();
+                              name == "message"
+                                  ? Get.to(() => MessagesScreen())
+                                  : name == "negotiation"
+                                  ? Get.to(
+                                    () => NegotiationScreen(
+                                      prodId: prodId,
+                                      status: status,
+                                      price: price,
+                                      negoId: negoId,
+                                      userId: userId,
+                                    ),
+                                  )
+                                  : null;
+                            },
+                            child: Container(
+                              width: double.infinity,
+                              height: MediaQuery.of(context).size.height * 0.08,
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  Icon(Icons.notifications),
+                                  SizedBox(width: 10),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Icon(Icons.notifications),
-                                      SizedBox(
-                                        width: 10,
-                                      ),
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(name),
-                                          SizedBox(
-                                            height: 4,
+                                      Text(name),
+                                      SizedBox(height: 4),
+                                      Container(
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                            0.6,
+                                        child: Text(
+                                          desc,
+                                          style: TextStyle(
+                                            fontWeight:
+                                                seen_one == "0"
+                                                    ? FontWeight.bold
+                                                    : FontWeight.normal,
                                           ),
-                                          Container(
-                                              width: MediaQuery.of(context).size.width * 0.6,
-                                              child: Text(
-                                                desc,
-                                                style: TextStyle(fontWeight: seen_one == "0" ? FontWeight.bold : FontWeight.normal),
-                                              )),
-                                        ],
+                                        ),
                                       ),
-                                      SizedBox(
-                                        width: 10,
-                                      ),
-                                      Text(formattedDate),
-                                      SizedBox(
-                                        width: 2,
-                                      ),
-                                      name == "admin"
-                                          ? Text("")
-                                          : GestureDetector(
-                                              onTap: () {
-                                                deleteNotification(id, ind);
-                                              },
-                                              child: Container(child: Icon(Icons.close)))
                                     ],
                                   ),
-                                ),
-                              );
-                      },
-                      separatorBuilder: (context, index) {
-                        return Divider();
-                      }),
+                                  SizedBox(width: 10),
+                                  Text(formattedDate),
+                                  SizedBox(width: 2),
+                                  name == "admin"
+                                      ? Text("")
+                                      : GestureDetector(
+                                        onTap: () {
+                                          deleteNotification(id, ind);
+                                        },
+                                        child: Container(
+                                          child: Icon(Icons.close),
+                                        ),
+                                      ),
+                                ],
+                              ),
+                            ),
+                          );
+                    },
+                    separatorBuilder: (context, index) {
+                      return Divider();
+                    },
+                  ),
             ],
           ),
         ),
@@ -323,7 +384,6 @@ class _MessageScreenState extends State<MessageScreen> {
 
   card(name, count, desc, time, id, ind) {
     double res_width = MediaQuery.of(context).size.width;
-    double res_height = MediaQuery.of(context).size.height;
     return GestureDetector(
       onTap: () {
         name == "message" ? Get.to(() => MessagesScreen()) : null;
@@ -336,43 +396,40 @@ class _MessageScreenState extends State<MessageScreen> {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Icon(Icons.notifications),
-                SizedBox(
-                  width: 10,
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(name),
-                    SizedBox(
-                      height: 4,
-                    ),
-                    Container(width: MediaQuery.of(context).size.width * 0.6, child: Text(desc)),
-                  ],
-                ),
-                Text(time),
-                SizedBox(
-                  width: 10,
-                ),
-                GestureDetector(
-                    onTap: () {
-                     
-                      name == "admin" ? null : deleteNotification(id, ind);
-                    },
-                    child: name == "admin" ? null : Icon(Icons.close_outlined)),
-              ],
-            )
-            //  ListTile(
-            //   leading: Icon(Icons.notifications),
-            //   title: Text(name),
-            //   subtitle: Text(desc),
-            //   trailing: SizedBox(child: Row(children: [Text(time), Text("x")],),),
-            // )
-            ),
+          padding: const EdgeInsets.all(12.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Icon(Icons.notifications),
+              SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name),
+                  SizedBox(height: 4),
+                  Container(
+                    width: MediaQuery.of(context).size.width * 0.6,
+                    child: Text(desc),
+                  ),
+                ],
+              ),
+              Text(time),
+              SizedBox(width: 10),
+              GestureDetector(
+                onTap: () {
+                  name == "admin" ? null : deleteNotification(id, ind);
+                },
+                child: name == "admin" ? null : Icon(Icons.close_outlined),
+              ),
+            ],
+          ),
+          //  ListTile(
+          //   leading: Icon(Icons.notifications),
+          //   title: Text(name),
+          //   subtitle: Text(desc),
+          //   trailing: SizedBox(child: Row(children: [Text(time), Text("x")],),),
+          // )
+        ),
       ),
     );
   }

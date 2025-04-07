@@ -4,8 +4,12 @@ class GetAllReviewsByProductId {
   int? totalreviews;
   String? message;
 
-  GetAllReviewsByProductId(
-      {this.status, this.data, this.totalreviews, this.message});
+  GetAllReviewsByProductId({
+    this.status,
+    this.data,
+    this.totalreviews,
+    this.message,
+  });
 
   GetAllReviewsByProductId.fromJson(Map<String, dynamic> json) {
     status = json['status'];
@@ -43,17 +47,18 @@ class Data {
   int? vendorId;
   String? userName;
 
-  Data(
-      {this.id,
-      this.userId,
-      this.productId,
-      this.stars,
-      this.image,
-      this.description,
-      this.createdAt,
-      this.updatedAt,
-      this.vendorId,
-      this.userName});
+  Data({
+    this.id,
+    this.userId,
+    this.productId,
+    this.stars,
+    this.image,
+    this.description,
+    this.createdAt,
+    this.updatedAt,
+    this.vendorId,
+    this.userName,
+  });
 
   Data.fromJson(Map<String, dynamic> json) {
     id = json['id'];

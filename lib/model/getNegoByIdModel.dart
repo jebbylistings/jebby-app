@@ -47,28 +47,29 @@ class Data {
   int? negoId;
   String? image;
 
-  Data(
-      {this.id,
-      this.userId,
-      this.categoryId,
-      this.subcategoryId,
-      this.name,
-      this.price,
-      this.specifications,
-      this.serviceAgreements,
-      this.createdAt,
-      this.updatedAt,
-      this.negotiation,
-      this.isMessage,
-      this.isReview,
-      this.stars,
-      this.length,
-      this.negoprice,
-      this.negoVendorId,
-      this.negoUserId,
-      this.negoStatus,
-      this.negoId,
-      this.image});
+  Data({
+    this.id,
+    this.userId,
+    this.categoryId,
+    this.subcategoryId,
+    this.name,
+    this.price,
+    this.specifications,
+    this.serviceAgreements,
+    this.createdAt,
+    this.updatedAt,
+    this.negotiation,
+    this.isMessage,
+    this.isReview,
+    this.stars,
+    this.length,
+    this.negoprice,
+    this.negoVendorId,
+    this.negoUserId,
+    this.negoStatus,
+    this.negoId,
+    this.image,
+  });
 
   Data.fromJson(Map<String, dynamic> json) {
     id = json['id'];

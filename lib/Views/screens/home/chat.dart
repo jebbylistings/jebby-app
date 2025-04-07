@@ -14,7 +14,7 @@ import '../../../view_model/apiServices.dart';
 import '../../../view_model/user_view_model.dart';
 
 class Chat extends StatefulWidget {
-  var targetID;
+  final dynamic targetID;
 
   Chat(this.targetID);
 
@@ -23,7 +23,6 @@ class Chat extends StatefulWidget {
 }
 
 class _ChatState extends State<Chat> {
-  @override
   Future getData() async {
     final sp = context.read<SignInProvider>();
     final usp = context.read<UserViewModel>();
@@ -40,21 +39,20 @@ class _ChatState extends State<Chat> {
   String? phoneNumber;
   String? role;
   void profileData(BuildContext context) async {
-    getUserDate().then((value) async {
-      token = value.token.toString();
-      sourceId = value.id.toString();
-      fullname = value.name.toString();
-      phoneNumber = value.phoneNumber.toString();
-      email = value.email.toString();
-      role = value.role.toString();
-      print("Source ID: ${sourceId}");
-      getUserData();
-      getMessageApi();
-    }).onError((error, stackTrace) {
-      if (kDebugMode) {
-        print(error.toString());
-      }
-    });
+    getUserDate()
+        .then((value) async {
+          token = value.token.toString();
+          sourceId = value.id.toString();
+          fullname = value.name.toString();
+          phoneNumber = value.phoneNumber.toString();
+          email = value.email.toString();
+          role = value.role.toString();
+          getUserData();
+          getMessageApi();
+        })
+        .onError((error, stackTrace) {
+          if (kDebugMode) {}
+        });
   }
 
   late var Ctimer;
@@ -68,39 +66,44 @@ class _ChatState extends State<Chat> {
   TextEditingController _sendMessageController = TextEditingController();
 
   void getMessageApi() {
-    ApiRepository.shared.getMessagesApi(sourceId.toString(), widget.targetID.toString(), (List) {
-      if (this.mounted) {
-        if (List.data!.length == 0) {
+    ApiRepository.shared.getMessagesApi(
+      sourceId.toString(),
+      widget.targetID.toString(),
+      (List) {
+        if (this.mounted) {
+          if (List.data!.length == 0) {
+            setState(() {
+              isLoading = false;
+              isEmpty = true;
+              isError = false;
+            });
+          } else {
+            setState(() {
+              isLoading = false;
+              isError = false;
+              isEmpty = false;
+            });
+          }
+        }
+      },
+      (error) {
+        if (error != null) {
           setState(() {
-            isLoading = false;
-            isEmpty = true;
+            isLoading = true;
+            isError = true;
             isError = false;
-            print("null Data");
-          });
-        } else {
-          print("Data Found");
-          setState(() {
-            isLoading = false;
-            isError = false;
-            isEmpty = false;
           });
         }
-      }
-    }, (error) {
-      if (error != null) {
-        setState(() {
-          print("Error in data");
-          isLoading = true;
-          isError = true;
-          isError = false;
-        });
-      }
-    });
+      },
+    );
   }
 
   void sendMessage(msg, sender_id, recipient_id) {
-    var data = {"msg": msg, "sender_id": sender_id, "recipient_id": recipient_id};
-    ApiRepository.shared.postMessage(msg.toString(), sourceId.toString(), widget.targetID.toString());
+    ApiRepository.shared.postMessage(
+      msg.toString(),
+      sourceId.toString(),
+      widget.targetID.toString(),
+    );
   }
 
   bool userLoader = false;
@@ -110,42 +113,48 @@ class _ChatState extends State<Chat> {
 
   void getUserData() {
     ApiRepository.shared.userCredential(
-        (List) => {
-              if (this.mounted)
-                {
-                  if (List.data!.length == 0)
-                    {
-                      setState(() {
-                        print("EMPTY USER DATA");
-                        userLoader = false;
-                        userError = false;
-                        userEmpty = true;
-                        userImage = "";
-                      })
-                    }
-                  else
-                    {
-                      setState(() {
-                        userError = false;
-                        userLoader = false;
-                        userEmpty = false;
-                        userImage = ApiRepository.shared.getUserCredentialModelList!.data![0].image.toString();
-                      })
-                    }
-                }
-            },
-        (error) => {
-              if (error != null)
-                {
-                  setState(() {
-                    userError = true;
-                    userLoader = false;
-                    userEmpty = false;
-                    userImage = "";
-                  }),
-                },
-            },
-        sourceId.toString());
+      (List) => {
+        if (this.mounted)
+          {
+            if (List.data!.length == 0)
+              {
+                setState(() {
+                  userLoader = false;
+                  userError = false;
+                  userEmpty = true;
+                  userImage = "";
+                }),
+              }
+            else
+              {
+                setState(() {
+                  userError = false;
+                  userLoader = false;
+                  userEmpty = false;
+                  userImage =
+                      ApiRepository
+                          .shared
+                          .getUserCredentialModelList!
+                          .data![0]
+                          .image
+                          .toString();
+                }),
+              },
+          },
+      },
+      (error) => {
+        if (error != null)
+          {
+            setState(() {
+              userError = true;
+              userLoader = false;
+              userEmpty = false;
+              userImage = "";
+            }),
+          },
+      },
+      sourceId.toString(),
+    );
   }
 
   bool targetLoader = false;
@@ -154,50 +163,54 @@ class _ChatState extends State<Chat> {
   var targetImage = "";
 
   void getTargetData() {
-    print("getTargetDataCalled");
     ApiRepository.shared.userCredential(
-        (List) => {
-              if (this.mounted)
-                {
-                  if (List.data!.length == 0)
-                    {
-                      setState(() {
-                        print("EMPTY USER DATA");
-                        targetLoader = false;
-                        targetError = false;
-                        targetEmpty = true;
-                        targetImage = "";
-                      })
-                    }
-                  else
-                    {
-                      setState(() {
-                        targetError = false;
-                        targetLoader = false;
-                        targetEmpty = false;
-                        targetImage = ApiRepository.shared.getUserCredentialModelList!.data![0].image.toString();
-                      })
-                    }
-                }
-            },
-        (error) => {
-              if (error != null)
-                {
-                  setState(() {
-                    targetError = true;
-                    targetLoader = false;
-                    targetEmpty = false;
-                    targetImage = "";
-                  }),
-                },
-            },
-        widget.targetID.toString());
+      (List) => {
+        if (this.mounted)
+          {
+            if (List.data!.length == 0)
+              {
+                setState(() {
+                  targetLoader = false;
+                  targetError = false;
+                  targetEmpty = true;
+                  targetImage = "";
+                }),
+              }
+            else
+              {
+                setState(() {
+                  targetError = false;
+                  targetLoader = false;
+                  targetEmpty = false;
+                  targetImage =
+                      ApiRepository
+                          .shared
+                          .getUserCredentialModelList!
+                          .data![0]
+                          .image
+                          .toString();
+                }),
+              },
+          },
+      },
+      (error) => {
+        if (error != null)
+          {
+            setState(() {
+              targetError = true;
+              targetLoader = false;
+              targetEmpty = false;
+              targetImage = "";
+            }),
+          },
+      },
+      widget.targetID.toString(),
+    );
   }
 
   void initState() {
     getData();
     profileData(context);
-    print("Vendor ID ${widget.targetID}");
     getTargetData();
     Ctimer = new Timer.periodic(Duration(seconds: 2), (_) => getMessageApi());
     super.initState();
@@ -210,7 +223,6 @@ class _ChatState extends State<Chat> {
   }
 
   Widget build(BuildContext context) {
-    double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: Colors.grey[300],
@@ -220,7 +232,11 @@ class _ChatState extends State<Chat> {
         centerTitle: true,
         title: Text(
           'Messages',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 19,
+          ),
         ),
         leading: InkWell(
           onTap: () {
@@ -236,41 +252,76 @@ class _ChatState extends State<Chat> {
           child: Padding(
             padding: const EdgeInsets.all(17.0),
             child: Container(
-              child: Icon(
-                Icons.arrow_back,
-                color: Colors.black,
-              ),
+              child: Icon(Icons.arrow_back, color: Colors.black),
             ),
           ),
         ),
       ),
       body: SingleChildScrollView(
         reverse: true,
-        child: Column(children: [
-          isLoading
-              ? Center(child: Text("Loading Chats"))
-              : isEmpty
-                  ? Center(child: Text("start your chat"))
-                  : ListView.builder(
-                      physics: NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      itemCount: ApiRepository.shared.getAllMessagesModelList!.data!.length,
-                      itemBuilder: (context, index) {
-                        var msg = ApiRepository.shared.getAllMessagesModelList!.data![index].content.toString();
-                        String formattedDate = DateFormat('MMM dd, yyyy hh:mm a')
-                            .format(DateTime.parse(ApiRepository.shared.getAllMessagesModelList!.data![index].timeSent.toString()));
-                        String formattedTime = DateFormat('hh:mm a')
-                            .format(DateTime.parse(ApiRepository.shared.getAllMessagesModelList!.data![index].timeSent.toString()));
-                        var time = formattedTime;
-                        var date = formattedDate;
-                        var sender = ApiRepository.shared.getAllMessagesModelList!.data![index].senderId.toString();
-                        // return(Text(msg));
-                        return sender == sourceId ? usermsg(msg, time, date) : customersuppor(msg, time, date);
-                      }),
-          Container(
-            height: res_height * 0.11,
-          )
-        ]),
+        child: Column(
+          children: [
+            isLoading
+                ? Center(child: Text("Loading Chats"))
+                : isEmpty
+                ? Center(child: Text("start your chat"))
+                : ListView.builder(
+                  physics: NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  itemCount:
+                      ApiRepository
+                          .shared
+                          .getAllMessagesModelList!
+                          .data!
+                          .length,
+                  itemBuilder: (context, index) {
+                    var msg =
+                        ApiRepository
+                            .shared
+                            .getAllMessagesModelList!
+                            .data![index]
+                            .content
+                            .toString();
+                    String formattedDate = DateFormat(
+                      'MMM dd, yyyy hh:mm a',
+                    ).format(
+                      DateTime.parse(
+                        ApiRepository
+                            .shared
+                            .getAllMessagesModelList!
+                            .data![index]
+                            .timeSent
+                            .toString(),
+                      ),
+                    );
+                    String formattedTime = DateFormat('hh:mm a').format(
+                      DateTime.parse(
+                        ApiRepository
+                            .shared
+                            .getAllMessagesModelList!
+                            .data![index]
+                            .timeSent
+                            .toString(),
+                      ),
+                    );
+                    var time = formattedTime;
+                    var date = formattedDate;
+                    var sender =
+                        ApiRepository
+                            .shared
+                            .getAllMessagesModelList!
+                            .data![index]
+                            .senderId
+                            .toString();
+                    // return(Text(msg));
+                    return sender == sourceId
+                        ? usermsg(msg, time, date)
+                        : customersuppor(msg, time, date);
+                  },
+                ),
+            Container(height: res_height * 0.11),
+          ],
+        ),
       ),
       bottomSheet: getBottom(),
     );
@@ -293,7 +344,10 @@ class _ChatState extends State<Chat> {
                 children: <Widget>[
                   Container(
                     width: MediaQuery.of(context).size.width * 0.8,
-                    decoration: BoxDecoration(color: kprimaryColor, borderRadius: BorderRadius.circular(20)),
+                    decoration: BoxDecoration(
+                      color: kprimaryColor,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.only(left: 12),
                       child: TextField(
@@ -303,23 +357,27 @@ class _ChatState extends State<Chat> {
                         keyboardType: TextInputType.multiline,
                         minLines: 1,
                         maxLines: 5,
-                        decoration: InputDecoration(border: InputBorder.none, hintText: "Type a message", hintStyle: TextStyle(color: Colors.white)),
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          hintText: "Type a message",
+                          hintStyle: TextStyle(color: Colors.white),
+                        ),
                       ),
                     ),
                   ),
                   InkWell(
                     onTap: () {
                       if (_sendMessageController.text.isNotEmpty) {
-                        sendMessage(_sendMessageController.text, sourceId, widget.targetID);
+                        sendMessage(
+                          _sendMessageController.text,
+                          sourceId,
+                          widget.targetID,
+                        );
                         _sendMessageController.clear();
                         //  getMessageApi();
                       }
                     },
-                    child: Icon(
-                      Icons.send,
-                      size: 35,
-                      color: kprimaryColor,
-                    ),
+                    child: Icon(Icons.send, size: 35, color: kprimaryColor),
                   ),
                 ],
               ),
@@ -352,28 +410,36 @@ class _ChatState extends State<Chat> {
                   Container(
                     width: res_width * 0.2,
                     child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: targetImage == ""
-                            ? CircleAvatar(
+                      padding: const EdgeInsets.all(8.0),
+                      child:
+                          targetImage == ""
+                              ? CircleAvatar(
                                 backgroundColor: Colors.grey,
-                                backgroundImage: AssetImage("assets/slicing/blankuser.jpeg"),
+                                backgroundImage: AssetImage(
+                                  "assets/slicing/blankuser.jpeg",
+                                ),
                               )
-                            : CachedNetworkImage(
-                                imageUrl: AppUrl.baseUrlM + targetImage.toString(),
-                                imageBuilder: (context, imageProvider) => CircleAvatar(
-                                  backgroundImage: imageProvider,
-                                ),
-                                placeholder: (context, url) => Center(
-                                  child: SizedBox(
-                                    width: 30,
-                                    height: 30,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.0,
+                              : CachedNetworkImage(
+                                imageUrl:
+                                    AppUrl.baseUrlM + targetImage.toString(),
+                                imageBuilder:
+                                    (context, imageProvider) => CircleAvatar(
+                                      backgroundImage: imageProvider,
                                     ),
-                                  ),
-                                ),
-                                errorWidget: (context, url, error) => Icon(Icons.error),
-                              )),
+                                placeholder:
+                                    (context, url) => Center(
+                                      child: SizedBox(
+                                        width: 30,
+                                        height: 30,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.0,
+                                        ),
+                                      ),
+                                    ),
+                                errorWidget:
+                                    (context, url, error) => Icon(Icons.error),
+                              ),
+                    ),
                   ),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
@@ -382,7 +448,10 @@ class _ChatState extends State<Chat> {
                         width: res_width * 0.6,
                         child: Text(
                           msg,
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -391,7 +460,12 @@ class _ChatState extends State<Chat> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20, top: 5, bottom: 15),
+              padding: const EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 5,
+                bottom: 15,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -436,7 +510,10 @@ class _ChatState extends State<Chat> {
                         width: res_width * 0.6,
                         child: Text(
                           msg,
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -444,37 +521,53 @@ class _ChatState extends State<Chat> {
                   Container(
                     width: res_width * 0.2,
                     child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: userImage == ""
-                            ? CircleAvatar(
+                      padding: const EdgeInsets.all(8.0),
+                      child:
+                          userImage == ""
+                              ? CircleAvatar(
                                 backgroundColor: Colors.grey,
-                                backgroundImage: AssetImage("assets/slicing/blankuser.jpeg"),
-                              )
-                            : CircleAvatar(
-                                backgroundColor: Colors.transparent, // Optional: Background color
-                                child: CachedNetworkImage(
-                                  imageUrl: AppUrl.baseUrlM + userImage.toString(),
-                                  imageBuilder: (context, imageProvider) => CircleAvatar(
-                                    backgroundImage: imageProvider,
-                                  ),
-                                  placeholder: (context, url) => Center(
-                                    child: SizedBox(
-                                      width: 30,
-                                      height: 30,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.0,
-                                      ),
-                                    ),
-                                  ),
-                                  errorWidget: (context, url, error) => Icon(Icons.error),
+                                backgroundImage: AssetImage(
+                                  "assets/slicing/blankuser.jpeg",
                                 ),
-                              )),
-                  )
+                              )
+                              : CircleAvatar(
+                                backgroundColor:
+                                    Colors
+                                        .transparent, // Optional: Background color
+                                child: CachedNetworkImage(
+                                  imageUrl:
+                                      AppUrl.baseUrlM + userImage.toString(),
+                                  imageBuilder:
+                                      (context, imageProvider) => CircleAvatar(
+                                        backgroundImage: imageProvider,
+                                      ),
+                                  placeholder:
+                                      (context, url) => Center(
+                                        child: SizedBox(
+                                          width: 30,
+                                          height: 30,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.0,
+                                          ),
+                                        ),
+                                      ),
+                                  errorWidget:
+                                      (context, url, error) =>
+                                          Icon(Icons.error),
+                                ),
+                              ),
+                    ),
+                  ),
                 ],
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20, top: 5, bottom: 15),
+              padding: const EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 5,
+                bottom: 15,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -504,12 +597,10 @@ class StreamSocket {
   final _socketResponse = StreamController<String>();
 
   void Function(String) get addResponse {
-    print(" _socketResponse.sink.added");
     return _socketResponse.sink.add;
   }
 
   Stream<String> get getResponse {
-    print(_socketResponse);
     return _socketResponse.stream;
   }
 

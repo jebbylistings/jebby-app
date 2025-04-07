@@ -10,10 +10,10 @@ import 'package:jebby/res/app_url.dart';
 import '../../../view_model/apiServices.dart';
 
 class Reviews extends StatefulWidget {
-  var stars;
-  var reviewsLenght;
-  var userID;
-  var prodID;
+  final dynamic stars;
+  final dynamic reviewsLenght;
+  final dynamic userID;
+  final dynamic prodID;
 
   Reviews({this.stars, this.reviewsLenght, this.userID, this.prodID});
 
@@ -27,75 +27,106 @@ class _ReviewsState extends State<Reviews> {
   bool isEmpty = false;
 
   getReviews() {
-    ApiRepository.shared.reviewsByProductId(widget.prodID.toString(), (List) {
-      if (this.mounted) {
-        if (List.data!.length == 0) {
-          setState(() {
-            isEmpty = true;
-            isLoading = false;
-            isError = false;
-          });
-        } else {
+    ApiRepository.shared.reviewsByProductId(
+      widget.prodID.toString(),
+      (List) {
+        if (this.mounted) {
+          if (List.data!.length == 0) {
+            setState(() {
+              isEmpty = true;
+              isLoading = false;
+              isError = false;
+            });
+          } else {
+            setState(() {
+              isEmpty = false;
+              isLoading = false;
+              isError = false;
+            });
+          }
+        }
+      },
+      (error) {
+        if (error != null) {
           setState(() {
             isEmpty = false;
             isLoading = false;
-            isError = false;
+            isError = true;
           });
         }
-      }
-    }, (error) {
-      if (error != null) {
-        setState(() {
-          isEmpty = false;
-          isLoading = false;
-          isError = true;
-        });
-      }
-    });
+      },
+    );
   }
 
   getNewOrders() {
-    ApiRepository.shared.getAllOrdersByUserId(widget.userID, (List) {
-      if (this.mounted) {
-        if (List.data!.length == 0) {
-          setState(() {
-            isLoading = false;
-            isEmpty = true;
-            isError = false;
-            print("null Data");
-          });
-        } else {
-          setState(() {
-            isLoading = false;
-            isError = false;
-            isEmpty = false;
-          });
-          filter = ApiRepository.shared.getAllOrdersByUserIdModelList!.data != null && ApiRepository.shared.getAllOrdersByUserIdModelList!.data!.length > 0 ? ApiRepository.shared.getAllOrdersByUserIdModelList!.data!.where((data) => data.productId.toString() == widget.prodID).toList(): [];
-          filter1 = ApiRepository.shared.getAllOrdersByUserIdModelList!.data != null && ApiRepository.shared.getAllOrdersByUserIdModelList!.data!.length > 0 ? ApiRepository.shared.getAllOrdersByUserIdModelList!.data!.where((data) => data.userId.toString() == widget.userID).toList(): [];
+    ApiRepository.shared.getAllOrdersByUserId(
+      widget.userID,
+      (List) {
+        if (this.mounted) {
+          if (List.data!.length == 0) {
+            setState(() {
+              isLoading = false;
+              isEmpty = true;
+              isError = false;
+            });
+          } else {
+            setState(() {
+              isLoading = false;
+              isError = false;
+              isEmpty = false;
+            });
+            filter =
+                ApiRepository.shared.getAllOrdersByUserIdModelList!.data !=
+                            null &&
+                        ApiRepository
+                                .shared
+                                .getAllOrdersByUserIdModelList!
+                                .data!
+                                .length >
+                            0
+                    ? ApiRepository.shared.getAllOrdersByUserIdModelList!.data!
+                        .where(
+                          (data) => data.productId.toString() == widget.prodID,
+                        )
+                        .toList()
+                    : [];
+            filter1 =
+                ApiRepository.shared.getAllOrdersByUserIdModelList!.data !=
+                            null &&
+                        ApiRepository
+                                .shared
+                                .getAllOrdersByUserIdModelList!
+                                .data!
+                                .length >
+                            0
+                    ? ApiRepository.shared.getAllOrdersByUserIdModelList!.data!
+                        .where(
+                          (data) => data.userId.toString() == widget.userID,
+                        )
+                        .toList()
+                    : [];
+          }
         }
-        // print();
-      }
-    }, (error) {
-      if (error != null) {
-        setState(() {
-          isLoading = true;
-          isError = true;
-          isError = false;
-        });
-      }
-    });
+      },
+      (error) {
+        if (error != null) {
+          setState(() {
+            isLoading = true;
+            isError = true;
+            isError = false;
+          });
+        }
+      },
+    );
   }
- List filter = [];
- List filter1 = [];
+
+  List filter = [];
+  List filter1 = [];
   @override
   void initState() {
-    print('prod  ${widget.prodID.toString()}');
-    // print('pr ${ApiRepository.shared.getAllOrdersByUserIdModelList!.data![0].productId}');
     super.initState();
     getReviews();
     getNewOrders();
-   
-  //  print('kkkkjkjkj ${filter.length}');
   }
 
   @override
@@ -109,7 +140,11 @@ class _ReviewsState extends State<Reviews> {
         centerTitle: true,
         title: Text(
           'Reviews',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 19,
+          ),
         ),
         leading: InkWell(
           onTap: () {
@@ -119,10 +154,7 @@ class _ReviewsState extends State<Reviews> {
           child: Padding(
             padding: const EdgeInsets.all(17.0),
             child: Container(
-              child: Icon(
-                Icons.arrow_back,
-            color: Colors.black,
-              ),
+              child: Icon(Icons.arrow_back, color: Colors.black),
             ),
           ),
         ),
@@ -132,30 +164,22 @@ class _ReviewsState extends State<Reviews> {
           width: double.infinity,
           child: Column(
             children: [
-              SizedBox(
-                height: res_height * 0.05,
-              ),
+              SizedBox(height: res_height * 0.05),
               Text(
                 widget.stars.toString(),
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 33),
               ),
               RatingBarIndicator(
                 rating: double.parse(widget.stars),
-                itemBuilder: (context, index) => Icon(
-                  Icons.star,
-                  color: Colors.amber,
-                ),
+                itemBuilder:
+                    (context, index) => Icon(Icons.star, color: Colors.amber),
                 itemCount: 5,
                 itemSize: 15,
                 direction: Axis.horizontal,
               ),
-              SizedBox(
-                height: res_height * 0.005,
-              ),
+              SizedBox(height: res_height * 0.005),
               Text("${widget.reviewsLenght.toString()} reviews"),
-              SizedBox(
-                height: res_height * 0.03,
-              ),
+              SizedBox(height: res_height * 0.03),
               Container(
                 width: res_width * 0.9,
                 child: Row(
@@ -165,24 +189,31 @@ class _ReviewsState extends State<Reviews> {
                     Row(
                       children: [
                         Container(
-                            height: res_height * 0.007,
-                            width: res_width * 0.5,
-                            decoration: BoxDecoration(
-                                color: Color(0xff01af00),
-                                borderRadius: BorderRadius.only(topLeft: Radius.circular(12), bottomLeft: Radius.circular(12)),
-                                // border: Border(left: BorderSide(width: 12))
-                                )),
+                          height: res_height * 0.007,
+                          width: res_width * 0.5,
+                          decoration: BoxDecoration(
+                            color: Color(0xff01af00),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(12),
+                              bottomLeft: Radius.circular(12),
+                            ),
+                            // border: Border(left: BorderSide(width: 12))
+                          ),
+                        ),
                         Container(
                           height: res_height * 0.007,
                           width: res_width * 0.12,
                           decoration: BoxDecoration(
-                              color: Color(0xffd2d2d2),
-                              borderRadius: BorderRadius.only(topRight: Radius.circular(12), bottomRight: Radius.circular(12)),
-                              // border: Border(left: BorderSide(width: 12))
-                              ),
+                            color: Color(0xffd2d2d2),
+                            borderRadius: BorderRadius.only(
+                              topRight: Radius.circular(12),
+                              bottomRight: Radius.circular(12),
+                            ),
+                            // border: Border(left: BorderSide(width: 12))
+                          ),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -196,25 +227,31 @@ class _ReviewsState extends State<Reviews> {
                     Row(
                       children: [
                         Container(
-                            height: res_height * 0.007,
-                            width: res_width * 0.43,
-                            decoration: BoxDecoration(
-                                color: Color(0xff98e01d),
-                                borderRadius: BorderRadius.only(topLeft: Radius.circular(12), bottomLeft: Radius.circular(12)),
-                                // border: Border(left: BorderSide(width: 12))
-                                )
-                                ),
+                          height: res_height * 0.007,
+                          width: res_width * 0.43,
+                          decoration: BoxDecoration(
+                            color: Color(0xff98e01d),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(12),
+                              bottomLeft: Radius.circular(12),
+                            ),
+                            // border: Border(left: BorderSide(width: 12))
+                          ),
+                        ),
                         Container(
                           height: res_height * 0.007,
                           width: res_width * 0.19,
                           decoration: BoxDecoration(
-                              color: Color(0xffd2d2d2),
-                              borderRadius: BorderRadius.only(topRight: Radius.circular(12), bottomRight: Radius.circular(12)),
-                              // border: Border(left: BorderSide(width: 12))
-                              ),
+                            color: Color(0xffd2d2d2),
+                            borderRadius: BorderRadius.only(
+                              topRight: Radius.circular(12),
+                              bottomRight: Radius.circular(12),
+                            ),
+                            // border: Border(left: BorderSide(width: 12))
+                          ),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -228,26 +265,33 @@ class _ReviewsState extends State<Reviews> {
                     Row(
                       children: [
                         Container(
-                            height: res_height * 0.007,
-                            width: res_width * 0.33,
-                            decoration: BoxDecoration(
-                                color: Color(0xfffff023),
-                                borderRadius: BorderRadius.only(topLeft: Radius.circular(12), bottomLeft: Radius.circular(12)),
-                                // border: Border(
-                                //   left: BorderSide(width: 12),
-                                // )
-                                )),
+                          height: res_height * 0.007,
+                          width: res_width * 0.33,
+                          decoration: BoxDecoration(
+                            color: Color(0xfffff023),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(12),
+                              bottomLeft: Radius.circular(12),
+                            ),
+                            // border: Border(
+                            //   left: BorderSide(width: 12),
+                            // )
+                          ),
+                        ),
                         Container(
                           height: res_height * 0.007,
                           width: res_width * 0.29,
                           decoration: BoxDecoration(
-                              color: Color(0xffd2d2d2),
-                              borderRadius: BorderRadius.only(topRight: Radius.circular(12), bottomRight: Radius.circular(12)),
-                              // border: Border(left: BorderSide(width: 12))
-                              ),
+                            color: Color(0xffd2d2d2),
+                            borderRadius: BorderRadius.only(
+                              topRight: Radius.circular(12),
+                              bottomRight: Radius.circular(12),
+                            ),
+                            // border: Border(left: BorderSide(width: 12))
+                          ),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -261,25 +305,32 @@ class _ReviewsState extends State<Reviews> {
                     Row(
                       children: [
                         Container(
-                            height: res_height * 0.007,
-                            width: res_width * 0.23,
-                            decoration: BoxDecoration(
-                                color: Color(0xfff36523),
-                                borderRadius: BorderRadius.only(topLeft: Radius.circular(12), bottomLeft: Radius.circular(12)),
-                                // border: Border(left: BorderSide(width: 12)
-                                // )
-                                )),
+                          height: res_height * 0.007,
+                          width: res_width * 0.23,
+                          decoration: BoxDecoration(
+                            color: Color(0xfff36523),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(12),
+                              bottomLeft: Radius.circular(12),
+                            ),
+                            // border: Border(left: BorderSide(width: 12)
+                            // )
+                          ),
+                        ),
                         Container(
                           height: res_height * 0.007,
                           width: res_width * 0.39,
                           decoration: BoxDecoration(
-                              color: Color(0xffd2d2d2),
-                              borderRadius: BorderRadius.only(topRight: Radius.circular(12), bottomRight: Radius.circular(12)),
-                              // border: Border(left: BorderSide(width: 12))
-                              ),
+                            color: Color(0xffd2d2d2),
+                            borderRadius: BorderRadius.only(
+                              topRight: Radius.circular(12),
+                              bottomRight: Radius.circular(12),
+                            ),
+                            // border: Border(left: BorderSide(width: 12))
+                          ),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -293,24 +344,31 @@ class _ReviewsState extends State<Reviews> {
                     Row(
                       children: [
                         Container(
-                            height: res_height * 0.007,
-                            width: res_width * 0.13,
-                            decoration: BoxDecoration(
-                                color: Color(0xfffe0000),
-                                borderRadius: BorderRadius.only(topLeft: Radius.circular(12), bottomLeft: Radius.circular(12)),
-                                // border: Border(left: BorderSide(width: 12))
-                                )),
+                          height: res_height * 0.007,
+                          width: res_width * 0.13,
+                          decoration: BoxDecoration(
+                            color: Color(0xfffe0000),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(12),
+                              bottomLeft: Radius.circular(12),
+                            ),
+                            // border: Border(left: BorderSide(width: 12))
+                          ),
+                        ),
                         Container(
                           height: res_height * 0.007,
                           width: res_width * 0.49,
                           decoration: BoxDecoration(
-                              color: Color(0xffd2d2d2),
-                              borderRadius: BorderRadius.only(topRight: Radius.circular(12), bottomRight: Radius.circular(12)),
-                              // border: Border(left: BorderSide(width: 12))
-                              ),
+                            color: Color(0xffd2d2d2),
+                            borderRadius: BorderRadius.only(
+                              topRight: Radius.circular(12),
+                              bottomRight: Radius.circular(12),
+                            ),
+                            // border: Border(left: BorderSide(width: 12))
+                          ),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -318,45 +376,71 @@ class _ReviewsState extends State<Reviews> {
               isError
                   ? Center(child: Text("Some Error Occured In Loading Data"))
                   : isLoading
-                      ? Center(child: Text("Loading"))
-                      : isEmpty
-                          ? Center(child: Text(""))
-                          : ListView.builder(
-                              physics: NeverScrollableScrollPhysics(),
-                              shrinkWrap: true,
-                              itemCount: ApiRepository.shared.getReviewsByProductIdModelList!.data!.length,
-                              itemBuilder: (context, int index) {
-                                var data = ApiRepository.shared.getReviewsByProductIdModelList!.data![index];
-                                var image = AppUrl.baseUrlM + data.image.toString();
-                                var date = DateFormat('yyyy-MM-dd').format(DateTime.parse(data.createdAt.toString()));
-                                var stars = data.stars;
-                                print("RUNTIMETYPE ${stars.runtimeType}");
-                                var desc = data.description.toString();
-                                var name = data.userName.toString();
-                                return card(image, date, stars, desc, name);
-                              }),
+                  ? Center(child: Text("Loading"))
+                  : isEmpty
+                  ? Center(child: Text(""))
+                  : ListView.builder(
+                    physics: NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount:
+                        ApiRepository
+                            .shared
+                            .getReviewsByProductIdModelList!
+                            .data!
+                            .length,
+                    itemBuilder: (context, int index) {
+                      var data =
+                          ApiRepository
+                              .shared
+                              .getReviewsByProductIdModelList!
+                              .data![index];
+                      var image = AppUrl.baseUrlM + data.image.toString();
+                      var date = DateFormat(
+                        'yyyy-MM-dd',
+                      ).format(DateTime.parse(data.createdAt.toString()));
+                      var stars = data.stars;
+                      var desc = data.description.toString();
+                      var name = data.userName.toString();
+                      return card(image, date, stars, desc, name);
+                    },
+                  ),
               // card(),
               // SizedBox(height: res_height * 0.005),
               // card(),
               SizedBox(height: res_height * 0.03),
               InkWell(
                 onTap: () {
-                var check =  ApiRepository.shared.getReviewsByProductIdModelList!.data!.where((data) => data.userId.toString() == widget.userID ).toList();
-                  print("kkkkkkk ${check.length}");
-                  if(check.length > 0){
-                    final snackBar =
-                            new SnackBar(content: new Text("You have already give review on this product."));
-                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                  }
-                  else{
-                    if(filter.length > 0){
-                    Get.to(() => WriteReview(widget.stars, widget.reviewsLenght, widget.userID, widget.prodID));
-                  }
-                  else{
-                    final snackBar1 =
-                            new SnackBar(content: new Text("Please order the product before giving a review."));
-                        ScaffoldMessenger.of(context).showSnackBar(snackBar1);
-                  }
+                  var check =
+                      ApiRepository.shared.getReviewsByProductIdModelList!.data!
+                          .where(
+                            (data) => data.userId.toString() == widget.userID,
+                          )
+                          .toList();
+                  if (check.length > 0) {
+                    final snackBar = new SnackBar(
+                      content: new Text(
+                        "You have already give review on this product.",
+                      ),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                  } else {
+                    if (filter.length > 0) {
+                      Get.to(
+                        () => WriteReview(
+                          widget.stars,
+                          widget.reviewsLenght,
+                          widget.userID,
+                          widget.prodID,
+                        ),
+                      );
+                    } else {
+                      final snackBar1 = new SnackBar(
+                        content: new Text(
+                          "Please order the product before giving a review.",
+                        ),
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(snackBar1);
+                    }
                   }
                 },
                 child: Container(
@@ -368,7 +452,10 @@ class _ReviewsState extends State<Reviews> {
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
-                  decoration: BoxDecoration(color: kprimaryColor, borderRadius: BorderRadius.circular(14)),
+                  decoration: BoxDecoration(
+                    color: kprimaryColor,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
               ),
               SizedBox(height: res_height * 0.03),
@@ -392,16 +479,10 @@ class _ReviewsState extends State<Reviews> {
       ),
       child: Row(
         children: [
-          SizedBox(
-            height: res_height * 0.15,
-          ),
+          SizedBox(height: res_height * 0.15),
           Container(
             width: res_width * 0.2,
-            child: Image.network(
-              img,
-              height: 40,
-              width: 40,
-            ),
+            child: Image.network(img, height: 40, width: 40),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -413,47 +494,29 @@ class _ReviewsState extends State<Reviews> {
                   children: [
                     SizedBox(
                       width: res_width * 0.4,
-                      child: Text(
-                        name,
-                        style: TextStyle(
-                          fontSize: 17,
-                        ),
-                      ),
+                      child: Text(name, style: TextStyle(fontSize: 17)),
                     ),
-                    SizedBox(
-                      width: res_width * 0.11,
-                    ),
+                    SizedBox(width: res_width * 0.11),
                     Text(
                       date,
                       style: TextStyle(fontSize: 11, color: Colors.grey),
                     ),
-                    SizedBox(
-                      height: res_height * 0.01,
-                    ),
+                    SizedBox(height: res_height * 0.01),
                   ],
                 ),
               ),
               RatingBarIndicator(
                 rating: double.parse(stars.toString()),
-                itemBuilder: (context, index) => Icon(
-                  Icons.star,
-                  color: Colors.amber,
-                ),
+                itemBuilder:
+                    (context, index) => Icon(Icons.star, color: Colors.amber),
                 itemCount: 5,
                 itemSize: 15,
                 direction: Axis.horizontal,
               ),
-              SizedBox(
-                height: res_height * 0.001,
-              ),
+              SizedBox(height: res_height * 0.001),
               Container(
                 width: res_width * 0.7,
-                child: Text(
-                  desc,
-                  style: TextStyle(
-                    fontSize: 10,
-                  ),
-                ),
+                child: Text(desc, style: TextStyle(fontSize: 10)),
               ),
             ],
           ),

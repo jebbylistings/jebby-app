@@ -1,4 +1,3 @@
-
 import 'package:flutter/cupertino.dart';
 import 'package:jebby/data/response/api_response.dart';
 import 'package:jebby/model/movies_model.dart';
@@ -49,20 +48,17 @@ class HomeViewViewModel with ChangeNotifier {
 
   Future<void> changeProfileDataApi(id) async {
     setMovieList(ApiResponse.loading());
-    myRepo.changeProfileDataWithModel(id).then((value) {
-      setProfileData(ApiResponse.completed(value));
-    }).onError((error, stackTrace) {
-      setMovieList(ApiResponse.error(error.toString()));
-    });
+    myRepo
+        .changeProfileDataWithModel(id)
+        .then((value) {
+          setProfileData(ApiResponse.completed(value));
+        })
+        .onError((error, stackTrace) {
+          setMovieList(ApiResponse.error(error.toString()));
+        });
   }
 
- 
-
- 
-
-
-
-////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////
   ApiResponse<MovieListModel> movieslist = ApiResponse.loading();
 
   setMovieList(ApiResponse<MovieListModel> response) {
@@ -72,25 +68,20 @@ class HomeViewViewModel with ChangeNotifier {
 
   Future<void> fetchMoviesListApi() async {
     setMovieList(ApiResponse.loading());
-    myRepo.fetchMoviesList().then((value) {
-      setMovieList(ApiResponse.completed(value));
-    }).onError((error, stackTrace) {
-      setMovieList(ApiResponse.error(error.toString()));
-    });
+    myRepo
+        .fetchMoviesList()
+        .then((value) {
+          setMovieList(ApiResponse.completed(value));
+        })
+        .onError((error, stackTrace) {
+          setMovieList(ApiResponse.error(error.toString()));
+        });
   }
 
-
-
-
-
-
-
-
   ///////////////////////////////////////////////
-  
-   Future<void> updateProfileData(id) async {
 
-    dynamic updatedProfile=await myRepo.changeProfileData();
+  Future<void> updateProfileData(id) async {
+    dynamic updatedProfile = await myRepo.changeProfileData();
     return updatedProfile;
-   }
+  }
 }

@@ -6,13 +6,14 @@ class PayWithStripeModel {
   int? amount;
   String? vendorAccountId;
 
-  PayWithStripeModel(
-      {this.cardNumber,
-      this.expMonth,
-      this.expYear,
-      this.cvc,
-      this.amount,
-      this.vendorAccountId});
+  PayWithStripeModel({
+    this.cardNumber,
+    this.expMonth,
+    this.expYear,
+    this.cvc,
+    this.amount,
+    this.vendorAccountId,
+  });
 
   PayWithStripeModel.fromJson(Map<String, dynamic> json) {
     cardNumber = json['cardNumber'];

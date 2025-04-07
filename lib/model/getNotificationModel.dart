@@ -41,20 +41,20 @@ class Data {
   int? negoId;
   int? seen_one;
 
-  Data(
-      {this.id,
-      this.description,
-      this.name,
-      this.createdAt,
-      this.updatedAt,
-      this.seen,
-      this.userId,
-      this.productId,
-      this.price,
-      this.status,
-      this.negoId,
-      this.seen_one
-      });
+  Data({
+    this.id,
+    this.description,
+    this.name,
+    this.createdAt,
+    this.updatedAt,
+    this.seen,
+    this.userId,
+    this.productId,
+    this.price,
+    this.status,
+    this.negoId,
+    this.seen_one,
+  });
 
   Data.fromJson(Map<String, dynamic> json) {
     id = json['id'];

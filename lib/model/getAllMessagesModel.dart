@@ -32,13 +32,14 @@ class Data {
   String? timeSent;
   int? isShow;
 
-  Data(
-      {this.id,
-      this.content,
-      this.senderId,
-      this.recipientId,
-      this.timeSent,
-      this.isShow});
+  Data({
+    this.id,
+    this.content,
+    this.senderId,
+    this.recipientId,
+    this.timeSent,
+    this.isShow,
+  });
 
   Data.fromJson(Map<String, dynamic> json) {
     id = json['id'];

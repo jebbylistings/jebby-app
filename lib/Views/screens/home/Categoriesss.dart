@@ -30,15 +30,9 @@ class _CategoriesssScreenState extends State<CategoriesssScreen> {
             Get.back();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-          ),
+          child: Icon(Icons.arrow_back, color: Colors.black),
         ),
-        title: Text(
-          "Categories",
-          style: TextStyle(color: Colors.black),
-        ),
+        title: Text("Categories", style: TextStyle(color: Colors.black)),
         centerTitle: true,
       ),
       body: Container(
@@ -49,9 +43,7 @@ class _CategoriesssScreenState extends State<CategoriesssScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  height: 30,
-                ),
+                SizedBox(height: 30),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Container(
@@ -67,17 +59,20 @@ class _CategoriesssScreenState extends State<CategoriesssScreen> {
                 ),
                 FutureBuilder(
                   future: getAPiFromModel.getCategoryList(),
-                  builder: (BuildContext context, AsyncSnapshot<CategoryList> snapshot) {
+                  builder: (
+                    BuildContext context,
+                    AsyncSnapshot<CategoryList> snapshot,
+                  ) {
                     if (!snapshot.hasData) {
-                      return Center(
-                        child: CircularProgressIndicator(),
-                      );
+                      return Center(child: CircularProgressIndicator());
                     } else {
                       final data = snapshot.data!.data;
                       return Wrap(
                         spacing: 8,
                         runSpacing: 5,
-                        children: List.generate(snapshot.data!.data!.length, (index) {
+                        children: List.generate(snapshot.data!.data!.length, (
+                          index,
+                        ) {
                           return contBox(
                             txt: data![index].name,
                             img: '${AppUrl.baseUrlM}${data[index].image}',
@@ -108,9 +103,7 @@ class _CategoriesssScreenState extends State<CategoriesssScreen> {
         padding: const EdgeInsets.all(5.5),
         child: Column(
           children: [
-            SizedBox(
-              height: 10,
-            ),
+            SizedBox(height: 10),
             Container(
               margin: EdgeInsets.only(left: 5, top: 5),
               width: res_width * 0.25,
@@ -118,9 +111,7 @@ class _CategoriesssScreenState extends State<CategoriesssScreen> {
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.white, width: 2),
                 color: kprimaryColor,
-                borderRadius: BorderRadius.all(
-                  Radius.circular(18),
-                ),
+                borderRadius: BorderRadius.all(Radius.circular(18)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.grey,
@@ -133,22 +124,22 @@ class _CategoriesssScreenState extends State<CategoriesssScreen> {
                 padding: const EdgeInsets.all(12.0),
                 child: ClipOval(
                   child: CachedNetworkImage(
-                  imageUrl: '$img',
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Center(
-                    child: CircularProgressIndicator(), // Loading spinner
+                    imageUrl: '$img',
+                    fit: BoxFit.cover,
+                    placeholder:
+                        (context, url) => Center(
+                          child: CircularProgressIndicator(), // Loading spinner
+                        ),
+                    errorWidget:
+                        (context, url, error) => Icon(
+                          Icons.error,
+                          color: Colors.red,
+                        ), // Display an error icon
                   ),
-                  errorWidget: (context, url, error) => Icon(
-                    Icons.error,
-                    color: Colors.red,
-                  ), // Display an error icon
-                )
                 ),
               ),
             ),
-            SizedBox(
-              height: 6,
-            ),
+            SizedBox(height: 6),
             SizedBox(
               width: res_width * 0.27,
               child: Center(
@@ -159,7 +150,7 @@ class _CategoriesssScreenState extends State<CategoriesssScreen> {
                   maxLines: 1, // Limit to a single line
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),

@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -23,19 +22,19 @@ import '../../controller/bottomcontroller.dart';
 import '../mainfolder/homemain.dart';
 
 class EditProductScreen extends StatefulWidget {
-  var category_id;
-  var sub_category_id;
-  var name;
-  var price;
-  var specifications;
-  var description;
-  var negotiation;
-  var product_id;
-  var relProd;
-  var images;
-  var imageID;
-  var messageStatus;
-  var delivery_charges;
+  final dynamic category_id;
+  final dynamic sub_category_id;
+  final dynamic name;
+  final dynamic price;
+  final dynamic specifications;
+  final dynamic description;
+  final dynamic negotiation;
+  final dynamic product_id;
+  final dynamic relProd;
+  final dynamic images;
+  final dynamic imageID;
+  final dynamic messageStatus;
+  final dynamic delivery_charges;
 
   EditProductScreen({
     this.category_id,
@@ -58,7 +57,7 @@ class EditProductScreen extends StatefulWidget {
 }
 
 class _EditProductScreenState extends State<EditProductScreen> {
-   String Url = dotenv.env['baseUrlM'] ?? 'No url found';
+  String Url = dotenv.env['baseUrlM'] ?? 'No url found';
   // bool switchnot = false;
   bool insRentSwitchNot = false;
   bool messageSwitchNot = false;
@@ -106,19 +105,29 @@ class _EditProductScreenState extends State<EditProductScreen> {
   TextEditingController perController = TextEditingController();
   TextEditingController SecurityDepositeController = TextEditingController();
 
-  var pasd = ApiRepository.shared.getProductsByIdList?.data![0].pastart.toString();
-  var paed = ApiRepository.shared.getProductsByIdList?.data![0].paend.toString();
-  var dasd = ApiRepository.shared.getProductsByIdList?.data![0].dastart.toString();
-  var daed = ApiRepository.shared.getProductsByIdList?.data![0].daend.toString();
-  var price_1 = ApiRepository.shared.getProductsByIdList?.data![0].price1.toString();
+  var pasd =
+      ApiRepository.shared.getProductsByIdList?.data![0].pastart.toString();
+  var paed =
+      ApiRepository.shared.getProductsByIdList?.data![0].paend.toString();
+  var dasd =
+      ApiRepository.shared.getProductsByIdList?.data![0].dastart.toString();
+  var daed =
+      ApiRepository.shared.getProductsByIdList?.data![0].daend.toString();
+  var price_1 =
+      ApiRepository.shared.getProductsByIdList?.data![0].price1.toString();
   var per = ApiRepository.shared.getProductsByIdList?.data![0].per.toString();
-  var dis = ApiRepository.shared.getProductsByIdList?.data![0].discount.toString();
+  var dis =
+      ApiRepository.shared.getProductsByIdList?.data![0].discount.toString();
   var freePU = ApiRepository.shared.getProductsByIdList?.data![0].fp.toString();
-  var locationBD = ApiRepository.shared.getProductsByIdList?.data![0].lbd.toString();
+  var locationBD =
+      ApiRepository.shared.getProductsByIdList?.data![0].lbd.toString();
 
-  var security_deposit = ApiRepository.shared.getProductsByIdList?.data![0].security_deposit.toString();
+  var security_deposit =
+      ApiRepository.shared.getProductsByIdList?.data![0].security_deposit
+          .toString();
 
-  var price_2 = ApiRepository.shared.getProductsByIdList?.data![0].price.toString();
+  var price_2 =
+      ApiRepository.shared.getProductsByIdList?.data![0].price.toString();
   late var name_length;
   late var category_name;
   late var category_id;
@@ -132,7 +141,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
     getData();
     profileData(context);
     getCategory();
-    print("related products ${widget.relProd}");
     // relP();
     super.initState();
   }
@@ -141,20 +149,25 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   void assign() {
     switchnot = widget.negotiation.toString() == "0" ? true : false;
-    print("switch not ${widget.negotiation.toString()}");
     negotiationVisibility = widget.negotiation.toString() == "0" ? false : true;
     messageSwitchNot = widget.messageStatus == 1 ? true : false;
-    price_2 = ApiRepository.shared.getProductsByIdList?.data![0].price.toString();
-    price_1 = ApiRepository.shared.getProductsByIdList?.data![0].price1.toString();
+    price_2 =
+        ApiRepository.shared.getProductsByIdList?.data![0].price.toString();
+    price_1 =
+        ApiRepository.shared.getProductsByIdList?.data![0].price1.toString();
     per = ApiRepository.shared.getProductsByIdList?.data![0].per.toString();
-    dis = ApiRepository.shared.getProductsByIdList?.data![0].discount.toString();
-    pasd = ApiRepository.shared.getProductsByIdList?.data![0].pastart.toString();
+    dis =
+        ApiRepository.shared.getProductsByIdList?.data![0].discount.toString();
+    pasd =
+        ApiRepository.shared.getProductsByIdList?.data![0].pastart.toString();
     paed = ApiRepository.shared.getProductsByIdList?.data![0].paend.toString();
-    dasd = ApiRepository.shared.getProductsByIdList?.data![0].dastart.toString();
+    dasd =
+        ApiRepository.shared.getProductsByIdList?.data![0].dastart.toString();
     daed = ApiRepository.shared.getProductsByIdList?.data![0].daend.toString();
 
     freePU = ApiRepository.shared.getProductsByIdList?.data![0].fp.toString();
-    locationBD = ApiRepository.shared.getProductsByIdList?.data![0].lbd.toString();
+    locationBD =
+        ApiRepository.shared.getProductsByIdList?.data![0].lbd.toString();
     //   delivery_charges =
     // ApiRepository.shared.getProductsByIdList?.data![0].delivery_charges.toString();
 
@@ -169,173 +182,184 @@ class _EditProductScreenState extends State<EditProductScreen> {
     discountController.text = dis.toString();
     selected_id = widget.category_id.toString();
     selected_sub_id = widget.sub_category_id.toString();
-    _groupValue = freePU != 0 ? int.parse(freePU.toString()) : int.parse(locationBD.toString());
+    _groupValue =
+        freePU != 0
+            ? int.parse(freePU.toString())
+            : int.parse(locationBD.toString());
     deliverychargesController.text = widget.delivery_charges;
     SecurityDepositeController.text = security_deposit.toString();
   }
 
   getCatId() {
     ApiRepository.shared.CategoryId(
-        (List) => {
-              if (this.mounted)
-                {
-                  if (List.status == 0)
-                    {
-                      print("Category Data"),
-                      setState(() {
-                        catLoader = false;
-                        catError = false;
-                      })
-                    }
-                  else
-                    {
-                      print("Category Data"),
-                      setState(() {
-                        cat_value = ApiRepository.shared.getCategoryByIdModelList!.data![0].name.toString();
-                        catLoader = false;
-                        catError = false;
-                      })
-                    }
-                }
-            },
-        (error) => {
-              if (error != null)
-                {
-                  setState(() {
-                    catLoader = true;
-                    catError = true;
-                  })
-                }
-            },
-        widget.category_id.toString());
+      (List) => {
+        if (this.mounted)
+          {
+            if (List.status == 0)
+              {
+                setState(() {
+                  catLoader = false;
+                  catError = false;
+                }),
+              }
+            else
+              {
+                setState(() {
+                  cat_value =
+                      ApiRepository
+                          .shared
+                          .getCategoryByIdModelList!
+                          .data![0]
+                          .name
+                          .toString();
+                  catLoader = false;
+                  catError = false;
+                }),
+              },
+          },
+      },
+      (error) => {
+        if (error != null)
+          {
+            setState(() {
+              catLoader = true;
+              catError = true;
+            }),
+          },
+      },
+      widget.category_id.toString(),
+    );
   }
 
   getSubCatID() {
     ApiRepository.shared.SubCategoryId(
-        (List) => {
-              if (this.mounted)
-                {
-                  if (List.status == 0)
-                    {
-                      print("Category Data"),
-                      setState(() {
-                        sub_catLoader = false;
-                        sub_catError = false;
-                      })
-                    }
-                  else
-                    {
-                      print("Category Data"),
-                      setState(() {
-                        sub_cat_value = ApiRepository.shared.getSubCategoryByIdModelList!.data![0].name.toString();
-                        sub_catLoader = false;
-                        sub_catError = false;
-                      })
-                    }
-                }
-            },
-        (error) => {
-              if (error != null)
-                {
-                  setState(() {
-                    sub_catLoader = true;
-                    sub_catError = true;
-                  })
-                }
-            },
-        widget.sub_category_id.toString());
+      (List) => {
+        if (this.mounted)
+          {
+            if (List.status == 0)
+              {
+                setState(() {
+                  sub_catLoader = false;
+                  sub_catError = false;
+                }),
+              }
+            else
+              {
+                setState(() {
+                  sub_cat_value =
+                      ApiRepository
+                          .shared
+                          .getSubCategoryByIdModelList!
+                          .data![0]
+                          .name
+                          .toString();
+                  sub_catLoader = false;
+                  sub_catError = false;
+                }),
+              },
+          },
+      },
+      (error) => {
+        if (error != null)
+          {
+            setState(() {
+              sub_catLoader = true;
+              sub_catError = true;
+            }),
+          },
+      },
+      widget.sub_category_id.toString(),
+    );
   }
 
   getCategory() {
     ApiRepository.shared.getCategoryList(
-        (List) => {
-              if (this.mounted)
-                {
-                  if (List.status == 0)
-                    {
-                      setState(() {
-                        cats_loader = false;
-                        // isError = true;
-                      }),
-                    }
-                  else
-                    {
-                      name_length = ApiRepository.shared.categoryList?.data?.length,
-                      for (int i = 0; i < name_length; i++)
-                        {
-                          category_name = ApiRepository.shared.categoryList?.data?[i].name,
-                          category_id = ApiRepository.shared.categoryList?.data?[i].id,
-                          items.add(category_name.toString()),
-                          items_id.add(category_id),
-                        },
-                      print("CATEGORY LIST --> ${items}"),
-                      print("Category ID ---->> ${items_id}"),
-                      print("PRINT SELECTED CATEG ID ${selected_id}"),
-                      setState(() {
-                        dropdownValue = items.first;
-                        cats_loader = false;
-                      }),
-                    }
-                },
-            },
-        (error) => {
-              if (this.mounted)
-                {
-                  if (error != null)
-                    {
-                      setState(() {
-                        cats_loader = false;
-                        // isError = true;
-                        print("Error:  ${error}");
-                      }),
-                    }
-                }
-            });
+      (List) => {
+        if (this.mounted)
+          {
+            if (List.status == 0)
+              {
+                setState(() {
+                  cats_loader = false;
+                  // isError = true;
+                }),
+              }
+            else
+              {
+                name_length = ApiRepository.shared.categoryList?.data?.length,
+                for (int i = 0; i < name_length; i++)
+                  {
+                    category_name =
+                        ApiRepository.shared.categoryList?.data?[i].name,
+                    category_id =
+                        ApiRepository.shared.categoryList?.data?[i].id,
+                    items.add(category_name.toString()),
+                    items_id.add(category_id),
+                  },
+                setState(() {
+                  dropdownValue = items.first;
+                  cats_loader = false;
+                }),
+              },
+          },
+      },
+      (error) => {
+        if (this.mounted)
+          {
+            if (error != null)
+              {
+                setState(() {
+                  cats_loader = false;
+                  // isError = true;
+                }),
+              },
+          },
+      },
+    );
     ApiRepository.shared.checkApiStatus(true, "categoryList");
   }
 
   getSubCategory(id) {
     ApiRepository.shared.getSubCategoryList(
-        (list) => {
-              if (this.mounted)
-                {
-                  if (list.status == 0)
-                    {sub_items.add("No Category Found")}
-                  else
-                    {
-                      sub_length = ApiRepository.shared.subCategoryList?.data?.length,
-                      for (int i = 0; i < sub_length!; i++)
-                        {
-                          sub_name = ApiRepository.shared.subCategoryList?.data?[i].name,
-                          sub_id = ApiRepository.shared.subCategoryList?.data?[i].id,
-                          sub_items.add(sub_name),
-                          sub_items_id.add(sub_id),
-                        },
-                      print("Sub CATEGORY LIST --> ${sub_items}"),
-                      print("Sub Category ID ---->> ${sub_items_id}"),
-                      print("PRINT Selected_Sub CATEG ID ${selected_sub_id}"),
-                      setState(() {
-                        selected_sub_id = sub_items_id.first;
-                        sub_dropdownvalue = sub_items.first;
-                        sub_cat_value = sub_items.first;
-                        sub_cats_loader = false;
-                        // sub_categoryError = false;
-                        // subCategoryVisibility = true;
-                      }),
-                    }
-                }
-            },
-        (error) => {
-              if (error != null)
-                {
-                  setState(() {
-                    sub_cats_loader = true;
-                    // sub_categoryError = true;
-                    // isLoading = false;
-                  }),
-                },
-            },
-        id.toString());
+      (list) => {
+        if (this.mounted)
+          {
+            if (list.status == 0)
+              {sub_items.add("No Category Found")}
+            else
+              {
+                sub_length = ApiRepository.shared.subCategoryList?.data?.length,
+                for (int i = 0; i < sub_length!; i++)
+                  {
+                    sub_name =
+                        ApiRepository.shared.subCategoryList?.data?[i].name,
+                    sub_id = ApiRepository.shared.subCategoryList?.data?[i].id,
+                    sub_items.add(sub_name),
+                    sub_items_id.add(sub_id),
+                  },
+                setState(() {
+                  selected_sub_id = sub_items_id.first;
+                  sub_dropdownvalue = sub_items.first;
+                  sub_cat_value = sub_items.first;
+                  sub_cats_loader = false;
+                  // sub_categoryError = false;
+                  // subCategoryVisibility = true;
+                }),
+              },
+          },
+      },
+      (error) => {
+        if (error != null)
+          {
+            setState(() {
+              sub_cats_loader = true;
+              // sub_categoryError = true;
+              // isLoading = false;
+            }),
+          },
+      },
+      id.toString(),
+    );
   }
 
   void selectImages() async {
@@ -348,42 +372,35 @@ class _EditProductScreenState extends State<EditProductScreen> {
         }
         imageFileList.addAll(selectedImages);
       }
-      print("Image List Length:" + imageFileList.length.toString());
-      print(imageFileList);
-      print("Image Path Length:" + imagesPath.length.toString());
-      print(imagesPath);
       setState(() {});
-    } catch (e) {
-      print("ERROR IN UPLOADING IMAGE");
-    }
+    } catch (e) {}
   }
 
-  Future<GetProductsByProductId> getProductsById(onResponse(GetProductsByProductId List), onError(error), id) async {
-    final response = await http.get(Uri.parse(AppUrl.getProductsByID + id), headers: {
-      'Content-type': "application/json",
-    });
+  Future<GetProductsByProductId> getProductsById(
+    onResponse(GetProductsByProductId List),
+    onError(error),
+    id,
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.getProductsByID + id),
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
         var data = GetProductsByProductId.fromJson(jsonDecode(response.body));
-        print("Products Data By Product Id is here  ${data.data.toString()}");
 
         ApiRepository.shared.getProductByProductId(data);
         // getProductByProductId(data);
         onResponse(data);
 
-        print("tried");
         return data;
       } catch (error) {
-        print("catched");
         onError(error.toString());
-        print(error);
       }
     } else if (response.statusCode == 400) {
       onError("You are not in Range");
-      print("You are not in Range");
     } else if (response.statusCode == 500) {
       onError("Internal Server Error");
-      print("Internal Server Error");
     }
 
     return GetProductsByProductId();
@@ -395,42 +412,38 @@ class _EditProductScreenState extends State<EditProductScreen> {
     });
     final request = json.encode(<String, dynamic>{"id": id});
 
-    final response = await http.post(Uri.parse(AppUrl.productDeleteImage), body: request, headers: {
-      'Content-type': "application/json",
-    });
+    final response = await http.post(
+      Uri.parse(AppUrl.productDeleteImage),
+      body: request,
+      headers: {'Content-type': "application/json"},
+    );
     if (response.statusCode == 200) {
       try {
-        var data = ProductDeleteImageModel.fromJson(json.decode(response.body));
-        // print("Products Data By Product Id is here  ${data.data.toString()}");
         getProductsById(
-            (List) => {
-                  if (this.mounted)
-                    {
-                      if (List.data?.length == 0)
-                        {}
-                      else
-                        {
-                          setState(() {
-                            imgLoader = false;
-                          })
-                        }
-                    }
-                },
-            (error) {},
-            widget.product_id.toString());
-        print("product Image deleted");
+          (List) => {
+            if (this.mounted)
+              {
+                if (List.data?.length == 0)
+                  {}
+                else
+                  {
+                    setState(() {
+                      imgLoader = false;
+                    }),
+                  },
+              },
+          },
+          (error) {},
+          widget.product_id.toString(),
+        );
         // getdeletedProductImage(true);
       } catch (error) {
-        print("Product Delete Image catched");
         // onError(error.toString());
-        print(error);
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      print("You are not in Range");
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      print("Internal Server Error");
     }
 
     return ProductDeleteImageModel();
@@ -445,43 +458,42 @@ class _EditProductScreenState extends State<EditProductScreen> {
       for (int i = 0; i < imagesPath.length; i++) {
         String uniqueName = DateTime.now().millisecondsSinceEpoch.toString();
         var path = imagesPath[i].path;
-        print(path.split('/').last);
-        image_document.add(await d.MultipartFile.fromFile(path, filename: uniqueName));
+        image_document.add(
+          await d.MultipartFile.fromFile(path, filename: uniqueName),
+        );
       }
       try {
-        d.FormData formData = new d.FormData.fromMap({
-          "file": image_document,
-          "id": widget.product_id,
-        });
-
-        print("images ---->>>>>");
-        print(image_document);
-
-        d.Response response = await Dio().post("${Url}/productUpdateImage", data: formData);
         setState(() {
           imagesPath = []; //for displaying images at grid
           imageFileList = []; //for displaying images at grid
         });
-        getProductsById((list) {
-          if (this.mounted) {
-            if (list.status == 0) {
-            } else {
-              setState(() {
-                img_button = false;
-              });
+        getProductsById(
+          (list) {
+            if (this.mounted) {
+              if (list.status == 0) {
+              } else {
+                setState(() {
+                  img_button = false;
+                });
+              }
             }
-          }
-        }, (error) {}, widget.product_id.toString());
+          },
+          (error) {},
+          widget.product_id.toString(),
+        );
         final snackBar = new SnackBar(content: new Text("Images Updated"));
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       } catch (e) {
-        print("error ${e.toString()}");
-        final snackBar = new SnackBar(content: new Text("Error in uploading images"));
+        final snackBar = new SnackBar(
+          content: new Text("Error in uploading images"),
+        );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
     } ////image picker
     else {
-      final snackBar = new SnackBar(content: new Text("Select Images To Upload"));
+      final snackBar = new SnackBar(
+        content: new Text("Select Images To Upload"),
+      );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
 
@@ -494,106 +506,79 @@ class _EditProductScreenState extends State<EditProductScreen> {
     setState(() {
       product_update_button = true;
     });
-    var data = {
-      "user_id": id,
-      "category_id": selected_id,
-      "subcategory_id": selected_sub_id,
-      "name": nameController.text,
-      "price": rentPriceController.text,
-      "specifications": specsController.text,
-      "service_agreements": descriptionController.text,
-      "negotiation": negotiationVisibility == true
-          ? negotiationController.text.toString().isEmpty
-              ? "0"
-              : negotiationController.text.toString()
-          : "0",
-      "id": widget.product_id,
-      "array": relProdArray,
-      "product_id": widget.product_id,
-      "user_id1": id,
-      "price2": price_2_Controller.text,
-      "per": perController.text,
-      "subcat_id": selected_sub_id,
-      "fp": freePU,
-      "lbd": locationBD,
-      "pastart": pasd,
-      "paend": paed,
-      "dastart": dasd,
-      "daend": daed,
-      "price1": price_1_Controller.text,
-      "discount": discountController.text,
-      "isMessage": messageSwitchNot == true ? "1" : "0",
-      "delivery_charges": deliverychargesController.text,
-      "security_deposit": SecurityDepositeController.text,
-    };
-    print(data);
-    if (DateTime.parse(pasd.toString()).isAfter(DateTime.parse(paed.toString())) ||
-    DateTime.parse(pasd.toString()).isAtSameMomentAs(DateTime.parse(paed.toString()))) {
-  final snackBar = SnackBar(content: Text("End Date must be greater than Start Date"));
-  ScaffoldMessenger.of(context).showSnackBar(snackBar);
-}
-    else if (id != null &&
-            widget.category_id != null &&
-            selected_sub_id.toString().isNotEmpty &&
-            nameController.text.toString().isNotEmpty &&
-            rentPriceController.text.toString().isNotEmpty &&
-            SecurityDepositeController.text.isNotEmpty &&
-            deliverychargesController.text.toString().isNotEmpty &&
-            specsController.text.toString().isNotEmpty &&
-            descriptionController.text.toString().isNotEmpty &&
-            widget.product_id != null &&
-            widget.product_id != null &&
-            id != null &&
-            // price_2_Controller.text.toString().isNotEmpty &&
-            // perController.text.toString().isNotEmpty &&
-            selected_sub_id != null &&
-            freePU != null &&
-            locationBD != null &&
-            pasd != null &&
-            paed != null
-        // dasd != null &&
-        // daed != null
-        // price_1_Controller.text.toString().isNotEmpty &&
-        // discountController.text.toString().isNotEmpty
-        ) {
+    if (DateTime.parse(
+          pasd.toString(),
+        ).isAfter(DateTime.parse(paed.toString())) ||
+        DateTime.parse(
+          pasd.toString(),
+        ).isAtSameMomentAs(DateTime.parse(paed.toString()))) {
+      final snackBar = SnackBar(
+        content: Text("End Date must be greater than Start Date"),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    } else if (id != null &&
+        widget.category_id != null &&
+        selected_sub_id.toString().isNotEmpty &&
+        nameController.text.toString().isNotEmpty &&
+        rentPriceController.text.toString().isNotEmpty &&
+        SecurityDepositeController.text.isNotEmpty &&
+        deliverychargesController.text.toString().isNotEmpty &&
+        specsController.text.toString().isNotEmpty &&
+        descriptionController.text.toString().isNotEmpty &&
+        widget.product_id != null &&
+        widget.product_id != null &&
+        id != null &&
+        // price_2_Controller.text.toString().isNotEmpty &&
+        // perController.text.toString().isNotEmpty &&
+        selected_sub_id != null &&
+        freePU != null &&
+        locationBD != null &&
+        pasd != null &&
+        paed != null
+    // dasd != null &&
+    // daed != null
+    // price_1_Controller.text.toString().isNotEmpty &&
+    // discountController.text.toString().isNotEmpty
+    ) {
       ApiRepository.shared.productUpdate(
-          id,
-          selected_id,
-          selected_sub_id.toString(),
-          nameController.text.toString(),
-          rentPriceController.text.toString(),
-          specsController.text.toString(),
-          descriptionController.text.toString(),
-          negotiationVisibility == true
-              ? negotiationController.text.toString().isEmpty
-                  ? "0"
-                  : negotiationController.text.toString()
-              : "0",
-          widget.product_id,
-          relProdArray,
-          widget.product_id,
-          id,
-          // price_2_Controller.text.toString(),
-          "0",
-          // perController.text.toString(),
-          "0",
-          selected_sub_id,
-          freePU,
-          locationBD,
-          pasd,
-          paed,
-          // dasd,
-          pasd,
-          // daed,
-          paed,
-          // price_1_Controller.text.toString(),
-          "0",
-          // discountController.text.toString(),
-          "0",
-          // messageSwitchNot == true ? "1" : "0"
-          "1",
-          deliverychargesController.text.toString(),
-          SecurityDepositeController.text.toString());
+        id,
+        selected_id,
+        selected_sub_id.toString(),
+        nameController.text.toString(),
+        rentPriceController.text.toString(),
+        specsController.text.toString(),
+        descriptionController.text.toString(),
+        negotiationVisibility == true
+            ? negotiationController.text.toString().isEmpty
+                ? "0"
+                : negotiationController.text.toString()
+            : "0",
+        widget.product_id,
+        relProdArray,
+        widget.product_id,
+        id,
+        // price_2_Controller.text.toString(),
+        "0",
+        // perController.text.toString(),
+        "0",
+        selected_sub_id,
+        freePU,
+        locationBD,
+        pasd,
+        paed,
+        // dasd,
+        pasd,
+        // daed,
+        paed,
+        // price_1_Controller.text.toString(),
+        "0",
+        // discountController.text.toString(),
+        "0",
+        // messageSwitchNot == true ? "1" : "0"
+        "1",
+        deliverychargesController.text.toString(),
+        SecurityDepositeController.text.toString(),
+      );
     } else {
       final snackBar = new SnackBar(content: new Text("Fields can't be empty"));
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
@@ -619,17 +604,17 @@ class _EditProductScreenState extends State<EditProductScreen> {
   String? email;
   String? role;
   void profileData(BuildContext context) async {
-    getUserDate().then((value) async {
-      token = value.token.toString();
-      id = value.id.toString();
-      fullname = value.name.toString();
-      email = value.email.toString();
-      role = value.role.toString();
-    }).onError((error, stackTrace) {
-      if (kDebugMode) {
-        print(error.toString());
-      }
-    });
+    getUserDate()
+        .then((value) async {
+          token = value.token.toString();
+          id = value.id.toString();
+          fullname = value.name.toString();
+          email = value.email.toString();
+          role = value.role.toString();
+        })
+        .onError((error, stackTrace) {
+          if (kDebugMode) {}
+        });
   }
 
   // void relP() {
@@ -639,7 +624,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
   //     relProdArray.add(
   //         ApiRepository.shared.getRelatedProductsList!.data![i].id.toString());
   //   }
-  //   print(relProdArray);
   // }
 
   @override
@@ -653,7 +637,11 @@ class _EditProductScreenState extends State<EditProductScreen> {
         centerTitle: true,
         title: Text(
           'Edit Product',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 19,
+          ),
         ),
         leading: InkWell(
           onTap: () {
@@ -661,10 +649,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
             // Get.to(() => ProductListScreen(side: false));
           },
           borderRadius: BorderRadius.circular(50),
-          child: Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-          ),
+          child: Icon(Icons.arrow_back, color: Colors.black),
         ),
       ),
       body: Container(
@@ -676,9 +661,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                 width: res_width * 0.9,
                 child: Column(
                   children: [
-                    SizedBox(
-                      height: res_height * 0.01,
-                    ),
+                    SizedBox(height: res_height * 0.01),
                     Row(
                       children: [
                         Text(
@@ -691,21 +674,14 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(
-                      height: res_height * 0.01,
-                    ),
+                    SizedBox(height: res_height * 0.01),
                     Container(
                       child: Text(
                         'This information helps you and your customers identify the products on orders, documents and in the online store',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.black,
-                        ),
+                        style: TextStyle(fontSize: 11, color: Colors.black),
                       ),
                     ),
-                    SizedBox(
-                      height: res_height * 0.01,
-                    ),
+                    SizedBox(height: res_height * 0.01),
                     Container(
                       height: 50,
                       width: res_width * 0.9,
@@ -717,19 +693,23 @@ class _EditProductScreenState extends State<EditProductScreen> {
                             borderRadius: BorderRadius.circular(15.0),
                           ),
                           enabledBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                           focusedBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(
-                      height: res_height * 0.02,
-                    ),
+                    SizedBox(height: res_height * 0.02),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -746,100 +726,123 @@ class _EditProductScreenState extends State<EditProductScreen> {
                           onTap: () {
                             selectImages();
                           },
-                          child: Icon(
-                            Icons.image,
-                            color: Colors.black,
-                          ),
+                          child: Icon(Icons.image, color: Colors.black),
                         ),
                       ],
                     ),
-                    SizedBox(
-                      height: res_height * 0.02,
-                    ),
+                    SizedBox(height: res_height * 0.02),
 
                     SizedBox(
-                        height: 150,
-                        child: imgLoader
-                            ? Center(child: Text("Updating Images"))
-                            : ApiRepository.shared.getProductsByIdList!.data![1].images!.length > 0
-                                // imageList.length > 0
-                                ? ListView.separated(
-                                    scrollDirection: Axis.horizontal,
-                                    shrinkWrap: true,
-                                    separatorBuilder: (context, index) => SizedBox(
-                                          width: 10,
-                                        ),
-                                    itemCount: ApiRepository.shared.getProductsByIdList!.data![1].images!.length,
-                                    // imageList.length,
-                                    itemBuilder: (context, int index) {
-                                      // var img_id =
-                                      // var img = imageList[index];
-                                      var img = ApiRepository.shared.getProductsByIdList!.data![1].images![index].path;
-                                      var img_id = ApiRepository.shared.getProductsByIdList!.data![1].images![index].id;
-                                      return Stack(children: [
-                                        Container(
-                                          child: Image.network(AppUrl.baseUrlM + img.toString()),
-                                        ),
-                                        Positioned(
-                                            bottom: 2,
-                                            left: 4,
-                                            child: InkWell(
-                                              onTap: () {
-                                                print("Image ID --> ${img_id}");
-                                                deleteProductImage(img_id);
-                                              },
-                                              child: Icon(
-                                                Icons.delete,
-                                                color: Colors.grey,
-                                              ),
-                                            )),
-                                      ]);
-                                    })
-                                : Text("loading")),
-                    SizedBox(
-                      height: res_height * 0.01,
-                    ),
-                    imageFileList.length > 0
-                        ? SizedBox(
-                            height: 150,
-                            child: ListView.separated(
+                      height: 150,
+                      child:
+                          imgLoader
+                              ? Center(child: Text("Updating Images"))
+                              : ApiRepository
+                                      .shared
+                                      .getProductsByIdList!
+                                      .data![1]
+                                      .images!
+                                      .length >
+                                  0
+                              // imageList.length > 0
+                              ? ListView.separated(
                                 scrollDirection: Axis.horizontal,
-                                // physics: NeverScrollableScrollPhysics(),
                                 shrinkWrap: true,
-                                separatorBuilder: (context, index) => SizedBox(
-                                      width: 10,
-                                    ),
-                                itemCount: imageFileList.length,
+                                separatorBuilder:
+                                    (context, index) => SizedBox(width: 10),
+                                itemCount:
+                                    ApiRepository
+                                        .shared
+                                        .getProductsByIdList!
+                                        .data![1]
+                                        .images!
+                                        .length,
+                                // imageList.length,
                                 itemBuilder: (context, int index) {
-                                  return Stack(children: [
-                                    Container(
-                                      child: Image.file(File(imageFileList[index].path)),
-                                    ),
-                                    Positioned(
+                                  // var img_id =
+                                  // var img = imageList[index];
+                                  var img =
+                                      ApiRepository
+                                          .shared
+                                          .getProductsByIdList!
+                                          .data![1]
+                                          .images![index]
+                                          .path;
+                                  var img_id =
+                                      ApiRepository
+                                          .shared
+                                          .getProductsByIdList!
+                                          .data![1]
+                                          .images![index]
+                                          .id;
+                                  return Stack(
+                                    children: [
+                                      Container(
+                                        child: Image.network(
+                                          AppUrl.baseUrlM + img.toString(),
+                                        ),
+                                      ),
+                                      Positioned(
                                         bottom: 2,
                                         left: 4,
                                         child: InkWell(
                                           onTap: () {
-                                            setState(() {
-                                              imageFileList.removeAt(index);
-                                              imagesPath.removeAt(index);
-                                            });
-
-                                            print("imageFileList ${imageFileList}");
-                                            print("ImagesPath ${imagesPath}");
+                                            deleteProductImage(img_id);
                                           },
                                           child: Icon(
                                             Icons.delete,
                                             color: Colors.grey,
                                           ),
-                                        )),
-                                  ]);
-                                }),
-                          )
-                        : SizedBox(),
-                    SizedBox(
-                      height: res_height * 0.02,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              )
+                              : Text("loading"),
                     ),
+                    SizedBox(height: res_height * 0.01),
+                    imageFileList.length > 0
+                        ? SizedBox(
+                          height: 150,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            // physics: NeverScrollableScrollPhysics(),
+                            shrinkWrap: true,
+                            separatorBuilder:
+                                (context, index) => SizedBox(width: 10),
+                            itemCount: imageFileList.length,
+                            itemBuilder: (context, int index) {
+                              return Stack(
+                                children: [
+                                  Container(
+                                    child: Image.file(
+                                      File(imageFileList[index].path),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    bottom: 2,
+                                    left: 4,
+                                    child: InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          imageFileList.removeAt(index);
+                                          imagesPath.removeAt(index);
+                                        });
+                                      },
+                                      child: Icon(
+                                        Icons.delete,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        )
+                        : SizedBox(),
+                    SizedBox(height: res_height * 0.02),
                     Center(
                       child: InkWell(
                         onTap: () async {
@@ -849,20 +852,25 @@ class _EditProductScreenState extends State<EditProductScreen> {
                           width: 250,
                           height: 50,
                           decoration: BoxDecoration(
-                              color: img_button ? kprimaryColor.withOpacity(0.5) : kprimaryColor.withOpacity(1),
-                              borderRadius: BorderRadius.circular(12)),
+                            color:
+                                img_button
+                                    ? kprimaryColor.withAlpha(128)
+                                    : kprimaryColor,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           child: Center(
                             child: Text(
                               img_button ? "Updating .." : "Update Image",
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(
-                      height: res_height * 0.01,
-                    ),
+                    SizedBox(height: res_height * 0.01),
 
                     // Row(
                     //   mainAxisAlignment: MainAxisAlignment.start,
@@ -925,9 +933,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(
-                      height: res_height * 0.01,
-                    ),
+                    SizedBox(height: res_height * 0.01),
                     Container(
                       height: 50,
                       width: res_width * 0.9,
@@ -940,20 +946,24 @@ class _EditProductScreenState extends State<EditProductScreen> {
                             borderRadius: BorderRadius.circular(15.0),
                           ),
                           enabledBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                           focusedBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                         ),
                       ),
                     ),
 
-                    SizedBox(
-                      height: res_height * 0.01,
-                    ),
+                    SizedBox(height: res_height * 0.01),
                     Row(
                       children: [
                         Text(
@@ -966,9 +976,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(
-                      height: res_height * 0.01,
-                    ),
+                    SizedBox(height: res_height * 0.01),
                     Container(
                       height: 50,
                       width: res_width * 0.9,
@@ -981,20 +989,24 @@ class _EditProductScreenState extends State<EditProductScreen> {
                             borderRadius: BorderRadius.circular(15.0),
                           ),
                           enabledBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                           focusedBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                         ),
                       ),
                     ),
 
-                    SizedBox(
-                      height: res_height * 0.01,
-                    ),
+                    SizedBox(height: res_height * 0.01),
                     Row(
                       children: [
                         Text(
@@ -1007,9 +1019,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(
-                      height: res_height * 0.01,
-                    ),
+                    SizedBox(height: res_height * 0.01),
                     Container(
                       height: 50,
                       width: res_width * 0.9,
@@ -1021,19 +1031,23 @@ class _EditProductScreenState extends State<EditProductScreen> {
                             borderRadius: BorderRadius.circular(15.0),
                           ),
                           enabledBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                           focusedBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(
-                      height: res_height * 0.01,
-                    ),
+                    SizedBox(height: res_height * 0.01),
                     Row(
                       children: [
                         Text(
@@ -1046,9 +1060,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(
-                      height: res_height * 0.01,
-                    ),
+                    SizedBox(height: res_height * 0.01),
                     Container(
                       height: 50,
                       width: res_width * 0.9,
@@ -1061,11 +1073,17 @@ class _EditProductScreenState extends State<EditProductScreen> {
                             borderRadius: BorderRadius.circular(15.0),
                           ),
                           enabledBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                           focusedBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                         ),
@@ -1075,9 +1093,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     // SizedBox(
                     //   height: res_height * 0.01,
                     // ),
-                    SizedBox(
-                      height: res_height * 0.01,
-                    ),
+                    SizedBox(height: res_height * 0.01),
                     Row(
                       children: [
                         Text(
@@ -1090,9 +1106,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(
-                      height: res_height * 0.01,
-                    ),
+                    SizedBox(height: res_height * 0.01),
                     Container(
                       height: 50,
                       width: res_width * 0.9,
@@ -1104,11 +1118,17 @@ class _EditProductScreenState extends State<EditProductScreen> {
                             borderRadius: BorderRadius.circular(15.0),
                           ),
                           enabledBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                           focusedBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: kprimaryColor, width: 1),
+                            borderSide: const BorderSide(
+                              color: kprimaryColor,
+                              width: 1,
+                            ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                         ),
@@ -1160,7 +1180,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     //     ),
                     //   ),
                     // ),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
@@ -1174,14 +1193,26 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         Transform.scale(
                           scale: 0.6,
                           child: CupertinoSwitch(
-                            activeTrackColor: Color.fromARGB(255, 210, 210, 210),
-                            inactiveTrackColor: Color.fromARGB(255, 235, 235, 235),
-                            thumbColor: insRentSwitchNot ? Color.fromARGB(255, 173, 173, 173) : Color(0xff00ff01),
+                            activeTrackColor: Color.fromARGB(
+                              255,
+                              210,
+                              210,
+                              210,
+                            ),
+                            inactiveTrackColor: Color.fromARGB(
+                              255,
+                              235,
+                              235,
+                              235,
+                            ),
+                            thumbColor:
+                                insRentSwitchNot
+                                    ? Color.fromARGB(255, 173, 173, 173)
+                                    : Color(0xff00ff01),
                             value: insRentSwitchNot,
                             onChanged: (value) {
                               setState(() {
                                 insRentSwitchNot = value;
-                                print("insRentSwitchNot ${insRentSwitchNot}");
                               });
                             },
                           ),
@@ -1209,7 +1240,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         //         onChanged: (value) {
                         //           setState(() {
                         //             messageSwitchNot = value;
-                        //             print(
                         //                 "messageSwitchNot ${messageSwitchNot}");
                         //           });
                         //         },
@@ -1219,9 +1249,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         // )
                       ],
                     ),
-                    SizedBox(
-                      height: res_height * 0.01,
-                    ),
+                    SizedBox(height: res_height * 0.01),
                     Container(
                       width: double.infinity,
                       child: SingleChildScrollView(
@@ -1316,27 +1344,32 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                   catLoader
                                       ? SizedBox()
                                       : Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text('Category'),
-                                            SizedBox(
-                                              height: res_height * 0.01,
-                                            ),
-                                            Container(
-                                              height: 50,
-                                              width: res_width * 0.9,
-                                              decoration:
-                                                  BoxDecoration(borderRadius: BorderRadius.circular(15), border: Border.all(color: kprimaryColor)),
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(top: 12.0, left: 12.0),
-                                                child: Text(cat_value),
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text('Category'),
+                                          SizedBox(height: res_height * 0.01),
+                                          Container(
+                                            height: 50,
+                                            width: res_width * 0.9,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(15),
+                                              border: Border.all(
+                                                color: kprimaryColor,
                                               ),
                                             ),
-                                          ],
-                                        ),
-                                  SizedBox(
-                                    height: res_height * 0.01,
-                                  ),
+                                            child: Padding(
+                                              padding: const EdgeInsets.only(
+                                                top: 12.0,
+                                                left: 12.0,
+                                              ),
+                                              child: Text(cat_value),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                  SizedBox(height: res_height * 0.01),
                                   // Padding(
                                   //   padding: const EdgeInsets.only(top: 5),
                                   //   child: Center(
@@ -1437,47 +1470,47 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                   //     ),
                                   //   ),
                                   // ),
-//                       var currencies = [
-//     "Food",
-//     "Transport",
-//     "Personal",
-//     "Shopping",
-//     "Medical",
-//     "Rent",
-//     "Movie",
-//     "Salary"
-//   ];
+                                  //                       var currencies = [
+                                  //     "Food",
+                                  //     "Transport",
+                                  //     "Personal",
+                                  //     "Shopping",
+                                  //     "Medical",
+                                  //     "Rent",
+                                  //     "Movie",
+                                  //     "Salary"
+                                  //   ];
 
-//  FormField<String>(
-//           builder: (FormFieldState<String> state) {
-//             return InputDecorator(
-//               decoration: InputDecoration(
-//                   labelStyle: textStyle,
-//                   errorStyle: TextStyle(color: Colors.redAccent, fontSize: 16.0),
-//                   hintText: 'Please select expense',
-//                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(5.0))),
-//               isEmpty: _currentSelectedValue == '',
-//               child: DropdownButtonHideUnderline(
-//                 child: DropdownButton<String>(
-//                   value: _currentSelectedValue,
-//                   isDense: true,
-//                   onChanged: (String newValue) {
-//                     setState(() {
-//                       _currentSelectedValue = newValue;
-//                       state.didChange(newValue);
-//                     });
-//                   },
-//                   items: _currencies.map((String value) {
-//                     return DropdownMenuItem<String>(
-//                       value: value,
-//                       child: Text(value),
-//                     );
-//                   }).toList(),
-//                 ),
-//               ),
-//             );
-//           },
-//         )
+                                  //  FormField<String>(
+                                  //           builder: (FormFieldState<String> state) {
+                                  //             return InputDecorator(
+                                  //               decoration: InputDecoration(
+                                  //                   labelStyle: textStyle,
+                                  //                   errorStyle: TextStyle(color: Colors.redAccent, fontSize: 16.0),
+                                  //                   hintText: 'Please select expense',
+                                  //                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(5.0))),
+                                  //               isEmpty: _currentSelectedValue == '',
+                                  //               child: DropdownButtonHideUnderline(
+                                  //                 child: DropdownButton<String>(
+                                  //                   value: _currentSelectedValue,
+                                  //                   isDense: true,
+                                  //                   onChanged: (String newValue) {
+                                  //                     setState(() {
+                                  //                       _currentSelectedValue = newValue;
+                                  //                       state.didChange(newValue);
+                                  //                     });
+                                  //                   },
+                                  //                   items: _currencies.map((String value) {
+                                  //                     return DropdownMenuItem<String>(
+                                  //                       value: value,
+                                  //                       child: Text(value),
+                                  //                     );
+                                  //                   }).toList(),
+                                  //                 ),
+                                  //               ),
+                                  //             );
+                                  //           },
+                                  //         )
                                   // dropdown('Day'),
                                   // DropdownButtonFormField(items: items, onChanged: onChanged)
                                   // DropdownButton<String>(
@@ -1506,82 +1539,100 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                   //   }).toList(),
                                   // ),
                                   // dropdown('Day'),
-                                  SizedBox(
-                                    height: res_height * 0.01,
-                                  ),
+                                  SizedBox(height: res_height * 0.01),
 
                                   Text('Edit Category'),
-                                  SizedBox(
-                                    height: res_height * 0.005,
-                                  ),
+                                  SizedBox(height: res_height * 0.005),
                                   Container(
                                     height: 50,
                                     width: res_width * 0.9,
-                                    child: cats_loader
-                                        ? Center(child: Text("Loading"))
-                                        : FutureBuilder(builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                                            return DropdownButton<String>(
-                                              value: cat_value,
-                                              icon: const Icon(
-                                                Icons.arrow_downward,
-                                                color: Colors.black,
-                                              ),
-                                              elevation: 16,
-                                              style: const TextStyle(color: darkBlue),
-                                              underline: Container(height: 2, color: darkBlue),
-                                              onChanged: (String? value) {
-                                                // This is called when the user selects an item.
-                                                setState(() {
-                                                  cat_value = value;
-                                                  dropdownValue = value!;
-                                                  print("dropdownValue $dropdownValue");
-                                                  print(items_id[items.indexOf(value)]);
-                                                  selected_id = items_id[items
-                                                      .indexOf(dropdownValue)];
-                                                  print("selected ID ${selected_id}");
-                                                  sub_id = [];
-                                                  sub_items = [];
-                                                  sub_cat_value = "";
-                                                  selected_sub_id = "";
-                                                  getSubCategory(selected_id);
-                                                });
-                                              },
-                                              items: items.map<DropdownMenuItem<String>>((String value) {
-                                                return DropdownMenuItem<String>(
-                                                  value: value,
-                                                  child: Text(value),
+                                    child:
+                                        cats_loader
+                                            ? Center(child: Text("Loading"))
+                                            : FutureBuilder(
+                                              builder: (
+                                                BuildContext context,
+                                                AsyncSnapshot<dynamic> snapshot,
+                                              ) {
+                                                return DropdownButton<String>(
+                                                  value: cat_value,
+                                                  icon: const Icon(
+                                                    Icons.arrow_downward,
+                                                    color: Colors.black,
+                                                  ),
+                                                  elevation: 16,
+                                                  style: const TextStyle(
+                                                    color: darkBlue,
+                                                  ),
+                                                  underline: Container(
+                                                    height: 2,
+                                                    color: darkBlue,
+                                                  ),
+                                                  onChanged: (String? value) {
+                                                    // This is called when the user selects an item.
+                                                    setState(() {
+                                                      cat_value = value;
+                                                      dropdownValue = value!;
+                                                      selected_id =
+                                                          items_id[items
+                                                              .indexOf(
+                                                                dropdownValue,
+                                                              )];
+                                                      sub_id = [];
+                                                      sub_items = [];
+                                                      sub_cat_value = "";
+                                                      selected_sub_id = "";
+                                                      getSubCategory(
+                                                        selected_id,
+                                                      );
+                                                    });
+                                                  },
+                                                  items:
+                                                      items.map<
+                                                        DropdownMenuItem<String>
+                                                      >((String value) {
+                                                        return DropdownMenuItem<
+                                                          String
+                                                        >(
+                                                          value: value,
+                                                          child: Text(value),
+                                                        );
+                                                      }).toList(),
                                                 );
-                                              }).toList(),
-                                            );
-                                          }, future: null,),
+                                              },
+                                              future: null,
+                                            ),
                                   ),
-                                  SizedBox(
-                                    height: res_height * 0.005,
-                                  ),
+                                  SizedBox(height: res_height * 0.005),
                                   sub_catLoader
                                       ? Text("Loading")
                                       : Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text('Sub Category'),
-                                            SizedBox(
-                                              height: res_height * 0.01,
-                                            ),
-                                            Container(
-                                              height: 50,
-                                              width: res_width * 0.9,
-                                              decoration:
-                                                  BoxDecoration(borderRadius: BorderRadius.circular(15), border: Border.all(color: kprimaryColor)),
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(top: 12.0, left: 12.0),
-                                                child: Text(sub_cat_value),
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text('Sub Category'),
+                                          SizedBox(height: res_height * 0.01),
+                                          Container(
+                                            height: 50,
+                                            width: res_width * 0.9,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(15),
+                                              border: Border.all(
+                                                color: kprimaryColor,
                                               ),
                                             ),
-                                          ],
-                                        ),
-                                  SizedBox(
-                                    height: res_height * 0.01,
-                                  ),
+                                            child: Padding(
+                                              padding: const EdgeInsets.only(
+                                                top: 12.0,
+                                                left: 12.0,
+                                              ),
+                                              child: Text(sub_cat_value),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                  SizedBox(height: res_height * 0.01),
                                   // sub_catLoader ? SizedBox() :
                                   // Container(child: Padding(
                                   //   padding: const EdgeInsets.only(top: 12.0, left: 12),
@@ -1593,40 +1644,59 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                   Container(
                                     height: 50,
                                     width: res_width * 0.9,
-                                    child: sub_cats_loader
-                                        ? SizedBox(height: 25, width: 25, child: Text(""))
-                                        : FutureBuilder(builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                                            return DropdownButton<String>(
-                                              value: sub_cat_value,
-                                              icon: const Icon(Icons.arrow_downward),
-                                              elevation: 16,
-                                              style: const TextStyle(color: darkBlue),
-                                              underline: Container(
-                                                height: 2,
-                                                color: darkBlue,
-                                              ),
-                                              onChanged: (String? value) {
-                                                // This is called when the user selects an item.
-                                                setState(() {
-                                                  sub_cat_value = value;
-                                                  sub_dropdownvalue = value!;
-                                                  print("SubDropDown --> ${sub_dropdownvalue}");
-                                                  selected_sub_id = sub_items_id[sub_items.indexOf(value)];
-                                                  print("SelectedSubID --> ${selected_sub_id}");
-                                                });
-                                              },
-                                              items: sub_items.map<DropdownMenuItem<String>>((String value) {
-                                                return DropdownMenuItem<String>(
-                                                  value: value,
-                                                  child: Text(value),
+                                    child:
+                                        sub_cats_loader
+                                            ? SizedBox(
+                                              height: 25,
+                                              width: 25,
+                                              child: Text(""),
+                                            )
+                                            : FutureBuilder(
+                                              builder: (
+                                                BuildContext context,
+                                                AsyncSnapshot<dynamic> snapshot,
+                                              ) {
+                                                return DropdownButton<String>(
+                                                  value: sub_cat_value,
+                                                  icon: const Icon(
+                                                    Icons.arrow_downward,
+                                                  ),
+                                                  elevation: 16,
+                                                  style: const TextStyle(
+                                                    color: darkBlue,
+                                                  ),
+                                                  underline: Container(
+                                                    height: 2,
+                                                    color: darkBlue,
+                                                  ),
+                                                  onChanged: (String? value) {
+                                                    // This is called when the user selects an item.
+                                                    setState(() {
+                                                      sub_cat_value = value;
+                                                      sub_dropdownvalue =
+                                                          value!;
+                                                      selected_sub_id =
+                                                          sub_items_id[sub_items
+                                                              .indexOf(value)];
+                                                    });
+                                                  },
+                                                  items:
+                                                      sub_items.map<
+                                                        DropdownMenuItem<String>
+                                                      >((String value) {
+                                                        return DropdownMenuItem<
+                                                          String
+                                                        >(
+                                                          value: value,
+                                                          child: Text(value),
+                                                        );
+                                                      }).toList(),
                                                 );
-                                              }).toList(),
-                                            );
-                                          }, future: null,),
+                                              },
+                                              future: null,
+                                            ),
                                   ),
-                                  SizedBox(
-                                    height: res_height * 0.01,
-                                  ),
+                                  SizedBox(height: res_height * 0.01),
                                   // dropdown('Select'),
                                   // Padding(
                                   //   padding: const EdgeInsets.only(top: 5),
@@ -1739,15 +1809,13 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                         child: _myRadioButton(
                                           title: "Free Pickup",
                                           value: 0,
-                                          onChanged: (newValue) => setState(() {
-                                            _groupValue = newValue;
-                                            // freePU = newValue.toString();
-                                            locationBD = "0";
-                                            freePU = "1";
-                                            print(freePU);
-                                            print("FREE PICKUP ${freePU}");
-                                            print("LOCATION BASED DELIVERY ${locationBD}");
-                                          }),
+                                          onChanged:
+                                              (newValue) => setState(() {
+                                                _groupValue = newValue;
+                                                // freePU = newValue.toString();
+                                                locationBD = "0";
+                                                freePU = "1";
+                                              }),
                                         ),
                                       ),
                                       Expanded(
@@ -1755,24 +1823,19 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                         child: _myRadioButton(
                                           title: "Location Based Delivery",
                                           value: 1,
-                                          onChanged: (newValue) => setState(() {
-                                            _groupValue = newValue;
-                                            locationBD = "1";
-                                            freePU = "0";
-                                            print("FREE PICKUP ${freePU}");
-                                            print("LOCATION BASED DELIVERY ${locationBD}");
-                                          }),
+                                          onChanged:
+                                              (newValue) => setState(() {
+                                                _groupValue = newValue;
+                                                locationBD = "1";
+                                                freePU = "0";
+                                              }),
                                         ),
                                       ),
                                     ],
                                   ),
-                                  SizedBox(
-                                    height: res_height * 0.005,
-                                  ),
+                                  SizedBox(height: res_height * 0.005),
                                   itemdtl('Product Availibility', 1),
-                                  SizedBox(
-                                    height: res_height * 0.005,
-                                  ),
+                                  SizedBox(height: res_height * 0.005),
                                   // itemdtl('Discount Availibility', 2),
                                   // SizedBox(
                                   //   height: res_height * 0.01,
@@ -1944,9 +2007,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                 ],
                               ),
                             ),
-                            SizedBox(
-                              height: res_height * 0.02,
-                            ),
+                            SizedBox(height: res_height * 0.02),
                             // Align(
                             //     alignment: Alignment.topLeft,
                             //     child: Text("Related Products")),
@@ -1974,7 +2035,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
                             //             setState(() {
                             //              relProdArray
                             //                   .remove(name);
-                            //               print(relProdArray);
                             //             });
                             //           },
                             //           child: Icon(Icons.delete_outline))
@@ -1983,19 +2043,18 @@ class _EditProductScreenState extends State<EditProductScreen> {
                             //             setState(() {
                             //               relProdArray
                             //                   .add(name);
-                            //               print(relProdArray);
                             //             });
                             //           },
                             //           child: Icon(Icons.add))
                             //     );
                             //   },
                             // ),
-                            SizedBox(
-                              height: res_height * 0.01,
-                            ),
+                            SizedBox(height: res_height * 0.01),
                             GestureDetector(
                               onTap: () {
-                                final bottomcontroller = Get.put(BottomController());
+                                final bottomcontroller = Get.put(
+                                  BottomController(),
+                                );
                                 bottomcontroller.navBarChange(1);
                                 Get.to(() => MainScreen());
                               },
@@ -2008,21 +2067,28 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                     width: 380,
                                     height: 58,
                                     decoration: BoxDecoration(
-                                        color: product_update_button ? kprimaryColor.withOpacity(0.5) : kprimaryColor,
-                                        borderRadius: BorderRadius.circular(12)),
+                                      color:
+                                          product_update_button
+                                              ? kprimaryColor.withOpacity(0.5)
+                                              : kprimaryColor,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                     child: Center(
                                       child: Text(
-                                        product_update_button ? "Updating .." : 'Update',
-                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                        product_update_button
+                                            ? "Updating .."
+                                            : 'Update',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                            SizedBox(
-                              height: res_height * 0.02,
-                            ),
+                            SizedBox(height: res_height * 0.02),
                           ],
                         ),
                       ),
@@ -2046,9 +2112,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     //         borderRadius: BorderRadius.circular(14)),
                     //   ),
                     // ),
-                    SizedBox(
-                      height: res_height * 0.02,
-                    ),
+                    SizedBox(height: res_height * 0.02),
                   ],
                 ),
               ),
@@ -2067,19 +2131,13 @@ class _EditProductScreenState extends State<EditProductScreen> {
       height: res_height * 0.03,
       decoration: BoxDecoration(
         color: kprimaryColor,
-        border: Border.all(
-          color: kprimaryColor,
-          width: 0.5,
-        ),
+        border: Border.all(color: kprimaryColor, width: 0.5),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Center(
         child: Text(
           'TAG',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
         ),
       ),
     );
@@ -2096,10 +2154,11 @@ class _EditProductScreenState extends State<EditProductScreen> {
             borderSide: const BorderSide(color: kprimaryColor, width: 1),
             borderRadius: BorderRadius.all(Radius.circular(15)),
           ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15.0),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: BorderSide(color: kprimaryColor, width: 1),
           ),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: kprimaryColor, width: 1)),
           filled: true,
           fillColor: Colors.white,
           hintText: txt,
@@ -2121,12 +2180,15 @@ class _EditProductScreenState extends State<EditProductScreen> {
                 dropdownValue = newValue!;
               });
             },
-            items: <String>['1', '2', '3', '4'].map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
+            items:
+                <String>['1', '2', '3', '4'].map<DropdownMenuItem<String>>((
+                  String value,
+                ) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
           ),
           // Row(
           //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -2149,12 +2211,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
     return Container(
       child: Column(
         children: [
-          SizedBox(
-            height: res_height * 0.01,
-          ),
-          SizedBox(
-            height: res_height * 0.018,
-          ),
+          SizedBox(height: res_height * 0.01),
+          SizedBox(height: res_height * 0.018),
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
@@ -2164,9 +2222,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
               ),
             ],
           ),
-          SizedBox(
-            height: res_height * 0.018,
-          ),
+          SizedBox(height: res_height * 0.018),
           Center(
             child: Row(
               children: [
@@ -2181,36 +2237,53 @@ class _EditProductScreenState extends State<EditProductScreen> {
                           style: TextStyle(fontSize: 13),
                         ),
                       ),
-                      SizedBox(
-                        height: res_height * 0.01,
-                      ),
+                      SizedBox(height: res_height * 0.01),
                       Row(
                         children: [
                           Container(
                             height: res_height * 0.04,
                             width: res_width * 0.29,
                             child: Center(
-                                child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 3),
-                                  child: Center(
-                                    child: Text(
-                                      value == 1 ? DateFormat('MM/dd/yyyy').format(DateTime.parse(pasd.toString())).toString() : DateFormat('MM/dd/yyyy').format(DateTime.parse(dasd.toString())).toString(),
-                                      style: TextStyle(fontSize: 10),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 3),
+                                    child: Center(
+                                      child: Text(
+                                        value == 1
+                                            ? DateFormat('MM/dd/yyyy')
+                                                .format(
+                                                  DateTime.parse(
+                                                    pasd.toString(),
+                                                  ),
+                                                )
+                                                .toString()
+                                            : DateFormat('MM/dd/yyyy')
+                                                .format(
+                                                  DateTime.parse(
+                                                    dasd.toString(),
+                                                  ),
+                                                )
+                                                .toString(),
+                                        style: TextStyle(fontSize: 10),
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            )),
+                                ],
+                              ),
+                            ),
                             decoration: BoxDecoration(
-                                color: Colors.white, borderRadius: BorderRadius.circular(7), border: Border.all(color: Colors.grey, width: 0.3)),
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(7),
+                              border: Border.all(
+                                color: Colors.grey,
+                                width: 0.3,
+                              ),
+                            ),
                           ),
-                          SizedBox(
-                            width: res_width * 0.01,
-                          ),
+                          SizedBox(width: res_width * 0.01),
                           GestureDetector(
                             onTap: () async {
                               DateTime? pickedDate = await showDatePicker(
@@ -2222,13 +2295,17 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                   return Theme(
                                     data: Theme.of(context).copyWith(
                                       colorScheme: ColorScheme.light(
-                                        primary: kprimaryColor, // header background color
-                                        onPrimary: Colors.white, // header text color
-                                        onSurface: kprimaryColor, // body text color
+                                        primary:
+                                            kprimaryColor, // header background color
+                                        onPrimary:
+                                            Colors.white, // header text color
+                                        onSurface:
+                                            kprimaryColor, // body text color
                                       ),
                                       textButtonTheme: TextButtonThemeData(
                                         style: TextButton.styleFrom(
-                                          foregroundColor: kprimaryColor, // button text color
+                                          foregroundColor:
+                                              kprimaryColor, // button text color
                                         ),
                                       ),
                                     ),
@@ -2236,9 +2313,9 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                   );
                                 },
                               );
-                              print(pickedDate);
-                              String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate!);
-                              print(formattedDate);
+                              String formattedDate = DateFormat(
+                                'yyyy-MM-dd',
+                              ).format(pickedDate!);
                               setState(() {
                                 if (value == 1) {
                                   pasd = formattedDate.toString();
@@ -2255,12 +2332,20 @@ class _EditProductScreenState extends State<EditProductScreen> {
                             child: Container(
                               child: Padding(
                                 padding: const EdgeInsets.all(6.0),
-                                child: Image.asset('assets/slicing/calender.png'),
+                                child: Image.asset(
+                                  'assets/slicing/calender.png',
+                                ),
                               ),
                               height: res_height * 0.04,
                               width: res_width * 0.11,
                               decoration: BoxDecoration(
-                                  color: Colors.white, borderRadius: BorderRadius.circular(7), border: Border.all(color: Colors.grey, width: 0.3)),
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(7),
+                                border: Border.all(
+                                  color: Colors.grey,
+                                  width: 0.3,
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -2268,49 +2353,61 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     ],
                   ),
                 ),
-                SizedBox(
-                  width: res_width * 0.06,
-                ),
+                SizedBox(width: res_width * 0.06),
                 Container(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        child: Text(
-                          'End Date',
-                          style: TextStyle(fontSize: 13),
-                        ),
+                        child: Text('End Date', style: TextStyle(fontSize: 13)),
                       ),
-                      SizedBox(
-                        height: res_height * 0.01,
-                      ),
+                      SizedBox(height: res_height * 0.01),
                       Row(
                         children: [
                           Container(
                             height: res_height * 0.04,
                             width: res_width * 0.29,
                             child: Center(
-                                child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 3),
-                                  child: Center(
-                                    child: Text(
-                                      value == 1 ? DateFormat('MM/dd/yyyy').format(DateTime.parse(paed.toString())).toString() : DateFormat('MM/dd/yyyy').format(DateTime.parse(daed.toString())).toString(),
-                                      style: TextStyle(fontSize: 10),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 3),
+                                    child: Center(
+                                      child: Text(
+                                        value == 1
+                                            ? DateFormat('MM/dd/yyyy')
+                                                .format(
+                                                  DateTime.parse(
+                                                    paed.toString(),
+                                                  ),
+                                                )
+                                                .toString()
+                                            : DateFormat('MM/dd/yyyy')
+                                                .format(
+                                                  DateTime.parse(
+                                                    daed.toString(),
+                                                  ),
+                                                )
+                                                .toString(),
+                                        style: TextStyle(fontSize: 10),
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            )),
+                                ],
+                              ),
+                            ),
                             decoration: BoxDecoration(
-                                color: Colors.white, borderRadius: BorderRadius.circular(7), border: Border.all(color: Colors.grey, width: 0.3)),
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(7),
+                              border: Border.all(
+                                color: Colors.grey,
+                                width: 0.3,
+                              ),
+                            ),
                           ),
-                          SizedBox(
-                            width: res_width * 0.01,
-                          ),
+                          SizedBox(width: res_width * 0.01),
                           GestureDetector(
                             onTap: () async {
                               DateTime? pickedDate = await showDatePicker(
@@ -2322,13 +2419,17 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                   return Theme(
                                     data: Theme.of(context).copyWith(
                                       colorScheme: ColorScheme.light(
-                                        primary: kprimaryColor, // header background color
-                                        onPrimary: Colors.white, // header text color
-                                        onSurface: kprimaryColor, // body text color
+                                        primary:
+                                            kprimaryColor, // header background color
+                                        onPrimary:
+                                            Colors.white, // header text color
+                                        onSurface:
+                                            kprimaryColor, // body text color
                                       ),
                                       textButtonTheme: TextButtonThemeData(
                                         style: TextButton.styleFrom(
-                                          foregroundColor: kprimaryColor, // button text color
+                                          foregroundColor:
+                                              kprimaryColor, // button text color
                                         ),
                                       ),
                                     ),
@@ -2336,9 +2437,9 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                   );
                                 },
                               );
-                              print(pickedDate);
-                              String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate!);
-                              print(formattedDate);
+                              String formattedDate = DateFormat(
+                                'yyyy-MM-dd',
+                              ).format(pickedDate!);
                               setState(() {
                                 if (value == 1) {
                                   paed = formattedDate.toString();
@@ -2355,12 +2456,20 @@ class _EditProductScreenState extends State<EditProductScreen> {
                             child: Container(
                               child: Padding(
                                 padding: const EdgeInsets.all(6.0),
-                                child: Image.asset('assets/slicing/calender.png'),
+                                child: Image.asset(
+                                  'assets/slicing/calender.png',
+                                ),
                               ),
                               height: res_height * 0.04,
                               width: res_width * 0.11,
                               decoration: BoxDecoration(
-                                  color: Colors.white, borderRadius: BorderRadius.circular(7), border: Border.all(color: Colors.grey, width: 0.3)),
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(7),
+                                border: Border.all(
+                                  color: Colors.grey,
+                                  width: 0.3,
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -2372,9 +2481,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
               ],
             ),
           ),
-          SizedBox(
-            height: res_height * 0.02,
-          ),
+          SizedBox(height: res_height * 0.02),
         ],
       ),
     );

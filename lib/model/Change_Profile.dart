@@ -38,16 +38,17 @@ class Data {
   int? latitude;
   int? longitude;
 
-  Data(
-      {this.id,
-      this.image,
-      this.name,
-      this.email,
-      this.number,
-      this.address,
-      this.userId,
-      this.latitude,
-      this.longitude});
+  Data({
+    this.id,
+    this.image,
+    this.name,
+    this.email,
+    this.number,
+    this.address,
+    this.userId,
+    this.latitude,
+    this.longitude,
+  });
 
   Data.fromJson(Map<String, dynamic> json) {
     id = json['id'];

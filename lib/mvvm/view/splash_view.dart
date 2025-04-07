@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jebby/view_model/services/splash_services.dart';
 
-
 class SplashView extends StatefulWidget {
   const SplashView({Key? key}) : super(key: key);
 
@@ -10,7 +9,6 @@ class SplashView extends StatefulWidget {
 }
 
 class _SplashViewState extends State<SplashView> {
-
   SplashServices splashServices = SplashServices();
 
   @override
@@ -19,11 +17,15 @@ class _SplashViewState extends State<SplashView> {
 
     splashServices.checkAuthentication(context);
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body:Center(
-        child: Text('Splash screen', style: Theme.of(context).textTheme.headlineMedium,),
+      body: Center(
+        child: Text(
+          'Splash screen',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
       ),
     );
   }

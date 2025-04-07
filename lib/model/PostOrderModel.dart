@@ -10,16 +10,17 @@ class PostOrderModel {
   int? longitude;
   String? CurrentAddress;
 
-  PostOrderModel(
-      {this.userId,
-      this.productId,
-      this.rentStart,
-      this.originalReturn,
-      this.name,
-      this.email,
-      this.location,
-      this.latitude,
-      this.longitude});
+  PostOrderModel({
+    this.userId,
+    this.productId,
+    this.rentStart,
+    this.originalReturn,
+    this.name,
+    this.email,
+    this.location,
+    this.latitude,
+    this.longitude,
+  });
 
   PostOrderModel.fromJson(Map<String, dynamic> json) {
     userId = json['user_id'];

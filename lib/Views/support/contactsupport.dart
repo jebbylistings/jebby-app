@@ -11,7 +11,6 @@ class ContactSupport extends StatefulWidget {
 class _ContactSupportState extends State<ContactSupport> {
   @override
   Widget build(BuildContext context) {
-    double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
@@ -20,7 +19,11 @@ class _ContactSupportState extends State<ContactSupport> {
         centerTitle: true,
         title: Text(
           'Contact Support',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 19,
+          ),
         ),
         leading: InkWell(
           onTap: () {
@@ -30,10 +33,7 @@ class _ContactSupportState extends State<ContactSupport> {
           child: Padding(
             padding: const EdgeInsets.all(17.0),
             child: Container(
-              child: Icon(
-                Icons.arrow_back,
-                color: Colors.black,
-              ),
+              child: Icon(Icons.arrow_back, color: Colors.black),
             ),
           ),
         ),
@@ -46,16 +46,17 @@ class _ContactSupportState extends State<ContactSupport> {
             children: [
               Text(
                 'Contact Support',
-                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                  fontSize: 18,
+                ),
                 textAlign: TextAlign.justify,
               ),
               SizedBox(height: res_height * 0.04),
               Text(
                 'At JEBBY, we are committed to providing you with the best rental experience possible. If you have any questions, concerns, or need assistance with our service, please don\'t hesitate to reach out to our dedicated support team. We\'re here to help you!',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xff524034),
-                ),
+                style: TextStyle(fontSize: 16, color: Color(0xff524034)),
               ),
               SizedBox(height: res_height * 0.02),
               Text(
@@ -79,44 +80,29 @@ class _ContactSupportState extends State<ContactSupport> {
               SizedBox(height: res_height * 0.02),
               Text(
                 '• Open the JEBBY app.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xff524034),
-                ),
+                style: TextStyle(fontSize: 16, color: Color(0xff524034)),
               ),
               SizedBox(height: res_height * 0.02),
-               Text(
+              Text(
                 '• Go to the top left bar to open the slider section.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xff524034),
-                ),
+                style: TextStyle(fontSize: 16, color: Color(0xff524034)),
               ),
               SizedBox(height: res_height * 0.02),
-               Text(
+              Text(
                 '• Click on "Provide Feedback.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xff524034),
-                ),
+                style: TextStyle(fontSize: 16, color: Color(0xff524034)),
               ),
               SizedBox(height: res_height * 0.02),
-               Text(
+              Text(
                 '• Follow the prompts to describe your issue or inquiry.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xff524034),
-                ),
+                style: TextStyle(fontSize: 16, color: Color(0xff524034)),
               ),
               SizedBox(height: res_height * 0.02),
-               Text(
+              Text(
                 '• Our support team will respond to you as soon as possible via the app\'s messaging system or in your email.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xff524034),
-                ),
+                style: TextStyle(fontSize: 16, color: Color(0xff524034)),
               ),
-               SizedBox(height: res_height * 0.02),
+              SizedBox(height: res_height * 0.02),
 
               Text(
                 '2. Email Support:',
@@ -129,34 +115,22 @@ class _ContactSupportState extends State<ContactSupport> {
               SizedBox(height: res_height * 0.02),
               Text(
                 '• You can also reach us via email at [support@jebbylistings.com].',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xff524034),
-                ),
+                style: TextStyle(fontSize: 16, color: Color(0xff524034)),
               ),
               SizedBox(height: res_height * 0.02),
-               Text(
+              Text(
                 '• Please include your name, contact information, and a detailed description of your issue or question.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xff524034),
-                ),
+                style: TextStyle(fontSize: 16, color: Color(0xff524034)),
               ),
               SizedBox(height: res_height * 0.02),
-               Text(
+              Text(
                 '• Our support team will respond to your email within [response time] during our business hours.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xff524034),
-                ),
+                style: TextStyle(fontSize: 16, color: Color(0xff524034)),
               ),
               SizedBox(height: res_height * 0.04),
               Text(
                 'Sincerely, The JEBBY Support Team',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xff524034),
-                ),
+                style: TextStyle(fontSize: 16, color: Color(0xff524034)),
               ),
               SizedBox(height: res_height * 0.04),
             ],

@@ -59,41 +59,40 @@ class Data {
   int? price2;
   List<Images>? images;
   String? delivery_charges;
-  
 
-  Data(
-      {this.id,
-      this.userId,
-      this.categoryId,
-      this.subcategoryId,
-      this.name,
-      this.price,
-      this.specifications,
-      this.serviceAgreements,
-      this.createdAt,
-      this.updatedAt,
-      this.negotiation,
-      this.isMessage,
-      this.stars,
-      this.length,
-      this.productId,
-      this.per,
-      this.subcatId,
-      this.fp,
-      this.lbd,
-      this.pastart,
-      this.paend,
-      this.dastart,
-      this.daend,
-      this.price1,
-      this.discount,
-      this.latitude,
-      this.longitude,
-      this.security_deposit,
-      this.price2,
-      this.images,
-      this.delivery_charges,
-      });
+  Data({
+    this.id,
+    this.userId,
+    this.categoryId,
+    this.subcategoryId,
+    this.name,
+    this.price,
+    this.specifications,
+    this.serviceAgreements,
+    this.createdAt,
+    this.updatedAt,
+    this.negotiation,
+    this.isMessage,
+    this.stars,
+    this.length,
+    this.productId,
+    this.per,
+    this.subcatId,
+    this.fp,
+    this.lbd,
+    this.pastart,
+    this.paend,
+    this.dastart,
+    this.daend,
+    this.price1,
+    this.discount,
+    this.latitude,
+    this.longitude,
+    this.security_deposit,
+    this.price2,
+    this.images,
+    this.delivery_charges,
+  });
 
   Data.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -123,7 +122,7 @@ class Data {
     discount = json['discount'];
     latitude = json['latitude'];
     longitude = json['longitude'];
-    security_deposit =json['security_deposit'];
+    security_deposit = json['security_deposit'];
     price2 = json['price2'];
     if (json['images'] != null) {
       images = <Images>[];

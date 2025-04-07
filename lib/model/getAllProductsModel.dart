@@ -6,13 +6,14 @@ class GetAllProductsModel {
   List<Reviews>? reviews;
   String? message;
 
-  GetAllProductsModel(
-      {this.status,
-      this.data,
-      this.images,
-      this.relate,
-      this.reviews,
-      this.message});
+  GetAllProductsModel({
+    this.status,
+    this.data,
+    this.images,
+    this.relate,
+    this.reviews,
+    this.message,
+  });
 
   GetAllProductsModel.fromJson(Map<String, dynamic> json) {
     status = json['status'];
@@ -81,23 +82,24 @@ class Data {
   String? image;
   String? delivery_charges;
 
-  Data(
-      {this.id,
-      this.userId,
-      this.categoryId,
-      this.subcategoryId,
-      this.name,
-      this.price,
-      this.specifications,
-      this.serviceAgreements,
-      this.createdAt,
-      this.updatedAt,
-      this.negotiation,
-      this.isMessage,
-      this.stars,
-      this.length,
-      this.image,
-      this.delivery_charges});
+  Data({
+    this.id,
+    this.userId,
+    this.categoryId,
+    this.subcategoryId,
+    this.name,
+    this.price,
+    this.specifications,
+    this.serviceAgreements,
+    this.createdAt,
+    this.updatedAt,
+    this.negotiation,
+    this.isMessage,
+    this.stars,
+    this.length,
+    this.image,
+    this.delivery_charges,
+  });
 
   Data.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -115,7 +117,7 @@ class Data {
     stars = json['stars'];
     length = json['length'];
     image = json['image'];
-    delivery_charges =json['delivery_charges'];
+    delivery_charges = json['delivery_charges'];
   }
 
   Map<String, dynamic> toJson() {
@@ -135,7 +137,7 @@ class Data {
     data['stars'] = this.stars;
     data['length'] = this.length;
     data['image'] = this.image;
-    data['delivery_charges'] =this.delivery_charges;
+    data['delivery_charges'] = this.delivery_charges;
     return data;
   }
 }
@@ -175,12 +177,13 @@ class Relate {
   String? createdAt;
   String? updatedAt;
 
-  Relate(
-      {this.id,
-      this.productId,
-      this.relatedProductId,
-      this.createdAt,
-      this.updatedAt});
+  Relate({
+    this.id,
+    this.productId,
+    this.relatedProductId,
+    this.createdAt,
+    this.updatedAt,
+  });
 
   Relate.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -211,15 +214,16 @@ class Reviews {
   String? createdAt;
   String? updatedAt;
 
-  Reviews(
-      {this.id,
-      this.userId,
-      this.productId,
-      this.stars,
-      this.image,
-      this.description,
-      this.createdAt,
-      this.updatedAt});
+  Reviews({
+    this.id,
+    this.userId,
+    this.productId,
+    this.stars,
+    this.image,
+    this.description,
+    this.createdAt,
+    this.updatedAt,
+  });
 
   Reviews.fromJson(Map<String, dynamic> json) {
     id = json['id'];

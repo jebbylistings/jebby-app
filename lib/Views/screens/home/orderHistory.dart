@@ -23,17 +23,18 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         centerTitle: true,
         title: Text(
           'Order History',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 19,
+          ),
         ),
         leading: InkWell(
           onTap: () {
             Get.back();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-          ),
+          child: Icon(Icons.arrow_back, color: Colors.black),
         ),
         actions: [
           GestureDetector(
@@ -42,13 +43,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             },
             child: Padding(
               padding: const EdgeInsets.all(19.0),
-              child: Icon(
-                        Icons.person_outline,
-                        color: Colors.black,
-                        size: 25
-                      )
+              child: Icon(Icons.person_outline, color: Colors.black, size: 25),
             ),
-          )
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -77,9 +74,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                         Container(
                           width: res_width * 0.44,
                           decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Colors.grey,
-                            ),
+                            border: Border.all(color: Colors.grey),
                           ),
                         ),
                       ],
@@ -90,9 +85,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                         Container(
                           width: res_width * 0.45,
                           child: TextButton(
-                            style: ButtonStyle(
-                              alignment: Alignment.center,
-                            ),
+                            style: ButtonStyle(alignment: Alignment.center),
                             onPressed: () {},
                             child: Text(
                               'History',
@@ -103,9 +96,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                         Container(
                           width: res_width * 0.44,
                           decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Colors.grey,
-                            ),
+                            border: Border.all(color: Colors.grey),
                           ),
                         ),
                       ],
@@ -113,9 +104,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                   ],
                 ),
               ),
-              SizedBox(
-                height: res_height * 0.018,
-              ),
+              SizedBox(height: res_height * 0.018),
               Container(
                 width: res_width * 0.9,
                 child: Row(
@@ -125,13 +114,11 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                       width: res_height * 0.035,
                       child: Image.asset('assets/slicing/line.png'),
                     ),
-                    SizedBox(
-                      width: 10,
-                    ),
+                    SizedBox(width: 10),
                     Container(
                       width: res_height * 0.035,
                       child: Image.asset('assets/slicing/column.png'),
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -141,35 +128,40 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                   runSpacing: 10,
                   children: [
                     itmBox(
-                        img: 'assets/slicing/h.jpg',
-                        dx: '\$ 7000',
-                        rv: '(2.9k Revews)',
-                        tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
-                        rt: '4.9'),
+                      img: 'assets/slicing/h.jpg',
+                      dx: '\$ 7000',
+                      rv: '(2.9k Revews)',
+                      tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
+                      rt: '4.9',
+                    ),
                     itmBox(
-                        img: 'assets/slicing/h.jpg',
-                        dx: '\$ 7000',
-                        rv: '(2.9k Revews)',
-                        tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
-                        rt: '4.9'),
+                      img: 'assets/slicing/h.jpg',
+                      dx: '\$ 7000',
+                      rv: '(2.9k Revews)',
+                      tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
+                      rt: '4.9',
+                    ),
                     itmBox(
-                        img: 'assets/slicing/h.jpg',
-                        dx: '\$ 7000',
-                        rv: '(2.9k Revews)',
-                        tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
-                        rt: '4.9'),
+                      img: 'assets/slicing/h.jpg',
+                      dx: '\$ 7000',
+                      rv: '(2.9k Revews)',
+                      tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
+                      rt: '4.9',
+                    ),
                     itmBox(
-                        img: 'assets/slicing/h.jpg',
-                        dx: '\$ 7000',
-                        rv: '(2.9k Revews)',
-                        tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
-                        rt: '4.9'),
+                      img: 'assets/slicing/h.jpg',
+                      dx: '\$ 7000',
+                      rv: '(2.9k Revews)',
+                      tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
+                      rt: '4.9',
+                    ),
                     itmBox(
-                        img: 'assets/slicing/h.jpg',
-                        dx: '\$ 7000',
-                        rv: '(2.9k Revews)',
-                        tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
-                        rt: '4.9'),
+                      img: 'assets/slicing/h.jpg',
+                      dx: '\$ 7000',
+                      rv: '(2.9k Revews)',
+                      tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
+                      rt: '4.9',
+                    ),
                   ],
                 ),
               ),
@@ -205,29 +197,17 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                 height: res_height * 0.2,
                 decoration: BoxDecoration(),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(10),
-                  ),
-                  child: Image.asset(
-                    '$img',
-                    fit: BoxFit.fill,
-                  ),
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  child: Image.asset('$img', fit: BoxFit.fill),
                 ),
               ),
-              SizedBox(
-                height: res_height * 0.005,
-              ),
+              SizedBox(height: res_height * 0.005),
               Container(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '$tx',
-                      style: TextStyle(fontSize: 11),
-                    ),
-                    SizedBox(
-                      height: res_height * 0.006,
-                    ),
+                    Text('$tx', style: TextStyle(fontSize: 11)),
+                    SizedBox(height: res_height * 0.006),
                     Text(
                       '$dx',
                       style: TextStyle(fontSize: 11),
@@ -235,40 +215,18 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                     ),
                     Row(
                       children: [
-                        Icon(
-                          Icons.star,
-                          size: 11,
-                          color: kprimaryColor,
-                        ),
-                        Icon(
-                          Icons.star,
-                          size: 11,
-                          color: kprimaryColor,
-                        ),
-                        Icon(
-                          Icons.star,
-                          size: 11,
-                          color: kprimaryColor,
-                        ),
-                        Icon(
-                          Icons.star,
-                          size: 11,
-                          color: kprimaryColor,
-                        ),
+                        Icon(Icons.star, size: 11, color: kprimaryColor),
+                        Icon(Icons.star, size: 11, color: kprimaryColor),
+                        Icon(Icons.star, size: 11, color: kprimaryColor),
+                        Icon(Icons.star, size: 11, color: kprimaryColor),
                         Icon(Icons.star, size: 11),
-                        Text(
-                          '$rt ',
-                          style: TextStyle(fontSize: 11),
-                        ),
+                        Text('$rt ', style: TextStyle(fontSize: 11)),
                         Text(
                           '$rv',
-                          style: TextStyle(
-                            fontSize: 9,
-                            color: Colors.grey,
-                          ),
+                          style: TextStyle(fontSize: 9, color: Colors.grey),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),

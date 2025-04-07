@@ -17,9 +17,9 @@ class UserNameProvider extends ChangeNotifier {
   String userName = "";
   void getUserName() async {
     if (userName == "Guest" || userName.isEmpty) {
-      SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+      SharedPreferences sharedPreferences =
+          await SharedPreferences.getInstance();
       String _name = sharedPreferences.getString('fullname') ?? "";
-      print("the user is $_name");
       userName = _name;
     }
   }
@@ -81,22 +81,24 @@ class SignInProvider extends ChangeNotifier {
 
   // sign in with google
   Future signInWithGoogle(value, BuildContext context) async {
-    print('hello google');
     final authViewMode = Provider.of<AuthViewModel>(context, listen: false);
 
-    final GoogleSignInAccount? googleSignInAccount = await googleSignIn.signIn();
+    final GoogleSignInAccount? googleSignInAccount =
+        await googleSignIn.signIn();
 
     if (googleSignInAccount != null) {
       // executing our authentication
       try {
-        final GoogleSignInAuthentication googleSignInAuthentication = await googleSignInAccount.authentication;
+        final GoogleSignInAuthentication googleSignInAuthentication =
+            await googleSignInAccount.authentication;
         final AuthCredential credential = GoogleAuthProvider.credential(
           accessToken: googleSignInAuthentication.accessToken,
           idToken: googleSignInAuthentication.idToken,
         );
 
         // signing to firebase user instance
-        final User userDetails = (await firebaseAuth.signInWithCredential(credential)).user!;
+        final User userDetails =
+            (await firebaseAuth.signInWithCredential(credential)).user!;
 
         // now save all values
         _name = userDetails.displayName;
@@ -120,7 +122,8 @@ class SignInProvider extends ChangeNotifier {
       } on FirebaseAuthException catch (e) {
         switch (e.code) {
           case "account-exists-with-different-credential":
-            _errorCode = "You already have an account with us. Use correct provider";
+            _errorCode =
+                "You already have an account with us. Use correct provider";
             _hasError = true;
             notifyListeners();
             break;
@@ -195,19 +198,33 @@ class SignInProvider extends ChangeNotifier {
         // Save the verificationId for use in signInWithPhoneCode
         // You can use a TextEditingController to get the SMS code from the user
         showSnackBar(context, 'OTP SENT');
-        Get.to(() => OTPSCREEN(fromPhoneAuth: true, verificationId: verificationId, phoneNumber: phoneNumber));
+        Get.to(
+          () => OTPSCREEN(
+            fromPhoneAuth: true,
+            verificationId: verificationId,
+            phoneNumber: phoneNumber,
+          ),
+        );
       },
       codeAutoRetrievalTimeout: (String verificationId) {},
     );
   }
 
   // sign in with phone code
-  Future signInWithPhoneCode(String verificationId, String smsCode, BuildContext context) async {
+  Future signInWithPhoneCode(
+    String verificationId,
+    String smsCode,
+    BuildContext context,
+  ) async {
     final authViewMode = Provider.of<AuthViewModel>(context, listen: false);
-    final AuthCredential credential = PhoneAuthProvider.credential(verificationId: verificationId, smsCode: smsCode);
+    final AuthCredential credential = PhoneAuthProvider.credential(
+      verificationId: verificationId,
+      smsCode: smsCode,
+    );
 
     try {
-      final UserCredential userCredential = await firebaseAuth.signInWithCredential(credential);
+      final UserCredential userCredential = await firebaseAuth
+          .signInWithCredential(credential);
       final User user = userCredential.user!;
 
       // now save all values
@@ -220,7 +237,6 @@ class SignInProvider extends ChangeNotifier {
 
       notifyListeners();
       int uniqueNumber = generateUniqueNumber();
-      print('Unique Number: $uniqueNumber');
 
       // save in registerApi
       Map<String, dynamic> data = {
@@ -312,93 +328,74 @@ class SignInProvider extends ChangeNotifier {
 
   // sign in with facebook
 
-// Future signInWithFacebook(value, BuildContext context) async {
-//   print('facebook');
-//     final authViewMode = Provider.of<AuthViewModel>(context,listen: false);
+  // Future signInWithFacebook(value, BuildContext context) async {
+  //     final authViewMode = Provider.of<AuthViewModel>(context,listen: false);
 
-//     try{
+  //     try{
 
-//      final LoginResult loginResult = await FacebookAuth.instance
-//           .login(permissions: ['email']);
+  //      final LoginResult loginResult = await FacebookAuth.instance
+  //           .login(permissions: ['email']);
 
-//     print("Result: ${loginResult.accessToken!.token}");
+  //     final OAuthCredential facebookAuthCredential =
+  //           FacebookAuthProvider.credential(loginResult.accessToken!.token);
 
-//     final OAuthCredential facebookAuthCredential =
-//           FacebookAuthProvider.credential(loginResult.accessToken!.token);
+  //       var authResult = await FirebaseAuth.instance
+  //           .signInWithCredential(facebookAuthCredential);
 
-//           print("facebookAuthCredential ${facebookAuthCredential}");
+  //         //save in registerApi
+  //         if (authResult.user != null) {
+  //         Map data = {
+  //           "full_name": '',
+  //           "email":  authResult.user!.email,
+  //           "password": "",
+  //           "source": "FACEBOOK",
+  //           "role": value.toString(),
+  //         };
+  //         authViewMode.signUpApiWithSocials(data, context);
+  //         // saving the values
+  //         _name = '';
+  //         _email = authResult.user!.email;
+  //         _imageUrl = '';
+  //         _uid = authResult.user!.uid;
+  //         _hasError = false;
+  //         _provider = "FACEBOOK";
+  //         _role=value.toString();
+  //         notifyListeners();}
+  //         else {
+  //       }
+  //       } on FirebaseAuthException catch (e) {
+  //         switch (e.code) {
+  //           case "account-exists-with-different-credential":
+  //             _errorCode = "You already have an account with us. Use correct provider";
+  //             _hasError = true;
+  //             notifyListeners();
+  //             break;
 
-//       var authResult = await FirebaseAuth.instance
-//           .signInWithCredential(facebookAuthCredential);
-
-//       print("authResult ${authResult}");
-
-//         //save in registerApi
-//         if (authResult.user != null) {
-//         Map data = {
-//           "full_name": '',
-//           "email":  authResult.user!.email,
-//           "password": "",
-//           "source": "FACEBOOK",
-//           "role": value.toString(),
-//         };
-//         authViewMode.signUpApiWithSocials(data, context);
-//         // saving the values
-//         _name = '';
-//         _email = authResult.user!.email;
-//         _imageUrl = '';
-//         _uid = authResult.user!.uid;
-//         _hasError = false;
-//         _provider = "FACEBOOK";
-//         _role=value.toString();
-//         notifyListeners();}
-//         else {
-//         print("Login failed");
-//       }
-//       } on FirebaseAuthException catch (e) {
-//         print("error: $e");
-//         switch (e.code) {
-//           case "account-exists-with-different-credential":
-//             _errorCode = "You already have an account with us. Use correct provider";
-//             _hasError = true;
-//             notifyListeners();
-//             break;
-
-//           case "null":
-//             _errorCode = "Some unexpected error while trying to sign in";
-//             _hasError = true;
-//             notifyListeners();
-//             break;
-//           default:
-//             _errorCode = e.toString();
-//             _hasError = true;
-//             notifyListeners();
-//         }
-//       }
-//   }
+  //           case "null":
+  //             _errorCode = "Some unexpected error while trying to sign in";
+  //             _hasError = true;
+  //             notifyListeners();
+  //             break;
+  //           default:
+  //             _errorCode = e.toString();
+  //             _hasError = true;
+  //             notifyListeners();
+  //         }
+  //       }
+  //   }
 
   Future signInWithFacebook(value, BuildContext context) async {
-    print('facebook');
     final authViewMode = Provider.of<AuthViewModel>(context, listen: false);
 
     try {
-      final LoginResult loginResult = await FacebookAuth.instance.login(permissions: ['email']);
-
-      print("Result: ${loginResult.accessToken!.tokenString}");
 
       final userData = await FacebookAuth.instance.getUserData();
-
-      print("userData ${userData}");
 
       // final OAuthCredential facebookAuthCredential =
       //       FacebookAuthProvider.credential(loginResult.accessToken!.token);
 
-      //       print("facebookAuthCredential ${facebookAuthCredential}");
-
       //   var authResult = await FirebaseAuth.instance
       //       .signInWithCredential(facebookAuthCredential);
-
-      //   print("authResult ${authResult}");
 
       // save in registerApi
       if (userData.isNotEmpty) {
@@ -419,14 +416,12 @@ class SignInProvider extends ChangeNotifier {
         // _provider = "FACEBOOK";
         // _role=value.toString();
         notifyListeners();
-      } else {
-        print("Login failed");
-      }
+      } else {}
     } on FirebaseAuthException catch (e) {
-      print("error: $e");
       switch (e.code) {
         case "account-exists-with-different-credential":
-          _errorCode = "You already have an account with us. Use correct provider";
+          _errorCode =
+              "You already have an account with us. Use correct provider";
           _hasError = true;
           notifyListeners();
           break;
@@ -444,7 +439,7 @@ class SignInProvider extends ChangeNotifier {
     }
   }
 
-// sign in with apple
+  // sign in with apple
 
   Future signInWithApple(value, BuildContext context) async {
     final authViewMode = Provider.of<AuthViewModel>(context, listen: false);
@@ -464,11 +459,13 @@ class SignInProvider extends ChangeNotifier {
         accessToken: appleCredential.authorizationCode,
       );
 
-      final userData = await FirebaseAuth.instance.signInWithCredential(oauthCredential);
+      final userData = await FirebaseAuth.instance.signInWithCredential(
+        oauthCredential,
+      );
 
-      print("Apple Login user: ${appleCredential.email} , ${appleCredential.familyName}, ${appleCredential.givenName}");
       // Check if the user data is available
-      String? displayName = "${appleCredential.givenName} ${appleCredential.familyName}";
+      String? displayName =
+          "${appleCredential.givenName} ${appleCredential.familyName}";
       String? email = appleCredential.email;
       final user = FirebaseAuth.instance.currentUser;
       if (displayName == "" || email == null) {
@@ -491,9 +488,6 @@ class SignInProvider extends ChangeNotifier {
         await user.reload();
       }
 
-      print("userData ${userData.user!.emailVerified}");
-      print("displayName ${userData.user!.uid}");
-      print("email ${email}");
       // save in registerApi
       if (userData.user != null) {
         Map data = {
@@ -505,14 +499,12 @@ class SignInProvider extends ChangeNotifier {
         };
         authViewMode.signUpApiWithSocials(data, context);
         notifyListeners();
-      } else {
-        print("Login failed");
-      }
+      } else {}
     } on FirebaseAuthException catch (e) {
-      print("error: $e");
       switch (e.code) {
         case "account-exists-with-different-credential":
-          _errorCode = "You already have an account with us. Use correct provider";
+          _errorCode =
+              "You already have an account with us. Use correct provider";
           _hasError = true;
           notifyListeners();
           break;
@@ -532,19 +524,27 @@ class SignInProvider extends ChangeNotifier {
 
   // ENTRY FOR CLOUDFIRESTORE
   Future getUserDataFromFirestore(uid) async {
-    await FirebaseFirestore.instance.collection("users").doc(uid).get().then((DocumentSnapshot snapshot) => {
-          _uid = snapshot['uid'],
-          _name = snapshot['name'],
-          _email = snapshot['email'],
-          _phoneNumber = snapshot['phoneNumber'],
-          _imageUrl = snapshot['image_url'],
-          _provider = snapshot['provider'],
-          // _role = snapshot['role'],
-        });
+    await FirebaseFirestore.instance
+        .collection("users")
+        .doc(uid)
+        .get()
+        .then(
+          (DocumentSnapshot snapshot) => {
+            _uid = snapshot['uid'],
+            _name = snapshot['name'],
+            _email = snapshot['email'],
+            _phoneNumber = snapshot['phoneNumber'],
+            _imageUrl = snapshot['image_url'],
+            _provider = snapshot['provider'],
+            // _role = snapshot['role'],
+          },
+        );
   }
 
   Future saveDataToFirestore() async {
-    final DocumentReference r = FirebaseFirestore.instance.collection("users").doc(uid);
+    final DocumentReference r = FirebaseFirestore.instance
+        .collection("users")
+        .doc(uid);
     await r.set({
       "name": _name,
       "email": _email,
@@ -589,7 +589,8 @@ class SignInProvider extends ChangeNotifier {
 
   // checkUser exists or not in cloudfirestore
   Future<bool> checkUserExists() async {
-    DocumentSnapshot snap = await FirebaseFirestore.instance.collection('users').doc(_uid).get();
+    DocumentSnapshot snap =
+        await FirebaseFirestore.instance.collection('users').doc(_uid).get();
     if (snap.exists) {
       return true;
     } else {
@@ -617,12 +618,7 @@ class SignInProvider extends ChangeNotifier {
 
     FirebaseAuth auth = FirebaseAuth.instance;
     final user = auth.currentUser;
-    print(user.toString());
-    if (user != null) {
-      print("/////////////////////////////////////////////////////");
-      print("////////////////////${user.displayName}//////////////////////");
-      // print("///////////////////${sp.getDataFromSharedPreferences().then((value){sp.name.toString();})}///////////////");
-    }
+    if (user != null) {}
 
     notifyListeners();
     // clear all storage information
@@ -632,14 +628,15 @@ class SignInProvider extends ChangeNotifier {
   Future clearStoredData() async {
     final SharedPreferences s = await SharedPreferences.getInstance();
     s.clear();
-// await s.remove('name');
-// await s.remove('email');
-// await s.remove('image_url');
-// await s.remove('uid');
-// await s.remove('provider');
-// notifyListeners();
+    // await s.remove('name');
+    // await s.remove('email');
+    // await s.remove('image_url');
+    // await s.remove('uid');
+    // await s.remove('provider');
+    // notifyListeners();
   }
 }
+
 math.Random random = math.Random();
 
 int generateUniqueNumber() {
@@ -654,4 +651,3 @@ int generateUniqueNumber() {
 
   return uniqueNumber;
 }
-

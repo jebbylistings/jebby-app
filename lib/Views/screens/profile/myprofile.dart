@@ -51,20 +51,19 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   String? email;
   String? role;
   void profileData(BuildContext context) async {
-    getUserDate().then((value) async {
-      token = value.token.toString();
-      id = value.id.toString();
-      getProductsApi(id);
-      fullname = value.name.toString();
-      print("fullname ${fullname}");
+    getUserDate()
+        .then((value) async {
+          token = value.token.toString();
+          id = value.id.toString();
+          getProductsApi(id);
+          fullname = value.name.toString();
 
-      email = value.email.toString();
-      role = value.role.toString();
-    }).onError((error, stackTrace) {
-      if (kDebugMode) {
-        print(error.toString());
-      }
-    });
+          email = value.email.toString();
+          role = value.role.toString();
+        })
+        .onError((error, stackTrace) {
+          if (kDebugMode) {}
+        });
   }
 
   @override
@@ -72,8 +71,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     // change read to watch!!!!
     //
     final sp = context.watch<SignInProvider>();
-    print('sp.imageUrl');
-    print(sp.imageUrl);
     double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
     return Scaffold(
@@ -83,17 +80,18 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
         centerTitle: true,
         title: Text(
           'My Profile',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 19,
+          ),
         ),
         leading: InkWell(
           onTap: () {
             Get.to(() => MainScreen());
           },
           borderRadius: BorderRadius.circular(50),
-          child: Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-          ),
+          child: Icon(Icons.arrow_back, color: Colors.black),
         ),
         actions: [
           Padding(
@@ -106,7 +104,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                 child: Image.asset('assets/slicing/Group 63@3x.png'),
               ),
             ),
-          )
+          ),
         ],
       ),
       body: Container(
@@ -122,91 +120,120 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                   width: res_width * 0.9,
                   child: Column(
                     children: [
-                      SizedBox(
-                        height: res_height * 0.02,
-                      ),
+                      SizedBox(height: res_height * 0.02),
                       Stack(
                         clipBehavior: Clip.none,
                         children: [
                           Container(
-                              width: 400,
-                              height: 136,
-                              decoration: BoxDecoration(),
-                              child: imagesapi == "null"
-                                  ? sp.imageUrl.toString() == "null"
-                                      ? Image.asset("assets/slicing/blankuser.jpeg", fit: BoxFit.cover)
-                                      : CachedNetworkImage(
+                            width: 400,
+                            height: 136,
+                            decoration: BoxDecoration(),
+                            child:
+                                imagesapi == "null"
+                                    ? sp.imageUrl.toString() == "null"
+                                        ? Image.asset(
+                                          "assets/slicing/blankuser.jpeg",
+                                          fit: BoxFit.cover,
+                                        )
+                                        : CachedNetworkImage(
                                           imageUrl: "${sp.imageUrl}",
                                           fit: BoxFit.cover,
-                                          placeholder: (context, url) => Center(
+                                          placeholder:
+                                              (context, url) => Center(
+                                                child:
+                                                    CircularProgressIndicator(),
+                                              ),
+                                          errorWidget:
+                                              (context, url, error) => Icon(
+                                                Icons.error,
+                                                color: Colors.red,
+                                              ),
+                                        )
+                                    : CachedNetworkImage(
+                                      imageUrl: "${Url}${back_image_api}",
+                                      fit: BoxFit.cover,
+                                      placeholder:
+                                          (context, url) => Center(
                                             child: CircularProgressIndicator(),
                                           ),
-                                          errorWidget: (context, url, error) => Icon(
+                                      errorWidget:
+                                          (context, url, error) => Icon(
                                             Icons.error,
                                             color: Colors.red,
                                           ),
-                                        )
-                                  : CachedNetworkImage(
-                                      imageUrl: "${Url}${back_image_api}",
-                                      fit: BoxFit.cover,
-                                      placeholder: (context, url) => Center(
-                                        child: CircularProgressIndicator(),
-                                      ),
-                                      errorWidget: (context, url, error) => Icon(
-                                        Icons.error,
-                                        color: Colors.red,
-                                      ),
-                                    )
-                              //  imagesapi == "null"
-                              //     ? Image.asset(
-                              //         'assets/slicing/userblankpng.png',
-                              //         fit: BoxFit.cover,
-                              //       )
-                              //     : Image.network(
-                              //         "${Url}${imagesapi}",
-                              //         fit: BoxFit.cover,
-                              //       ),
-                              ),
+                                    ),
+                            //  imagesapi == "null"
+                            //     ? Image.asset(
+                            //         'assets/slicing/userblankpng.png',
+                            //         fit: BoxFit.cover,
+                            //       )
+                            //     : Image.network(
+                            //         "${Url}${imagesapi}",
+                            //         fit: BoxFit.cover,
+                            //       ),
+                          ),
                           Positioned(
                             left: 15,
                             bottom: -20,
                             child: Container(
-                              child: imagesapi == "null"
-                                  ? sp.imageUrl.toString() == "null"
-                                      ? CircleAvatar(radius: 40, backgroundImage: AssetImage("assets/slicing/blankuser.jpeg"))
-                                      : CircleAvatar(
-                                          radius: 40,
-                                          backgroundColor: Colors.grey[200],
-                                          child: CachedNetworkImage(
-                                            imageUrl: "${sp.imageUrl}",
-                                            imageBuilder: (context, imageProvider) => CircleAvatar(
-                                              radius: 40,
-                                              backgroundImage: imageProvider,
+                              child:
+                                  imagesapi == "null"
+                                      ? sp.imageUrl.toString() == "null"
+                                          ? CircleAvatar(
+                                            radius: 40,
+                                            backgroundImage: AssetImage(
+                                              "assets/slicing/blankuser.jpeg",
                                             ),
-                                            placeholder: (context, url) => CircularProgressIndicator(), // Placeholder widget
-                                            errorWidget: (context, url, error) => Icon(Icons.error, size: 40), // Error widget
-                                          ),
-                                        )
-                                  : CircleAvatar(
-                                      radius: 40,
-                                      backgroundColor: Colors.grey[200],
-                                      child: CachedNetworkImage(
-                                        imageUrl: "${Url}${imagesapi}",
-                                        imageBuilder: (context, imageProvider) => CircleAvatar(
-                                          radius: 40,
-                                          backgroundImage: imageProvider,
+                                          )
+                                          : CircleAvatar(
+                                            radius: 40,
+                                            backgroundColor: Colors.grey[200],
+                                            child: CachedNetworkImage(
+                                              imageUrl: "${sp.imageUrl}",
+                                              imageBuilder:
+                                                  (context, imageProvider) =>
+                                                      CircleAvatar(
+                                                        radius: 40,
+                                                        backgroundImage:
+                                                            imageProvider,
+                                                      ),
+                                              placeholder:
+                                                  (context, url) =>
+                                                      CircularProgressIndicator(), // Placeholder widget
+                                              errorWidget:
+                                                  (context, url, error) => Icon(
+                                                    Icons.error,
+                                                    size: 40,
+                                                  ), // Error widget
+                                            ),
+                                          )
+                                      : CircleAvatar(
+                                        radius: 40,
+                                        backgroundColor: Colors.grey[200],
+                                        child: CachedNetworkImage(
+                                          imageUrl: "${Url}${imagesapi}",
+                                          imageBuilder:
+                                              (context, imageProvider) =>
+                                                  CircleAvatar(
+                                                    radius: 40,
+                                                    backgroundImage:
+                                                        imageProvider,
+                                                  ),
+                                          placeholder:
+                                              (context, url) =>
+                                                  CircularProgressIndicator(), // Placeholder widget
+                                          errorWidget:
+                                              (context, url, error) => Icon(
+                                                Icons.error,
+                                                size: 40,
+                                              ), // Error widget
                                         ),
-                                        placeholder: (context, url) => CircularProgressIndicator(), // Placeholder widget
-                                        errorWidget: (context, url, error) => Icon(Icons.error, size: 40), // Error widget
                                       ),
-                                    ),
                             ),
-                          )
+                          ),
                         ],
                       ),
-                      SizedBox(
-                        height: res_height * 0.04,
-                      ),
+                      SizedBox(height: res_height * 0.04),
                       Row(
                         children: [
                           Column(
@@ -225,20 +252,22 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                                             ? fullname.toString()
                                             : sp.name.toString()
                                         : nameapi.toString(),
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 30,
+                                    ),
                                   ),
                                 ),
                               ),
-                              SizedBox(
-                                height: 8,
-                              ),
+                              SizedBox(height: 8),
                               Text(
                                 "Verified User",
-                                style: TextStyle(fontSize: 16, color: Colors.grey),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey,
+                                ),
                               ),
-                              SizedBox(
-                                height: 8,
-                              ),
+                              SizedBox(height: 8),
                               // Text(
                               //   "1024 Reservation | 278 For Rents",
                               //   style: TextStyle(fontSize: 16, color: Colors.grey),
@@ -247,9 +276,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(
-                        height: 10,
-                      ),
+                      SizedBox(height: 10),
                       Wrap(
                         alignment: WrapAlignment.start,
                         runSpacing: 20,
@@ -303,9 +330,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                           // ),
                         ],
                       ),
-                      SizedBox(
-                        height: res_height * 0.03,
-                      ),
+                      SizedBox(height: res_height * 0.03),
                       // Row(
                       //   mainAxisAlignment: MainAxisAlignment.center,
                       //   children: [
@@ -398,9 +423,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                       //     ),
                       //   ),
                       // ),
-                      SizedBox(
-                        height: 40,
-                      )
+                      SizedBox(height: 40),
                     ],
                   ),
                 ),
@@ -437,29 +460,17 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                 height: res_height * 0.2,
                 decoration: BoxDecoration(),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(10),
-                  ),
-                  child: Image.asset(
-                    '$img',
-                    fit: BoxFit.fill,
-                  ),
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  child: Image.asset('$img', fit: BoxFit.fill),
                 ),
               ),
-              SizedBox(
-                height: res_height * 0.005,
-              ),
+              SizedBox(height: res_height * 0.005),
               Container(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '$tx',
-                      style: TextStyle(fontSize: 11),
-                    ),
-                    SizedBox(
-                      height: res_height * 0.006,
-                    ),
+                    Text('$tx', style: TextStyle(fontSize: 11)),
+                    SizedBox(height: res_height * 0.006),
                     Text(
                       '$dx',
                       style: TextStyle(fontSize: 11),
@@ -467,40 +478,18 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                     ),
                     Row(
                       children: [
-                        Icon(
-                          Icons.star,
-                          size: 11,
-                          color: kprimaryColor,
-                        ),
-                        Icon(
-                          Icons.star,
-                          size: 11,
-                          color: kprimaryColor,
-                        ),
-                        Icon(
-                          Icons.star,
-                          size: 11,
-                          color: kprimaryColor,
-                        ),
-                        Icon(
-                          Icons.star,
-                          size: 11,
-                          color: kprimaryColor,
-                        ),
+                        Icon(Icons.star, size: 11, color: kprimaryColor),
+                        Icon(Icons.star, size: 11, color: kprimaryColor),
+                        Icon(Icons.star, size: 11, color: kprimaryColor),
+                        Icon(Icons.star, size: 11, color: kprimaryColor),
                         Icon(Icons.star, size: 11),
-                        Text(
-                          '$rt ',
-                          style: TextStyle(fontSize: 11),
-                        ),
+                        Text('$rt ', style: TextStyle(fontSize: 11)),
                         Text(
                           '$rv',
-                          style: TextStyle(
-                            fontSize: 9,
-                            color: Colors.grey,
-                          ),
+                          style: TextStyle(fontSize: 9, color: Colors.grey),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -511,28 +500,22 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     );
   }
 
-  Wraper(
-    img,
-    txt,
-    VoidCallback onTap,
-  ) {
+  Wraper(img, txt, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 100,
         height: 90,
-        decoration: BoxDecoration(color: Color(0xFF4285F4), borderRadius: BorderRadius.all(Radius.circular(5))),
+        decoration: BoxDecoration(
+          color: Color(0xFF4285F4),
+          borderRadius: BorderRadius.all(Radius.circular(5)),
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Image.asset(
-              img,
-              scale: 3,
-            ),
-            SizedBox(
-              height: 10,
-            ),
+            Image.asset(img, scale: 3),
+            SizedBox(height: 10),
             Text(
               txt,
               textAlign: TextAlign.center,
@@ -550,7 +533,9 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 
   ////////
   Future getProductsApi(id) async {
-    final response = await http.get(Uri.parse('${Url}/UserProfileGetById/${id}'));
+    final response = await http.get(
+      Uri.parse('${Url}/UserProfileGetById/${id}'),
+    );
     var data = jsonDecode(response.body.toString());
     if (data["data"].length != 0) {}
     setState(() {
@@ -615,7 +600,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 //        id = value.id.toString();
 //       });
 //     }).onError((error, stackTrace) {
-//       print(error.toString());
 //     });
 //   }
 //   HomeViewViewModel homeViewViewModel = HomeViewViewModel();
@@ -630,7 +614,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 //     log(getId.toString());
 //     homeViewViewModel.changeProfileDataApi(getId);
 //   }
-
 
 //   // Future getDataFromSharedPreferences() async {
 //   //   final usp = context.watch<UserViewModel>();
@@ -647,7 +630,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 //    // homeViewViewModel.changeProfileDataApi(434);
 //     final usp = context.read<UserViewModel>();
 //     usp.getUpdatedUser();
-
 
 //     super.initState();
 //   }
@@ -952,9 +934,9 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 //               var profileValuesforcheck = value.changeProfileData.data!.data!;
 
 //               if (profileValuesforcheck.length != 0) {
-               
+
 //                   profileValues = value.changeProfileData.data!.data![0];
-              
+
 //               }
 
 //               return Container(
@@ -979,9 +961,8 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 //                                     width: 400,
 //                                     height: 136,
 //                                     decoration: BoxDecoration(),
-//                                     child: 
-                                    
-                                    
+//                                     child:
+
 //                                     sp.imageUrl.toString() == "null"
 //                                     ? usp.image.toString() == "null"
 //                                         ? Image.asset("assets/slicing/blankuser.jpeg", fit: BoxFit.cover)
@@ -1000,9 +981,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 //                                     radius: 40,
 //                                     backgroundImage: NetworkImage("${Url}${usp.image}"))
 //                                     : CircleAvatar(radius: 40, backgroundImage: NetworkImage("${sp.imageUrl}")),
-                                
 
-                                      
 //                                       ///////////////
 //                                       // profileValuesforcheck.length == 0
 //                                       //     ? sp.name.toString() == "null"? CircleAvatar(radius: 40, backgroundImage: AssetImage("assets/slicing/blankuser.jpeg")):CircleAvatar(radius: 40, backgroundImage: NetworkImage("${sp.imageUrl}"))
@@ -1359,18 +1338,17 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 //       log(data["data"][0]["id"].toString());
 //     }
 
-    
 //       if (data["data"].length != 0) {
-        
+
 //         imagesapi = data["data"][0]["image"].toString();
 //         nameapi = data["data"][0]["name"].toString();
-      
+
 //         emailapi = data["data"][0]["email"].toString();
-        
+
 //         back_image_api = data["data"][0]["back_image"].toString();
-        
+
 //       }
-   
+
 //     if (response.statusCode == 200) {
 //       return data;
 //     } else {
@@ -1378,11 +1356,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 //     }
 //   }
 // }
-
-
-
-
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1432,7 +1405,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 //     sp.getDataFromSharedPreferences();
 //    // final UsharePref = context.watch<UserViewModel>();
 //    log("//////////////////"+usp.id.toString());
-    
+
 //    updatedProfile= home_view_model.updateProfileData(usp.id.toString());
 
 //   }

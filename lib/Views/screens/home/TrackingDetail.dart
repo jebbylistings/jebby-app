@@ -6,22 +6,23 @@ import 'package:jebby/res/app_url.dart';
 import '../../../view_model/apiServices.dart';
 
 class TrackingDetailScreen extends StatefulWidget {
-  var date;
-  var vendorId;
-  var status;
-  var created;
-  var approve;
-  var complete;
-  var cancel;
+  final dynamic date;
+  final dynamic vendorId;
+  final dynamic status;
+  final dynamic created;
+  final dynamic approve;
+  final dynamic complete;
+  final dynamic cancel;
 
-  TrackingDetailScreen(
-      {this.date,
-      this.vendorId,
-      this.status,
-      this.created,
-      this.approve,
-      this.complete,
-      this.cancel});
+  TrackingDetailScreen({
+    this.date,
+    this.vendorId,
+    this.status,
+    this.created,
+    this.approve,
+    this.complete,
+    this.cancel,
+  });
 
   @override
   State<TrackingDetailScreen> createState() => _TrackingDetailScreenState();
@@ -38,57 +39,72 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
 
   void getUserData() {
     ApiRepository.shared.userCredential(
-        (List) => {
-              if (this.mounted)
-                {
-                  if (List.data!.length == 0)
-                    {
-                      setState(() {
-                        print("EMPTY USER DATA");
-                        userLoader = false;
-                        userError = false;
-                        userEmpty = true;
-                        userImage = "";
-                      })
-                    }
-                  else
-                    {
-                      setState(() {
-                        userError = false;
-                        userLoader = false;
-                        userEmpty = false;
-                        userImage = ApiRepository
-                            .shared.getUserCredentialModelList!.data![0].image
-                            .toString();
-                        userName = ApiRepository
-                            .shared.getUserCredentialModelList!.data![0].name
-                            .toString();
-                        userNumber = ApiRepository
-                            .shared.getUserCredentialModelList!.data![0].number
-                            .toString();
-                        userAddress = ApiRepository
-                            .shared.getUserCredentialModelList!.data![0].address
-                            .toString();
-                      })
-                    }
-                }
-            },
-        (error) => {
-              if (error != null)
-                {
-                  setState(() {
-                    userError = true;
-                    userLoader = false;
-                    userEmpty = false;
-                    userImage = "";
-                  }),
-                },
-            },
-        widget.vendorId.toString());
+      (List) => {
+        if (this.mounted)
+          {
+            if (List.data!.length == 0)
+              {
+                setState(() {
+                  userLoader = false;
+                  userError = false;
+                  userEmpty = true;
+                  userImage = "";
+                }),
+              }
+            else
+              {
+                setState(() {
+                  userError = false;
+                  userLoader = false;
+                  userEmpty = false;
+                  userImage =
+                      ApiRepository
+                          .shared
+                          .getUserCredentialModelList!
+                          .data![0]
+                          .image
+                          .toString();
+                  userName =
+                      ApiRepository
+                          .shared
+                          .getUserCredentialModelList!
+                          .data![0]
+                          .name
+                          .toString();
+                  userNumber =
+                      ApiRepository
+                          .shared
+                          .getUserCredentialModelList!
+                          .data![0]
+                          .number
+                          .toString();
+                  userAddress =
+                      ApiRepository
+                          .shared
+                          .getUserCredentialModelList!
+                          .data![0]
+                          .address
+                          .toString();
+                }),
+              },
+          },
+      },
+      (error) => {
+        if (error != null)
+          {
+            setState(() {
+              userError = true;
+              userLoader = false;
+              userEmpty = false;
+              userImage = "";
+            }),
+          },
+      },
+      widget.vendorId.toString(),
+    );
   }
 
   void initState() {
-    print("status ${widget.status}");
     getUserData();
     super.initState();
   }
@@ -108,12 +124,7 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
             Get.back();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Container(
-            child: Icon(
-              Icons.arrow_back,
-              color: Colors.black,
-            ),
-          ),
+          child: Container(child: Icon(Icons.arrow_back, color: Colors.black)),
         ),
         automaticallyImplyLeading: false,
         elevation: 0,
@@ -125,9 +136,7 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               children: [
-                SizedBox(
-                  height: 35,
-                ),
+                SizedBox(height: 35),
                 Row(
                   children: [
                     Text(
@@ -136,30 +145,30 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
                     ),
                   ],
                 ),
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: 10),
                 Container(
                   width: 391,
                   height: 1,
-                  color: Colors.grey.withOpacity(0.4),
+                  color: Colors.grey.withAlpha(102),
                 ),
-                SizedBox(
-                  height: 17,
-                ),
+                SizedBox(height: 17),
                 RR(),
-                SizedBox(
-                  height: 50,
-                ),
+                SizedBox(height: 50),
                 widget.status == "3"
-                    ? Icn("assets/slicing/Group 353@3x.png",
-                        "Order is Cancelled", "cancel")
+                    ? Icn(
+                      "assets/slicing/Group 353@3x.png",
+                      "Order is Cancelled",
+                      "cancel",
+                    )
                     : widget.status == "0"
-                        ? Icn("assets/slicing/Group 353@3x.png",
-                            "Order is Pending", "")
-                        : widget.status == "1"
-                            ? Icn1("assets/slicing/Group 353@3x.png")
-                            : Icn2("assets/slicing/Group 353@3x.png")
+                    ? Icn(
+                      "assets/slicing/Group 353@3x.png",
+                      "Order is Pending",
+                      "",
+                    )
+                    : widget.status == "1"
+                    ? Icn1("assets/slicing/Group 353@3x.png")
+                    : Icn2("assets/slicing/Group 353@3x.png"),
                 //     Padding(
                 //       padding: const EdgeInsets.only(right: 235),
                 //       child: Container(
@@ -260,52 +269,51 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(),
-                child: userImage == ""
-                    ? Image.asset("assets/slicing/blankuser.jpeg")
-                    : Image.network(AppUrl.baseUrlM + userImage)),
-            SizedBox(
-              width: 22,
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(),
+              child:
+                  userImage == ""
+                      ? Image.asset("assets/slicing/blankuser.jpeg")
+                      : Image.network(AppUrl.baseUrlM + userImage),
             ),
+            SizedBox(width: 22),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   userName == "" ? "vendor" : userName,
                   style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16),
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
-                SizedBox(
-                  height: 5,
-                ),
+                SizedBox(height: 5),
                 Text(
                   userNumber == "" ? "" : userNumber,
                   style: TextStyle(
-                      color: Colors.grey,
-                      fontWeight: FontWeight.normal,
-                      fontSize: 11),
+                    color: Colors.grey,
+                    fontWeight: FontWeight.normal,
+                    fontSize: 11,
+                  ),
                 ),
-                SizedBox(
-                  height: 7,
-                ),
+                SizedBox(height: 7),
                 Container(
                   width: 270,
                   child: Text(
                     userAddress == "" ? "" : userAddress,
                     style: TextStyle(
-                        color: Colors.grey,
-                        fontWeight: FontWeight.normal,
-                        fontSize: 11),
+                      color: Colors.grey,
+                      fontWeight: FontWeight.normal,
+                      fontSize: 11,
+                    ),
                   ),
                 ),
               ],
-            )
+            ),
           ],
-        )
+        ),
       ],
     );
   }
@@ -321,99 +329,85 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
               child: Text(
                 type == "cancel"
                     ? widget.cancel == "0"
-                        ? 
-                        ""
-                        :
-                        DateFormat('dd-MM-yy')
-                            .format(DateTime.parse(widget.cancel))
-                        // : widget.cancel
+                        ? ""
+                        : DateFormat(
+                          'dd-MM-yy',
+                        ).format(DateTime.parse(widget.cancel))
+                    // : widget.cancel
                     : widget.created,
                 style: TextStyle(fontSize: 11),
               ),
             ),
-            SizedBox(width: MediaQuery.of(context).size.width*0.01,),
+            SizedBox(width: MediaQuery.of(context).size.width * 0.01),
             Align(
               alignment: Alignment.center,
               child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                      shape: BoxShape.circle, color: Color(0xFF4285F4)),
-                  child: Image.asset(
-                    img,
-                    scale: 3,
-                  )),
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFF4285F4),
+                ),
+                child: Image.asset(img, scale: 3),
+              ),
             ),
-            SizedBox(
-              width: MediaQuery.of(context).size.width * 0.01,
-            ),
+            SizedBox(width: MediaQuery.of(context).size.width * 0.01),
             Center(
               child: Text(
                 txt,
                 style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Icn1(img) {
+    return Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              child: Text(widget.created, style: TextStyle(fontSize: 11)),
+            ),
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0xFF4285F4),
+              ),
+              child: Image.asset(img, scale: 3),
+            ),
+            SizedBox(width: MediaQuery.of(context).size.width * 0.01),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Placed",
+                  style: TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.bold,
-                    fontSize: 16),
-              ),
-            )
-          ],
-        ),
-      ],
-    );
-  }
-
-  Icn1(
-    img,
-  ) {
-    return Column(
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              child: Text(
-                widget.created,
-                style: TextStyle(fontSize: 11),
-              ),
-            ),
-            Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                    shape: BoxShape.circle, color: Color(0xFF4285F4)),
-                child: Image.asset(
-                  img,
-                  scale: 3,
-                )),
-            SizedBox(
-              width: MediaQuery.of(context).size.width * 0.01,
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Placed",
-                  style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16),
+                    fontSize: 16,
+                  ),
                 ),
               ],
-            )
+            ),
           ],
         ),
         Padding(
           padding: const EdgeInsets.only(right: 235),
-          child: Container(
-            height: 60,
-            width: 1,
-            color: Color(0xff707070),
-          ),
+          child: Container(height: 60, width: 1, color: Color(0xff707070)),
         ),
-        SizedBox(
-          height: 8,
-        ),
+        SizedBox(height: 8),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           // mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -421,55 +415,48 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
             Container(
               child: Text(
                 widget.approve != "0"
-                    ? DateFormat('dd-MM-yy').format(DateTime.parse(widget.approve))
+                    ? DateFormat(
+                      'dd-MM-yy',
+                    ).format(DateTime.parse(widget.approve))
                     : "",
                 style: TextStyle(fontSize: 11),
               ),
             ),
             Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                    shape: BoxShape.circle, color: Color(0xFF4285F4)),
-                child: Image.asset(
-                  img,
-                  scale: 3,
-                )),
-            SizedBox(
-              width: MediaQuery.of(context).size.width * 0.01,
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0xFF4285F4),
+              ),
+              child: Image.asset(img, scale: 3),
             ),
+            SizedBox(width: MediaQuery.of(context).size.width * 0.01),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   "Approved",
                   style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16),
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
               ],
-            )
+            ),
           ],
         ),
         Padding(
           padding: const EdgeInsets.only(right: 235),
-          child: Container(
-            height: 60,
-            width: 1,
-            color: Color(0xff707070),
-          ),
+          child: Container(height: 60, width: 1, color: Color(0xff707070)),
         ),
-        SizedBox(
-          height: 8,
-        ),
+        SizedBox(height: 8),
       ],
     );
   }
 
-  Icn2(
-    img,
-  ) {
+  Icn2(img) {
     return Column(
       children: [
         Row(
@@ -477,48 +464,38 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
           // mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Container(
-              child: Text(
-                widget.created ,
-                style: TextStyle(fontSize: 11),
-              ),
+              child: Text(widget.created, style: TextStyle(fontSize: 11)),
             ),
             Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                    shape: BoxShape.circle, color: Color(0xFF4285F4)),
-                child: Image.asset(
-                  img,
-                  scale: 3,
-                )),
-            SizedBox(
-              width: MediaQuery.of(context).size.width * 0.01,
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0xFF4285F4),
+              ),
+              child: Image.asset(img, scale: 3),
             ),
+            SizedBox(width: MediaQuery.of(context).size.width * 0.01),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   "Placed",
                   style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16),
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
               ],
-            )
+            ),
           ],
         ),
         Padding(
           padding: const EdgeInsets.only(right: 235),
-          child: Container(
-            height: 60,
-            width: 1,
-            color: Color(0xff707070),
-          ),
+          child: Container(height: 60, width: 1, color: Color(0xff707070)),
         ),
-        SizedBox(
-          height: 8,
-        ),
+        SizedBox(height: 8),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           // mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -526,48 +503,43 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
             Container(
               child: Text(
                 widget.approve != "0"
-                    ? DateFormat('dd-MM-yy').format(DateTime.parse(widget.approve))
+                    ? DateFormat(
+                      'dd-MM-yy',
+                    ).format(DateTime.parse(widget.approve))
                     : "",
                 style: TextStyle(fontSize: 11),
               ),
             ),
             Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                    shape: BoxShape.circle, color: Color(0xFF4285F4)),
-                child: Image.asset(
-                  img,
-                  scale: 3,
-                )),
-            SizedBox(
-              width: MediaQuery.of(context).size.width * 0.01,
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0xFF4285F4),
+              ),
+              child: Image.asset(img, scale: 3),
             ),
+            SizedBox(width: MediaQuery.of(context).size.width * 0.01),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   "Approved",
                   style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16),
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
               ],
-            )
+            ),
           ],
         ),
         Padding(
           padding: const EdgeInsets.only(right: 235),
-          child: Container(
-            height: 60,
-            width: 1,
-            color: Color(0xff707070),
-          ),
+          child: Container(height: 60, width: 1, color: Color(0xff707070)),
         ),
-        SizedBox(
-          height: 8,
-        ),
+        SizedBox(height: 8),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           // mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -575,36 +547,36 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
             Container(
               child: Text(
                 widget.complete != "0"
-                    ? DateFormat('dd-MM-yy')
-                        .format(DateTime.parse(widget.complete))
+                    ? DateFormat(
+                      'dd-MM-yy',
+                    ).format(DateTime.parse(widget.complete))
                     : "",
                 style: TextStyle(fontSize: 11),
               ),
             ),
             Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                    shape: BoxShape.circle, color: Color(0xFF4285F4)),
-                child: Image.asset(
-                  img,
-                  scale: 3,
-                )),
-            SizedBox(
-              width: MediaQuery.of(context).size.width * 0.01,
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0xFF4285F4),
+              ),
+              child: Image.asset(img, scale: 3),
             ),
+            SizedBox(width: MediaQuery.of(context).size.width * 0.01),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   "Shipped",
                   style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16),
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ],

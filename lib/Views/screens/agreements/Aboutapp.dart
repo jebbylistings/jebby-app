@@ -12,54 +12,53 @@ class AboutAppScreen extends StatefulWidget {
 }
 
 class _AboutAppScreenState extends State<AboutAppScreen> {
-
   bool isLoading = true;
   bool isError = false;
   bool emptyData = false;
 
-  getAbout(){
+  getAbout() {
     ApiRepository.shared.maintenance(
-      (List)=>{
-         if (this.mounted)
-                {
-                  if (List.status == 0)
-                    {
-                      setState((){
-                        isLoading = false;
-                        emptyData = true;
-                        isError = false;
-                      })
-                    }
-                  else
-                    {
-                     setState((){
-                        isLoading = false;
-                        emptyData = false;
-                        isError = false;
-                      })
-                    }
-                }
-      }, 
-      (error)=>{
-          if (error != null)
-                {
-                  setState(() {
-                   isLoading = false;
-                   isError = true;
-                   emptyData = false;
-                  }),
-                },
-      });
+      (List) => {
+        if (this.mounted)
+          {
+            if (List.status == 0)
+              {
+                setState(() {
+                  isLoading = false;
+                  emptyData = true;
+                  isError = false;
+                }),
+              }
+            else
+              {
+                setState(() {
+                  isLoading = false;
+                  emptyData = false;
+                  isError = false;
+                }),
+              },
+          },
+      },
+      (error) => {
+        if (error != null)
+          {
+            setState(() {
+              isLoading = false;
+              isError = true;
+              emptyData = false;
+            }),
+          },
+      },
+    );
   }
 
-  void initState(){
+  void initState() {
     getAbout();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
@@ -69,7 +68,10 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
         title: Text(
           'Maintenance & Warranties',
           style: TextStyle(
-              fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 19,
+          ),
         ),
         leading: InkWell(
           onTap: () {
@@ -79,10 +81,7 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
           child: Padding(
             padding: const EdgeInsets.all(17.0),
             child: Container(
-              child: Icon(
-                Icons.arrow_back,
-            color: Colors.black,
-              ),
+              child: Icon(Icons.arrow_back, color: Colors.black),
             ),
           ),
         ),
@@ -92,14 +91,22 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              isLoading ?
-              Container(child: Text('Loading'),) :
-              Container(
-                child: 
-          Html(data: ApiRepository.shared.getMaintainenceModelList!.data![0].description.toString(),)),
+              isLoading
+                  ? Container(child: Text('Loading'))
+                  : Container(
+                    child: Html(
+                      data:
+                          ApiRepository
+                              .shared
+                              .getMaintainenceModelList!
+                              .data![0]
+                              .description
+                              .toString(),
+                    ),
+                  ),
               // Container(
               //   child: Text(
-              //     isLoading ? "Loading" : 
+              //     isLoading ? "Loading" :
               //     ApiRepository.shared.getAboutAppModelList!.data![0].description.toString(),
               //     style: TextStyle(
               //       fontSize: 16,

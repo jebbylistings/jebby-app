@@ -41,22 +41,23 @@ class Data {
   String? image;
   String? delivery_charges;
 
-  Data(
-      {this.id,
-      this.userId,
-      this.categoryId,
-      this.subcategoryId,
-      this.name,
-      this.price,
-      this.specifications,
-      this.serviceAgreements,
-      this.createdAt,
-      this.updatedAt,
-      this.negotiation,
-      this.stars,
-      this.length,
-      this.image,
-      this.delivery_charges});
+  Data({
+    this.id,
+    this.userId,
+    this.categoryId,
+    this.subcategoryId,
+    this.name,
+    this.price,
+    this.specifications,
+    this.serviceAgreements,
+    this.createdAt,
+    this.updatedAt,
+    this.negotiation,
+    this.stars,
+    this.length,
+    this.image,
+    this.delivery_charges,
+  });
 
   Data.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -73,7 +74,7 @@ class Data {
     stars = json['stars'];
     length = json['length'];
     image = json['image'];
-    delivery_charges =json['delivery_charges'];
+    delivery_charges = json['delivery_charges'];
   }
 
   Map<String, dynamic> toJson() {
@@ -92,7 +93,7 @@ class Data {
     data['stars'] = this.stars;
     data['length'] = this.length;
     data['image'] = this.image;
-    data['delivery_charges'] =this.delivery_charges;
+    data['delivery_charges'] = this.delivery_charges;
     return data;
   }
 }

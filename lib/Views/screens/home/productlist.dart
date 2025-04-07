@@ -24,27 +24,28 @@ class _ProductListState extends State<ProductList> {
         centerTitle: true,
         title: Text(
           'Products List',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 19,
+          ),
         ),
         leading: InkWell(
           onTap: () {
             Get.offAll(() => MainScreen());
-//             Navigator.push(
-//   context,
-//   MaterialPageRoute(
-//     builder: (BuildContext context) {
-//       return MainScreen();
-//     },
-//   ),
-// );
+            //             Navigator.push(
+            //   context,
+            //   MaterialPageRoute(
+            //     builder: (BuildContext context) {
+            //       return MainScreen();
+            //     },
+            //   ),
+            // );
             // Get.to(() => MainScreen());
             // Get.back();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-          ),
+          child: Icon(Icons.arrow_back, color: Colors.black),
         ),
         actions: [
           GestureDetector(
@@ -53,13 +54,9 @@ class _ProductListState extends State<ProductList> {
             },
             child: Padding(
               padding: const EdgeInsets.all(19.0),
-              child: Icon(
-                        Icons.person_outline,
-                        color: Colors.black,
-                        size: 25
-                      )
+              child: Icon(Icons.person_outline, color: Colors.black, size: 25),
             ),
-          )
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -72,18 +69,19 @@ class _ProductListState extends State<ProductList> {
                 width: res_width * 0.9,
                 child: TextField(
                   decoration: InputDecoration(
-                      enabledBorder:
-                          OutlineInputBorder(borderRadius: BorderRadius.circular(15.0), borderSide: BorderSide(color: kprimaryColor, width: 0.5)),
-                      filled: true,
-                      hintStyle: TextStyle(color: Colors.grey),
-                      suffixIcon: Icon(Icons.search_outlined),
-                      hintText: "Search",
-                      fillColor: Colors.white),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15.0),
+                      borderSide: BorderSide(color: kprimaryColor, width: 0.5),
+                    ),
+                    filled: true,
+                    hintStyle: TextStyle(color: Colors.grey),
+                    suffixIcon: Icon(Icons.search_outlined),
+                    hintText: "Search",
+                    fillColor: Colors.white,
+                  ),
                 ),
               ),
-              SizedBox(
-                height: res_height * 0.03,
-              ),
+              SizedBox(height: res_height * 0.03),
               Container(
                 width: res_width * 0.9,
                 child: Row(
@@ -92,7 +90,10 @@ class _ProductListState extends State<ProductList> {
                     Container(
                       child: Text(
                         'Featured Categories',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     Row(
@@ -101,53 +102,53 @@ class _ProductListState extends State<ProductList> {
                           width: res_height * 0.035,
                           child: Image.asset('assets/slicing/line.png'),
                         ),
-                        SizedBox(
-                          width: 10,
-                        ),
+                        SizedBox(width: 10),
                         Container(
                           width: res_height * 0.035,
                           child: Image.asset('assets/slicing/column.png'),
-                        )
+                        ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
-              SizedBox(
-                height: res_height * 0.03,
-              ),
+              SizedBox(height: res_height * 0.03),
               Container(
                 child: Wrap(
                   spacing: 10,
                   runSpacing: 10,
                   children: [
                     itmBox(
-                        img: 'assets/slicing/h.jpg',
-                        dx: '\$ 7000',
-                        rv: '(2.9k Revews)',
-                        tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
-                        rt: '4.9'),
+                      img: 'assets/slicing/h.jpg',
+                      dx: '\$ 7000',
+                      rv: '(2.9k Revews)',
+                      tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
+                      rt: '4.9',
+                    ),
                     itmBox(
-                        img: 'assets/slicing/h.jpg',
-                        dx: '\$ 9000',
-                        rv: '(2.9k Revews)',
-                        tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
-                        rt: '4.9'),
+                      img: 'assets/slicing/h.jpg',
+                      dx: '\$ 9000',
+                      rv: '(2.9k Revews)',
+                      tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
+                      rt: '4.9',
+                    ),
                     itmBox(
-                        img: 'assets/slicing/h.jpg',
-                        dx: '\$ 9000',
-                        rv: '(2.9k Revews)',
-                        tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
-                        rt: '4.9'),
+                      img: 'assets/slicing/h.jpg',
+                      dx: '\$ 9000',
+                      rv: '(2.9k Revews)',
+                      tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
+                      rt: '4.9',
+                    ),
                     itmBox(
-                        img: 'assets/slicing/h.jpg',
-                        dx: '\$ 9000',
-                        rv: '(2.9k Revews)',
-                        tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
-                        rt: '4.9'),
+                      img: 'assets/slicing/h.jpg',
+                      dx: '\$ 9000',
+                      rv: '(2.9k Revews)',
+                      tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
+                      rt: '4.9',
+                    ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -180,29 +181,17 @@ class _ProductListState extends State<ProductList> {
                 height: res_height * 0.2,
                 decoration: BoxDecoration(),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(10),
-                  ),
-                  child: Image.asset(
-                    '$img',
-                    fit: BoxFit.fill,
-                  ),
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  child: Image.asset('$img', fit: BoxFit.fill),
                 ),
               ),
-              SizedBox(
-                height: res_height * 0.005,
-              ),
+              SizedBox(height: res_height * 0.005),
               Container(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '$tx',
-                      style: TextStyle(fontSize: 11),
-                    ),
-                    SizedBox(
-                      height: res_height * 0.006,
-                    ),
+                    Text('$tx', style: TextStyle(fontSize: 11)),
+                    SizedBox(height: res_height * 0.006),
                     Text(
                       '$dx',
                       style: TextStyle(fontSize: 11),
@@ -210,40 +199,18 @@ class _ProductListState extends State<ProductList> {
                     ),
                     Row(
                       children: [
-                        Icon(
-                          Icons.star,
-                          size: 11,
-                          color: kprimaryColor,
-                        ),
-                        Icon(
-                          Icons.star,
-                          size: 11,
-                          color: kprimaryColor,
-                        ),
-                        Icon(
-                          Icons.star,
-                          size: 11,
-                          color: kprimaryColor,
-                        ),
-                        Icon(
-                          Icons.star,
-                          size: 11,
-                          color: kprimaryColor,
-                        ),
+                        Icon(Icons.star, size: 11, color: kprimaryColor),
+                        Icon(Icons.star, size: 11, color: kprimaryColor),
+                        Icon(Icons.star, size: 11, color: kprimaryColor),
+                        Icon(Icons.star, size: 11, color: kprimaryColor),
                         Icon(Icons.star, size: 11),
-                        Text(
-                          '$rt ',
-                          style: TextStyle(fontSize: 11),
-                        ),
+                        Text('$rt ', style: TextStyle(fontSize: 11)),
                         Text(
                           '$rv',
-                          style: TextStyle(
-                            fontSize: 9,
-                            color: Colors.grey,
-                          ),
+                          style: TextStyle(fontSize: 9, color: Colors.grey),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),

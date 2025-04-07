@@ -3,21 +3,21 @@ import 'package:get/get.dart';
 import 'dart:math' as math;
 import 'package:awesome_card/awesome_card.dart';
 
-
 class ReOrderPayment extends StatefulWidget {
-  var accountId;
-  var paypalMail;
-  var price;
-  var orderId;
-  var location;
-  var applicationFee;
-  ReOrderPayment(
-      {this.accountId,
-      this.paypalMail,
-      this.price,
-      this.orderId,
-      this.location,
-      this.applicationFee});
+  final dynamic accountId;
+  final dynamic paypalMail;
+  final dynamic price;
+  final dynamic orderId;
+  final dynamic location;
+  final dynamic applicationFee;
+  ReOrderPayment({
+    this.accountId,
+    this.paypalMail,
+    this.price,
+    this.orderId,
+    this.location,
+    this.applicationFee,
+  });
 
   @override
   State<ReOrderPayment> createState() => _ReOrderPaymentState();
@@ -34,11 +34,8 @@ class _ReOrderPaymentState extends State<ReOrderPayment> {
   String cvv = '';
   bool showBack = false;
 
-   @override
+  @override
   void initState() {
-    print("accountId ${widget.accountId}");
-    print("paypalEmail ${widget.paypalMail}");
-    print("Location ${widget.location}");
     super.initState();
     _focusNode = FocusNode();
     _focusNode.addListener(() {
@@ -53,7 +50,6 @@ class _ReOrderPaymentState extends State<ReOrderPayment> {
     _focusNode.dispose();
     super.dispose();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -74,12 +70,7 @@ class _ReOrderPaymentState extends State<ReOrderPayment> {
             Get.back();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Container(
-            child: Icon(
-              Icons.arrow_back,
-              color: Colors.black,
-            ),
-          ),
+          child: Container(child: Icon(Icons.arrow_back, color: Colors.black)),
         ),
       ),
       body: SingleChildScrollView(
@@ -87,9 +78,7 @@ class _ReOrderPaymentState extends State<ReOrderPayment> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            SizedBox(
-              height: 40,
-            ),
+            SizedBox(height: 40),
             CreditCard(
               cardNumber: cardNumber,
               cardExpiry: expiryDate,
@@ -102,17 +91,13 @@ class _ReOrderPaymentState extends State<ReOrderPayment> {
               showShadow: true,
               // mask: getCardTypeMask(cardType: CardType.americanExpress),
             ),
-            SizedBox(
-              height: 40,
-            ),
+            SizedBox(height: 40),
             Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Container(
-                  margin: EdgeInsets.symmetric(
-                    horizontal: 20,
-                  ),
+                  margin: EdgeInsets.symmetric(horizontal: 20),
                   child: TextFormField(
                     keyboardType: TextInputType.number,
                     controller: cardNumberCtrl,
@@ -125,7 +110,9 @@ class _ReOrderPaymentState extends State<ReOrderPayment> {
 
                       for (var i = 0; i < newCardNumber.length; i += step) {
                         newStr += newCardNumber.substring(
-                            i, math.min(i + step, newCardNumber.length));
+                          i,
+                          math.min(i + step, newCardNumber.length),
+                        );
                         if (i + step < newCardNumber.length) newStr += ' ';
                       }
 
@@ -136,9 +123,7 @@ class _ReOrderPaymentState extends State<ReOrderPayment> {
                   ),
                 ),
                 Container(
-                  margin: EdgeInsets.symmetric(
-                    horizontal: 20,
-                  ),
+                  margin: EdgeInsets.symmetric(horizontal: 20),
                   child: TextFormField(
                     keyboardType: TextInputType.number,
                     controller: expiryFieldCtrl,
@@ -153,14 +138,16 @@ class _ReOrderPaymentState extends State<ReOrderPayment> {
                       if (newDateValue.length >= 2 &&
                           !containsSlash &&
                           !isPressingBackspace) {
-                        newDateValue = newDateValue.substring(0, 2) +
+                        newDateValue =
+                            newDateValue.substring(0, 2) +
                             '/' +
                             newDateValue.substring(2);
                       }
                       setState(() {
                         expiryFieldCtrl.text = newDateValue;
                         expiryFieldCtrl.selection = TextSelection.fromPosition(
-                            TextPosition(offset: newDateValue.length));
+                          TextPosition(offset: newDateValue.length),
+                        );
                         expiryDate = newDateValue;
                       });
                     },
@@ -196,36 +183,26 @@ class _ReOrderPaymentState extends State<ReOrderPayment> {
               ],
             ),
             Center(
-                child: Text(
-              "Total : ${(int.parse(widget.price.toString()) + widget.applicationFee).toString()} \$",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            )),
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.01,
+              child: Text(
+                "Total : ${(int.parse(widget.price.toString()) + widget.applicationFee).toString()} \$",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
             ),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.01),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Center(
                   child: MaterialButton(
                     color: Color.fromARGB(255, 1, 36, 65),
-                    onPressed: (){
-                      print("hello");
+                    onPressed: () {
                       if (cardNumber.isNotEmpty &&
                           expiryDate.isNotEmpty &&
                           cvv.isNotEmpty) {
-                        final snackBar =
-                            new SnackBar(content: new Text("Please Wait"));
+                        final snackBar = new SnackBar(
+                          content: new Text("Please Wait"),
+                        );
                         ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                        var data = {
-                          "cardNumber":
-                              int.parse(cardNumber.replaceAll(' ', '')),
-                          "exp_month": expiryDate.toString().substring(0, 2),
-                          "exp_year": expiryDate.toString().substring(3),
-                          "cvc": int.parse(cvv.toString()),
-                          "amount": widget.price,
-                          "vendorAccountId": widget.accountId,
-                        };
                         // ApiRepository.shared.reOrderStripePayment(
                         //   int.parse(cardNumber.replaceAll(' ', '')),
                         //   expiryDate.toString().substring(0, 2),
@@ -238,17 +215,14 @@ class _ReOrderPaymentState extends State<ReOrderPayment> {
                         //   widget.location,
                         //   widget.applicationFee,
                         // );
-                        print(data);
                       } else {
                         final snackBar = new SnackBar(
-                            content: new Text("Fileds Cant Be Empty"));
+                          content: new Text("Fileds Cant Be Empty"),
+                        );
                         ScaffoldMessenger.of(context).showSnackBar(snackBar);
                       }
                     },
-                    child: Text(
-                      "Pay",
-                      style: TextStyle(color: Colors.white),
-                    ),
+                    child: Text("Pay", style: TextStyle(color: Colors.white)),
                   ),
                 ),
                 // SizedBox(

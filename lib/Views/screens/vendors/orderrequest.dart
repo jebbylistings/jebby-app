@@ -39,94 +39,95 @@ class _OrderRequestsState extends State<OrderRequests> {
   String? email;
   String? role;
   void profileData(BuildContext context) async {
-    getUserDate().then((value) async {
-      token = value.token.toString();
-      sourceId = value.id.toString();
-      fullname = value.name.toString();
-      email = value.email.toString();
-      role = value.role.toString();
-      print("Source ID: ${sourceId}");
-      getNewOrders();
-    }).onError((error, stackTrace) {
-      if (kDebugMode) {
-        print(error.toString());
-      }
-    });
+    getUserDate()
+        .then((value) async {
+          token = value.token.toString();
+          sourceId = value.id.toString();
+          fullname = value.name.toString();
+          email = value.email.toString();
+          role = value.role.toString();
+          getNewOrders();
+        })
+        .onError((error, stackTrace) {
+          if (kDebugMode) {}
+        });
   }
 
   getNewOrders() {
-    ApiRepository.shared.getVenodorOrders(sourceId, (List) {
-      if (this.mounted) {
-        if (List.data!.length == 0) {
+    ApiRepository.shared.getVenodorOrders(
+      sourceId,
+      (List) {
+        if (this.mounted) {
+          if (List.data!.length == 0) {
+            setState(() {
+              isLoading = false;
+              isEmpty = true;
+              isError = false;
+            });
+          } else {
+            setState(() {
+              isLoading = false;
+              isError = false;
+              isEmpty = false;
+            });
+          }
+        }
+      },
+      (error) {
+        if (error != null) {
           setState(() {
-            isLoading = false;
-            isEmpty = true;
+            isLoading = true;
+            isError = true;
             isError = false;
-            print("null Data");
-          });
-        } else {
-          setState(() {
-            isLoading = false;
-            isError = false;
-            isEmpty = false;
           });
         }
-      }
-    }, (error) {
-      if (error != null) {
-        setState(() {
-          isLoading = true;
-          isError = true;
-          isError = false;
-        });
-      }
-    });
+      },
+    );
   }
 
   void orderStatus(id, status, desc) {
     orderStatusUpdate(id, status, desc, sourceId, "listing");
     final snackBar = new SnackBar(content: new Text("Updating Status"));
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   Future<PostOrderStatusUpdateModel> orderStatusUpdate(
-      id, status, desc, vendorID, route) async {
-    final request = json.encode(
-        <String, dynamic>{"id": id, "status": status, "description": desc});
+    id,
+    status,
+    desc,
+    vendorID,
+    route,
+  ) async {
+    final request = json.encode(<String, dynamic>{
+      "id": id,
+      "status": status,
+      "description": desc,
+    });
 
-    print(request);
     final response = await http.post(
       Uri.parse(AppUrl.orderStatusById),
       body: request,
-      headers: {
-        'Content-type': "application/json",
-      },
+      headers: {'Content-type': "application/json"},
     );
     if (response.statusCode == 200) {
       try {
-        print("Order Status Updated");
         ApiRepository.shared.getVenodorOrders(vendorID.toString(), (List) {
           if (this.mounted) {
             setState(() {});
           }
         }, (error) {});
       } catch (error) {
-        print("Order Status :catched");
         // onError(error.toString());
-        print(error);
       }
     } else if (response.statusCode == 400) {
       // onError("You are not in Range");
-      print("You are not in Range");
     } else if (response.statusCode == 500) {
       // onError("Internal Server Error");
-      print("Internal Server Error");
     }
     return PostOrderStatusUpdateModel();
   }
 
   void initState() {
-    print("INVOKEd");
     getData();
     profileData(context);
     super.initState();
@@ -134,8 +135,6 @@ class _OrderRequestsState extends State<OrderRequests> {
 
   @override
   Widget build(BuildContext context) {
-    double res_width = MediaQuery.of(context).size.width;
-    double res_height = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: Color(0xfffdfdfd),
       appBar: AppBar(
@@ -145,72 +144,84 @@ class _OrderRequestsState extends State<OrderRequests> {
         title: Text(
           'My Orders',
           style: TextStyle(
-              fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 19,
+          ),
         ),
         leading: InkWell(
           onTap: () {
             Get.back();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-          ),
+          child: Icon(Icons.arrow_back, color: Colors.black),
         ),
       ),
       body: SingleChildScrollView(
         child: Container(
-            width: double.infinity,
-            child: isError
-                ? Center(child: Text("Some Error Occured"))
-                : isLoading
-                    ? Center(child: Text("Loading"))
-                    : isEmpty
-                        ? Center(child: Text("No Orders Yet"))
-                        : ListView.builder(
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            itemCount: ApiRepository
-                                .shared.getAllOrdersByVenodrIdList!.data!.length,
-                            itemBuilder: (context, int index) {
-                              var data = ApiRepository.shared
-                                  .getAllOrdersByVenodrIdList!.data![index];
-                              var name = data.name.toString();
-                              var id = data.productId.toString();
-                              var price = data.totalPrice.toString();
-                              var start = data.rentStart.toString();
-                              var end = data.originalReturn.toString();
-                              var status = data.status;
-                              var orderId = data.id;
-                              var email = data.email.toString();
-                              var location = data.location.toString();
-                              var nego_price = data.negoPrice.toString();
-                              return status == 0
-                                  ? GestureDetector(
-                                      onTap: () {
-                                        Get.off(() => OrderRequestDetail(
-                                              name : name,
-                                              id: id,
-                                              price: price,
-                                              start: start,
-                                              end: end,
-                                              sourceId: sourceId,
-                                              orderId: orderId,
-                                              email: email,
-                                              location: location,
-                                              nego_price : nego_price,
-                                            ));
-                                      },
-                                      child: reqBox(name, orderId))
-                                  : SizedBox(height: 0, width: 0,);
-                            })),
+          width: double.infinity,
+          child:
+              isError
+                  ? Center(child: Text("Some Error Occured"))
+                  : isLoading
+                  ? Center(child: Text("Loading"))
+                  : isEmpty
+                  ? Center(child: Text("No Orders Yet"))
+                  : ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount:
+                        ApiRepository
+                            .shared
+                            .getAllOrdersByVenodrIdList!
+                            .data!
+                            .length,
+                    itemBuilder: (context, int index) {
+                      var data =
+                          ApiRepository
+                              .shared
+                              .getAllOrdersByVenodrIdList!
+                              .data![index];
+                      var name = data.name.toString();
+                      var id = data.productId.toString();
+                      var price = data.totalPrice.toString();
+                      var start = data.rentStart.toString();
+                      var end = data.originalReturn.toString();
+                      var status = data.status;
+                      var orderId = data.id;
+                      var email = data.email.toString();
+                      var location = data.location.toString();
+                      var nego_price = data.negoPrice.toString();
+                      return status == 0
+                          ? GestureDetector(
+                            onTap: () {
+                              Get.off(
+                                () => OrderRequestDetail(
+                                  name: name,
+                                  id: id,
+                                  price: price,
+                                  start: start,
+                                  end: end,
+                                  sourceId: sourceId,
+                                  orderId: orderId,
+                                  email: email,
+                                  location: location,
+                                  nego_price: nego_price,
+                                ),
+                              );
+                            },
+                            child: reqBox(name, orderId),
+                          )
+                          : SizedBox(height: 0, width: 0);
+                    },
+                  ),
+        ),
       ),
     );
   }
 
   Widget reqBox(name, orderId) {
     double res_width = MediaQuery.of(context).size.width;
-    double res_height = MediaQuery.of(context).size.height;
     return Container(
       width: res_width * 0.95,
       child: Card(
@@ -231,18 +242,18 @@ class _OrderRequestsState extends State<OrderRequests> {
                       color: Colors.black,
                     ),
                   ),
-                  SizedBox(
-                    width: 7,
-                  ),
+                  SizedBox(width: 7),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       SizedBox(
                         width: res_width * 0.45,
                         child: Text(
-                         name,
+                          name,
                           style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 19),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 19,
+                          ),
                         ),
                       ),
                       SizedBox(
@@ -250,9 +261,11 @@ class _OrderRequestsState extends State<OrderRequests> {
                         child: Text(
                           'Request your order',
                           style: TextStyle(
-                              fontWeight: FontWeight.normal, fontSize: 15),
+                            fontWeight: FontWeight.normal,
+                            fontSize: 15,
+                          ),
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ],
@@ -269,18 +282,14 @@ class _OrderRequestsState extends State<OrderRequests> {
                           orderStatus(orderId, 1, "Order Approved");
                         },
                         child: SizedBox(
-                            width: 40,
-                            height: 40,
-                            child: Icon(
-                              Icons.check,
-                              color: Colors.white,
-                            )),
+                          width: 40,
+                          height: 40,
+                          child: Icon(Icons.check, color: Colors.white),
+                        ),
                       ),
                     ),
                   ),
-                  SizedBox(
-                    width: 10,
-                  ),
+                  SizedBox(width: 10),
                   ClipOval(
                     child: Material(
                       color: Colors.grey, // Button color
@@ -290,17 +299,15 @@ class _OrderRequestsState extends State<OrderRequests> {
                           orderStatus(orderId, 3, "Order Approved");
                         },
                         child: SizedBox(
-                            width: 40,
-                            height: 40,
-                            child: Icon(
-                              Icons.close,
-                              color: Colors.white,
-                            )),
+                          width: 40,
+                          height: 40,
+                          child: Icon(Icons.close, color: Colors.white),
+                        ),
                       ),
                     ),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         ),

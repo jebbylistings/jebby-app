@@ -1,10 +1,8 @@
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jebby/Views/helper/colors.dart';
 import 'package:jebby/Views/screens/profile/myprofile.dart';
 import 'package:jebby/Views/screens/vendors/orderequestdetail.dart';
-
 
 class OrderListingScreen extends StatefulWidget {
   const OrderListingScreen({Key? key}) : super(key: key);
@@ -30,17 +28,17 @@ class _OrderListingScreenState extends State<OrderListingScreen> {
         title: Text(
           'My Orders',
           style: TextStyle(
-              fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 19,
+          ),
         ),
         leading: InkWell(
           onTap: () {
             Get.back();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-          ),
+          child: Icon(Icons.arrow_back, color: Colors.black),
         ),
         actions: [
           GestureDetector(
@@ -49,13 +47,9 @@ class _OrderListingScreenState extends State<OrderListingScreen> {
             },
             child: Padding(
               padding: const EdgeInsets.all(19.0),
-              child: Icon(
-                        Icons.person_outline,
-                        color: Colors.black,
-                        size: 25
-                      )
+              child: Icon(Icons.person_outline, color: Colors.black, size: 25),
             ),
-          )
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -70,24 +64,23 @@ class _OrderListingScreenState extends State<OrderListingScreen> {
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: 'Search',
-                    hintStyle: TextStyle(
-                      color: Colors.grey,
-                    ),
-                    suffixIcon: Icon(
-                      Icons.search_outlined,
-                      color: Colors.grey,
-                    ),
+                    hintStyle: TextStyle(color: Colors.grey),
+                    suffixIcon: Icon(Icons.search_outlined, color: Colors.grey),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(15.0),
                     ),
                     enabledBorder: const OutlineInputBorder(
-                      borderSide:
-                          const BorderSide(color: kprimaryColor, width: 1),
+                      borderSide: const BorderSide(
+                        color: kprimaryColor,
+                        width: 1,
+                      ),
                       borderRadius: BorderRadius.all(Radius.circular(15)),
                     ),
                     focusedBorder: const OutlineInputBorder(
-                      borderSide:
-                          const BorderSide(color: kprimaryColor, width: 1),
+                      borderSide: const BorderSide(
+                        color: kprimaryColor,
+                        width: 1,
+                      ),
                       borderRadius: BorderRadius.all(Radius.circular(15)),
                     ),
                   ),
@@ -108,9 +101,7 @@ class _OrderListingScreenState extends State<OrderListingScreen> {
               //         fillColor: Colors.white),
               //   ),
               // ),
-              SizedBox(
-                height: res_height * 0.03,
-              ),
+              SizedBox(height: res_height * 0.03),
               Container(
                 width: res_width * 0.9,
                 child: Row(
@@ -120,7 +111,9 @@ class _OrderListingScreenState extends State<OrderListingScreen> {
                       child: Text(
                         'Featured Categories',
                         style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     Row(
@@ -129,53 +122,53 @@ class _OrderListingScreenState extends State<OrderListingScreen> {
                           width: res_height * 0.035,
                           child: Image.asset('assets/slicing/line.png'),
                         ),
-                        SizedBox(
-                          width: 10,
-                        ),
+                        SizedBox(width: 10),
                         Container(
                           width: res_height * 0.035,
                           child: Image.asset('assets/slicing/column.png'),
-                        )
+                        ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
-              SizedBox(
-                height: res_height * 0.03,
-              ),
+              SizedBox(height: res_height * 0.03),
               Container(
                 child: Wrap(
                   spacing: 10,
                   runSpacing: 10,
                   children: [
                     itmBox(
-                        img: 'assets/slicing/h.jpg',
-                        dx: '\$ 7000',
-                        rv: '(2.9k Revews)',
-                        tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
-                        rt: '4.9'),
+                      img: 'assets/slicing/h.jpg',
+                      dx: '\$ 7000',
+                      rv: '(2.9k Revews)',
+                      tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
+                      rt: '4.9',
+                    ),
                     itmBox(
-                        img: 'assets/slicing/h.jpg',
-                        dx: '\$ 9000',
-                        rv: '(2.9k Revews)',
-                        tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
-                        rt: '4.9'),
+                      img: 'assets/slicing/h.jpg',
+                      dx: '\$ 9000',
+                      rv: '(2.9k Revews)',
+                      tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
+                      rt: '4.9',
+                    ),
                     itmBox(
-                        img: 'assets/slicing/h.jpg',
-                        dx: '\$ 9000',
-                        rv: '(2.9k Revews)',
-                        tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
-                        rt: '4.9'),
+                      img: 'assets/slicing/h.jpg',
+                      dx: '\$ 9000',
+                      rv: '(2.9k Revews)',
+                      tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
+                      rt: '4.9',
+                    ),
                     itmBox(
-                        img: 'assets/slicing/h.jpg',
-                        dx: '\$ 9000',
-                        rv: '(2.9k Revews)',
-                        tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
-                        rt: '4.9'),
+                      img: 'assets/slicing/h.jpg',
+                      dx: '\$ 9000',
+                      rv: '(2.9k Revews)',
+                      tx: 'Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB0',
+                      rt: '4.9',
+                    ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -208,29 +201,17 @@ class _OrderListingScreenState extends State<OrderListingScreen> {
                 height: res_height * 0.2,
                 decoration: BoxDecoration(),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(10),
-                  ),
-                  child: Image.asset(
-                    '$img',
-                    fit: BoxFit.fill,
-                  ),
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  child: Image.asset('$img', fit: BoxFit.fill),
                 ),
               ),
-              SizedBox(
-                height: res_height * 0.005,
-              ),
+              SizedBox(height: res_height * 0.005),
               Container(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '$tx',
-                      style: TextStyle(fontSize: 11),
-                    ),
-                    SizedBox(
-                      height: res_height * 0.006,
-                    ),
+                    Text('$tx', style: TextStyle(fontSize: 11)),
+                    SizedBox(height: res_height * 0.006),
                     Text(
                       '$dx',
                       style: TextStyle(fontSize: 11),
@@ -238,40 +219,18 @@ class _OrderListingScreenState extends State<OrderListingScreen> {
                     ),
                     Row(
                       children: [
-                        Icon(
-                          Icons.star,
-                          size: 11,
-                          color: kprimaryColor,
-                        ),
-                        Icon(
-                          Icons.star,
-                          size: 11,
-                          color: kprimaryColor,
-                        ),
-                        Icon(
-                          Icons.star,
-                          size: 11,
-                          color: kprimaryColor,
-                        ),
-                        Icon(
-                          Icons.star,
-                          size: 11,
-                          color: kprimaryColor,
-                        ),
+                        Icon(Icons.star, size: 11, color: kprimaryColor),
+                        Icon(Icons.star, size: 11, color: kprimaryColor),
+                        Icon(Icons.star, size: 11, color: kprimaryColor),
+                        Icon(Icons.star, size: 11, color: kprimaryColor),
                         Icon(Icons.star, size: 11),
-                        Text(
-                          '$rt ',
-                          style: TextStyle(fontSize: 11),
-                        ),
+                        Text('$rt ', style: TextStyle(fontSize: 11)),
                         Text(
                           '$rv',
-                          style: TextStyle(
-                            fontSize: 9,
-                            color: Colors.grey,
-                          ),
+                          style: TextStyle(fontSize: 9, color: Colors.grey),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),

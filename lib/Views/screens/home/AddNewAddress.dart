@@ -17,7 +17,10 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
         title: Text(
           "Add New Address",
           style: TextStyle(
-              color: Colors.black, fontSize: 22, fontWeight: FontWeight.bold),
+            color: Colors.black,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
@@ -27,12 +30,7 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
             Get.back();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Container(
-            child: Icon(
-              Icons.arrow_back,
-              color: Colors.black,
-            ),
-          ),
+          child: Container(child: Icon(Icons.arrow_back, color: Colors.black)),
         ),
         automaticallyImplyLeading: false,
       ),
@@ -41,30 +39,20 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              SizedBox(
-                height: 90,
-              ),
+              SizedBox(height: 90),
               Txtfld("Country/Religion", "United State Of America"),
               Txtfld("Personal Info", "Contact Name"),
-              SizedBox(
-                height: 10,
-              ),
+              SizedBox(height: 10),
               fieldss("Phone Number"),
               // SizedBox(
               //   height: 10,
               // ),
               Txtfld("Address", "Street House/appartment"),
-              SizedBox(
-                height: 10,
-              ),
+              SizedBox(height: 10),
               fieldss("City"),
-              SizedBox(
-                height: 10,
-              ),
+              SizedBox(height: 10),
               fieldss("Zipcode"),
-              SizedBox(
-                height: 30,
-              ),
+              SizedBox(height: 30),
 
               Container(
                 child: Text(
@@ -72,9 +60,7 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
                   style: TextStyle(color: Colors.grey, fontSize: 17),
                 ),
               ),
-              SizedBox(
-                height: 80,
-              ),
+              SizedBox(height: 80),
               Container(
                 height: 58,
                 width: 391,
@@ -85,8 +71,9 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
                   ),
                 ),
                 decoration: BoxDecoration(
-                    color: kprimaryColor,
-                    borderRadius: BorderRadius.circular(14)),
+                  color: kprimaryColor,
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ],
           ),
@@ -95,26 +82,19 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
     );
   }
 
-  Txtfld(
-    txt,
-    tf,
-  ) {
+  Txtfld(txt, tf) {
     double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
     return Container(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            height: res_height * 0.02,
-          ),
+          SizedBox(height: res_height * 0.02),
           Text(
             txt,
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
           ),
-          SizedBox(
-            height: res_height * 0.005,
-          ),
+          SizedBox(height: res_height * 0.005),
           Container(
             height: 50,
             width: res_width * 0.9,
@@ -140,18 +120,14 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
     );
   }
 
-  fieldss(
-    tf,
-  ) {
+  fieldss(tf) {
     return Container(
       height: 50,
       width: 369,
       child: TextField(
         decoration: InputDecoration(
           hintText: tf,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15.0),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
           enabledBorder: const OutlineInputBorder(
             borderSide: const BorderSide(color: kprimaryColor, width: 1),
             borderRadius: BorderRadius.all(Radius.circular(15)),

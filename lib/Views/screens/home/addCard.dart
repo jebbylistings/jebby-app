@@ -22,17 +22,17 @@ class _AddCardScreenState extends State<AddCardScreen> {
         title: Text(
           'Add Card',
           style: TextStyle(
-              fontWeight: FontWeight.bold, color: Colors.black, fontSize: 19),
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 19,
+          ),
         ),
         leading: InkWell(
           onTap: () {
             Get.back();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-          ),
+          child: Icon(Icons.arrow_back, color: Colors.black),
         ),
       ),
       body: SingleChildScrollView(
@@ -70,13 +70,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
                 decoration: BoxDecoration(
                   color: Color.fromARGB(255, 200, 200, 200),
                   // shape: BoxShape.rectangle,
-                  border: Border.all(
-                    color: kprimaryColor,
-                    width: 2.5,
-                  ),
-                  borderRadius: BorderRadius.circular(
-                    15,
-                  ),
+                  border: Border.all(color: kprimaryColor, width: 2.5),
+                  borderRadius: BorderRadius.circular(15),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(13.0),
@@ -90,9 +85,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                           width: res_width * 0.7,
                           child: Text('THE BANK OF ANYTHING'),
                         ),
-                        SizedBox(
-                          height: res_height * 0.01,
-                        ),
+                        SizedBox(height: res_height * 0.01),
                         Container(
                           height: res_height * 0.04,
                           width: res_width * 0.08,
@@ -128,9 +121,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                 fontSize: 30,
                               ),
                             ),
-                            SizedBox(
-                              width: res_width * 0.05,
-                            ),
+                            SizedBox(width: res_width * 0.05),
                             Text(
                               '.',
                               style: TextStyle(
@@ -159,9 +150,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                 fontSize: 30,
                               ),
                             ),
-                            SizedBox(
-                              width: res_width * 0.05,
-                            ),
+                            SizedBox(width: res_width * 0.05),
                             Text(
                               '.',
                               style: TextStyle(
@@ -190,9 +179,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                 fontSize: 30,
                               ),
                             ),
-                            SizedBox(
-                              width: res_width * 0.05,
-                            ),
+                            SizedBox(width: res_width * 0.05),
                             Text(
                               '2',
                               style: TextStyle(
@@ -226,9 +213,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                             // Text('THE BANK OF ANYTHING'),
                           ],
                         ),
-                        SizedBox(
-                          height: res_height * 0.01,
-                        ),
+                        SizedBox(height: res_height * 0.01),
                         Row(
                           children: [
                             Text(
@@ -238,9 +223,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                 fontSize: 11,
                               ),
                             ),
-                            SizedBox(
-                              width: res_width * 0.09,
-                            ),
+                            SizedBox(width: res_width * 0.09),
                             Text(
                               '3/28',
                               style: TextStyle(
@@ -264,7 +247,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
                               height: res_height * 0.05,
                               width: res_width * 0.08,
                               child: Image.asset(
-                                  'assets/slicing/mastercard-logo.png'),
+                                'assets/slicing/mastercard-logo.png',
+                              ),
                             ),
                           ],
                         ),
@@ -273,18 +257,11 @@ class _AddCardScreenState extends State<AddCardScreen> {
                   ),
                 ),
               ),
-              SizedBox(
-                height: res_height * 0.015,
-              ),
+              SizedBox(height: res_height * 0.015),
               Container(
                 width: res_width * 0.9,
                 child: Row(
-                  children: [
-                    Text(
-                      'Name',
-                      style: TextStyle(fontSize: 15),
-                    ),
-                  ],
+                  children: [Text('Name', style: TextStyle(fontSize: 15))],
                 ),
               ),
               Container(
@@ -298,13 +275,17 @@ class _AddCardScreenState extends State<AddCardScreen> {
                       borderRadius: BorderRadius.circular(15.0),
                     ),
                     enabledBorder: const OutlineInputBorder(
-                      borderSide:
-                          const BorderSide(color: kprimaryColor, width: 1),
+                      borderSide: const BorderSide(
+                        color: kprimaryColor,
+                        width: 1,
+                      ),
                       borderRadius: BorderRadius.all(Radius.circular(15)),
                     ),
                     focusedBorder: const OutlineInputBorder(
-                      borderSide:
-                          const BorderSide(color: kprimaryColor, width: 1),
+                      borderSide: const BorderSide(
+                        color: kprimaryColor,
+                        width: 1,
+                      ),
                       borderRadius: BorderRadius.all(Radius.circular(15)),
                     ),
                   ),
@@ -333,12 +314,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
               Container(
                 width: res_width * 0.9,
                 child: Row(
-                  children: [
-                    Text(
-                      'Gender',
-                      style: TextStyle(fontSize: 15),
-                    ),
-                  ],
+                  children: [Text('Gender', style: TextStyle(fontSize: 15))],
                 ),
               ),
               Container(
@@ -351,13 +327,17 @@ class _AddCardScreenState extends State<AddCardScreen> {
                       borderRadius: BorderRadius.circular(15.0),
                     ),
                     enabledBorder: const OutlineInputBorder(
-                      borderSide:
-                          const BorderSide(color: kprimaryColor, width: 1),
+                      borderSide: const BorderSide(
+                        color: kprimaryColor,
+                        width: 1,
+                      ),
                       borderRadius: BorderRadius.all(Radius.circular(15)),
                     ),
                     focusedBorder: const OutlineInputBorder(
-                      borderSide:
-                          const BorderSide(color: kprimaryColor, width: 1),
+                      borderSide: const BorderSide(
+                        color: kprimaryColor,
+                        width: 1,
+                      ),
                       borderRadius: BorderRadius.all(Radius.circular(15)),
                     ),
                   ),
@@ -383,9 +363,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
               //         fillColor: Colors.white),
               //   ),
               // ),
-              SizedBox(
-                height: res_height * 0.01,
-              ),
+              SizedBox(height: res_height * 0.01),
               Container(
                 width: res_width * 0.8,
                 child: Row(
@@ -407,11 +385,12 @@ class _AddCardScreenState extends State<AddCardScreen> {
                             // ),
                             child: TextField(
                               decoration: InputDecoration(
-                                  border: InputBorder.none,
-                                  filled: true,
-                                  hintStyle: TextStyle(color: Colors.grey),
-                                  hintText: "10/25",
-                                  fillColor: Colors.white),
+                                border: InputBorder.none,
+                                filled: true,
+                                hintStyle: TextStyle(color: Colors.grey),
+                                hintText: "10/25",
+                                fillColor: Colors.white,
+                              ),
                             ),
                           ),
                         ],
@@ -432,11 +411,12 @@ class _AddCardScreenState extends State<AddCardScreen> {
                             // ),
                             child: TextField(
                               decoration: InputDecoration(
-                                  border: InputBorder.none,
-                                  filled: true,
-                                  hintStyle: TextStyle(color: Colors.grey),
-                                  hintText: "10/25",
-                                  fillColor: Colors.white),
+                                border: InputBorder.none,
+                                filled: true,
+                                hintStyle: TextStyle(color: Colors.grey),
+                                hintText: "10/25",
+                                fillColor: Colors.white,
+                              ),
                             ),
                           ),
                         ],
@@ -445,9 +425,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                   ],
                 ),
               ),
-              SizedBox(
-                height: res_height * 0.01,
-              ),
+              SizedBox(height: res_height * 0.01),
 
               GestureDetector(
                 onTap: (() {
@@ -459,13 +437,16 @@ class _AddCardScreenState extends State<AddCardScreen> {
                   child: Center(
                     child: Text(
                       'Add',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
                     ),
                   ),
                   decoration: BoxDecoration(
-                      color: kprimaryColor,
-                      borderRadius: BorderRadius.circular(14)),
+                    color: kprimaryColor,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
               ),
               // Container(

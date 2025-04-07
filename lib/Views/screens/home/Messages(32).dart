@@ -23,7 +23,6 @@ class MessagesScreen extends StatefulWidget {
 }
 
 class _MessagesScreenState extends State<MessagesScreen> {
-  @override
   Future getData() async {
     final sp = context.read<SignInProvider>();
     final usp = context.read<UserViewModel>();
@@ -39,21 +38,19 @@ class _MessagesScreenState extends State<MessagesScreen> {
   String? email;
   String? role;
   void profileData(BuildContext context) async {
-    getUserDate().then((value) async {
-      token = value.token.toString();
-      sourceId = value.id.toString();
-      fullname = value.name.toString();
-      email = value.email.toString();
-      role = value.role.toString();
-      get_chat_history();
-      seenNotification();
-      print("Source ID: ${sourceId}");
-      print("role: ${role}");
-    }).onError((error, stackTrace) {
-      if (kDebugMode) {
-        print(error.toString());
-      }
-    });
+    getUserDate()
+        .then((value) async {
+          token = value.token.toString();
+          sourceId = value.id.toString();
+          fullname = value.name.toString();
+          email = value.email.toString();
+          role = value.role.toString();
+          get_chat_history();
+          seenNotification();
+        })
+        .onError((error, stackTrace) {
+          if (kDebugMode) {}
+        });
   }
 
   seenNotification() {
@@ -65,38 +62,44 @@ class _MessagesScreenState extends State<MessagesScreen> {
   bool isEmpty = false;
 
   get_chat_history() {
-    ApiRepository.shared.chatsHistory(sourceId.toString(), (List) {
-      if (this.mounted) {
-        if (List.data!.length == 0) {
-          setState(() {
-            isEmpty = true;
-            isLoading = false;
-            isError = false;
-          });
-        } else {
+    ApiRepository.shared.chatsHistory(
+      sourceId.toString(),
+      (List) {
+        if (this.mounted) {
+          if (List.data!.length == 0) {
+            setState(() {
+              isEmpty = true;
+              isLoading = false;
+              isError = false;
+            });
+          } else {
+            setState(() {
+              isEmpty = false;
+              isLoading = false;
+              isError = false;
+            });
+          }
+        }
+      },
+      (error) {
+        if (error != null) {
           setState(() {
             isEmpty = false;
             isLoading = false;
-            isError = false;
+            isError = true;
           });
         }
-      }
-    }, (error) {
-      if (error != null) {
-        setState(() {
-          isEmpty = false;
-          isLoading = false;
-          isError = true;
-        });
-      }
-    });
+      },
+    );
   }
 
   late var Mtimer;
 
   void initState() {
-    print("Backed with");
-    Mtimer = new Timer.periodic(Duration(seconds: 5), (_) => get_chat_history());
+    Mtimer = new Timer.periodic(
+      Duration(seconds: 5),
+      (_) => get_chat_history(),
+    );
     getData();
     profileData(context);
     super.initState();
@@ -117,12 +120,16 @@ class _MessagesScreenState extends State<MessagesScreen> {
           // child: Center(
           child: RichText(
             text: const TextSpan(
-              style: TextStyle(
-                fontSize: 14.0,
-                color: Colors.black,
-              ),
+              style: TextStyle(fontSize: 14.0, color: Colors.black),
               children: <TextSpan>[
-                TextSpan(text: 'Messages', style: TextStyle(color: Colors.black, fontSize: 17, fontWeight: FontWeight.bold)),
+                TextSpan(
+                  text: 'Messages',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 // TextSpan(
                 //     text: '(32)',
                 //     style: TextStyle(
@@ -139,11 +146,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
         elevation: 0,
         leading: InkWell(
           onTap: () {
-            print("navigated");
             // Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>HomeScreen()), (route) => false);
             // Get.back();
             // Navigator.pop(context);
-            print("role : ${role}");
             // if (bottomctrl.navigationBarIndexValue != 0) {
             bottomctrl.navBarChange(0);
             Get.back();
@@ -153,10 +158,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
             // Navigator.push(context, MaterialPageRoute(builder: ((context) => role == "1" ? VendrosHomeScreen() : MainScreen())));
           },
           borderRadius: BorderRadius.circular(50),
-          child: Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-          ),
+          child: Icon(Icons.arrow_back, color: Colors.black),
         ),
       ),
       body: Container(
@@ -169,32 +171,53 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 isError
                     ? Text("Error occured in loading data")
                     : isLoading
-                        ? CircularProgressIndicator()
-                        : ApiRepository.shared.getChatsHistoryModelList!.data!.length == 0
-                            ? Text("No messages", style: TextStyle(fontSize: 14))
-                            : ListView.builder(
-                                physics: NeverScrollableScrollPhysics(),
-                                shrinkWrap: true,
-                                itemCount: ApiRepository.shared.getChatsHistoryModelList!.data!.length,
-                                itemBuilder: (context, index) {
-                                  // Access elements in reversed order using reversed.toList()
-                                  var reversedData = ApiRepository.shared.getChatsHistoryModelList!.data!.reversed.toList();
-                                  var element = reversedData[index];
+                    ? CircularProgressIndicator()
+                    : ApiRepository
+                            .shared
+                            .getChatsHistoryModelList!
+                            .data!
+                            .length ==
+                        0
+                    ? Text("No messages", style: TextStyle(fontSize: 14))
+                    : ListView.builder(
+                      physics: NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount:
+                          ApiRepository
+                              .shared
+                              .getChatsHistoryModelList!
+                              .data!
+                              .length,
+                      itemBuilder: (context, index) {
+                        // Access elements in reversed order using reversed.toList()
+                        var reversedData =
+                            ApiRepository
+                                .shared
+                                .getChatsHistoryModelList!
+                                .data!
+                                .reversed
+                                .toList();
+                        var element = reversedData[index];
 
-                                  var name = element.name;
-                                  var image = element.image.toString();
-                                  var targetId = element.id.toString();
-                                  var count = element.count.toString();
-                                  var lastMessage = element.lastMessage.toString();
-                                  var lastMessageTime = element.lastMessageTime.toString();
+                        var name = element.name;
+                        var image = element.image.toString();
+                        var targetId = element.id.toString();
+                        var count = element.count.toString();
+                        var lastMessage = element.lastMessage.toString();
+                        var lastMessageTime =
+                            element.lastMessageTime.toString();
 
-                                  print("index: ${index} count: ${count}");
-                                  return msgs(name, image, targetId, count, lastMessage, lastMessageTime);
-                                },
-                              ),
-                SizedBox(
-                  height: 50,
-                ),
+                        return msgs(
+                          name,
+                          image,
+                          targetId,
+                          count,
+                          lastMessage,
+                          lastMessageTime,
+                        );
+                      },
+                    ),
+                SizedBox(height: 50),
               ],
             ),
           ),
@@ -209,13 +232,13 @@ class _MessagesScreenState extends State<MessagesScreen> {
     return GestureDetector(
       onTap: () {
         Mtimer.cancel();
-        Navigator.of(context).push(MaterialPageRoute(builder: ((context) => Chat(id))));
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: ((context) => Chat(id))));
       },
       child: Column(
         children: [
-          SizedBox(
-            height: 20,
-          ),
+          SizedBox(height: 20),
           Container(
             height: res_height * 0.1,
             decoration: BoxDecoration(
@@ -223,7 +246,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
               borderRadius: BorderRadius.all(Radius.circular(10)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.2),
+                  color: Colors.grey.withAlpha(51),
                   spreadRadius: 5,
                   blurRadius: 7,
                   offset: Offset(0, 3), // changes position of shadow
@@ -240,16 +263,19 @@ class _MessagesScreenState extends State<MessagesScreen> {
                       Container(
                         height: res_height * 0.070,
                         width: res_width * 0.15,
-                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(40)),
-                        child: img == ""
-                            ? Image.asset("assets/slicing/blankuser.jpeg")
-                            : CircleAvatar(
-                                backgroundImage: NetworkImage(AppUrl.baseUrlM + img),
-                              ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(40),
+                        ),
+                        child:
+                            img == ""
+                                ? Image.asset("assets/slicing/blankuser.jpeg")
+                                : CircleAvatar(
+                                  backgroundImage: NetworkImage(
+                                    AppUrl.baseUrlM + img,
+                                  ),
+                                ),
                       ),
-                      SizedBox(
-                        width: res_width * 0.05,
-                      ),
+                      SizedBox(width: res_width * 0.05),
                       SizedBox(
                         width: res_width * 0.55,
                         child: Column(
@@ -257,26 +283,40 @@ class _MessagesScreenState extends State<MessagesScreen> {
                           children: [
                             Text(
                               name == "" ? "Vendor" : name,
-                              style: TextStyle(fontWeight: count == "0" ? FontWeight.normal : FontWeight.bold),
+                              style: TextStyle(
+                                fontWeight:
+                                    count == "0"
+                                        ? FontWeight.normal
+                                        : FontWeight.bold,
+                              ),
                             ),
                             // SizedBox(
                             //   height: 3
                             // ),
                             Text(
-                              lastMsg.length > 30 ? lastMsg.substring(0, 20) + '...' : lastMsg,
-                              style: TextStyle(fontWeight: count != "0" ? FontWeight.bold : FontWeight.normal),
+                              lastMsg.length > 30
+                                  ? lastMsg.substring(0, 20) + '...'
+                                  : lastMsg,
+                              style: TextStyle(
+                                fontWeight:
+                                    count != "0"
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                              ),
                             ),
-                            SizedBox(
-                              height: 10
-                            ),
+                            SizedBox(height: 10),
                             Align(
                               alignment: Alignment.bottomLeft,
                               child: Text(
                                 DateFormat('MMM dd, yyyy hh:mm a').format(
-                              DateTime.parse(lastMessageTime).toLocal()),
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 8.5),
+                                  DateTime.parse(lastMessageTime).toLocal(),
+                                ),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 8.5,
+                                ),
                               ),
-                            )
+                            ),
                           ],
                         ),
                       ),
@@ -285,20 +325,20 @@ class _MessagesScreenState extends State<MessagesScreen> {
                       // ),
                       count != "0"
                           ? CircleAvatar(
-                              backgroundColor: kprimaryColor,
-                              radius: 15,
-                              child: Text(
-                                count,
-                                style: TextStyle(color: Colors.black),
-                              ),
-                            )
-                          : Text("")
+                            backgroundColor: kprimaryColor,
+                            radius: 15,
+                            child: Text(
+                              count,
+                              style: TextStyle(color: Colors.black),
+                            ),
+                          )
+                          : Text(""),
                     ],
                   ),
                 ],
               ),
             ),
-          )
+          ),
         ],
       ),
     );

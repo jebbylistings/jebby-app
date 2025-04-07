@@ -52,7 +52,6 @@
 //                     }
 //                   else
 //                     {
-//                       print("Product ID --> ${ApiRepository.shared.getProductsByIdList?.data![0].productId}"),
 //                       setState(() {
 //                         pastart = ApiRepository.shared.getProductsByIdList!.data![0].pastart.toString();
 //                         paend = ApiRepository.shared.getProductsByIdList!.data![0].paend.toString();
@@ -182,10 +181,8 @@
 //       email = value.email.toString();
 //       role = value.role.toString();
 //       getUserData();
-//       print("User: ${userID}");
 //     }).onError((error, stackTrace) {
 //       if (kDebugMode) {
-//         print(error.toString());
 //       }
 //     });
 //   }
@@ -210,7 +207,6 @@
 //                   if (List.data!.length == 0)
 //                     {
 //                       setState(() {
-//                         print("EMPTY USER DATA");
 //                         userLoader = false;
 //                         userError = false;
 //                         userEmpty = true;
@@ -559,8 +555,6 @@
 //                               _locationController.removeListener(() {});
 //                               Latitiude = location.last.latitude.toString();
 //                               Longitude = location.last.longitude.toString();
-//                               print("Latitude: ${location.last.latitude.toString()}");
-//                               print("Longitude: ${location.last.longitude.toString()}");
 //                               _placeList = [];
 //                             });
 //                           },
@@ -632,7 +626,6 @@
 //                     onTap: () {
 //                       setState(() {
 //                         onlinepay = false;
-//                         print("LBD");
 //                         // cod = false;
 //                       });
 //                     },
@@ -662,7 +655,6 @@
 //                     onTap: () {
 //                       setState(() {
 //                         onlinepay = true;
-//                         print("COD");
 //                         // cod = true;
 //                       });
 //                     },
@@ -699,7 +691,6 @@
 //                     onTap: () {
 //                       int diff = selectedDate1.difference(selectedDate).inDays + 1;
 //                       int amount = int.parse(price.toString()) * diff;
-//                       print(amount);
 //                       if (onlinepay == true) {
 //                         if (emailController.text.isNotEmpty && _locationController.text.toString().isNotEmpty && nameController.text.isNotEmpty) {
 //                           final snackBar = new SnackBar(content: new Text("Please Wait"));

@@ -5,12 +5,13 @@ class GetFeaturedModel {
   List<RelatedProducts>? relatedProducts;
   List<Reviews>? reviews;
 
-  GetFeaturedModel(
-      {this.message,
-      this.data,
-      this.images,
-      this.relatedProducts,
-      this.reviews});
+  GetFeaturedModel({
+    this.message,
+    this.data,
+    this.images,
+    this.relatedProducts,
+    this.reviews,
+  });
 
   GetFeaturedModel.fromJson(Map<String, dynamic> json) {
     message = json['message'];
@@ -79,24 +80,25 @@ class Data {
   String? image;
   String? delivery_charges;
 
-  Data(
-      {this.id,
-      this.userId,
-      this.categoryId,
-      this.subcategoryId,
-      this.name,
-      this.price,
-      this.specifications,
-      this.serviceAgreements,
-      this.createdAt,
-      this.updatedAt,
-      this.negotiation,
-      this.isMessage,
-      this.isReview,
-      this.stars,
-      this.length,
-      this.image,
-      this.delivery_charges});
+  Data({
+    this.id,
+    this.userId,
+    this.categoryId,
+    this.subcategoryId,
+    this.name,
+    this.price,
+    this.specifications,
+    this.serviceAgreements,
+    this.createdAt,
+    this.updatedAt,
+    this.negotiation,
+    this.isMessage,
+    this.isReview,
+    this.stars,
+    this.length,
+    this.image,
+    this.delivery_charges,
+  });
 
   Data.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -115,7 +117,7 @@ class Data {
     stars = json['stars'];
     length = json['length'];
     image = json['image'];
-    delivery_charges =json['delivery_charges'];
+    delivery_charges = json['delivery_charges'];
   }
 
   Map<String, dynamic> toJson() {
@@ -176,12 +178,13 @@ class RelatedProducts {
   String? createdAt;
   String? updatedAt;
 
-  RelatedProducts(
-      {this.id,
-      this.productId,
-      this.relatedProductId,
-      this.createdAt,
-      this.updatedAt});
+  RelatedProducts({
+    this.id,
+    this.productId,
+    this.relatedProductId,
+    this.createdAt,
+    this.updatedAt,
+  });
 
   RelatedProducts.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -213,16 +216,17 @@ class Reviews {
   String? updatedAt;
   int? vendorId;
 
-  Reviews(
-      {this.id,
-      this.userId,
-      this.productId,
-      this.stars,
-      this.image,
-      this.description,
-      this.createdAt,
-      this.updatedAt,
-      this.vendorId});
+  Reviews({
+    this.id,
+    this.userId,
+    this.productId,
+    this.stars,
+    this.image,
+    this.description,
+    this.createdAt,
+    this.updatedAt,
+    this.vendorId,
+  });
 
   Reviews.fromJson(Map<String, dynamic> json) {
     id = json['id'];
