@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jebby/Views/helper/global.dart';
 import 'package:jebby/Views/screens/auth/login.dart';
+import 'package:jebby/Views/screens/auth/stripe_onboarding.dart';
 import 'package:jebby/Views/screens/mainfolder/homemain.dart';
 import 'package:jebby/model/user_model.dart';
 import 'package:jebby/view_model/user_view_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashServices {
   Future<UserModel> getUserDate() => UserViewModel().getUser();
@@ -18,13 +20,26 @@ class SplashServices {
             Get.offAll(() => LoginScreen());
           } else {
             await Future.delayed(Duration(seconds: 3));
-            // if (value.role.toString() == "1") {
-            //   loginType = "vendor";
-            //   Get.offAll(() => VendrosHomeScreen());
-            // } else {
+            
+            // Check if onboarding is completed
+            SharedPreferences prefs = await SharedPreferences.getInstance();
+            bool onboardingCompleted = prefs.getBool('identity_verified') ?? false;
+            
+            // Get saved verification status
+            String verificationStatus = prefs.getString('stripe_verification_status') ?? "";
+            
             loginType = "user";
-            Get.offAll(() => MainScreen());
-            // }
+            
+            // Only navigate to MainScreen if onboarding is completed
+            if (onboardingCompleted) {
+              Get.offAll(() => MainScreen());
+            } else {
+              // Navigate to StripeOnboardingScreen to complete onboarding
+              Get.offAll(() => StripeOnboardingScreen(
+                userId: value.id.toString(),
+                verificationStatus: verificationStatus,
+              ));
+            }
           }
         })
         .onError((error, stackTrace) {

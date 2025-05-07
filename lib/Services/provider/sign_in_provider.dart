@@ -388,7 +388,9 @@ class SignInProvider extends ChangeNotifier {
     final authViewMode = Provider.of<AuthViewModel>(context, listen: false);
 
     try {
+      final LoginResult loginResult = await FacebookAuth.instance.login();
 
+      if (loginResult.status == LoginStatus.success) {
       final userData = await FacebookAuth.instance.getUserData();
 
       // final OAuthCredential facebookAuthCredential =
@@ -415,7 +417,10 @@ class SignInProvider extends ChangeNotifier {
         // _hasError = false;
         // _provider = "FACEBOOK";
         // _role=value.toString();
-        notifyListeners();
+        notifyListeners(); // ✅ safe to call now
+      } else {
+        print('Login failed or cancelled');
+      }
       } else {}
     } on FirebaseAuthException catch (e) {
       switch (e.code) {

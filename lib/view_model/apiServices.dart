@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -54,6 +55,7 @@ import '../model/productInfoInsert.dart';
 import '../model/productUpdateModel.dart';
 import '../model/reOrderModel.dart';
 import '../model/stripePaymentModel.dart';
+import '../model/stripe_verification_model.dart';
 import '../model/sub_category_list_model.dart';
 import '../res/app_url.dart';
 
@@ -102,6 +104,7 @@ class ApiRepository extends ChangeNotifier {
   GetAllOrdersByUserIdModel? getAllOrdersByUserIdModelList;
   GetFeaturedModel? getFeaturedProductsModelList;
   GetNegoByIdModel? getNegoByIdModelList;
+  StripeVerificationModel? stripeVerificationModelList;
 
   static var shared = ApiRepository();
 
@@ -2083,6 +2086,171 @@ class ApiRepository extends ChangeNotifier {
     }
 
     return GetNegoByIdModel();
+  }
+
+  // New methods for Stripe verification
+  getStripeVerification(data) {
+    stripeVerificationModelList = data;
+    notifyListeners();
+  }
+  
+  // Create a verification session with Stripe Identity
+  Future<StripeVerificationModel> createVerificationSession(String userId, onResponse(StripeVerificationModel data), onError(error)) async {
+    final request = json.encode(<String, dynamic>{
+      "user_id": userId,
+    });
+
+    final response = await http.post(
+      Uri.parse("${Url}/stripe/create-verification-session"),
+      body: request,
+      headers: {
+        'Content-type': "application/json",
+      },
+    );
+    
+    if (response.statusCode == 200) {
+      try {
+        var data = StripeVerificationModel.fromJson(jsonDecode(response.body));
+        getStripeVerification(data);
+        onResponse(data);
+        return data;
+      } catch (error) {
+        onError(error.toString());
+      }
+    } else if (response.statusCode == 400) {
+      onError("Error creating verification session");
+    } else if (response.statusCode == 500) {
+      onError("Internal Server Error");
+    }
+    
+    return StripeVerificationModel();
+  }
+  
+  // Check verification status
+  Future<dynamic> checkVerificationStatus(String verificationSessionId, onResponse(dynamic data), onError(error)) async {
+    final response = await http.get(
+      Uri.parse("${Url}/stripe/verification-status/${verificationSessionId}"),
+      headers: {
+        'Content-type': "application/json",
+      },
+    );
+    
+    if (response.statusCode == 200) {
+      try {
+        var data = jsonDecode(response.body);
+        onResponse(data);
+        return data;
+      } catch (error) {
+        onError(error.toString());
+      }
+    } else if (response.statusCode == 400) {
+      onError("Error checking verification status");
+    } else if (response.statusCode == 500) {
+      onError("Internal Server Error");
+    }
+    
+    return {};
+  }
+
+  Future<dynamic> updateProfile(String userId, String fullName, String email, String phoneNumber, String address, double? latitude, double? longitude, onResponse(dynamic data), onError(error)) async {
+    final request = json.encode(<String, dynamic>{
+      "full_name": fullName,
+      "email": email, 
+      "phoneNumber": phoneNumber,
+      "address": address,
+      "latitude": latitude,
+      "longitude": longitude,
+      "user_id": userId,
+    });
+
+    final response = await http.post(
+      Uri.parse("${Url}/update-profile"),
+      body: request,
+      headers: {
+        'Content-type': "application/json",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      try {
+        var data = jsonDecode(response.body);
+        onResponse(data);
+        return data;
+      } catch (error) {
+        onError(error.toString());
+      }
+    }  else if (response.statusCode == 400) {
+      onError("Error checking verification status");
+    } else if (response.statusCode == 500) {
+      onError("Internal Server Error");
+    }
+    
+    return {};
+  }
+
+  // Create Stripe Express account link
+  Future<dynamic> createStripeExpressAccountLink(
+    String userId,
+    onResponse(dynamic data),
+    onError(error),
+  ) async {
+    final request = json.encode(<String, dynamic>{
+      "user_id": userId,
+    });
+
+    final response = await http.post(
+      Uri.parse("${Url}/stripe/create-express-account"),
+      body: request,
+      headers: {
+        'Content-type': "application/json",
+      },
+    );
+    
+    if (response.statusCode == 200) {
+      try {
+        var data = jsonDecode(response.body);
+        onResponse(data);
+        return data;
+      } catch (error) {
+        onError(error.toString());
+      }
+    } else if (response.statusCode == 400) {
+      onError("Error creating Stripe Express account");
+    } else if (response.statusCode == 500) {
+      onError("Internal Server Error");
+    }
+    
+    return {};
+  }
+
+  // Check Stripe Express account status
+  Future<dynamic> checkStripeAccountStatus(
+    String userId,
+    onResponse(dynamic data),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse("${Url}/stripe/account-status/${userId}"),
+      headers: {
+        'Content-type': "application/json",
+      },
+    );
+    
+    if (response.statusCode == 200) {
+      try {
+        var data = jsonDecode(response.body);
+        onResponse(data);
+        return data;
+      } catch (error) {
+        onError(error.toString());
+      }
+    } else if (response.statusCode == 400) {
+      onError("Error checking account status");
+    } else if (response.statusCode == 500) {
+      onError("Internal Server Error");
+    }
+    
+    return {};
   }
 }
 

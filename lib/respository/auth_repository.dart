@@ -120,7 +120,7 @@ class AuthRepository {
   Future<dynamic> DeleteAccount(dynamic data) async {
     try {
       dynamic response = await _apiServices.getPostApiResponse(
-        AppUrl.DeleteAccount,
+        AppUrl.deleteAccount,
         data,
       );
       return response;

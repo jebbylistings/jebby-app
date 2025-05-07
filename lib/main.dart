@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:jebby/Views/helper/colors.dart';
+import 'package:jebby/Views/screens/auth/stripe_onboarding.dart';
 import 'package:jebby/provider/prodetail_provider.dart';
 
 import 'package:jebby/view_model/auth_view_model.dart';
@@ -96,14 +97,26 @@ class _SplashScreenState extends State<SplashScreen> {
     final user = auth.currentUser;
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     Name = sharedPreferences.getString('fullname') ?? "";
-    //
+    
+    // Check if onboarding is completed
+    bool onboardingCompleted = sharedPreferences.getBool('identity_verified') ?? false;
+    String userId = sharedPreferences.getString('id') ?? "";
+    
+    // Get saved verification status
+    String verificationStatus = sharedPreferences.getString('stripe_verification_status') ?? "";
+
     if (user != null) {
       Timer(const Duration(seconds: 2), () {
-        // if (sharedPreferences.getString('role').toString() == "1") {
-        //   Get.offAll(() => VendrosHomeScreen());
-        // } else {
-        Get.offAll(() => MainScreen());
-        // }
+        // Check if onboarding is completed before navigating
+        if (onboardingCompleted) {
+          Get.offAll(() => MainScreen());
+        } else {
+          // Navigate to stripe onboarding screen to complete verification
+          Get.offAll(() => StripeOnboardingScreen(
+            userId: userId,
+            verificationStatus: verificationStatus,
+          ));
+        }
       });
     } else {
       String _name = sharedPreferences.getString('fullname') ?? "";
@@ -115,7 +128,6 @@ class _SplashScreenState extends State<SplashScreen> {
         });
       } else {
         splashServices.checkAuthentication(context);
-        // Timer(const Duration(seconds: 2), () {Get.to(() => LoginScreen());});
       }
     }
   }

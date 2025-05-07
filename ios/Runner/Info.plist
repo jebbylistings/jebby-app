@@ -72,6 +72,8 @@
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>To capture profile photo please grant camera access</string>
+	<key>io.flutter.embedded_views_preview</key>
+	<true/>
 	<key>NSLocationAlwaysAndWhenInUsageDescription</key>
 	<string> The app requires access to your location for smoother deliveries of the item.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

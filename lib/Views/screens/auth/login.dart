@@ -741,6 +741,7 @@ class _LoginScreenState extends State<LoginScreen> {
             // }
           })
           .catchError((error) {
+            print(error.toString());
             facebookController.reset();
           });
     }

@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     <meta-data android:name="io.flutter.embedding.android.EnableImpeller"
-    android:value="false" />
+        android:value="false" />
     <queries>
         <provider android:authorities="com.facebook.katana.provider.PlatformProvider" /> <!-- allows
         app to access Facebook app features -->
@@ -18,8 +18,10 @@
         android:icon="@mipmap/ic_launcher"
         android:requestLegacyExternalStorage="true">
 
+        <!-- <meta-data android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyBkzoEvOmBy1dUxRP24ekNAtokQL4rllsE" /> -->
         <meta-data android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyBkzoEvOmBy1dUxRP24ekNAtokQL4rllsE" />
+            android:value="AIzaSyAdGQ36aP1VwJbXAkvvdsX8A95DxbJAIvY" />
         <meta-data android:name="com.google.android.gms.wallet.api.enabled" android:value="true" />
         <activity
             android:name=".MainActivity"

@@ -25,7 +25,8 @@ class AppUrl {
   static var ForgetPasswordOtpEndPoint = baseUrlM + "/forgetPasswordEmailOtp";
 
   static var editProfileUrl = baseUrlM + "/UserProfileInsert";
-  static var DeleteAccount = baseUrlM + "/VendorDelete";
+  static var deleteAccount = baseUrlM + "/VendorDelete";
+  static var stripeVerificationStatus = baseUrlM + "/stripe/verification-status/";
 
   ///GET Apis
   static var UserProfileGetByIdUrl = baseUrlM + "/UserProfileGetById/:id";
