@@ -75,6 +75,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final authViewMode = Provider.of<AuthViewModel>(context);
     double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
+    final isTablet = res_width > 600;
+
     return Container(
       decoration: BoxDecoration(
         image: DecorationImage(
@@ -431,14 +433,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         valueColor: darkBlue,
                         color: Colors.transparent,
                         child: Container(
-                          width: res_width * 0.15,
-                          height: res_width * 0.08,
+                          width: isTablet ? res_width * 0.15 : res_width * 0.15,
+                          height: isTablet ? res_width * 0.03 : res_width * 0.08,
                           child: Image.asset('assets/slicing/fb.png'),
                         ),
                       ),
 
                       GetPlatform.isIOS
-                          ? IOSButton(res_width)
+                          ? IOSButton(res_width, isTablet)
                           : SizedBox.shrink(),
 
                       // : Container(
@@ -486,7 +488,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       Container(
-                        height: res_width * 0.127,
+                        height: isTablet ? res_width * 0.055 : res_width * 0.127,
+                        width: isTablet ? res_width * 0.15 : res_width * 0.17,
                         child: ElevatedButton.icon(
                           onPressed: () {
                             getUserDate()
@@ -787,6 +790,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // }
         })
         .catchError((error) {
+          print(error.toString());
           AppleController.reset();
         });
     ;
@@ -816,7 +820,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  Widget IOSButton(res_width) {
+  Widget IOSButton(res_width, isTablet) {
     if (GetPlatform.isIOS) {
       return RoundedLoadingButton(
         onPressed: () {
@@ -830,8 +834,8 @@ class _LoginScreenState extends State<LoginScreen> {
         borderRadius: 25,
         color: Colors.transparent,
         child: Container(
-          width: res_width * 0.15,
-          height: res_width * 0.08,
+          width: isTablet ? res_width * 0.15 : res_width * 0.15,
+          height: isTablet ? res_width * 0.03 : res_width * 0.08,
           child: Image.asset('assets/slicing/aple.png'),
         ),
       );
