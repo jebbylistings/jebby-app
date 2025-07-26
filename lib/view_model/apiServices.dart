@@ -56,8 +56,10 @@ import '../model/productUpdateModel.dart';
 import '../model/reOrderModel.dart';
 import '../model/stripePaymentModel.dart';
 import '../model/stripe_verification_model.dart';
+import '../model/stripeTransactionsModel.dart';
 import '../model/sub_category_list_model.dart';
 import '../res/app_url.dart';
+import '../utils/utils.dart';
 
 class ApiRepository extends ChangeNotifier {
   bool getCategoryListApiStatus = false;
@@ -105,6 +107,7 @@ class ApiRepository extends ChangeNotifier {
   GetFeaturedModel? getFeaturedProductsModelList;
   GetNegoByIdModel? getNegoByIdModelList;
   StripeVerificationModel? stripeVerificationModelList;
+  StripeTransactionsModel? stripeTransactionsModelList;
 
   static var shared = ApiRepository();
 
@@ -1251,6 +1254,7 @@ class ApiRepository extends ChangeNotifier {
       "amount": amount,
       "vendorAccountId": accountId,
       "sales_tax": ApplicationFees.toInt(),
+      "user_id": userid,
     });
 
     final response = await http.post(
@@ -1258,6 +1262,7 @@ class ApiRepository extends ChangeNotifier {
       body: request,
       headers: {'Content-type': "application/json"},
     );
+    
     if (response.statusCode == 200) {
       try {
         final responseData = json.decode(response.body);
@@ -1278,9 +1283,14 @@ class ApiRepository extends ChangeNotifier {
         // 3. Present PaymentSheet
         await Stripe.instance.presentPaymentSheet();
 
-        // final snackBar = new SnackBar(content: new Text("Placing order please wait"));
-        // ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        //
+        // Show processing message
+        final processingSnackBar = new SnackBar(
+          content: new Text("Processing payment and placing order..."),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 2),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(processingSnackBar);
+        
         // ChargeBack(context, userid, productId, rentStart, originalReturn, name, email, location, lat, long, negoPrice,shipping_address, cardNumber, expiryMonth, expiryYear, cvv, amount, security_deposit);
         ApiRepository.shared.postOrder(
           context,
@@ -1312,14 +1322,37 @@ class ApiRepository extends ChangeNotifier {
         // onError(error.toString());
       }
     } else if (response.statusCode == 400) {
-      // onError("You are not in Range");
+      // Parse error message from backend
+      try {
+        final errorData = json.decode(response.body);
+        String errorMessage = "Payment validation failed";
+        
+        if (errorData['message'] != null) {
+          errorMessage = errorData['message'];
+        } else if (errorData['error'] != null) {
+          errorMessage = errorData['error'];
+        }
+        
+        Utils.flushBarErrorMessage(errorMessage, context);
+      } catch (e) {
+        Utils.flushBarErrorMessage("Payment validation failed", context);
+      }
     } else if (response.statusCode == 500) {
-      // ApiRepository.shared.postOrder(context, userid, productId, rentStart, originalReturn, name, email, location, lat, long);
-      final snackBar = new SnackBar(
-        content: new Text("Error in placing order ${response.body.toString()}"),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      // onError("Internal Server Error");
+      // Parse error message from backend
+      try {
+        final errorData = json.decode(response.body);
+        String errorMessage = "Server error occurred";
+        
+        if (errorData['message'] != null) {
+          errorMessage = errorData['message'];
+        } else if (errorData['error'] != null) {
+          errorMessage = errorData['error'];
+        }
+        
+        Utils.flushBarErrorMessage(errorMessage, context);
+      } catch (e) {
+        Utils.flushBarErrorMessage("Server error occurred", context);
+      }
     }
     return PayWithStripeModel();
   }
@@ -1447,7 +1480,9 @@ class ApiRepository extends ChangeNotifier {
       // ProductInfoInsert data = ProductInfoInsert.fromJson(json.decode(response.body));
 
       final snackBar = new SnackBar(
-        content: new Text("Order placed sucessfully"),
+        content: new Text("Payment successful! Order placed successfully. You and the item owner have been notified."),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 4),
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
       Get.off(() => MainScreen());
@@ -1956,13 +1991,37 @@ class ApiRepository extends ChangeNotifier {
         // onError(error.toString());
       }
     } else if (response.statusCode == 400) {
-      // onError("You are not in Range");
+      // Parse error message from backend
+      try {
+        final errorData = json.decode(response.body);
+        String errorMessage = "Payment validation failed";
+        
+        if (errorData['message'] != null) {
+          errorMessage = errorData['message'];
+        } else if (errorData['error'] != null) {
+          errorMessage = errorData['error'];
+        }
+        
+        Utils.flushBarErrorMessage(errorMessage, context);
+      } catch (e) {
+        Utils.flushBarErrorMessage("Payment validation failed", context);
+      }
     } else if (response.statusCode == 500) {
-      final snackBar = new SnackBar(
-        content: new Text("Seller Payment Method Invalid, Cannot Place Order"),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      // onError("Internal Server Error");
+      // Parse error message from backend
+      try {
+        final errorData = json.decode(response.body);
+        String errorMessage = "Server error occurred";
+        
+        if (errorData['message'] != null) {
+          errorMessage = errorData['message'];
+        } else if (errorData['error'] != null) {
+          errorMessage = errorData['error'];
+        }
+        
+        Utils.flushBarErrorMessage(errorMessage, context);
+      } catch (e) {
+        Utils.flushBarErrorMessage("Server error occurred", context);
+      }
     }
     return PayWithStripeModel();
   }
@@ -2091,6 +2150,11 @@ class ApiRepository extends ChangeNotifier {
   // New methods for Stripe verification
   getStripeVerification(data) {
     stripeVerificationModelList = data;
+    notifyListeners();
+  }
+  
+  getStripeTransactions(data) {
+    stripeTransactionsModelList = data;
     notifyListeners();
   }
   
@@ -2251,6 +2315,37 @@ class ApiRepository extends ChangeNotifier {
     }
     
     return {};
+  }
+  
+  // Get user's Stripe transactions
+  Future<StripeTransactionsModel> getUserStripeTransactions(
+    String userId,
+    onResponse(StripeTransactionsModel data),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.getUserStripeTransactions + userId),
+      headers: {'Content-type': "application/json"},
+    );
+    
+    if (response.statusCode == 200) {
+      try {
+        var data = StripeTransactionsModel.fromJson(jsonDecode(response.body));
+        getStripeTransactions(data);
+        onResponse(data);
+        return data;
+      } catch (error) {
+        onError(error.toString());
+      }
+    } else if (response.statusCode == 400) {
+      onError("Error fetching transactions");
+    } else if (response.statusCode == 404) {
+      onError("User not found");
+    } else if (response.statusCode == 500) {
+      onError("Internal Server Error");
+    }
+    
+    return StripeTransactionsModel();
   }
 }
 

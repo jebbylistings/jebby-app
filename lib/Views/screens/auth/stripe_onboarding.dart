@@ -3,8 +3,10 @@ import 'package:get/get.dart';
 import 'package:jebby/Views/helper/colors.dart';
 import 'package:jebby/Views/screens/auth/login.dart';
 import 'package:jebby/Views/screens/mainfolder/homemain.dart';
+import 'package:jebby/Views/screens/vendors/vendorhome.dart';
 import 'package:jebby/model/stripe_verification_model.dart';
 import 'package:jebby/view_model/apiServices.dart';
+import 'package:jebby/respository/auth_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:jebby/Views/screens/auth/location_picker.dart';
@@ -12,11 +14,13 @@ import 'package:jebby/Views/screens/auth/location_picker.dart';
 class StripeOnboardingScreen extends StatefulWidget {
   final String userId;
   final String verificationStatus;
+  final bool isFromTransactions;
 
   const StripeOnboardingScreen({
     Key? key,
     required this.userId,
     this.verificationStatus = "",
+    this.isFromTransactions = false,
   }) : super(key: key);
 
   @override
@@ -50,9 +54,14 @@ class _StripeOnboardingScreenState extends State<StripeOnboardingScreen>
   void initState() {
     super.initState();
     _verificationStatus = widget.verificationStatus;
+
+    // If coming from transactions screen, start at step 3 (banking)
+    if (widget.isFromTransactions) {
+      _currentStep = 2; // Set to banking step (step 3)
+    }
     // If the user is coming with a failed verification status,
     // prepare to go to verification step
-    if (_verificationStatus == 'failed') {
+    else if (_verificationStatus == 'failed') {
       _currentStep = 1; // Set to verification step
     }
 
@@ -433,8 +442,39 @@ class _StripeOnboardingScreenState extends State<StripeOnboardingScreen>
     prefs.setBool('identity_verified', true);
     prefs.setString('stripe_verification_status', 'verified');
 
-    // Navigate to the main screen
-    Get.offAll(() => MainScreen());
+    // If coming from transactions, go back to transactions
+    if (widget.isFromTransactions) {
+      Get.back();
+    } else {
+      // Call update role API before navigating
+      final authRepo = AuthRepository();
+      final userEmail = prefs.getString('email') ?? '';
+      
+      try {
+        final response = await authRepo.updateRoleApi({
+          "role": "1",
+          "email": userEmail,
+        });
+        
+        if (response["status"] == 200) {
+          print("Role updated to provider successfully during onboarding");
+          // Update local preferences
+          prefs.setString('role', '1');
+          // Navigate to vendor home screen
+          Get.offAll(() => VendrosHomeScreen());
+        } else {
+          print("Failed to update role during onboarding: ${response["message"]}");
+          // Still navigate but log the error
+          prefs.setString('role', '1');
+          Get.offAll(() => VendrosHomeScreen());
+        }
+      } catch (error) {
+        print("Error updating role during onboarding: $error");
+        // Still navigate but log the error
+        prefs.setString('role', '1');
+        Get.offAll(() => VendrosHomeScreen());
+      }
+    }
   }
 
   // Helper function to format error messages from Stripe
@@ -490,8 +530,17 @@ class _StripeOnboardingScreenState extends State<StripeOnboardingScreen>
           if (status == 'active') {
             setState(() {
               _isLoading = false;
-              _currentStep = 3; // Move to completion step
             });
+
+            // If coming from transactions, go directly back to transactions
+            if (widget.isFromTransactions) {
+              Get.back();
+            } else {
+              // Move to completion step for new users
+              setState(() {
+                _currentStep = 3;
+              });
+            }
           } else if (status == 'failed') {
             setState(() {
               _isLoading = false;
@@ -1201,8 +1250,7 @@ class _StripeOnboardingScreenState extends State<StripeOnboardingScreen>
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
             onPressed: () {
-              // Navigate back to login screen
-              Get.offAll(() => LoginScreen());
+              Get.back();
             },
           ),
         ),
@@ -1227,8 +1275,7 @@ class _StripeOnboardingScreenState extends State<StripeOnboardingScreen>
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            // Navigate back to login screen
-            Get.offAll(() => LoginScreen());
+            Get.back();
           },
         ),
       ),

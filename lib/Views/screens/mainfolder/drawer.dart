@@ -19,6 +19,7 @@ import 'package:jebby/Views/screens/auth/login.dart';
 import 'package:jebby/Views/screens/home/Favourites.dart';
 import 'package:jebby/Views/screens/home/Messages(32).dart';
 import 'package:jebby/Views/screens/home/MyOrders.dart';
+import 'package:jebby/Views/screens/home/MyTransactions.dart';
 import 'package:jebby/Views/screens/home/returnproduct.dart';
 import 'package:jebby/Views/screens/home/setting.dart';
 import 'package:jebby/Views/screens/mainfolder/homemain.dart';
@@ -28,6 +29,7 @@ import 'package:jebby/Views/screens/vendors/productreturn.dart';
 import 'package:jebby/Views/screens/vendors/renterProfile.dart';
 import 'package:jebby/Views/screens/vendors/transactionlist.dart';
 import 'package:jebby/Views/screens/vendors/vendorhome.dart';
+import 'package:jebby/Views/screens/auth/stripe_onboarding.dart';
 import 'package:jebby/Views/support/FAQs.dart';
 import 'package:jebby/Views/support/contactsupport.dart';
 import 'package:jebby/Views/support/providerfeedback.dart';
@@ -52,6 +54,7 @@ class DrawerScreen extends StatefulWidget {
 }
 
 class _DrawerScreenState extends State<DrawerScreen> {
+  bool onboardingCompleted = false;
   // String userName = "";
   // String userEmail = "";
   // bool checkLogin = false;
@@ -82,6 +85,16 @@ class _DrawerScreenState extends State<DrawerScreen> {
           email = value.email.toString();
           getProductsApi(id);
           role = value.role.toString();
+
+          // Also update the UserViewModel to ensure consistency
+          final usp = context.read<UserViewModel>();
+          if (usp.role != value.role.toString()) {
+            usp.setRole(value.role.toString());
+          }
+
+          if (mounted) {
+            setState(() {});
+          }
         })
         .onError((error, stackTrace) {});
   }
@@ -91,6 +104,24 @@ class _DrawerScreenState extends State<DrawerScreen> {
     super.initState();
     getData();
     profileData(context);
+    _loadOnboardingStatus();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh role data when dependencies change
+    profileData(context);
+    _loadOnboardingStatus(); // Refresh onboarding status
+  }
+
+  void _loadOnboardingStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    bool newOnboardingCompleted = prefs.getBool('identity_verified') ?? false;
+
+    setState(() {
+      onboardingCompleted = newOnboardingCompleted;
+    });
   }
 
   void _showSuccessAlert(BuildContext context) {
@@ -132,6 +163,11 @@ class _DrawerScreenState extends State<DrawerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Refresh onboarding status when drawer is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadOnboardingStatus();
+    });
+
     double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
     double baseWidth = 428;
@@ -171,51 +207,51 @@ class _DrawerScreenState extends State<DrawerScreen> {
                   padding: const EdgeInsets.only(left: 10),
                   child: Row(
                     children: [
-                      usp.image.toString() == "null"
-                          ? sp.imageUrl.toString() == "null"
-                              ? CircleAvatar(
-                                radius: 40,
-                                backgroundImage: AssetImage(
-                                  "assets/slicing/blankuser.jpeg",
-                                ),
-                              )
-                              : CachedNetworkImage(
-                                imageUrl: "${sp.imageUrl}",
-                                imageBuilder:
-                                    (context, imageProvider) => CircleAvatar(
-                                      radius: 40,
-                                      backgroundImage: imageProvider,
-                                    ),
-                                placeholder:
-                                    (context, url) => SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.0,
-                                      ),
-                                    ),
-                                errorWidget:
-                                    (context, url, error) =>
-                                        Icon(Icons.error, size: 40),
-                              )
-                          : CachedNetworkImage(
-                            imageUrl: "${Url}${usp.image}",
+                      isLoadingImage
+                          ? CircleAvatar(
+                            radius: 40,
+                            backgroundColor: Colors.grey[200],
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.0,
+                              ),
+                            ),
+                          )
+                          : imagesapi != "null" && imagesapi.isNotEmpty
+                          ? CachedNetworkImage(
+                            imageUrl: "${Url}${imagesapi}",
                             imageBuilder:
                                 (context, imageProvider) => CircleAvatar(
                                   radius: 40,
                                   backgroundImage: imageProvider,
                                 ),
                             placeholder:
-                                (context, url) => SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.0,
+                                (context, url) => CircleAvatar(
+                                  radius: 40,
+                                  backgroundColor: Colors.grey[200],
+                                  child: SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.0,
+                                    ),
                                   ),
                                 ),
                             errorWidget:
-                                (context, url, error) =>
-                                    Icon(Icons.error, size: 40),
+                                (context, url, error) => CircleAvatar(
+                                  radius: 40,
+                                  backgroundImage: AssetImage(
+                                    "assets/slicing/blankuser.jpeg",
+                                  ),
+                                ),
+                          )
+                          : CircleAvatar(
+                            radius: 40,
+                            backgroundImage: AssetImage(
+                              "assets/slicing/blankuser.jpeg",
+                            ),
                           ),
                       SizedBox(width: 15),
                       Column(
@@ -1033,6 +1069,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
     final usp = context.watch<UserViewModel>();
     // Retrieve the current text scale factor from the MediaQuery
     final textScaleFactor = MediaQuery.of(context).textScaler.scale(1.0);
+
     return Container(
       width: res_width * 0.85,
       decoration: BoxDecoration(
@@ -1053,48 +1090,30 @@ class _DrawerScreenState extends State<DrawerScreen> {
                       padding: const EdgeInsets.only(left: 10),
                       child: Row(
                         children: [
-                          usp.image.toString() == "null"
-                              ? sp.imageUrl.toString() == "null"
-                                  ? CircleAvatar(
-                                    radius: 40,
-                                    backgroundImage: AssetImage(
-                                      "assets/slicing/blankuser.jpeg",
-                                    ),
-                                  )
-                                  : CachedNetworkImage(
-                                    imageUrl: "${sp.imageUrl}",
-                                    imageBuilder:
-                                        (context, imageProvider) =>
-                                            CircleAvatar(
-                                              radius: 40,
-                                              backgroundImage: imageProvider,
-                                            ),
-                                    placeholder:
-                                        (context, url) => Padding(
-                                          padding: const EdgeInsets.all(20),
-                                          child: SizedBox(
-                                            width: 24,
-                                            height: 24,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2.0,
-                                            ),
-                                          ),
-                                        ),
-                                    errorWidget:
-                                        (context, url, error) =>
-                                            Icon(Icons.error, size: 40),
-                                  )
-                              : CachedNetworkImage(
-                                imageUrl:
-                                    "https://api.jebbylistings.com${usp.image}",
+                          isLoadingImage
+                              ? CircleAvatar(
+                                radius: 40,
+                                backgroundColor: Colors.grey[200],
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.0,
+                                  ),
+                                ),
+                              )
+                              : imagesapi != "null" && imagesapi.isNotEmpty
+                              ? CachedNetworkImage(
+                                imageUrl: "${Url}${imagesapi}",
                                 imageBuilder:
                                     (context, imageProvider) => CircleAvatar(
                                       radius: 40,
                                       backgroundImage: imageProvider,
                                     ),
                                 placeholder:
-                                    (context, url) => Padding(
-                                      padding: const EdgeInsets.all(20),
+                                    (context, url) => CircleAvatar(
+                                      radius: 40,
+                                      backgroundColor: Colors.grey[200],
                                       child: SizedBox(
                                         width: 24,
                                         height: 24,
@@ -1104,8 +1123,18 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                       ),
                                     ),
                                 errorWidget:
-                                    (context, url, error) =>
-                                        Icon(Icons.error, size: 40),
+                                    (context, url, error) => CircleAvatar(
+                                      radius: 40,
+                                      backgroundImage: AssetImage(
+                                        "assets/slicing/blankuser.jpeg",
+                                      ),
+                                    ),
+                              )
+                              : CircleAvatar(
+                                radius: 40,
+                                backgroundImage: AssetImage(
+                                  "assets/slicing/blankuser.jpeg",
+                                ),
                               ),
                           SizedBox(width: 15),
                           Column(
@@ -1148,38 +1177,108 @@ class _DrawerScreenState extends State<DrawerScreen> {
                       ),
                     ),
                     SizedBox(height: res_height * 0.01),
-                    usp.role == "0"
+                    (usp.role == "1" || onboardingCompleted)
                         ? Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Renter',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Transform.scale(
+                                scale: 0.8,
+                                child: Switch(
+                                  value: usp.role == "1",
+                                  onChanged: (value) async {
+                                    final usp = context.read<UserViewModel>();
+                                    final sp = context.read<SignInProvider>();
+                                    
+                                    if (value) {
+                                      // Switch to provider - call API first
+                                      _myRepo.updateRoleApi({
+                                        "role": "1",
+                                        "email": usp.email ?? sp.email,
+                                      }).then((response) async {
+                                        if (response["status"] == 200) {
+                                          print("Role updated to provider successfully");
+                                          // Only update local state and navigate if API succeeds
+                                          SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+                                          await sharedPreferences.setString('role', '1');
+                                          usp.setRole('1');
+                                          sp.saveDataToSharedPreferences();
+                                          Get.offAll(() => VendrosHomeScreen());
+                                        } else {
+                                          print("Failed to update role to provider");
+                                          // Optionally show error message to user
+                                        }
+                                      }).catchError((error) {
+                                        print("Error updating role to provider: $error");
+                                        // Optionally show error message to user
+                                      });
+                                    } else {
+                                      // Switch to renter - call API first
+                                      _myRepo.updateRoleApi({
+                                        "role": "0",
+                                        "email": usp.email ?? sp.email,
+                                      }).then((response) async {
+                                        if (response["status"] == 200) {
+                                          print("Role updated to renter successfully");
+                                          // Only update local state and navigate if API succeeds
+                                          SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+                                          await sharedPreferences.setString('role', '0');
+                                          usp.setRole('0');
+                                          sp.saveDataToSharedPreferences();
+                                          Get.offAll(() => MainScreen());
+                                        } else {
+                                          print("Failed to update role to renter");
+                                          // Optionally show error message to user
+                                        }
+                                      }).catchError((error) {
+                                        print("Error updating role to renter: $error");
+                                        // Optionally show error message to user
+                                      });
+                                    }
+                                  },
+                                  activeTrackColor: lightBlue,
+                                  activeColor: darkBlue,
+                                ),
+                              ),
+                              Text(
+                                'Provider',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                        : Center(
                           child: ElevatedButton(
                             onPressed: () async {
-                              _myRepo
-                                  .updateRoleApi({
-                                    "role": "1",
-                                    "email": usp.email ?? sp.email,
-                                  })
-                                  .then((value) async {
-                                    if (value["status"] == 200) {
-                                      SharedPreferences sharedPreferences =
-                                          await SharedPreferences.getInstance();
+                              // Get user data for Stripe onboarding
+                              SharedPreferences prefs =
+                                  await SharedPreferences.getInstance();
+                              String userId = prefs.getString('id') ?? "";
+                              String stripeStatus =
+                                  prefs.getString(
+                                    'stripe_verification_status',
+                                  ) ??
+                                  "";
 
-                                      setState(() {
-                                        sharedPreferences.setString(
-                                          'role',
-                                          "1",
-                                        );
-                                        sp.saveDataToSharedPreferences();
-                                      });
-
-                                      getData();
-                                      Get.back();
-                                      widget.onCloseDrawer?.call();
-                                      _showSuccessAlert(context);
-
-                                      Get.offAll(() => VendrosHomeScreen());
-                                      // final userPrefernece = Provider.of<UserViewModel>(context, listen: false);
-                                      // userPrefernece.saveUser()
-                                    }
-                                  });
+                              // Go to Stripe onboarding
+                              Get.to(
+                                () => StripeOnboardingScreen(
+                                  userId: userId,
+                                  verificationStatus: stripeStatus,
+                                ),
+                              );
                             },
                             child: Text(
                               'Become Provider',
@@ -1196,46 +1295,6 @@ class _DrawerScreenState extends State<DrawerScreen> {
                               textStyle: TextStyle(fontSize: 16),
                               backgroundColor: darkBlue,
                             ),
-                          ),
-                        )
-                        : Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Renter',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Transform.scale(
-                                scale: 0.8,
-                                child: Switch(
-                                  value:
-                                      widget.stack == "vendor" ? true : false,
-                                  onChanged: (value) {
-                                    Get.offAll(
-                                      () =>
-                                          widget.stack == "vendor"
-                                              ? MainScreen()
-                                              : VendrosHomeScreen(),
-                                    );
-                                  },
-                                  activeTrackColor: lightBlue,
-                                  activeColor: darkBlue,
-                                ),
-                              ),
-                              Text(
-                                'Provider',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
                           ),
                         ),
                     SizedBox(height: res_height * 0.04),
@@ -1685,7 +1744,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                   "Support",
                                   textAlign: TextAlign.left,
                                   style: TextStyle(
-                                    fontSize: 23 * ffem,
+                                    fontSize: 23 * textScaleFactor,
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -1706,138 +1765,10 @@ class _DrawerScreenState extends State<DrawerScreen> {
                       ),
                       child: GestureDetector(
                         onTap: () {
-                          Get.to(() => FAQs());
-                          setState(() {
-                            shaka = 7;
-                          });
-                        },
-                        child: Container(
-                          width: res_width * 0.7,
-                          height: res_height * 0.041,
-                          decoration: BoxDecoration(
-                            // color: Colors.transparent,
-                            color:
-                                shaka == 7
-                                    ? Color(0xFF4285F4)
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Container(
-                            width: res_width * 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 20,
-                                bottom: 5,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.question_mark,
-                                      color: Colors.white,
-                                    ),
-                                    SizedBox(width: 20),
-                                    SizedBox(
-                                      width: res_width * 0.681,
-                                      child: Text(
-                                        "FAQs",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontSize: 18 * textScaleFactor,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
-                        ),
-                      ),
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            shaka = 8;
-                          });
-                          Get.to(() => ContactSupport());
-                        },
-                        child: Container(
-                          width: res_width * 0.7,
-                          height: res_height * 0.041,
-                          decoration: BoxDecoration(
-                            color:
-                                shaka == 8
-                                    ? Color(0xFF4285F4)
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Container(
-                            width: res_width * 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 20,
-                                bottom: 5,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.phone, color: Colors.white),
-                                    SizedBox(width: 20),
-                                    SizedBox(
-                                      width: res_width * 0.681,
-                                      child: Text(
-                                        "Contact Support",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontSize: 18 * textScaleFactor,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
-                        ),
-                      ),
-                      child: GestureDetector(
-                        onTap: () {
                           setState(() {
                             shaka = 9;
                           });
-                          Get.to(ProviderFeedback());
+                          Get.to(() => ContactSupport());
                         },
                         child: Container(
                           width: res_width * 0.7,
@@ -1912,7 +1843,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                   "Legal",
                                   textAlign: TextAlign.left,
                                   style: TextStyle(
-                                    fontSize: 23 * ffem,
+                                    fontSize: 23 * textScaleFactor,
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -2143,10 +2074,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           child: Container(
                             width: res_width * 0.4,
                             child: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 20,
-                                bottom: 5,
-                              ),
+                              padding: const EdgeInsets.only(left: 20),
                               child: Align(
                                 alignment: Alignment.centerLeft,
                                 child: Row(
@@ -2354,7 +2282,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                         "Transportation & Installation Policy",
                                         textAlign: TextAlign.left,
                                         style: TextStyle(
-                                          fontSize: 18 * textScaleFactor * ffem,
+                                          fontSize: 18 * textScaleFactor,
                                           color: Colors.white,
                                         ),
                                         overflow: TextOverflow.ellipsis,
@@ -2507,57 +2435,68 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           bottom: BorderSide(color: Colors.white, width: 0.2),
                         ),
                       ),
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            shaka = 19;
-                          });
-                          Get.to(() => Settings());
-                        },
-                        child: Container(
-                          width: res_width * 0.7,
-                          height: res_height * 0.041,
-                          decoration: BoxDecoration(
-                            color:
-                                shaka == 19
-                                    ? Color(0xFF4285F4)
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Colors.white, width: 0.2),
                           ),
-                          child: GestureDetector(
-                            // onTap: () {
-                            //   Get.to(Settings());
-                            // },
-                            child: Container(
-                              width: res_width * 0.4,
-                              child: Padding(
-                                padding: const EdgeInsets.only(
-                                  left: 20,
-                                  bottom: 5,
-                                ),
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.settings, color: Colors.white),
-                                      SizedBox(width: 20),
-                                      SizedBox(
-                                        width: res_width * 0.681,
-                                        child: Text(
-                                          "Settings",
-                                          textAlign: TextAlign.left,
-                                          style: TextStyle(
-                                            fontSize: 18 * textScaleFactor,
-                                            color: Colors.white,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                          maxLines: 1,
+                        ),
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              shaka = 19;
+                            });
+                            if (bottomctrl.navigationBarIndexValue != 4) {
+                              bottomctrl.navBarChange(4);
+                            } else {
+                              Get.back();
+                            }
+                          },
+                          child: Container(
+                            width: res_width * 0.7,
+                            height: res_height * 0.041,
+                            decoration: BoxDecoration(
+                              color:
+                                  shaka == 19
+                                      ? Color(0xFF4285F4)
+                                      : Colors.transparent,
+                              borderRadius: BorderRadius.only(
+                                topRight: Radius.circular(20),
+                                bottomRight: Radius.circular(20),
+                              ),
+                            ),
+                            child: GestureDetector(
+                              child: Container(
+                                width: res_width * 0.4,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 20,
+                                    bottom: 5,
+                                  ),
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.settings,
+                                          color: Colors.white,
                                         ),
-                                      ),
-                                    ],
+                                        SizedBox(width: 20),
+                                        SizedBox(
+                                          width: res_width * 0.681,
+                                          child: Text(
+                                            "Settings",
+                                            textAlign: TextAlign.left,
+                                            style: TextStyle(
+                                              fontSize: 18 * textScaleFactor,
+                                              color: Colors.white,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
@@ -2592,9 +2531,6 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           );
                           userPrefernece.remove().then((value) {
                             sharedPreferences.clear();
-
-                            // Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => LoginScreen()), (route) => false);
-                            // Get.offAll(() => LoginScreen());
                           });
                           sp
                               .userSignOut()
@@ -2606,7 +2542,6 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                   ),
                                   (route) => false,
                                 );
-                                // Get.to(() => LoginScreen());
                                 notiTimer().timer?.cancel();
                               })
                               .catchError((e) {
@@ -2636,7 +2571,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 99),
+                    SizedBox(height: res_height * 0.095),
                   ],
                 )
                 : Column(
@@ -2647,48 +2582,30 @@ class _DrawerScreenState extends State<DrawerScreen> {
                       padding: const EdgeInsets.only(left: 10),
                       child: Row(
                         children: [
-                          usp.image.toString() == "null"
-                              ? sp.imageUrl.toString() == "null"
-                                  ? CircleAvatar(
-                                    radius: 40,
-                                    backgroundImage: AssetImage(
-                                      "assets/slicing/blankuser.jpeg",
-                                    ),
-                                  )
-                                  : CachedNetworkImage(
-                                    imageUrl: "${sp.imageUrl}",
-                                    imageBuilder:
-                                        (context, imageProvider) =>
-                                            CircleAvatar(
-                                              radius: 40,
-                                              backgroundImage: imageProvider,
-                                            ),
-                                    placeholder:
-                                        (context, url) => Padding(
-                                          padding: const EdgeInsets.all(20),
-                                          child: SizedBox(
-                                            width: 24,
-                                            height: 24,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2.0,
-                                            ),
-                                          ),
-                                        ),
-                                    errorWidget:
-                                        (context, url, error) =>
-                                            Icon(Icons.error, size: 40),
-                                  )
-                              : CachedNetworkImage(
-                                imageUrl:
-                                    "https://api.jebbylistings.com${usp.image}",
+                          isLoadingImage
+                              ? CircleAvatar(
+                                radius: 40,
+                                backgroundColor: Colors.grey[200],
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.0,
+                                  ),
+                                ),
+                              )
+                              : imagesapi != "null" && imagesapi.isNotEmpty
+                              ? CachedNetworkImage(
+                                imageUrl: "${Url}${imagesapi}",
                                 imageBuilder:
                                     (context, imageProvider) => CircleAvatar(
                                       radius: 40,
                                       backgroundImage: imageProvider,
                                     ),
                                 placeholder:
-                                    (context, url) => Padding(
-                                      padding: const EdgeInsets.all(20),
+                                    (context, url) => CircleAvatar(
+                                      radius: 40,
+                                      backgroundColor: Colors.grey[200],
                                       child: SizedBox(
                                         width: 24,
                                         height: 24,
@@ -2698,8 +2615,18 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                       ),
                                     ),
                                 errorWidget:
-                                    (context, url, error) =>
-                                        Icon(Icons.error, size: 40),
+                                    (context, url, error) => CircleAvatar(
+                                      radius: 40,
+                                      backgroundImage: AssetImage(
+                                        "assets/slicing/blankuser.jpeg",
+                                      ),
+                                    ),
+                              )
+                              : CircleAvatar(
+                                radius: 40,
+                                backgroundImage: AssetImage(
+                                  "assets/slicing/blankuser.jpeg",
+                                ),
                               ),
                           SizedBox(width: 15),
                           Column(
@@ -2742,36 +2669,108 @@ class _DrawerScreenState extends State<DrawerScreen> {
                       ),
                     ),
                     SizedBox(height: res_height * 0.01),
-                    usp.role == "0"
+                    (usp.role == "1" || onboardingCompleted)
                         ? Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Renter',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Transform.scale(
+                                scale: 0.8,
+                                child: Switch(
+                                  value: usp.role == "1",
+                                  onChanged: (value) async {
+                                    final usp = context.read<UserViewModel>();
+                                    final sp = context.read<SignInProvider>();
+                                    
+                                    if (value) {
+                                      // Switch to provider - call API first
+                                      _myRepo.updateRoleApi({
+                                        "role": "1",
+                                        "email": usp.email ?? sp.email,
+                                      }).then((response) async {
+                                        if (response["status"] == 200) {
+                                          print("Role updated to provider successfully");
+                                          // Only update local state and navigate if API succeeds
+                                          SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+                                          await sharedPreferences.setString('role', '1');
+                                          usp.setRole('1');
+                                          sp.saveDataToSharedPreferences();
+                                          Get.offAll(() => VendrosHomeScreen());
+                                        } else {
+                                          print("Failed to update role to provider");
+                                          // Optionally show error message to user
+                                        }
+                                      }).catchError((error) {
+                                        print("Error updating role to provider: $error");
+                                        // Optionally show error message to user
+                                      });
+                                    } else {
+                                      // Switch to renter - call API first
+                                      _myRepo.updateRoleApi({
+                                        "role": "0",
+                                        "email": usp.email ?? sp.email,
+                                      }).then((response) async {
+                                        if (response["status"] == 200) {
+                                          print("Role updated to renter successfully");
+                                          // Only update local state and navigate if API succeeds
+                                          SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+                                          await sharedPreferences.setString('role', '0');
+                                          usp.setRole('0');
+                                          sp.saveDataToSharedPreferences();
+                                          Get.offAll(() => MainScreen());
+                                        } else {
+                                          print("Failed to update role to renter");
+                                          // Optionally show error message to user
+                                        }
+                                      }).catchError((error) {
+                                        print("Error updating role to renter: $error");
+                                        // Optionally show error message to user
+                                      });
+                                    }
+                                  },
+                                  activeTrackColor: lightBlue,
+                                  activeColor: darkBlue,
+                                ),
+                              ),
+                              Text(
+                                'Provider',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                        : Center(
                           child: ElevatedButton(
                             onPressed: () async {
-                              _myRepo
-                                  .updateRoleApi({
-                                    "role": "1",
-                                    "email": usp.email ?? sp.email,
-                                  })
-                                  .then((value) async {
-                                    if (value["status"] == 200) {
-                                      SharedPreferences sharedPreferences =
-                                          await SharedPreferences.getInstance();
+                              // Get user data for Stripe onboarding
+                              SharedPreferences prefs =
+                                  await SharedPreferences.getInstance();
+                              String userId = prefs.getString('id') ?? "";
+                              String stripeStatus =
+                                  prefs.getString(
+                                    'stripe_verification_status',
+                                  ) ??
+                                  "";
 
-                                      setState(() {
-                                        sharedPreferences.setString(
-                                          'role',
-                                          "1",
-                                        );
-                                      });
-
-                                      getData();
-                                      Get.back();
-                                      widget.onCloseDrawer?.call();
-                                      Get.offAll(() => VendrosHomeScreen());
-                                      _showSuccessAlert(context);
-                                      // final userPrefernece = Provider.of<UserViewModel>(context, listen: false);
-                                      // userPrefernece.saveUser()
-                                    }
-                                  });
+                              // Go to Stripe onboarding
+                              Get.to(
+                                () => StripeOnboardingScreen(
+                                  userId: userId,
+                                  verificationStatus: stripeStatus,
+                                ),
+                              );
                             },
                             child: Text(
                               'Become Provider',
@@ -2788,46 +2787,6 @@ class _DrawerScreenState extends State<DrawerScreen> {
                               textStyle: TextStyle(fontSize: 16),
                               backgroundColor: darkBlue,
                             ),
-                          ),
-                        )
-                        : Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Renter',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Transform.scale(
-                                scale: 0.8,
-                                child: Switch(
-                                  value:
-                                      widget.stack == "vendor" ? true : false,
-                                  onChanged: (value) {
-                                    Get.offAll(
-                                      () =>
-                                          widget.stack == "vendor"
-                                              ? MainScreen()
-                                              : VendrosHomeScreen(),
-                                    );
-                                  },
-                                  activeTrackColor: lightBlue,
-                                  activeColor: darkBlue,
-                                ),
-                              ),
-                              Text(
-                                'Provider',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
                           ),
                         ),
                     SizedBox(height: res_height * 0.04),
@@ -3255,6 +3214,71 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         ),
                       ),
                     ),
+                    SizedBox(height: 10),
+                    Container(
+                      width: res_width * 0.9,
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(color: Colors.white, width: 0.2),
+                        ),
+                      ),
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            shaka = 7;
+                          });
+                          Get.to(() => MyTransactionsScreen());
+                        },
+                        child: Container(
+                          width: res_width * 0.7,
+                          height: res_height * 0.041,
+                          decoration: BoxDecoration(
+                            color:
+                                shaka == 7
+                                    ? Color(0xFF4285F4)
+                                    : Colors.transparent,
+                            borderRadius: BorderRadius.only(
+                              topRight: Radius.circular(20),
+                              bottomRight: Radius.circular(20),
+                            ),
+                          ),
+                          child: Container(
+                            width: res_width * 0.4,
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                left: 20,
+                                bottom: 5,
+                              ),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.receipt_long,
+                                      color: Colors.white,
+                                    ),
+                                    SizedBox(width: 20),
+                                    SizedBox(
+                                      width: res_width * 0.681,
+                                      child: Text(
+                                        "My Transactions",
+                                        textAlign: TextAlign.left,
+                                        style: TextStyle(
+                                          fontSize: 18 * textScaleFactor,
+                                          color: Colors.white,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                     SizedBox(height: role == 1 ? 10 : 0),
                     SizedBox(height: 15),
                     Container(
@@ -3301,136 +3325,9 @@ class _DrawerScreenState extends State<DrawerScreen> {
                       child: GestureDetector(
                         onTap: () {
                           setState(() {
-                            shaka = 7;
-                          });
-                          Get.to(() => FAQs());
-                        },
-                        child: Container(
-                          width: res_width * 0.7,
-                          height: res_height * 0.041,
-                          decoration: BoxDecoration(
-                            color:
-                                shaka == 7
-                                    ? Color(0xFF4285F4)
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Container(
-                            width: res_width * 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 20,
-                                bottom: 5,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.question_mark,
-                                      color: Colors.white,
-                                    ),
-                                    SizedBox(width: 20),
-                                    SizedBox(
-                                      width: res_width * 0.681,
-                                      child: Text(
-                                        "FAQs",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontSize: 18 * textScaleFactor,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
-                        ),
-                      ),
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            shaka = 8;
-                          });
-                          Get.to(() => ContactSupport());
-                        },
-                        child: Container(
-                          width: res_width * 0.7,
-                          height: res_height * 0.041,
-                          decoration: BoxDecoration(
-                            color:
-                                shaka == 8
-                                    ? Color(0xFF4285F4)
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Container(
-                            width: res_width * 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 20,
-                                bottom: 5,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.phone, color: Colors.white),
-                                    SizedBox(width: 20),
-                                    SizedBox(
-                                      width: res_width * 0.681,
-                                      child: Text(
-                                        "Contact Support",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontSize: 18 * textScaleFactor,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
-                        ),
-                      ),
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
                             shaka = 9;
                           });
-                          Get.to(ProviderFeedback());
+                          Get.to(() => ContactSupport());
                         },
                         child: Container(
                           width: res_width * 0.7,
@@ -4245,28 +4142,49 @@ class _DrawerScreenState extends State<DrawerScreen> {
   var nameapi = "null";
   var emailapi = "user email";
   var datalength;
+  bool isLoadingImage = true;
 
   Future getProductsApi(id) async {
-    final response = await http.get(
-      Uri.parse('${Url}/UserProfileGetById/${id}'),
-    );
-    var data = jsonDecode(response.body.toString());
-    datalength = data["data"].length;
-    if (data["data"].length != 0) {}
+    try {
+      final response = await http.get(
+        Uri.parse('${Url}/UserProfileGetById/${id}'),
+      );
+      var data = jsonDecode(response.body.toString());
+      datalength = data["data"].length;
 
-    if (data["data"].length != 0) {
+      if (data["data"].length != 0) {
+        if (mounted) {
+          setState(() {
+            imagesapi = data["data"][0]["image"].toString();
+            nameapi = data["data"][0]["name"].toString();
+            emailapi = data["data"][0]["email"].toString();
+            isLoadingImage = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            isLoadingImage = false;
+          });
+        }
+      }
+
+      if (response.statusCode == 200) {
+        return data;
+      } else {
+        if (mounted) {
+          setState(() {
+            isLoadingImage = false;
+          });
+        }
+        return "No data";
+      }
+    } catch (error) {
       if (mounted) {
         setState(() {
-          imagesapi = data["data"][0]["image"].toString();
-          nameapi = data["data"][0]["name"].toString();
-          emailapi = data["data"][0]["email"].toString();
+          isLoadingImage = false;
         });
       }
-    }
-
-    if (response.statusCode == 200) {
-      return data;
-    } else {
       return "No data";
     }
   }

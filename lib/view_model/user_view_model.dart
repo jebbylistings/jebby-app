@@ -6,6 +6,13 @@ class UserViewModel with ChangeNotifier {
   String? _role;
   String? get role => _role;
 
+  void setRole(String role) async {
+    _role = role;
+    final SharedPreferences sp = await SharedPreferences.getInstance();
+    sp.setString('role', role);
+    notifyListeners();
+  }
+
   String? _id;
   String? get id => _id;
 

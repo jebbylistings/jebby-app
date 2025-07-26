@@ -23,12 +23,17 @@ import 'provider/get_products_provider.dart';
 import 'view_model/services/splash_services.dart';
 import 'view_model/user_view_model.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'Services/fcm_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await dotenv.load(fileName: ".env");
   Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY'].toString();
+  
+  // Initialize FCM service
+  await FCMService().initialize();
+  
   runApp(
     OverlaySupport.global(
       child: MyApp(), // Replace with your actual app widget
@@ -98,25 +103,9 @@ class _SplashScreenState extends State<SplashScreen> {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     Name = sharedPreferences.getString('fullname') ?? "";
     
-    // Check if onboarding is completed
-    bool onboardingCompleted = sharedPreferences.getBool('identity_verified') ?? false;
-    String userId = sharedPreferences.getString('id') ?? "";
-    
-    // Get saved verification status
-    String verificationStatus = sharedPreferences.getString('stripe_verification_status') ?? "";
-
     if (user != null) {
       Timer(const Duration(seconds: 2), () {
-        // Check if onboarding is completed before navigating
-        if (onboardingCompleted) {
-          Get.offAll(() => MainScreen());
-        } else {
-          // Navigate to stripe onboarding screen to complete verification
-          Get.offAll(() => StripeOnboardingScreen(
-            userId: userId,
-            verificationStatus: verificationStatus,
-          ));
-        }
+        Get.offAll(() => MainScreen());
       });
     } else {
       String _name = sharedPreferences.getString('fullname') ?? "";

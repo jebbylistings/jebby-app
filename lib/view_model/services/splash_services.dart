@@ -21,25 +21,8 @@ class SplashServices {
           } else {
             await Future.delayed(Duration(seconds: 3));
             
-            // Check if onboarding is completed
-            SharedPreferences prefs = await SharedPreferences.getInstance();
-            bool onboardingCompleted = prefs.getBool('identity_verified') ?? false;
-            
-            // Get saved verification status
-            String verificationStatus = prefs.getString('stripe_verification_status') ?? "";
-            
             loginType = "user";
-            
-            // Only navigate to MainScreen if onboarding is completed
-            if (onboardingCompleted) {
-              Get.offAll(() => MainScreen());
-            } else {
-              // Navigate to StripeOnboardingScreen to complete onboarding
-              Get.offAll(() => StripeOnboardingScreen(
-                userId: value.id.toString(),
-                verificationStatus: verificationStatus,
-              ));
-            }
+            Get.offAll(() => MainScreen());
           }
         })
         .onError((error, stackTrace) {

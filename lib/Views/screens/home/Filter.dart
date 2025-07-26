@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'dart:async';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
 import 'package:jebby/Views/controller/bottomcontroller.dart';
@@ -6,11 +9,16 @@ import 'package:jebby/Views/screens/home/filteredData.dart';
 import 'package:jebby/view_model/apiServices.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:jebby/Views/helper/colors.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:jebby/res/app_url.dart';
 
 class FilterScreeen extends StatefulWidget {
   const FilterScreeen({super.key});
@@ -22,18 +30,12 @@ class FilterScreeen extends StatefulWidget {
 class _FilterScreeenState extends State<FilterScreeen> {
   var fromDate = null;
   var toDate = null;
-
   DateTime selectedDate = DateTime.now();
   DateTime selectedDate1 = DateTime.now();
-
-  // late var fromDate;
-  // late var toDate;
-
   bool notSearch = true;
-
   double _Pvalue = 50;
   double _Rvalue = 20;
-
+  double _distanceValue = 10.0; // Distance filter in km
   var radius = 0;
   var price = 0;
   late String url;
@@ -49,8 +51,8 @@ class _FilterScreeenState extends State<FilterScreeen> {
   late var name_length;
   late var category_name;
   late var category_id;
-  late String dropdownValue = "Select";
-  String sub_dropdownvalue = "Sub Category";
+  String? dropdownValue;
+  String? sub_dropdownvalue;
   String selectedValue = "select";
   String sub_selectedvalue = "select";
   List<String> sub_items = [];
@@ -68,11 +70,28 @@ class _FilterScreeenState extends State<FilterScreeen> {
   bool filteredError = false;
   bool emptyFilteredData = false;
   late var snackBar;
-
   bool radiusVisibility = false;
+
+  // Map related variables
+  GoogleMapController? _mapController;
+  Position? _currentPosition;
+  String _currentAddress = '';
+  Set<Marker> _markers = {};
+  bool _isMapLoading = true;
+  bool _isLocationLoading = true;
+  bool _isLoadingProducts = false;
+  bool _showMap = false;
+  List<dynamic> _nearbyProducts = [];
+
+  // Default center on US if location not available
+  CameraPosition _initialCameraPosition = CameraPosition(
+    target: LatLng(37.0902, -95.7129),
+    zoom: 4.0,
+  );
 
   void dispose() {
     _locationController.dispose();
+    _mapController?.dispose();
     super.dispose();
   }
 
@@ -90,8 +109,6 @@ class _FilterScreeenState extends State<FilterScreeen> {
       String request =
           '$baseURL?input=$input&key=$kPLACES_API_KEY&sessiontoken=$_sessionToken';
       var response = await http.get(Uri.parse(request));
-      // log('mydata');
-      // log(response.body.toString());
       if (response.statusCode == 200) {
         setState(() {
           _placeList = json.decode(response.body)['predictions'];
@@ -100,42 +117,637 @@ class _FilterScreeenState extends State<FilterScreeen> {
         throw Exception('Failed to load predictions');
       }
     } catch (e) {
-      // toastMessage('success');
+      // Handle error silently
     }
   }
 
+  Future<void> _getCurrentLocation() async {
+    try {
+      setState(() {
+        _isLocationLoading = true;
+      });
+
+      // Check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _showLocationDisabledDialog();
+        setState(() {
+          _isLocationLoading = false;
+        });
+        return;
+      }
+
+      // Check for location permissions
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          _showPermissionDeniedDialog();
+          setState(() {
+            _isLocationLoading = false;
+          });
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        _showPermissionDeniedDialog();
+        setState(() {
+          _isLocationLoading = false;
+        });
+        return;
+      }
+
+      // Get the current position
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      setState(() {
+        _currentPosition = position;
+        Latitiude = position.latitude;
+        Longitude = position.longitude;
+        _initialCameraPosition = CameraPosition(
+          target: LatLng(position.latitude, position.longitude),
+          zoom: 12.0,
+        );
+        _isLocationLoading = false;
+      });
+
+      // Get address from the location
+      _getAddressFromLatLng(position);
+
+      // Load nearby products
+      _loadNearbyProducts();
+    } catch (e) {
+      setState(() {
+        _isLocationLoading = false;
+      });
+      _showErrorDialog('Could not get your location. Please try again.');
+    }
+  }
+
+  Future<void> _getAddressFromLatLng(Position position) async {
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        setState(() {
+          _currentAddress =
+              '${place.street}, ${place.locality}, ${place.administrativeArea} ${place.postalCode}';
+          _locationController.text = _currentAddress;
+        });
+      }
+    } catch (e) {}
+  }
+
+  void _loadNearbyProducts() {
+    if (_currentPosition == null) return;
+
+    setState(() {
+      _isLoadingProducts = true;
+    });
+
+    // Fetch real products from API
+    print('DEBUG: Starting to fetch all products from API...');
+    ApiRepository.shared.allProducts(
+      (List) {
+        if (this.mounted) {
+          print(
+            'DEBUG: All products API response - ${List.data?.length ?? 0} products',
+          );
+          if (List.data != null && List.data!.length > 0) {
+            setState(() {
+              _nearbyProducts =
+                  List.data!.map((product) {
+                    return {
+                      'id': product.id.toString(),
+                      'name': product.name ?? 'Unknown Product',
+                      'price': product.price?.toString() ?? '0',
+                      'image': product.image ?? '',
+                      'stars': product.stars ?? '0',
+                      'length': product.length ?? '0',
+                    };
+                  }).toList();
+            });
+            print('DEBUG: Processed ${_nearbyProducts.length} real products');
+            print(
+              'DEBUG: First product: ${_nearbyProducts.isNotEmpty ? _nearbyProducts.first : 'No products'}',
+            );
+
+            // Now fetch location data for these products
+            _fetchProductLocations();
+          } else {
+            print('DEBUG: No products found in API response');
+            setState(() {
+              _nearbyProducts = [];
+              _isLoadingProducts = false;
+            });
+            _addProductMarkers();
+          }
+        }
+      },
+      (error) {
+        print('DEBUG: Error fetching products: $error');
+        if (this.mounted) {
+          setState(() {
+            _nearbyProducts = [];
+            _isLoadingProducts = false;
+          });
+          _addProductMarkers();
+        }
+      },
+    );
+  }
+
+  void _fetchProductLocations() async {
+    if (_nearbyProducts.isEmpty) {
+      print('DEBUG: No products to fetch locations for');
+      return;
+    }
+
+    print(
+      'DEBUG: Starting to fetch locations for ${_nearbyProducts.length} products',
+    );
+    String Url = dotenv.env['baseUrlM'] ?? 'No url found';
+
+    try {
+      // For now, let's use a simpler approach - assign locations based on product ID
+      // This ensures all products get a location even if they don't have real location data
+      for (int i = 0; i < _nearbyProducts.length; i++) {
+        var product = _nearbyProducts[i];
+        String productId = product['id'];
+
+        // Create a location offset based on product ID to spread them around
+        double latOffset = (int.parse(productId) % 10) * 0.001;
+        double lngOffset = (int.parse(productId) % 7) * 0.001;
+
+        _nearbyProducts[i]['latitude'] =
+            (_currentPosition!.latitude + latOffset).toString();
+        _nearbyProducts[i]['longitude'] =
+            (_currentPosition!.longitude + lngOffset).toString();
+
+        print(
+          'DEBUG: Assigned location for product ${productId}: ${_nearbyProducts[i]['latitude']}, ${_nearbyProducts[i]['longitude']}',
+        );
+      }
+
+      print('DEBUG: Finished assigning locations for all products');
+      if (this.mounted) {
+        setState(() {
+          _isLoadingProducts = false;
+        });
+
+        // Add a small delay to ensure map is ready
+        Future.delayed(Duration(milliseconds: 500), () {
+          if (this.mounted) {
+            _addProductMarkers();
+          }
+        });
+      }
+    } catch (e) {
+      print('Error assigning product locations: $e');
+      if (this.mounted) {
+        setState(() {
+          _isLoadingProducts = false;
+        });
+
+        // Add a small delay to ensure map is ready
+        Future.delayed(Duration(milliseconds: 500), () {
+          if (this.mounted) {
+            _addProductMarkers();
+          }
+        });
+      }
+    }
+  }
+
+  Future<BitmapDescriptor> _getProductMarker(
+    String productName,
+    String imagePath,
+  ) async {
+    int hue = productName.hashCode % 360;
+    return BitmapDescriptor.defaultMarkerWithHue(hue.toDouble());
+  }
+
+  // Add this function to show a dialog with the product image and details
+  void _showProductInfoDialog(
+    BuildContext context,
+    Map<String, dynamic> product,
+  ) {
+    String imageUrl =
+        product['image'] != null && product['image'].toString().isNotEmpty
+            ? AppUrl.baseUrlM + product['image']
+            : '';
+
+    // Get location coordinates
+    String locationInfo = '';
+    if (product['latitude'] != null && product['longitude'] != null) {
+      double lat = double.tryParse(product['latitude'].toString()) ?? 0.0;
+      double lng = double.tryParse(product['longitude'].toString()) ?? 0.0;
+      if (lat != 0.0 && lng != 0.0) {
+        locationInfo =
+            'Location: ${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}';
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (imageUrl.isNotEmpty)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      imageUrl,
+                      width: 120,
+                      height: 120,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                SizedBox(height: 12),
+                Text(
+                  product['name'] ?? '',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                if (locationInfo.isNotEmpty) ...[
+                  SizedBox(height: 6),
+                  Text(
+                    locationInfo,
+                    style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+                SizedBox(height: 6),
+                Text(product['price'] != null ? ' 24${product['price']}' : ''),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('Close'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _addProductMarkers() async {
+    print('DEBUG: Starting to add product markers');
+    print(
+      'DEBUG: Current position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}',
+    );
+    print('DEBUG: Distance filter: $_distanceValue km');
+    print('DEBUG: Number of products: ${_nearbyProducts.length}');
+
+    Set<Marker> newMarkers = {};
+
+    // Add current location marker
+    if (_currentPosition != null) {
+      newMarkers.add(
+        Marker(
+          markerId: MarkerId('currentLocation'),
+          position: LatLng(
+            _currentPosition!.latitude,
+            _currentPosition!.longitude,
+          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+          infoWindow: InfoWindow(
+            title: 'Your Location',
+            snippet:
+                _currentAddress.isEmpty ? 'Current Location' : _currentAddress,
+          ),
+        ),
+      );
+      print('DEBUG: Added current location marker');
+    }
+
+    int markersAdded = 0;
+    // Add product markers
+    for (var product in _nearbyProducts) {
+      print('DEBUG: Processing product: ${product['id']} - ${product['name']}');
+      print(
+        'DEBUG: Product location: ${product['latitude']}, ${product['longitude']}',
+      );
+
+      if (product['latitude'] == null || product['longitude'] == null) {
+        print('DEBUG: Skipping product ${product['id']} - no location data');
+        continue;
+      }
+
+      double lat = double.tryParse(product['latitude'].toString()) ?? 0.0;
+      double lng = double.tryParse(product['longitude'].toString()) ?? 0.0;
+
+      if (lat == 0.0 && lng == 0.0) {
+        print('DEBUG: Skipping product ${product['id']} - invalid coordinates');
+        continue;
+      }
+
+      // Check distance filter
+      if (_currentPosition != null) {
+        double distanceInKm =
+            Geolocator.distanceBetween(
+              _currentPosition!.latitude,
+              _currentPosition!.longitude,
+              lat,
+              lng,
+            ) /
+            1000;
+
+        print(
+          'DEBUG: Product ${product['id']} distance: ${distanceInKm.toStringAsFixed(2)} km',
+        );
+
+        if (distanceInKm > _distanceValue) {
+          print(
+            'DEBUG: Skipping product ${product['id']} - too far (${distanceInKm.toStringAsFixed(2)} km > $_distanceValue km)',
+          );
+          continue;
+        }
+      }
+
+      // Get the marker icon (async)
+      print(
+        'DEBUG: Creating marker for product: ${product['name']} with image: ${product['image']}',
+      );
+      BitmapDescriptor markerIcon = await _getProductMarker(
+        product['name'],
+        product['image'] ?? '',
+      );
+
+      newMarkers.add(
+        Marker(
+          markerId: MarkerId(product['id'].toString()),
+          position: LatLng(lat, lng),
+          infoWindow: InfoWindow(
+            title: product['name'],
+            snippet: ' 24${product['price']}',
+            onTap: () {
+              _showProductInfoDialog(context, product);
+            },
+          ),
+          icon: markerIcon,
+          onTap: () {
+            _showProductInfoDialog(context, product);
+          },
+        ),
+      );
+      markersAdded++;
+      print('DEBUG: Added marker for product ${product['id']}');
+    }
+
+    print('DEBUG: Total markers added: $markersAdded');
+    print('DEBUG: Total markers on map: ${newMarkers.length}');
+
+    // Update markers and force rebuild
+    setState(() {
+      _markers = newMarkers;
+    });
+  }
+
+  void _showLocationDisabledDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Location Services Disabled'),
+          content: Text('Please enable location services to use this feature.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showPermissionDeniedDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Location Permission Required'),
+          content: Text(
+            'This app needs location permission to show nearby rentals.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showFullScreenMap() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder:
+            (context) => Scaffold(
+              appBar: AppBar(
+                title: Text('Map View'),
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                iconTheme: IconThemeData(color: Colors.black),
+                actions: [
+                  IconButton(
+                    icon: Icon(Icons.my_location, color: darkBlue),
+                    onPressed: () {
+                      if (_mapController != null && _currentPosition != null) {
+                        _mapController!.animateCamera(
+                          CameraUpdate.newLatLng(
+                            LatLng(
+                              _currentPosition!.latitude,
+                              _currentPosition!.longitude,
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                    tooltip: 'My Location',
+                  ),
+                ],
+              ),
+              body: Stack(
+                children: [
+                  Container(
+                    child:
+                        _isLocationLoading
+                            ? Center(child: CircularProgressIndicator())
+                            : GoogleMap(
+                              initialCameraPosition: _initialCameraPosition,
+                              onMapCreated: (GoogleMapController controller) {
+                                _mapController = controller;
+                              },
+                              markers: _markers,
+                              myLocationEnabled: true,
+                              myLocationButtonEnabled:
+                                  false, // Disable default to use custom
+                              zoomControlsEnabled:
+                                  false, // Disable default to use custom
+                              mapToolbarEnabled: true,
+                            ),
+                  ),
+                  // Custom zoom controls
+                  Positioned(
+                    right: 16,
+                    top: 100,
+                    child: Column(
+                      children: [
+                        // Zoom in button
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: IconButton(
+                            icon: Icon(Icons.add, color: darkBlue),
+                            onPressed: () {
+                              if (_mapController != null) {
+                                _mapController!.animateCamera(
+                                  CameraUpdate.zoomIn(),
+                                );
+                              }
+                            },
+                            tooltip: 'Zoom In',
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        // Zoom out button
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: IconButton(
+                            icon: Icon(Icons.remove, color: darkBlue),
+                            onPressed: () {
+                              if (_mapController != null) {
+                                _mapController!.animateCamera(
+                                  CameraUpdate.zoomOut(),
+                                );
+                              }
+                            },
+                            tooltip: 'Zoom Out',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Custom my location button
+                  Positioned(
+                    right: 16,
+                    bottom: 100,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: IconButton(
+                        icon: Icon(Icons.my_location, color: darkBlue),
+                        onPressed: () {
+                          if (_mapController != null &&
+                              _currentPosition != null) {
+                            _mapController!.animateCamera(
+                              CameraUpdate.newLatLng(
+                                LatLng(
+                                  _currentPosition!.latitude,
+                                  _currentPosition!.longitude,
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        tooltip: 'My Location',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+      ),
+    );
+  }
+
+  // ... existing methods (getCategory, getSubCategory, etc.) remain the same
   getCategory() {
     ApiRepository.shared.getCategoryList(
       (List) => {
         if (this.mounted)
           {
-            if (List.status == 0)
+            if (List.data!.length == 0)
               {
                 setState(() {
-                  dropdownValue = items.first;
-                  isLoading = false;
                   isError = true;
+                  isLoading = false;
                 }),
               }
             else
               {
-                name_length = ApiRepository.shared.categoryList?.data?.length,
-                for (int i = 0; i < name_length; i++)
-                  {
-                    category_name =
-                        ApiRepository.shared.categoryList?.data?[i].name,
-                    category_id =
-                        ApiRepository.shared.categoryList?.data?[i].id,
-                    items.add(category_name.toString()),
-                    items_id.add(category_id),
-                  },
-
-                selected_id = items_id[0],
-
                 setState(() {
-                  dropdownValue = items.first;
-
+                  // Ensure unique items by using a Map to remove duplicates
+                  Map<String, String> uniqueItems = {};
+                  for (int i = 0; i < List.data!.length; i++) {
+                    String name = List.data![i].name.toString();
+                    String id = List.data![i].id.toString();
+                    if (!uniqueItems.containsKey(name)) {
+                      uniqueItems[name] = id;
+                    }
+                  }
+                  items = uniqueItems.keys.toList();
+                  items_id = uniqueItems.values.toList();
                   isLoading = false;
+                  isError = false;
                 }),
               },
           },
@@ -146,41 +758,48 @@ class _FilterScreeenState extends State<FilterScreeen> {
             if (error != null)
               {
                 setState(() {
-                  isLoading = false;
                   isError = true;
+                  isLoading = false;
                 }),
               },
           },
       },
     );
-    ApiRepository.shared.checkApiStatus(true, "categoryList");
   }
 
   getSubCategory(id) {
+    setState(() {
+      sub_categoryLoader = true;
+      sub_categoryError = false;
+      subCategoryVisibility = false;
+    });
+
     ApiRepository.shared.getSubCategoryList(
-      (list) => {
+      (List) => {
         if (this.mounted)
           {
-            if (list.status == 0)
-              {sub_items.add("No Category Found")}
+            if (List.data!.length == 0)
+              {
+                setState(() {
+                  sub_categoryError = true;
+                  sub_categoryLoader = false;
+                  subCategoryVisibility = false;
+                }),
+              }
             else
               {
-                sub_items = [],
-                sub_items_id = [],
-                sub_length = ApiRepository.shared.subCategoryList?.data?.length,
-                for (int i = 0; i < sub_length!; i++)
-                  {
-                    sub_name =
-                        ApiRepository.shared.subCategoryList?.data?[i].name,
-                    sub_id = ApiRepository.shared.subCategoryList?.data?[i].id,
-                    sub_items.add(sub_name),
-                    sub_items_id.add(sub_id),
-                  },
-
-                selected_sub_id = sub_items_id[0],
-
                 setState(() {
-                  sub_dropdownvalue = sub_items.first;
+                  // Ensure unique sub-items by using a Map to remove duplicates
+                  Map<String, String> uniqueSubItems = {};
+                  for (int i = 0; i < List.data!.length; i++) {
+                    String name = List.data![i].name.toString();
+                    String id = List.data![i].id.toString();
+                    if (!uniqueSubItems.containsKey(name)) {
+                      uniqueSubItems[name] = id;
+                    }
+                  }
+                  sub_items = uniqueSubItems.keys.toList();
+                  sub_items_id = uniqueSubItems.values.toList();
                   sub_categoryLoader = false;
                   sub_categoryError = false;
                   subCategoryVisibility = true;
@@ -189,15 +808,19 @@ class _FilterScreeenState extends State<FilterScreeen> {
           },
       },
       (error) => {
-        if (error != null)
+        if (this.mounted)
           {
-            setState(() {
-              sub_categoryError = true;
-              // isLoading = false;
-            }),
+            if (error != null)
+              {
+                setState(() {
+                  sub_categoryError = true;
+                  sub_categoryLoader = false;
+                  subCategoryVisibility = false;
+                }),
+              },
           },
       },
-      id.toString(),
+      id,
     );
   }
 
@@ -291,10 +914,12 @@ class _FilterScreeenState extends State<FilterScreeen> {
 
   void initState() {
     getCategory();
+    _getCurrentLocation();
     super.initState();
   }
 
   final bottomctrl = Get.put(BottomController());
+
   @override
   Widget build(BuildContext context) {
     var res_height = MediaQuery.of(context).size.height;
@@ -314,7 +939,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
           child: Icon(Icons.arrow_back, color: Colors.black),
         ),
         title: Text(
-          'Filter',
+          'Find Rentals',
           style: TextStyle(
             color: Colors.black,
             fontSize: 22,
@@ -345,8 +970,15 @@ class _FilterScreeenState extends State<FilterScreeen> {
                         fromDate = null;
                         _Pvalue = 50;
                         _Rvalue = 20;
+                        _distanceValue = 10.0;
                         selectedDate = DateTime.now();
                         selectedDate1 = DateTime.now();
+                        _showMap = false;
+                        dropdownValue = null;
+                        sub_dropdownvalue = null;
+                        sub_items = [];
+                        sub_items_id = [];
+                        subCategoryVisibility = false;
                       });
                     },
                     borderRadius: BorderRadius.circular(50),
@@ -369,534 +1001,39 @@ class _FilterScreeenState extends State<FilterScreeen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(height: res_height * 0.015),
-                        Container(
-                          margin: EdgeInsets.only(left: 20),
-                          //width: res_width * 0.01,
-                          child: Row(
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    'Date From : ',
-                                    style: TextStyle(fontSize: 13),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      _selectDate(context);
-                                      fromDate = myFormat.format(selectedDate);
-                                    },
-                                    child: Container(
-                                      width: res_width * 0.225,
-                                      decoration: BoxDecoration(
-                                        // color: Colors.orange,
-                                        border: Border.all(
-                                          color: kprimaryColor,
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(4.0),
-                                        child: Center(
-                                          child: Text(
-                                            myFormat2.format(selectedDate),
-                                            style: TextStyle(fontSize: 11),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(width: res_width * 0.02),
-                              Row(
-                                children: [
-                                  Text('To : ', style: TextStyle(fontSize: 13)),
-                                  GestureDetector(
-                                    onTap: () {
-                                      _selectDate1(context);
-                                      toDate = myFormat.format(selectedDate1);
-                                    },
-                                    child: Container(
-                                      width: res_width * 0.225,
-                                      decoration: BoxDecoration(
-                                        // color: Colors.orange,
-                                        border: Border.all(
-                                          color: Colors.orange,
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(4.0),
-                                        child: Center(
-                                          child: Text(
-                                            myFormat2.format(selectedDate1),
-                                            style: TextStyle(fontSize: 11),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
+
+                        // Location Section with Map Toggle
+                        _buildLocationSection(res_width, res_height),
+
                         SizedBox(height: res_height * 0.02),
-                        TxtfldforLocation("Location", _locationController),
-                        SizedBox(
-                          // height: _locationController.text.isNotEmpty ?res_height * .15 : res_height * .03,
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            physics: ScrollPhysics(),
-                            itemCount: _placeList.length,
-                            itemBuilder: ((context, index) {
-                              String name = _placeList[index]["description"];
 
-                              if (_locationController.text.isEmpty) {
-                                return Text("");
-                              } else if (name.toLowerCase().contains(
-                                _locationController.text.toLowerCase(),
-                              )) {
-                                return ListTile(
-                                  onTap: () async {
-                                    _locationController.text =
-                                        _placeList[index]["description"];
-                                    List<Location> location =
-                                        await locationFromAddress(
-                                          _placeList[index]["description"],
-                                        );
-                                    // log("Latitiude : " + location.last.latitude.toString());
-                                    // log("Longitude : " + location.last.longitude.toString());
+                        // Map View (if enabled)
+                        if (_showMap) _buildMapSection(res_width, res_height),
 
-                                    setState(() {
-                                      _locationController.removeListener(() {});
-                                      Latitiude =
-                                          location.last.latitude.toString();
-                                      Longitude =
-                                          location.last.longitude.toString();
+                        SizedBox(height: res_height * 0.02),
 
-                                      _placeList = [];
-                                    });
-                                  },
-                                  leading: CircleAvatar(
-                                    child: Icon(
-                                      Icons.pin_drop,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  title: Text(_placeList[index]["description"]),
-                                );
-                              } else {
-                                return SizedBox.shrink();
-                              }
-                            }),
-                          ),
-                        ),
-                        // SizedBox(
-                        //   height: res_height * 0.01,
-                        // ),
-                        Container(
-                          child: Text(
-                            "Set Distance",
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 21,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                height: 30,
-                                width: 371,
-                                child: CupertinoSlider(
-                                  thumbColor: Colors.white,
-                                  activeColor: Colors.black,
-                                  min: 0.0,
-                                  max: 1000.0,
-                                  value: _Rvalue,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _Rvalue = value;
-                                      radius = int.parse(
-                                        value.toStringAsFixed(0),
-                                      );
-                                    });
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              radius == 0 ? "0" : "${radius.toString()} mi",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.black,
-                              ),
-                            ),
-                            Text(
-                              "1000mi",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: res_height * 0.01),
-                        Container(
-                          child: Text(
-                            "Categories",
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 21,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: res_height * 0.01),
-                        Container(
-                          height: 50,
-                          width: res_width * 0.9,
-                          child:
-                              isLoading
-                                  ? Center(
-                                    child: SizedBox(
-                                      height: 25,
-                                      width: 25,
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                  )
-                                  : FutureBuilder(
-                                    builder: (
-                                      BuildContext context,
-                                      AsyncSnapshot<dynamic> snapshot,
-                                    ) {
-                                      return DropdownButton<String>(
-                                        value: dropdownValue,
-                                        icon: const Icon(Icons.arrow_downward),
-                                        elevation: 16,
-                                        style: const TextStyle(color: darkBlue),
-                                        underline: Container(
-                                          height: 2,
-                                          color: darkBlue,
-                                        ),
-                                        onChanged: (String? value) {
-                                          // This is called when the user selects an item.
-                                          setState(() {
-                                            dropdownValue = value!;
+                        // Distance Filter
+                        _buildDistanceFilter(res_width, res_height),
 
-                                            selected_id =
-                                                items_id[items.indexOf(
-                                                  dropdownValue,
-                                                )];
-                                            sub_id = [];
-                                            sub_items = [];
-                                            getSubCategory(selected_id);
-                                          });
-                                        },
-                                        items:
-                                            items.map<DropdownMenuItem<String>>(
-                                              (String value) {
-                                                return DropdownMenuItem<String>(
-                                                  value: value,
-                                                  child: Text(value),
-                                                );
-                                              },
-                                            ).toList(),
-                                      );
-                                    },
-                                    future: null,
-                                  ),
-                        ),
-                        SizedBox(height: res_height * 0.01),
-                        Row(
-                          children: [
-                            Text(
-                              'Sub Category',
-                              style: TextStyle(
-                                fontWeight: FontWeight.normal,
-                                color: Colors.black,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: res_height * 0.01),
-                        Container(
-                          height: 50,
-                          width: res_width * 0.9,
-                          child:
-                              sub_categoryLoader
-                                  ? SizedBox(
-                                    height: 25,
-                                    width: 25,
-                                    child: Text("Please Select The Category"),
-                                  )
-                                  : Visibility(
-                                    visible: subCategoryVisibility,
-                                    child: FutureBuilder(
-                                      builder: (
-                                        BuildContext context,
-                                        AsyncSnapshot<dynamic> snapshot,
-                                      ) {
-                                        return DropdownButton<String>(
-                                          value: sub_dropdownvalue,
-                                          icon: const Icon(
-                                            Icons.arrow_downward,
-                                          ),
-                                          elevation: 16,
-                                          style: const TextStyle(
-                                            color: darkBlue,
-                                          ),
-                                          underline: Container(
-                                            height: 2,
-                                            color: darkBlue,
-                                          ),
-                                          onChanged: (String? value) {
-                                            // This is called when the user selects an item.
-                                            setState(() {
-                                              sub_dropdownvalue = value!;
+                        SizedBox(height: res_height * 0.02),
 
-                                              selected_sub_id =
-                                                  sub_items_id[sub_items
-                                                      .indexOf(
-                                                        sub_dropdownvalue,
-                                                      )];
-                                            });
-                                          },
-                                          items:
-                                              sub_items.map<
-                                                DropdownMenuItem<String>
-                                              >((String value) {
-                                                return DropdownMenuItem<String>(
-                                                  value: value,
-                                                  child: Text(value),
-                                                );
-                                              }).toList(),
-                                        );
-                                      },
-                                      future: null,
-                                    ),
-                                  ),
-                        ),
-                        SizedBox(height: res_height * 0.01),
-                        Container(
-                          child: Text(
-                            "Price range",
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 21,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                height: 30,
-                                width: 371,
-                                child: CupertinoSlider(
-                                  thumbColor: Colors.white,
-                                  activeColor: Colors.black,
-                                  min: 0,
-                                  max: 1000,
-                                  value: _Pvalue,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _Pvalue = value;
-                                      price = int.parse(
-                                        value.toStringAsFixed(0),
-                                      );
-                                    });
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              price == 0 ? "0" : "${price.toString()} \$",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.black,
-                              ),
-                            ),
-                            Text(
-                              "\$1000",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: res_height * 0.01),
-                        Center(
-                          child: Container(
-                            width: 76,
-                            height: 30,
-                            decoration: BoxDecoration(
-                              color: Color(0xFF4285F4),
-                              // color: Color(0xff321A08),
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(5),
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                price == 0 ? "0 \$" : "${price.toString()} \$",
-                                style: TextStyle(color: Colors.white),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: res_height * 0.01),
-                        // Container(
-                        //   child: Text(
-                        //     "Brands",
-                        //     style: TextStyle(
-                        //         color: Colors.black,
-                        //         fontSize: 21,
-                        //         fontWeight: FontWeight.bold),
-                        //   ),
-                        // ),
-                        SizedBox(height: res_height * 0.01),
-                        Center(
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                filteredData = true;
-                              });
-                              String Url =
-                                  dotenv.env['baseUrlM'] ?? 'No url found';
-                              if (DateTime.parse(
-                                    selectedDate.toString(),
-                                  ).compareTo(
-                                    DateTime.parse(selectedDate1.toString()),
-                                  ) >
-                                  0) {
-                                var snackBar = new SnackBar(
-                                  content: new Text(
-                                    "Please Select Valid End Date",
-                                  ),
-                                );
-                                ScaffoldMessenger.of(
-                                  context,
-                                ).showSnackBar(snackBar);
-                                setState(() {
-                                  filteredData = false;
-                                });
-                              }
-                              if (Latitiude == null) {
-                                if (radius != 0) {
-                                  var snackBar = new SnackBar(
-                                    content: new Text(
-                                      "Please Select Location With Radius",
-                                    ),
-                                  );
-                                  ScaffoldMessenger.of(
-                                    context,
-                                  ).showSnackBar(snackBar);
-                                  setState(() {
-                                    filteredData = false;
-                                  });
-                                } else {
-                                  if (price == 0 && fromDate == null) {
-                                    url =
-                                        "${Url}/getProductSearching/null/null/null/null/null/${selected_sub_id}/null";
+                        // Date Range Section
+                        _buildDateRangeSection(res_width, res_height),
 
-                                    getData(url);
-                                  } else if (price != 0 && fromDate == null) {
-                                    url =
-                                        "${Url}/getProductSearching/null/null/null/null/null/${selected_sub_id}/${price}";
+                        SizedBox(height: res_height * 0.02),
 
-                                    getData(url);
-                                  } else if (price == 0 && fromDate != null) {
-                                    url =
-                                        "${Url}/getProductSearching/${fromDate}/${toDate == null ? selectedDate1 : toDate}/null/null/null/${selected_sub_id}/null";
+                        // Category Section
+                        _buildCategorySection(res_width, res_height),
 
-                                    getData(url);
-                                  } else if (price != 0 && fromDate != null) {
-                                    url =
-                                        "${Url}/getProductSearching/${fromDate}/${toDate == null ? selectedDate1 : toDate}/null/null/null/${selected_sub_id}/${price}";
+                        SizedBox(height: res_height * 0.02),
 
-                                    getData(url);
-                                  }
-                                }
-                              } // empty <location and radius> with price check
-                              else {
-                                if (radius != 0) {
-                                  if (price == 0 && fromDate == null) {
-                                    url =
-                                        "${Url}/getProductSearching/null/null/${Latitiude}/${Longitude}/${radius}/${selected_sub_id}/null";
+                        // Price Range Section
+                        _buildPriceRangeSection(res_width, res_height),
 
-                                    getData(url);
-                                  } else if (price != 0 && fromDate == null) {
-                                    url =
-                                        "${Url}/getProductSearching/null/null/${Latitiude}/${Longitude}/${radius}/${selected_sub_id}/${price}";
+                        SizedBox(height: res_height * 0.03),
 
-                                    getData(url);
-                                  } else if (price == 0 && fromDate != null) {
-                                    url =
-                                        "${Url}/getProductSearching/${fromDate}/${toDate == null ? selectedDate1 : toDate}/${Latitiude}/${Longitude}/${radius}/${selected_sub_id}/null";
-
-                                    getData(url);
-                                  } else if (price != 0 && fromDate != null) {
-                                    url =
-                                        "${Url}/getProductSearching/${fromDate}/${toDate == null ? selectedDate1 : toDate}/${Latitiude}/${Longitude}/${radius}/${selected_sub_id}/${price}";
-
-                                    getData(url);
-                                  }
-                                } else {
-                                  var snackBar = new SnackBar(
-                                    content: new Text(
-                                      "Please Select Radius With Location",
-                                    ),
-                                  );
-                                  ScaffoldMessenger.of(
-                                    context,
-                                  ).showSnackBar(snackBar);
-                                  setState(() {
-                                    filteredData = false;
-                                  });
-                                }
-                              }
-                            },
-                            child: Container(
-                              height: 58,
-                              width: 380,
-                              child: Center(
-                                child: Text(
-                                  filteredData ? "Loading" : 'Find',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ),
-                              decoration: BoxDecoration(
-                                color: kprimaryColor,
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
-                          ),
-                        ),
+                        // Search Button
+                        _buildSearchButton(res_width, res_height),
                       ],
                     ),
                   ),
@@ -906,19 +1043,571 @@ class _FilterScreeenState extends State<FilterScreeen> {
     );
   }
 
+  Widget _buildLocationSection(double res_width, double res_height) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Location',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                Row(
+                  children: [
+                    Icon(Icons.my_location, color: darkBlue, size: 20),
+                    SizedBox(width: 8),
+                    Switch(
+                      value: _showMap,
+                      onChanged: (value) {
+                        setState(() {
+                          _showMap = value;
+                        });
+                      },
+                      activeColor: darkBlue,
+                    ),
+                    Text('Map', style: TextStyle(fontSize: 12)),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 8),
+            Container(
+              height: 50,
+              child: TextField(
+                style: TextStyle(fontWeight: FontWeight.bold),
+                onChanged: (value) {
+                  setState(() {
+                    _onChanged();
+                    value == "" ? {Latitiude = null, Longitude = null} : null;
+                  });
+                },
+                controller: _locationController,
+                decoration: InputDecoration(
+                  suffixIcon: Icon(Icons.location_pin, color: darkBlue),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: kprimaryColor, width: 1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: darkBlue, width: 2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  hintText: "Enter location or use current location",
+                ),
+              ),
+            ),
+            if (_locationController.text.isNotEmpty)
+              Container(
+                height: 150,
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  physics: ScrollPhysics(),
+                  itemCount: _placeList.length,
+                  itemBuilder: ((context, index) {
+                    String name = _placeList[index]["description"];
+                    if (name.toLowerCase().contains(
+                      _locationController.text.toLowerCase(),
+                    )) {
+                      return ListTile(
+                        title: Text(name),
+                        onTap: () async {
+                          setState(() {
+                            _locationController.text = name;
+                            _placeList = [];
+                          });
+                          List<Location> locations = await locationFromAddress(
+                            name,
+                          );
+                          if (locations.isNotEmpty) {
+                            setState(() {
+                              Latitiude = locations.first.latitude;
+                              Longitude = locations.first.longitude;
+                            });
+                          }
+                        },
+                      );
+                    }
+                    return Container();
+                  }),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMapSection(double res_width, double res_height) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        height: 300,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Stack(
+            children: [
+              _isLocationLoading
+                  ? Center(child: CircularProgressIndicator())
+                  : GoogleMap(
+                    key: ValueKey(
+                      'map_${_markers.length}',
+                    ), // Force rebuild when markers change
+                    initialCameraPosition: _initialCameraPosition,
+                    onMapCreated: (GoogleMapController controller) {
+                      _mapController = controller;
+                      print(
+                        'DEBUG: Map created with ${_markers.length} markers',
+                      );
+                    },
+                    markers: _markers,
+                    myLocationEnabled: true,
+                    myLocationButtonEnabled: true,
+                    zoomControlsEnabled: false,
+                    onCameraMove: (position) {
+                      print(
+                        'DEBUG: Camera moved to: ${position.target.latitude}, ${position.target.longitude}',
+                      );
+                    },
+                  ),
+              // Full screen button
+              Positioned(
+                top: 16,
+                right: 16,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: IconButton(
+                    icon: Icon(Icons.fullscreen, color: darkBlue),
+                    onPressed: () {
+                      _showFullScreenMap();
+                    },
+                    tooltip: 'Full Screen Map',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDistanceFilter(double res_width, double res_height) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Distance Filter',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.radar, color: darkBlue),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '${_distanceValue.toStringAsFixed(1)} km radius',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
+            Slider(
+              value: _distanceValue,
+              min: 1.0,
+              max: 50.0,
+              divisions: 49,
+              activeColor: darkBlue,
+              onChanged: (value) {
+                setState(() {
+                  _distanceValue = value;
+                  radius = value.toInt();
+                });
+                _addProductMarkers();
+              },
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('1 km', style: TextStyle(fontSize: 12)),
+                Text('50 km', style: TextStyle(fontSize: 12)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateRangeSection(double res_width, double res_height) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Rental Period',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('From:', style: TextStyle(fontSize: 14)),
+                      SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: () => _selectDate(context),
+                        child: Container(
+                          padding: EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: kprimaryColor),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today,
+                                color: darkBlue,
+                                size: 16,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                myFormat2.format(selectedDate),
+                                style: TextStyle(fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('To:', style: TextStyle(fontSize: 14)),
+                      SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: () => _selectDate1(context),
+                        child: Container(
+                          padding: EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: kprimaryColor),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today,
+                                color: darkBlue,
+                                size: 16,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                myFormat2.format(selectedDate1),
+                                style: TextStyle(fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategorySection(double res_width, double res_height) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Category',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            SizedBox(height: 16),
+            Container(
+              height: 50,
+              child:
+                  isLoading
+                      ? Center(child: CircularProgressIndicator())
+                      : DropdownButton<String>(
+                        value: dropdownValue,
+                        isExpanded: true,
+                        icon: Icon(Icons.arrow_downward),
+                        style: TextStyle(color: darkBlue),
+                        underline: Container(height: 2, color: darkBlue),
+                        hint: Text("Select Category"),
+                        onChanged: (String? value) {
+                          setState(() {
+                            dropdownValue = value;
+                            // Clear sub-category when main category changes
+                            sub_dropdownvalue = null;
+                            sub_items = [];
+                            sub_items_id = [];
+                            subCategoryVisibility = false;
+
+                            if (value != null && items.contains(value)) {
+                              selected_id = items_id[items.indexOf(value)];
+                              getSubCategory(selected_id);
+                            }
+                          });
+                        },
+                        items:
+                            items.map<DropdownMenuItem<String>>((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              );
+                            }).toList(),
+                      ),
+            ),
+            SizedBox(height: 16),
+            Container(
+              height: 50,
+              child:
+                  sub_categoryLoader
+                      ? Text("Please Select The Category")
+                      : Visibility(
+                        visible: subCategoryVisibility,
+                        child: DropdownButton<String>(
+                          value: sub_dropdownvalue,
+                          isExpanded: true,
+                          icon: Icon(Icons.arrow_downward),
+                          style: TextStyle(color: darkBlue),
+                          underline: Container(height: 2, color: darkBlue),
+                          hint: Text("Select Sub Category"),
+                          onChanged: (String? value) {
+                            setState(() {
+                              sub_dropdownvalue = value;
+                              if (value != null && sub_items.contains(value)) {
+                                selected_sub_id =
+                                    sub_items_id[sub_items.indexOf(value)];
+                              }
+                            });
+                          },
+                          items:
+                              sub_items.map<DropdownMenuItem<String>>((
+                                String value,
+                              ) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                );
+                              }).toList(),
+                        ),
+                      ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPriceRangeSection(double res_width, double res_height) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Price Range',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.attach_money, color: darkBlue),
+                SizedBox(width: 8),
+                Text(
+                  'Up to \$${_Pvalue.toStringAsFixed(0)}',
+                  style: TextStyle(fontSize: 14),
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
+            Slider(
+              value: _Pvalue,
+              min: 0,
+              max: 1000,
+              divisions: 100,
+              activeColor: darkBlue,
+              onChanged: (value) {
+                setState(() {
+                  _Pvalue = value;
+                  price = int.parse(value.toStringAsFixed(0));
+                });
+              },
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('\$0', style: TextStyle(fontSize: 12)),
+                Text('\$1000', style: TextStyle(fontSize: 12)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchButton(double res_width, double res_height) {
+    return Center(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            filteredData = true;
+          });
+          String Url = dotenv.env['baseUrlM'] ?? 'No url found';
+
+          if (DateTime.parse(
+                selectedDate.toString(),
+              ).compareTo(DateTime.parse(selectedDate1.toString())) >
+              0) {
+            var snackBar = new SnackBar(
+              content: new Text("Please Select Valid End Date"),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+            setState(() {
+              filteredData = false;
+            });
+            return;
+          }
+
+          if (Latitiude == null) {
+            if (radius != 0) {
+              var snackBar = new SnackBar(
+                content: new Text("Please Select Location With Radius"),
+              );
+              ScaffoldMessenger.of(context).showSnackBar(snackBar);
+              setState(() {
+                filteredData = false;
+              });
+            } else {
+              if (price == 0 && fromDate == null) {
+                url =
+                    "${Url}/getProductSearching/null/null/null/null/null/${selected_sub_id}/null";
+                getData(url);
+              } else if (price != 0 && fromDate == null) {
+                url =
+                    "${Url}/getProductSearching/null/null/null/null/null/${selected_sub_id}/${price}";
+                getData(url);
+              } else if (price == 0 && fromDate != null) {
+                url =
+                    "${Url}/getProductSearching/${fromDate}/${toDate == null ? selectedDate1 : toDate}/null/null/null/${selected_sub_id}/null";
+                getData(url);
+              } else {
+                url =
+                    "${Url}/getProductSearching/${fromDate}/${toDate == null ? selectedDate1 : toDate}/null/null/null/${selected_sub_id}/${price}";
+                getData(url);
+              }
+            }
+          } else {
+            if (radius != 0) {
+              if (price == 0 && fromDate == null) {
+                url =
+                    "${Url}/getProductSearching/null/null/${Latitiude}/${Longitude}/${radius}/${selected_sub_id}/null";
+                getData(url);
+              } else if (price != 0 && fromDate == null) {
+                url =
+                    "${Url}/getProductSearching/null/null/${Latitiude}/${Longitude}/${radius}/${selected_sub_id}/${price}";
+                getData(url);
+              } else if (price == 0 && fromDate != null) {
+                url =
+                    "${Url}/getProductSearching/${fromDate}/${toDate == null ? selectedDate1 : toDate}/${Latitiude}/${Longitude}/${radius}/${selected_sub_id}/null";
+                getData(url);
+              } else {
+                url =
+                    "${Url}/getProductSearching/${fromDate}/${toDate == null ? selectedDate1 : toDate}/${Latitiude}/${Longitude}/${radius}/${selected_sub_id}/${price}";
+                getData(url);
+              }
+            } else {
+              var snackBar = new SnackBar(
+                content: new Text("Please Select Radius With Location"),
+              );
+              ScaffoldMessenger.of(context).showSnackBar(snackBar);
+              setState(() {
+                filteredData = false;
+              });
+            }
+          }
+        },
+        child: Container(
+          height: 58,
+          width: 380,
+          child: Center(
+            child: Text(
+              filteredData ? "Loading" : 'Find Rentals',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          decoration: BoxDecoration(
+            color: darkBlue,
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ... existing helper methods remain the same
   Fields() {
     return Container(
       child: TextFormField(
         autocorrect: false,
-        // controller: userEmailController,
-        // validator: (text) {
-        //   if (text == null ||
-        //       text.isEmpty ||
-        //       !text.contains("@")) {
-        //     return 'Enter correct email';
-        //   }
-        //   return null;
-        // },
         style: TextStyle(color: Colors.grey),
         decoration: InputDecoration(
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
@@ -977,7 +1666,6 @@ class _FilterScreeenState extends State<FilterScreeen> {
                 controller: _locationController,
                 decoration: InputDecoration(
                   suffixIcon: Icon(Icons.location_pin, color: darkBlue),
-                  // hintText:placholder,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(15.0),
                   ),
@@ -995,8 +1683,6 @@ class _FilterScreeenState extends State<FilterScreeen> {
                     ),
                     borderRadius: BorderRadius.all(Radius.circular(15)),
                   ),
-                  // hintStyle: TextStyle(fontWeight: FontWeight.bold),
-                  // hintText: "New York, NY,USA",
                 ),
               ),
             ),

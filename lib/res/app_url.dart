@@ -76,6 +76,8 @@ class AppUrl {
   static var negoRequest = baseUrlM + "/RequestNago";
   static var negoRequestUpdate = baseUrlM + "/ChangeNegoStatus";
   static var negoById = baseUrlM + "/getNegoById/";
+  static var getUserStripeTransactions = baseUrlM + "/getUserStripeTransactions/";
 
   static var updateUserRoleApiEndPoint = baseUrlM + '/UpdateUserRole';
+  static var updateFCMToken = baseUrlM + '/updateFCMToken';
 }

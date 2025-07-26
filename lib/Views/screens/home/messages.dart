@@ -202,6 +202,7 @@ class _MessageScreenState extends State<MessageScreen> {
         ],
       ),
       body: SingleChildScrollView(
+        padding: EdgeInsets.only(bottom: 20),
         child: Container(
           width: double.infinity,
           child: Column(
@@ -324,25 +325,24 @@ class _MessageScreenState extends State<MessageScreen> {
                             },
                             child: Container(
                               width: double.infinity,
-                              height: MediaQuery.of(context).size.height * 0.08,
+                              padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                               child: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceAround,
                                 children: [
                                   Icon(Icons.notifications),
                                   SizedBox(width: 10),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(name),
-                                      SizedBox(height: 4),
-                                      Container(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                            0.6,
-                                        child: Text(
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(name),
+                                        SizedBox(height: 4),
+                                        Text(
                                           desc,
+                                          maxLines: 3,
+                                          overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
                                             fontWeight:
                                                 seen_one == "0"
@@ -350,8 +350,8 @@ class _MessageScreenState extends State<MessageScreen> {
                                                     : FontWeight.normal,
                                           ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                   SizedBox(width: 10),
                                   Text(formattedDate),

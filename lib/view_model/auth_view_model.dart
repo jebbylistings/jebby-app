@@ -8,6 +8,7 @@ import 'package:jebby/Views/screens/auth/forgetPasswordOtp.dart';
 import 'package:jebby/Views/screens/auth/login.dart';
 import 'package:jebby/Views/screens/auth/stripe_onboarding.dart';
 import 'package:jebby/Views/screens/profile/myprofile.dart';
+import 'package:jebby/Views/screens/vendors/vendorhome.dart';
 import 'package:jebby/model/user_model.dart';
 import 'package:jebby/respository/auth_repository.dart';
 import 'package:jebby/utils/utils.dart';
@@ -77,32 +78,26 @@ class AuthViewModel with ChangeNotifier {
         
         String userId = value['id'].toString();
         
-        // Get identity_verified and stripe verification status from API response
-        bool onboardingCompleted = value['identity_verified'] == 1 || value['identity_verified'] == "1";
-        String stripeStatus = value['stripe_verification_status'] ?? "";
-        
-        // Save both statuses to SharedPreferences
+        // Save user data to SharedPreferences
         SharedPreferences.getInstance().then((prefs) {
-          prefs.setBool('identity_verified', onboardingCompleted);
-          prefs.setString('stripe_verification_status', stripeStatus);
+          prefs.setString('stripe_verification_status', value['stripe_verification_status'] ?? "");
+          prefs.setBool('identity_verified', value['identity_verified'] == 1 || value['identity_verified'] == "1");
         });
-        print('stripeStatus: $stripeStatus');
+        
         if (isFromGuestFlow) {
           Get.until((route) {
             return Get.currentRoute == "/PD";
           });
         } else {
           loginType = "user";
-          
-          // Only go to MainScreen if onboarding is completed
-          if (onboardingCompleted) {
-            Get.offAll(() => MainScreen());
+          // Check user role and navigate accordingly
+          String userRole = value['role'].toString();
+          if (userRole == "1") {
+            // User is a provider, navigate to VendorsHomeScreen
+            Get.offAll(() => VendrosHomeScreen());
           } else {
-            // Navigate to StripeOnboardingScreen with verification status
-            Get.to(() => StripeOnboardingScreen(
-              userId: userId,
-              verificationStatus: stripeStatus,
-            ));
+            // User is a renter, navigate to MainScreen
+            Get.offAll(() => MainScreen());
           }
         }
       }
@@ -156,23 +151,12 @@ class AuthViewModel with ChangeNotifier {
         updatePrefrences.setString('role', value["data"]["role"].toString());
         // updatePrefrences.setString('number', value["number"].toString());
         
-        // Get stripe verification status
-        String stripeStatus = value["data"]["stripe_verification_status"] ?? "";
-        bool onboardingCompleted = value["data"]["identity_verified"] == 1 || value["data"]["identity_verified"] == "1";
+        // Save stripe verification status for future use
+        updatePrefrences.setString('stripe_verification_status', value["data"]["stripe_verification_status"] ?? "");
+        updatePrefrences.setBool('identity_verified', value["data"]["identity_verified"] == 1 || value["data"]["identity_verified"] == "1");
         
-        // Save verification statuses
-        updatePrefrences.setBool('identity_verified', onboardingCompleted);
-        updatePrefrences.setString('stripe_verification_status', stripeStatus);
-        
-        // If onboarding and verification are completed, go to MainScreen, otherwise go to StripeOnboardingScreen
-        if (onboardingCompleted) {
-          Get.offAll(() => MainScreen());
-        } else {
-          Get.to(() => StripeOnboardingScreen(
-            userId: value["data"]["id"].toString(),
-            verificationStatus: stripeStatus,
-          ));
-        }
+        // Always go to MainScreen after signup - Stripe onboarding will be handled when user becomes provider
+        Get.offAll(() => MainScreen());
       } else if (value["message"].toString() == "Email Already Registered") {
         Utils.flushBarErrorMessage('Email Already Registered', context);
       } else {
@@ -203,16 +187,24 @@ class AuthViewModel with ChangeNotifier {
       if (value["message"].toString() == "Successfully signup") {
         Utils.flushBarErrorMessage('SignUp Successfully', context);
         
-        String userId = value["data"]["id"].toString();
+        // Save user data to SharedPreferences
+        SharedPreferences.getInstance().then((prefs) async {
+          // Save basic user information
+          prefs.setString('fullname', value["data"]["full_name"].toString());
+          prefs.setString('email', value["data"]["email"].toString());
+          prefs.setString('id', value["data"]["id"].toString());
+          prefs.setString('phoneNumber', value["data"]["phoneNumber"].toString());
+          prefs.setString('latitude', value["data"]["latitude"].toString());
+          prefs.setString('longitude', value["data"]["longitude"].toString());
+          prefs.setString('role', value["data"]["role"].toString());
+          
+          // Save stripe verification status for future use
+          prefs.setString('stripe_verification_status', value["data"]["stripe_verification_status"] ?? "");
+          prefs.setBool('identity_verified', value["data"]["identity_verified"] == 1 || value["data"]["identity_verified"] == "1");
+        });
         
-        // Get stripe verification status if available
-        String stripeStatus = value["data"]["stripe_verification_status"] ?? "";
-        
-        // After successful signup, go to Stripe onboarding before login
-        Get.to(() => StripeOnboardingScreen(
-          userId: userId,
-          verificationStatus: stripeStatus,
-        ));
+        // After successful signup, go to MainScreen - Stripe onboarding will be handled when user becomes provider
+        Get.offAll(() => MainScreen());
       } else if (value["message"].toString() == "invalid OTP") {
         Utils.flushBarErrorMessage('invalid OTP', context);
       } else {
@@ -253,27 +245,13 @@ class AuthViewModel with ChangeNotifier {
         updatePrefrences.setString('role', value["data"]["role"].toString());
         // updatePrefrences.setString('number', value["number"].toString());
         
-        // Check onboarding and verification status
-        String userId = value["data"]["id"].toString();
-        bool onboardingCompleted = value["data"]["identity_verified"] == 1 || value["data"]["identity_verified"] == "1";
-        
-        // Save onboarding status
-        updatePrefrences.setBool('identity_verified', onboardingCompleted);
+        // Save stripe verification status for future use
         updatePrefrences.setString('stripe_verification_session', value["data"]["stripe_verification_session"] ?? "");
+        updatePrefrences.setString('stripe_verification_status', value["data"]["stripe_verification_status"] ?? "");
+        updatePrefrences.setBool('identity_verified', value["data"]["identity_verified"] == 1 || value["data"]["identity_verified"] == "1");
         
-        // Get stripe verification status
-        String stripeStatus = value["data"]["stripe_verification_status"] ?? "";
-        updatePrefrences.setString('stripe_verification_status', stripeStatus);
-        
-        // If onboarding and verification are completed, go to MainScreen, otherwise go to StripeOnboardingScreen
-        if (onboardingCompleted) {
-          Get.offAll(() => MainScreen());
-        } else {
-          Get.to(() => StripeOnboardingScreen(
-            userId: userId,
-            verificationStatus: stripeStatus,
-          ));
-        }
+        // Always go to MainScreen after social signup - Stripe onboarding will be handled when user becomes provider
+        Get.offAll(() => MainScreen());
       } else {
         Utils.flushBarErrorMessage('Something went wrong', context);
       }

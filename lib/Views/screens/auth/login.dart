@@ -14,7 +14,7 @@ import 'package:jebby/view_model/user_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:lottie/lottie.dart';
 
-import 'package:rounded_loading_button/rounded_loading_button.dart';
+import 'package:rounded_loading_button_plus/rounded_loading_button.dart';
 
 import '../../../Services/provider/internet_provider.dart';
 import '../../../utils/show_snackbar.dart';
@@ -431,7 +431,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         elevation: 0,
                         borderRadius: 25,
                         valueColor: darkBlue,
-                        color: Colors.transparent,
+                        color: Colors.white,
                         child: Container(
                           width: isTablet ? res_width * 0.15 : res_width * 0.15,
                           height: isTablet ? res_width * 0.03 : res_width * 0.08,
@@ -480,7 +480,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         elevation: 0,
                         borderRadius: 25,
                         valueColor: darkBlue,
-                        color: Colors.transparent,
+                        color: Colors.white,
                         child: Container(
                           width: res_width * 0.15,
                           height: res_width * 0.15,
@@ -832,7 +832,7 @@ class _LoginScreenState extends State<LoginScreen> {
         valueColor: darkBlue,
         elevation: 0,
         borderRadius: 25,
-        color: Colors.transparent,
+        color: Colors.white,
         child: Container(
           width: isTablet ? res_width * 0.15 : res_width * 0.15,
           height: isTablet ? res_width * 0.03 : res_width * 0.08,
