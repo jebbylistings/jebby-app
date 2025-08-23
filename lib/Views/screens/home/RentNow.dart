@@ -1023,7 +1023,7 @@ class _RentnowScreenState extends State<RentnowScreen> {
                               widget.vendorAccountId == "" ||
                               widget.vendorAccountId == 0) {
                             final snackBar = new SnackBar(
-                              content: new Text("Online pay not available"),
+                              content: new Text("Vendor account not found. Please ensure the vendor has completed Stripe onboarding."),
                             );
                             ScaffoldMessenger.of(
                               context,

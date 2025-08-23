@@ -85,8 +85,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   late var vendorBackImage;
   late var pastart;
   late var paend;
-  late var vendorAccountId;
-  late var vendorPPEmail;
+  String? vendorAccountId;
+  String? vendorPPEmail;
   late var security_deposit;
 
   bool fav = false;
@@ -445,6 +445,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   @override
   void initState() {
+    // Initialize vendorAccountId to prevent null errors
+    vendorAccountId = "";
+    vendorPPEmail = "";
+    
     // getData();
     profileData();
     getUserData();
