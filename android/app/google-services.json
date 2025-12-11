@@ -1,0 +1,102 @@
+{
+  "project_info": {
+    "project_number": "369111140699",
+    "project_id": "jebby-525d6",
+    "storage_bucket": "jebby-525d6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:369111140699:android:bb727908c68f7da1e1b27e",
+        "android_client_info": {
+          "package_name": "com.jebbylistings.jebby"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "369111140699-3ta87cop375p761blk4ee9gc2h6judc5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jebbylistings.jebby",
+            "certificate_hash": "72b706cf8d7e9a9b8825dc09ef1692879d338b5f"
+          }
+        },
+        {
+          "client_id": "369111140699-579706vbjmav9ecgle4h8psc2eso98us.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jebbylistings.jebby",
+            "certificate_hash": "24d5b4a9dcea8a0e215bfb2cf7ab74595b95c95a"
+          }
+        },
+        {
+          "client_id": "369111140699-916giv1f4bb9q0hbb5k0j8ptllkg2p5o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jebbylistings.jebby",
+            "certificate_hash": "46bfde118336394f6fbfce20e286d40c3941c921"
+          }
+        },
+        {
+          "client_id": "369111140699-ircd3sv627bo3k8hu3554gmdrspf3a3h.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jebbylistings.jebby",
+            "certificate_hash": "45ca4b4d07f3ffc187e4267e9ec4739165107fc7"
+          }
+        },
+        {
+          "client_id": "369111140699-lov6a1vssqdmlcirgvgddaa8d6fidemi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jebbylistings.jebby",
+            "certificate_hash": "c64df1c3de9c2f007ebd85ec18c6ba0e421582e4"
+          }
+        },
+        {
+          "client_id": "369111140699-m8qgc740fj8h98rnrrr2n73pnr8r6ubt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jebbylistings.jebby",
+            "certificate_hash": "e455254840774c8b1f07d0251a80ec99740c3a9f"
+          }
+        },
+        {
+          "client_id": "369111140699-ub8s2o9cjag689fq3cnevt0ndk7kqjhk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jebbylistings.jebby",
+            "certificate_hash": "98a387a2e505f540b0141a489b079f8b357e4d23"
+          }
+        },
+        {
+          "client_id": "369111140699-bi9hmdlag3kn637nslj7s9um58naohho.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBLO1JSYjnBkdG1xKb4d_lhejY8xhLiTko"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "369111140699-bi9hmdlag3kn637nslj7s9um58naohho.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "369111140699-bqt5ecpv25qh6iejij33mounckouctn3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.jebbylistings.jebby"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
