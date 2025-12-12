@@ -251,6 +251,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   color: AppColors.darkGreyColor,
                                 ),
                               ),
+
                               //  prefixIcon: Icon(Icons.lock, color: darkBlue),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(15.0),
