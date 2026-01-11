@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 import '../../../Services/provider/sign_in_provider.dart';
 import '../../../model/user_model.dart';
 import '../../../view_model/user_view_model.dart';
+import '../../../model/getChatHistoryModel.dart' as datamodel;
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({super.key});
@@ -23,6 +24,7 @@ class MessagesScreen extends StatefulWidget {
 }
 
 class _MessagesScreenState extends State<MessagesScreen> {
+  /// ---------------- EXISTING ----------------
   Future getData() async {
     final sp = context.read<SignInProvider>();
     final usp = context.read<UserViewModel>();
@@ -37,20 +39,21 @@ class _MessagesScreenState extends State<MessagesScreen> {
   String? fullname;
   String? email;
   String? role;
+
   void profileData(BuildContext context) async {
     getUserDate()
         .then((value) async {
-          token = value.token.toString();
-          sourceId = value.id.toString();
-          fullname = value.name.toString();
-          email = value.email.toString();
-          role = value.role.toString();
-          get_chat_history();
-          seenNotification();
-        })
+      token = value.token.toString();
+      sourceId = value.id.toString();
+      fullname = value.name.toString();
+      email = value.email.toString();
+      role = value.role.toString();
+      get_chat_history();
+      seenNotification();
+    })
         .onError((error, stackTrace) {
-          if (kDebugMode) {}
-        });
+      if (kDebugMode) {}
+    });
   }
 
   seenNotification() {
@@ -64,8 +67,18 @@ class _MessagesScreenState extends State<MessagesScreen> {
   get_chat_history() {
     ApiRepository.shared.chatsHistory(
       sourceId.toString(),
-      (List) {
+          (List) {
         if (this.mounted) {
+          List.data!.add(
+            datamodel.Data(
+              id: 1,
+              name: 'Abhi',
+              image: '',
+              count: 2,
+              lastMessage: "Hello can we sign contract",
+              lastMessageTime: "2023-08-03T20:12:00Z",
+            ),
+          );
           if (List.data!.length == 0) {
             setState(() {
               isEmpty = true;
@@ -81,7 +94,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
           }
         }
       },
-      (error) {
+          (error) {
         if (error != null) {
           setState(() {
             isEmpty = false;
@@ -95,10 +108,11 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   late var Mtimer;
 
+  @override
   void initState() {
-    Mtimer = new Timer.periodic(
-      Duration(seconds: 5),
-      (_) => get_chat_history(),
+    Mtimer = Timer.periodic(
+      const Duration(seconds: 5),
+          (_) => get_chat_history(),
     );
     getData();
     profileData(context);
@@ -107,234 +121,233 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   @override
   void dispose() {
-    super.dispose();
     Mtimer.cancel();
+    _searchController.dispose();
+    super.dispose();
   }
 
   final bottomctrl = Get.put(BottomController());
 
+  /// ---------------- SEARCH (ADDED ONLY) ----------------
+  TextEditingController _searchController = TextEditingController();
+  String searchText = "";
+
+  /// ---------------- UI ----------------
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Container(
-          // child: Center(
-          child: RichText(
-            text: const TextSpan(
-              style: TextStyle(fontSize: 14.0, color: Colors.black),
-              children: <TextSpan>[
-                TextSpan(
-                  text: 'Messages',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                  ),
+        title: RichText(
+          text: const TextSpan(
+            style: TextStyle(fontSize: 14.0, color: Colors.black),
+            children: <TextSpan>[
+              TextSpan(
+                text: 'Chat',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
                 ),
-                // TextSpan(
-                //     text: '(32)',
-                //     style: TextStyle(
-                //         fontWeight: FontWeight.bold,
-                //         fontSize: 17,
-                //         color: Color(0xffFEB038))),
-              ],
-            ),
+              ),
+            ],
           ),
-          // ),
         ),
-        centerTitle: true,
+        centerTitle: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: InkWell(
-          onTap: () {
-            // Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>HomeScreen()), (route) => false);
-            // Get.back();
-            // Navigator.pop(context);
-            // if (bottomctrl.navigationBarIndexValue != 0) {
-            bottomctrl.navBarChange(0);
-            Get.back();
-            // }
-            // Navigator.of(context).push(MaterialPageRoute(builder: ((context) => MainScreen())));
-            Mtimer.cancel();
-            // Navigator.push(context, MaterialPageRoute(builder: ((context) => role == "1" ? VendrosHomeScreen() : MainScreen())));
-          },
-          borderRadius: BorderRadius.circular(50),
-          child: Icon(Icons.arrow_back, color: Colors.black),
-        ),
       ),
-      body: Container(
-        width: double.infinity,
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              children: [
-                isError
-                    ? Text("Error occured in loading data")
-                    : isLoading
-                    ? CircularProgressIndicator()
-                    : ApiRepository
-                            .shared
-                            .getChatsHistoryModelList!
-                            .data!
-                            .length ==
-                        0
-                    ? Text("No messages", style: TextStyle(fontSize: 14))
-                    : ListView.builder(
-                      physics: NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      itemCount:
-                          ApiRepository
-                              .shared
-                              .getChatsHistoryModelList!
-                              .data!
-                              .length,
-                      itemBuilder: (context, index) {
-                        // Access elements in reversed order using reversed.toList()
-                        var reversedData =
-                            ApiRepository
-                                .shared
-                                .getChatsHistoryModelList!
-                                .data!
-                                .reversed
-                                .toList();
-                        var element = reversedData[index];
+      backgroundColor: const Color(0xffF2F2F2),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            children: [
+              /// -------- SEARCH BAR --------
+              searchBar(),
 
-                        var name = element.name;
-                        var image = element.image.toString();
-                        var targetId = element.id.toString();
-                        var count = element.count.toString();
-                        var lastMessage = element.lastMessage.toString();
-                        var lastMessageTime =
-                            element.lastMessageTime.toString();
+              isError
+                  ? const Text("Error occured in loading data")
+                  : isLoading
+                  ? const CircularProgressIndicator()
+                  : ApiRepository
+                  .shared
+                  .getChatsHistoryModelList!
+                  .data!
+                  .length ==
+                  0
+                  ? const Text("No messages",
+                  style: TextStyle(fontSize: 14))
+                  : ListView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemCount: ApiRepository
+                    .shared
+                    .getChatsHistoryModelList!
+                    .data!
+                    .length,
+                itemBuilder: (context, index) {
+                  /// -------- FILTER + REVERSE --------
+                  var reversedData = ApiRepository
+                      .shared
+                      .getChatsHistoryModelList!
+                      .data!
+                      .reversed
+                      .where((element) {
+                    if (searchText.isEmpty) return true;
+                    return element.name
+                        .toString()
+                        .toLowerCase()
+                        .contains(searchText);
+                  })
+                      .toList();
 
-                        return msgs(
-                          name,
-                          image,
-                          targetId,
-                          count,
-                          lastMessage,
-                          lastMessageTime,
-                        );
-                      },
-                    ),
-                SizedBox(height: 50),
-              ],
-            ),
+                  var element = reversedData[index];
+
+                  var name = element.name;
+                  var image = element.image.toString();
+                  var targetId = element.id.toString();
+                  var count = element.count.toString();
+                  var lastMessage =
+                  element.lastMessage.toString();
+                  var lastMessageTime =
+                  element.lastMessageTime.toString();
+
+                  return msgs(
+                    name,
+                    image,
+                    targetId,
+                    count,
+                    lastMessage,
+                    lastMessageTime,
+                  );
+                },
+              ),
+              const SizedBox(height: 50),
+            ],
           ),
         ),
       ),
     );
   }
 
+  /// ---------------- SEARCH BAR UI ----------------
+  Widget searchBar() {
+    return Container(
+      margin: const EdgeInsets.only(top: 10, bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      height: 48,
+      decoration: BoxDecoration(
+        color: const Color(0xffF8F9FB),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.search, color: Colors.grey),
+          const SizedBox(width: 10),
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) {
+                setState(() {
+                  searchText = value.toLowerCase();
+                });
+              },
+              decoration: const InputDecoration(
+                hintText: "Search",
+                border: InputBorder.none,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// ---------------- MESSAGE TILE ----------------
   msgs(name, img, id, count, lastMsg, lastMessageTime) {
     double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
+
     return GestureDetector(
       onTap: () {
         Mtimer.cancel();
-        Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: ((context) => Chat(id))));
+        Navigator.of(context)
+            .push(MaterialPageRoute(builder: ((context) => Chat(id))));
       },
       child: Column(
         children: [
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Container(
             height: res_height * 0.1,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.all(Radius.circular(10)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withAlpha(51),
-                  spreadRadius: 5,
-                  blurRadius: 7,
-                  offset: Offset(0, 3), // changes position of shadow
-                ),
-              ],
-            ),
+            color: Colors.transparent,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 5),
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        height: res_height * 0.070,
-                        width: res_width * 0.15,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(40),
-                        ),
-                        child:
-                            img == ""
-                                ? Image.asset("assets/slicing/blankuser.jpeg")
-                                : CircleAvatar(
-                                  backgroundImage: NetworkImage(
-                                    AppUrl.baseUrlM + img,
-                                  ),
-                                ),
-                      ),
-                      SizedBox(width: res_width * 0.05),
-                      SizedBox(
-                        width: res_width * 0.55,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              name == "" ? "Vendor" : name,
-                              style: TextStyle(
-                                fontWeight:
-                                    count == "0"
-                                        ? FontWeight.normal
-                                        : FontWeight.bold,
-                              ),
-                            ),
-                            // SizedBox(
-                            //   height: 3
-                            // ),
-                            Text(
-                              lastMsg.length > 30
-                                  ? lastMsg.substring(0, 20) + '...'
-                                  : lastMsg,
-                              style: TextStyle(
-                                fontWeight:
-                                    count != "0"
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                              ),
-                            ),
-                            SizedBox(height: 10),
-                            Align(
-                              alignment: Alignment.bottomLeft,
-                              child: Text(
-                                DateFormat('MMM dd, yyyy hh:mm a').format(
-                                  DateTime.parse(lastMessageTime).toLocal(),
-                                ),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 8.5,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // SizedBox(
-                      //   width: 110,
-                      // ),
-                      count != "0"
-                          ? CircleAvatar(
-                            backgroundColor: kprimaryColor,
-                            radius: 15,
-                            child: Text(
-                              count,
-                              style: TextStyle(color: Colors.black),
-                            ),
-                          )
-                          : Text(""),
-                    ],
+                  Container(
+                    height: res_height * 0.070,
+                    width: res_width * 0.15,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(40),
+                    ),
+                    child: img == ""
+                        ? Image.asset(
+                      "assets/newpacks/chatpersonicon.png",
+                    )
+                        : CircleAvatar(
+                      backgroundImage:
+                      NetworkImage(AppUrl.baseUrlM + img),
+                    ),
                   ),
+                  SizedBox(width: res_width * 0.05),
+                  SizedBox(
+                    width: res_width * 0.55,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name == "" ? "Vendor" : name,
+                          style: TextStyle(
+                            fontWeight: count == "0"
+                                ? FontWeight.normal
+                                : FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          lastMsg.length > 30
+                              ? lastMsg.substring(0, 20) + '...'
+                              : lastMsg,
+                          style: TextStyle(
+                            color: const Color(0xff8F9098),
+                            fontWeight: count != "0"
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          DateFormat('MMM dd, yyyy hh:mm a').format(
+                            DateTime.parse(lastMessageTime).toLocal(),
+                          ),
+                          style: const TextStyle(
+                            color: Color(0xff8F9098),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 8.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  count != "0"
+                      ? CircleAvatar(
+                    backgroundColor: kprimaryColor,
+                    radius: 15,
+                    child: Text(
+                      count,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  )
+                      : const SizedBox(),
                 ],
               ),
             ),

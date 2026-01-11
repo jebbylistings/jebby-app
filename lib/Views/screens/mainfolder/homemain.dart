@@ -233,12 +233,19 @@ class _MainScreenState extends State<MainScreen> {
       child: Stack(
         // clipBehavior: Clip.none,
         children: [
-          CustomPaint(size: Size(size.width, 80), painter: BNBCustomPainter()),
+         // CustomPaint(size: Size(size.width, 80), painter: BNBCustomPainter()),
+          Container(
+            decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(28),
+                //boxShadow: [...]
+            ),
+          ),
           Center(
             heightFactor: 0.6,
             child: FloatingActionButton(
               backgroundColor: kprimaryColor,
-              child: Image.asset('assets/slicing/layer.png', width: 27),
+              child: Image.asset('assets/newpacks/menuicon.png', width: 27),
               elevation: 0,
               onPressed: () {
                 bottomctrl.navBarChange(2);
@@ -306,7 +313,7 @@ class _MainScreenState extends State<MainScreen> {
                             Get.to(() => FilterScreeen());
                           },
                           child: Image.asset(
-                            'assets/slicing/searchnew.png',
+                            'assets/newpacks/searchnew.png',
                             width: 25,
                             height: 25,
                             color: Colors.grey.shade500,
@@ -318,24 +325,57 @@ class _MainScreenState extends State<MainScreen> {
                         ),
                       ],
                     )
-                    : IconButton(
-                      icon: Icon(
-                        activeIndex == 1
-                            ? Icons.filter_alt
-                            : Icons.filter_alt_outlined,
+                    : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                      child: Image.asset(
+                        'assets/newpacks/searchnew.png',
+                        width: 25,
+                        height: 25,
                         color:
-                            activeIndex == 1
-                                ? AppColors.primaryColor
-                                : Colors.grey.shade500,
-                        size: 30,
+                        activeIndex == 1
+                            ? AppColors.primaryColor
+                            : Colors.grey.shade500,
                       ),
-                      onPressed: () {
+                      onTap: () {
+                        bottomctrl.navBarChange(1);
                         setState(() {
                           activeIndex = 1;
                         });
-                        bottomctrl.navBarChange(1);
                       },
+
+                      // splashColor: Colors.grey.shade500,
                     ),
+                    Text(
+                      'Search',
+                      style: TextStyle(
+                        color:
+                        activeIndex == 1
+                            ? Colors.black
+                            : Colors.grey.shade500,
+                      ),
+                    ),
+                  ],
+                ),
+                // IconButton(
+                //       icon: Icon(
+                //         activeIndex == 1
+                //             ? Icons.filter_alt
+                //             : Icons.filter_alt_outlined,
+                //         color:
+                //             activeIndex == 1
+                //                 ? AppColors.primaryColor
+                //                 : Colors.grey.shade500,
+                //         size: 30,
+                //       ),
+                //       onPressed: () {
+                //         setState(() {
+                //           activeIndex = 1;
+                //         });
+                //         bottomctrl.navBarChange(1);
+                //       },
+                //     ),
                 Container(width: size.width * 0.20),
                 Stack(
                   children: [
@@ -365,7 +405,7 @@ class _MainScreenState extends State<MainScreen> {
                         children: [
                           GestureDetector(
                             child: Image.asset(
-                              'assets/newpacks/messages.png',
+                              'assets/newpacks/chaticon.png',
                               width: 25,
                               height: 25,
                               color:
@@ -436,27 +476,53 @@ class _MainScreenState extends State<MainScreen> {
                   ],
                 ),
                 role == "1"
-                    ? IconButton(
-                      icon: Icon(
-                        activeIndex == 4
-                            ? Icons.settings
-                            : Icons.settings_outlined,
+                    ?
+                // IconButton(
+                //       icon: Icon(
+                //         activeIndex == 4
+                //             ? Icons.settings
+                //             : Icons.settings_outlined,
+                //
+                //         // color:
+                //         //     role != "Guest"
+                //         //         ? const Color.fromARGB(218, 255, 255, 255)
+                //         //         : Color(0xFF808080),
+                //         color:
+                //             activeIndex == 4
+                //                 ? AppColors.primaryColor
+                //                 : Colors.grey.shade500,
+                //       ),
+                //       // icon: Icon(
+                //       //   Icons.person_sharp,
+                //       //   color: Colors.white,
+                //       //   size: 30,
+                //       // ),
+                //       onPressed: () {
+                //         if (role != "Guest") {
+                //           setState(() {
+                //             activeIndex = 4;
+                //           });
+                //           bottomctrl.navBarChange(4);
+                //         } else {
+                //           Utils.toastMessage("Not Available For Guest User");
+                //         }
+                //       },
+                //     )
 
-                        // color:
-                        //     role != "Guest"
-                        //         ? const Color.fromARGB(218, 255, 255, 255)
-                        //         : Color(0xFF808080),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                      child: Image.asset(
+                        'assets/newpacks/settingicon.png',
+                        width: 25,
+                        height: 25,
                         color:
-                            activeIndex == 4
-                                ? AppColors.primaryColor
-                                : Colors.grey.shade500,
+                        activeIndex == 4
+                            ? AppColors.primaryColor
+                            : Colors.grey.shade500,
                       ),
-                      // icon: Icon(
-                      //   Icons.person_sharp,
-                      //   color: Colors.white,
-                      //   size: 30,
-                      // ),
-                      onPressed: () {
+                      onTap: () {
                         if (role != "Guest") {
                           setState(() {
                             activeIndex = 4;
@@ -466,7 +532,20 @@ class _MainScreenState extends State<MainScreen> {
                           Utils.toastMessage("Not Available For Guest User");
                         }
                       },
-                    )
+
+                      // splashColor: Colors.grey.shade500,
+                    ),
+                    Text(
+                      'Settings',
+                      style: TextStyle(
+                        color:
+                        activeIndex == 4
+                            ? Colors.black
+                            : Colors.grey.shade500,
+                      ),
+                    ),
+                  ],
+                )
                     : (role != "Guest")
                     ? GestureDetector(
                   onTap: (){
@@ -482,7 +561,7 @@ class _MainScreenState extends State<MainScreen> {
                         children: [
                           GestureDetector(
                             child: Image.asset(
-                              'assets/newpacks/setting-2.png',
+                              'assets/newpacks/settingicon.png',
                               width: 25,
                               height: 25,
                               color:

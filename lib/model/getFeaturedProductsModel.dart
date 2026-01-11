@@ -15,6 +15,7 @@ class GetFeaturedModel {
 
   GetFeaturedModel.fromJson(Map<String, dynamic> json) {
     message = json['message'];
+
     if (json['data'] != null) {
       data = <Data>[];
       json['data'].forEach((v) {

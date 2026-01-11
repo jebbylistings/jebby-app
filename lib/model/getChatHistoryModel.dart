@@ -32,7 +32,7 @@ class Data {
   String? lastMessage;
   String? lastMessageTime;
 
-  Data({this.id, this.name, this.image, this.count, this.lastMessage});
+  Data({this.id, this.name, this.image, this.count, this.lastMessage,this.lastMessageTime});
 
   Data.fromJson(Map<String, dynamic> json) {
     id = json['id'];

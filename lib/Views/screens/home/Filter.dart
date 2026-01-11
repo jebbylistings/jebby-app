@@ -898,7 +898,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
 
   var myFormat = DateFormat('yyyy-MM-dd');
   var myFormat1 = DateFormat('dd/MM/yyyy');
-  var myFormat2 = DateFormat('dd, MMM/yyyy');
+  var myFormat2 = DateFormat('MM/dd/yyyy');
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -1261,7 +1261,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
                     Icon(Icons.radar, color: darkBlue),
                     SizedBox(width: 8),
                     Text(
-                      '${_distanceValue.toStringAsFixed(1)} km radius',
+                      '${_distanceValue.toStringAsFixed(1)} miles radius',
                       style: TextStyle(fontSize: 14),
                     ),
                   ],
@@ -1288,11 +1288,11 @@ class _FilterScreeenState extends State<FilterScreeen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '1 km',
+                  '1 mile',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  '50 km',
+                  '50 miles',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ],

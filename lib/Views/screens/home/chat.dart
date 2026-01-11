@@ -38,6 +38,7 @@ class _ChatState extends State<Chat> {
   String? email;
   String? phoneNumber;
   String? role;
+
   void profileData(BuildContext context) async {
     getUserDate()
         .then((value) async {
@@ -59,6 +60,7 @@ class _ChatState extends State<Chat> {
   var messages = [];
   bool socketConnected = false;
   bool msgData = false;
+
   // var url = "https://192.168.18.39:7000/InsertMessage";
   bool isLoading = true;
   bool isError = false;
@@ -225,18 +227,30 @@ class _ChatState extends State<Chat> {
   Widget build(BuildContext context) {
     double res_height = MediaQuery.of(context).size.height;
     return Scaffold(
-      backgroundColor: Colors.grey[300],
+      backgroundColor: Color(0xffF2F2F2),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        title: Text(
-          'Messages',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-            fontSize: 19,
-          ),
+        title: Row(
+          children: [
+            Image.asset(
+              "assets/newpacks/chatpersonicon.png",
+              height: 30,
+              width: 30,
+            ),
+            SizedBox(
+              width: 20,
+            ),
+            Text(
+              'Abhi',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+                fontSize: 19,
+              ),
+            ),
+          ],
         ),
         leading: InkWell(
           onTap: () {
@@ -252,7 +266,7 @@ class _ChatState extends State<Chat> {
           child: Padding(
             padding: const EdgeInsets.all(17.0),
             child: Container(
-              child: Icon(Icons.arrow_back, color: Colors.black),
+              child: Icon(Icons.arrow_back_ios, color: Colors.black),
             ),
           ),
         ),
@@ -261,6 +275,9 @@ class _ChatState extends State<Chat> {
         reverse: true,
         child: Column(
           children: [
+            SizedBox(
+              height: 15,
+            ),
             isLoading
                 ? Center(child: Text("Loading Chats"))
                 : isEmpty
@@ -331,7 +348,8 @@ class _ChatState extends State<Chat> {
     return Container(
       height: 80,
       width: double.infinity,
-      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2)),
+      color: Color(0xffF2F2F2),
+      //  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2)),
       child: Padding(
         padding: const EdgeInsets.only(left: 20, bottom: 10),
         child: Row(
@@ -343,9 +361,9 @@ class _ChatState extends State<Chat> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   Container(
-                    width: MediaQuery.of(context).size.width * 0.8,
+                    width: MediaQuery.of(context).size.width * 0.75,
                     decoration: BoxDecoration(
-                      color: kprimaryColor,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Padding(
@@ -360,7 +378,7 @@ class _ChatState extends State<Chat> {
                         decoration: InputDecoration(
                           border: InputBorder.none,
                           hintText: "Type a message",
-                          hintStyle: TextStyle(color: Colors.white),
+                          hintStyle: TextStyle(color: Colors.black),
                         ),
                       ),
                     ),
@@ -377,7 +395,12 @@ class _ChatState extends State<Chat> {
                         //  getMessageApi();
                       }
                     },
-                    child: Icon(Icons.send, size: 35, color: kprimaryColor),
+                    child: Image.asset(
+                      'assets/newpacks/chatsendicon.png',
+                      height: 40,
+                      width: 40,
+                   //   color: kprimaryColor,
+                    ),
                   ),
                 ],
               ),
@@ -390,198 +413,209 @@ class _ChatState extends State<Chat> {
 
   customersuppor(msg, time, date) {
     double res_width = MediaQuery.of(context).size.width;
-    return Center(
-      child: Container(
-        width: res_width * 0.95,
-        child: Column(
-          children: [
-            Container(
-              width: res_width * 0.9,
-              decoration: BoxDecoration(
-                color: kprimaryColor,
-                borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(20),
-                  bottomRight: Radius.circular(20),
-                  bottomLeft: Radius.circular(20),
-                ),
+    return Container(
+      width: res_width * 0.75,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: res_width * 0.75,
+            margin: EdgeInsets.only(left: 20),
+            decoration: BoxDecoration(
+              color: Color(0xffF8F9FE),
+              borderRadius: BorderRadius.only(
+                topRight: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+               // bottomLeft: Radius.circular(20),
+                topLeft: Radius.circular(20),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: res_width * 0.2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child:
-                          targetImage == ""
-                              ? CircleAvatar(
-                                backgroundColor: Colors.grey,
-                                backgroundImage: AssetImage(
-                                  "assets/slicing/blankuser.jpeg",
-                                ),
-                              )
-                              : CachedNetworkImage(
-                                imageUrl:
-                                    AppUrl.baseUrlM + targetImage.toString(),
-                                imageBuilder:
-                                    (context, imageProvider) => CircleAvatar(
-                                      backgroundImage: imageProvider,
-                                    ),
-                                placeholder:
-                                    (context, url) => Center(
-                                      child: SizedBox(
-                                        width: 30,
-                                        height: 30,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.0,
-                                        ),
-                                      ),
-                                    ),
-                                errorWidget:
-                                    (context, url, error) => Icon(Icons.error),
-                              ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
+            ),
+            child: Row(
+              children: [
+
+                // Container(
+                //   width: res_width * 0.2,
+                //   child: Padding(
+                //     padding: const EdgeInsets.all(8.0),
+                //     child:
+                //         targetImage == ""
+                //             ? CircleAvatar(
+                //               backgroundColor: Colors.grey,
+                //               backgroundImage: AssetImage(
+                //                 "assets/slicing/blankuser.jpeg",
+                //               ),
+                //             )
+                //             : CachedNetworkImage(
+                //               imageUrl:
+                //                   AppUrl.baseUrlM + targetImage.toString(),
+                //               imageBuilder:
+                //                   (context, imageProvider) => CircleAvatar(
+                //                     backgroundImage: imageProvider,
+                //                   ),
+                //               placeholder:
+                //                   (context, url) => Center(
+                //                     child: SizedBox(
+                //                       width: 30,
+                //                       height: 30,
+                //                       child: CircularProgressIndicator(
+                //                         strokeWidth: 2.0,
+                //                       ),
+                //                     ),
+                //                   ),
+                //               errorWidget:
+                //                   (context, url, error) => Icon(Icons.error),
+                //             ),
+                //   ),
+                // ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Container(
                     child: Container(
-                      child: Container(
-                        width: res_width * 0.6,
-                        child: Text(
-                          msg,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      width: res_width * 0.6,
+                      child: Text(
+                        msg,
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 5,
-                bottom: 15,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    date,
-                    style: TextStyle(color: Colors.black, fontSize: 12),
-                  ),
-                  // Text(time, style: TextStyle(color: Color(0xffbfbab8)))
-                ],
-              ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 5,
+              bottom: 15,
             ),
-          ],
-        ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  date,
+                  style: TextStyle(color: Colors.black, fontSize: 12),
+                ),
+                // Text(time, style: TextStyle(color: Color(0xffbfbab8)))
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   usermsg(msg, time, date) {
     double res_width = MediaQuery.of(context).size.width;
-    return Center(
-      child: Container(
-        width: res_width * 0.95,
-        child: Column(
-          children: [
-            Container(
-              width: res_width * 0.9,
-              decoration: BoxDecoration(
-                color: Color(0xFF4285F4),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  bottomLeft: Radius.circular(20),
-                  bottomRight: Radius.circular(20),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Container(
+          width: res_width * 0.75,
+          child: Column(
+            children: [
+              Container(
+                width: res_width * 0.9,
+                decoration: BoxDecoration(
+                  color: Color(0xFF1F2024),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    bottomLeft: Radius.circular(20),
+                  //  bottomRight: Radius.circular(20),
+                    topRight:  Radius.circular(20),
+                  ),
                 ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Container(
-                        width: res_width * 0.6,
-                        child: Text(
-                          msg,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Container(
+                          width: res_width * 0.6,
+                          child: Text(
+                            msg,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  Container(
-                    width: res_width * 0.2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child:
-                          userImage == ""
-                              ? CircleAvatar(
-                                backgroundColor: Colors.grey,
-                                backgroundImage: AssetImage(
-                                  "assets/slicing/blankuser.jpeg",
-                                ),
-                              )
-                              : CircleAvatar(
-                                backgroundColor:
-                                    Colors
-                                        .transparent, // Optional: Background color
-                                child: CachedNetworkImage(
-                                  imageUrl:
-                                      AppUrl.baseUrlM + userImage.toString(),
-                                  imageBuilder:
-                                      (context, imageProvider) => CircleAvatar(
-                                        backgroundImage: imageProvider,
-                                      ),
-                                  placeholder:
-                                      (context, url) => Center(
-                                        child: SizedBox(
-                                          width: 30,
-                                          height: 30,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2.0,
-                                          ),
-                                        ),
-                                      ),
-                                  errorWidget:
-                                      (context, url, error) =>
-                                          Icon(Icons.error),
-                                ),
-                              ),
+                    // Container(
+                    //   width: res_width * 0.2,
+                    //   child: Padding(
+                    //     padding: const EdgeInsets.all(8.0),
+                    //     child:
+                    //         userImage == ""
+                    //             ? CircleAvatar(
+                    //               backgroundColor: Colors.grey,
+                    //               backgroundImage: AssetImage(
+                    //                 "assets/slicing/blankuser.jpeg",
+                    //               ),
+                    //             )
+                    //             : CircleAvatar(
+                    //               backgroundColor:
+                    //                   Colors
+                    //                       .transparent, // Optional: Background color
+                    //               child: CachedNetworkImage(
+                    //                 imageUrl:
+                    //                     AppUrl.baseUrlM + userImage.toString(),
+                    //                 imageBuilder:
+                    //                     (context, imageProvider) => CircleAvatar(
+                    //                       backgroundImage: imageProvider,
+                    //                     ),
+                    //                 placeholder:
+                    //                     (context, url) => Center(
+                    //                       child: SizedBox(
+                    //                         width: 30,
+                    //                         height: 30,
+                    //                         child: CircularProgressIndicator(
+                    //                           strokeWidth: 2.0,
+                    //                         ),
+                    //                       ),
+                    //                     ),
+                    //                 errorWidget:
+                    //                     (context, url, error) =>
+                    //                         Icon(Icons.error),
+                    //               ),
+                    //             ),
+                    //   ),
+                    // ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 5,
+                  bottom: 15,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      date,
+                      style: TextStyle(color: Colors.black, fontSize: 12),
                     ),
-                  ),
-                ],
+                    // Text(time, style: TextStyle(color: Colors.black, fontSize: 12))
+                  ],
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 5,
-                bottom: 15,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    date,
-                    style: TextStyle(color: Colors.black, fontSize: 12),
-                  ),
-                  // Text(time, style: TextStyle(color: Colors.black, fontSize: 12))
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
+        SizedBox(
+          width: 10,
+        )
+      ],
     );
   }
 }

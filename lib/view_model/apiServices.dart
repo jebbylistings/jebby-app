@@ -2030,14 +2030,22 @@ class ApiRepository extends ChangeNotifier {
     onResponse(GetFeaturedModel List),
     onError(error),
   ) async {
+    print("hello2033");
+
     final response = await http.get(
       Uri.parse(AppUrl.featuredGetUrl),
       headers: {'Content-type': "application/json"},
     );
+    print(response.statusCode.toString());
+
     if (response.statusCode == 200) {
       try {
         var data = GetFeaturedModel.fromJson(jsonDecode(response.body));
+        //data!.add(Data(id: 1,subcategoryId: 1,name: 'OUTDOORS',specifications: 'Outdoor Folding Chairs – Perfect for Parties',price: 100,isReview: 0,stars: '5'));
 
+
+        print("hello2041");
+        print(data.relatedProducts!.length);
         getFeaturedProducts(data);
         onResponse(data);
 

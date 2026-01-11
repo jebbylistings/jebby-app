@@ -10,6 +10,7 @@ import 'package:jebby/Views/screens/auth/ProductDetail.dart';
 import 'package:jebby/Views/screens/home/Categoriesss.dart';
 import 'package:jebby/Views/screens/home/Electronics.dart';
 import 'package:http/http.dart' as http;
+import '../../../model/getFeaturedProductsModel.dart' as datamodel;
 
 import 'package:jebby/Views/screens/home/messages.dart';
 import 'package:jebby/Views/screens/mainfolder/drawer.dart';
@@ -85,6 +86,21 @@ class _HomeScreenState extends State<HomeScreen> {
     ApiRepository.shared.featuredProducts(
       (List) {
         if (this.mounted) {
+          //List.data!.add(RelatedProducts(id: 1,productId: 1,relatedProductId: 1,)) ;
+          List.data!.add(
+            datamodel.Data(
+              image:
+                  "https://ik.imagekit.io/bdxxrsiix/15dd61ccbf734ed731469433dcf97363a454ec45.jpg",
+              id: 1,
+              subcategoryId: 1,
+              name: 'OUTDOORS',
+              specifications: 'Outdoor Folding Chairs – Perfect for Parties',
+              price: 100,
+              isReview: 0,
+              stars: '5',
+            ),
+          );
+
           if (List.data!.length == 0) {
             setState(() {
               isLoading = false;
@@ -459,6 +475,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+
                 // SizedBox(height: 20),
                 // Row(
                 //   children: [
@@ -521,6 +538,87 @@ class _HomeScreenState extends State<HomeScreen> {
                 //   ],
                 // ),
                 SizedBox(height: res_height * 0.03),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Container(
+                        child: Text(
+                          'Featured Items!',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                      // SizedBox(
+                      //   width: 120,
+                      // ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 10),
+                isLoading
+                    ? Text("")
+                    : isEmpty
+                    ? Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  child: Text("No items available currently"),
+                )
+                    : GridView.builder(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 1,
+                    crossAxisSpacing: 2.0,
+                    mainAxisSpacing: 5.0,
+                    childAspectRatio: 1.5,
+
+                  ),
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount:
+                  ApiRepository
+                      .shared
+                      .getFeaturedProductsModelList!
+                      .data!
+                      .length,
+                  itemBuilder: (context, int index) {
+                    var data =
+                    ApiRepository
+                        .shared
+                        .getFeaturedProductsModelList!
+                        .data![index];
+                    var price = data.price;
+                    var reviews = data.isReview.toString();
+                    var name = data.name.toString();
+                    var id = data.id.toString();
+                    var specs = data.specifications.toString();
+                    var desc = data.serviceAgreements.toString();
+                    var userId = data.userId.toString();
+                    var msg = data.isMessage;
+                    var image = data.image.toString();
+                    var stars = data.stars.toString();
+                    var delivery_charges = data.delivery_charges.toString();
+                    return itmBox(
+                      img: image,
+                      dx: price,
+                      rv: '(${reviews} Reveiws)',
+                      tx: '${name}',
+                      rt: stars,
+                      id: id,
+                      specs: specs,
+                      userId: userId,
+                      desc: desc,
+                      msg: msg,
+                      delivery_charges: delivery_charges,
+                    );
+                  },
+                ),
+                //SizedBox(height: res_height * 0.001),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Row(
@@ -612,85 +710,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 ),
                 SizedBox(height: res_height * 0.02),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Container(
-                        child: Text(
-                          'Featured Items!',
-                          style: TextStyle(
-                            fontSize: 29,
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      ),
-                      // SizedBox(
-                      //   width: 120,
-                      // ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 20),
-                isLoading
-                    ? Text("")
-                    : isEmpty
-                    ? Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10),
-                      child: Text("No items available currently"),
-                    )
-                    : GridView.builder(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 2.0,
-                        mainAxisSpacing: 30.0,
-                        childAspectRatio: 1,
-                      ),
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount:
-                          ApiRepository
-                              .shared
-                              .getFeaturedProductsModelList!
-                              .data!
-                              .length,
-                      itemBuilder: (context, int index) {
-                        var data =
-                            ApiRepository
-                                .shared
-                                .getFeaturedProductsModelList!
-                                .data![index];
-                        var price = data.price;
-                        var reviews = data.isReview.toString();
-                        var name = data.name.toString();
-                        var id = data.id.toString();
-                        var specs = data.specifications.toString();
-                        var desc = data.serviceAgreements.toString();
-                        var userId = data.userId.toString();
-                        var msg = data.isMessage;
-                        var image = data.image.toString();
-                        var stars = data.stars.toString();
-                        var delivery_charges = data.delivery_charges.toString();
-                        return itmBox(
-                          img: image,
-                          dx: price,
-                          rv: '(${reviews} Reveiws)',
-                          tx: '${name}',
-                          rt: stars,
-                          id: id,
-                          specs: specs,
-                          userId: userId,
-                          desc: desc,
-                          msg: msg,
-                          delivery_charges: delivery_charges,
-                        );
-                      },
-                    ),
-                SizedBox(height: res_height * 0.12),
+
+                SizedBox(height: res_height * 0.05),
               ],
             ),
           ),
@@ -713,7 +734,9 @@ class _HomeScreenState extends State<HomeScreen> {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
-          Get.to(() => ElectronicsScreen(categoryname: txt, id: id,pictureurl: img,));
+          Get.to(
+            () => ElectronicsScreen(categoryname: txt, id: id, pictureurl: img),
+          );
         },
         child: SizedBox(
           width: res_width * 0.45,
@@ -885,6 +908,8 @@ class _HomeScreenState extends State<HomeScreen> {
     delivery_charges,
   }) {
     double res_height = MediaQuery.of(context).size.height;
+    double res_width = MediaQuery.of(context).size.width;
+
     return GestureDetector(
       onTap: () {
         Get.to(
@@ -904,57 +929,179 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
       child: Padding(
-        padding: const EdgeInsets.only(top: 5, bottom: 0, left: 10, right: 10),
+        padding: const EdgeInsets.only(top: 5, bottom: 0, left: 5, right: 5),
         child: Column(
           children: [
             Container(
-              height: res_height * 0.20,
+              height: res_height * 0.27,
+              width: res_width,
               decoration: BoxDecoration(),
               child: ClipRRect(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-                child: CachedNetworkImage(
-                  imageUrl: AppUrl.baseUrlM + img,
-                  fit: BoxFit.cover,
-                  placeholder:
-                      (context, url) => Center(
-                        child: CircularProgressIndicator(), // Loading spinner
+                borderRadius: BorderRadius.all(Radius.circular(25)),
+                child: Stack(
+                  children: [
+                    CachedNetworkImage(
+                      imageUrl: id == "1" ? img : AppUrl.baseUrlM + img,
+                      fit: BoxFit.cover,
+                      placeholder:
+                          (context, url) => Center(
+                            child:
+                                CircularProgressIndicator(), // Loading spinner
+                          ),
+                      errorWidget:
+                          (context, url, error) => Icon(
+                            Icons.error,
+                            color: Colors.red,
+                          ), // Display an error icon
+                    ),
+
+                    // Dark gradient overlay (bottom)
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.7),
+                            ],
+                          ),
+                        ),
                       ),
-                  errorWidget:
-                      (context, url, error) => Icon(
-                        Icons.error,
-                        color: Colors.red,
-                      ), // Display an error icon
+                    ),
+
+                    // Rating badge (top-left)
+                    Positioned(
+                      top: 16,
+                      left: 16,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade700,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          children: [
+                            Image.asset('assets/newpacks/star.png',width: 25,height: 25,),
+                            SizedBox(width: 6),
+                            Text(
+                              "$rt",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Price badge (top-right)
+                    Positioned(
+                      top: 16,
+                      right: 16,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF5A623),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          "\$${dx.toString()} per day",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Bottom text content
+                    Positioned(
+                      left: 16,
+                      right: 16,
+                      bottom: 16,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "$tx",
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                              letterSpacing: 1.2,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          SizedBox(height: 6),
+                          Text(
+                            "Outdoor Folding Chairs – Perfect for Parties",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.location_on,
+                                size: 16,
+                                color: Colors.white70,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                "Downtown LA, 2 miles away",
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            SizedBox(height: res_height * 0.005),
-            Container(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('$tx', style: TextStyle(fontSize: 15)),
-                  SizedBox(height: res_height * 0.003),
-                  Text(
-                    '${dx.toString()} \$',
-                    style: TextStyle(fontSize: 13),
-                    textAlign: TextAlign.left,
-                  ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('$rt ', style: TextStyle(fontSize: 11)),
-                      Text(
-                        '$rv',
-                        style: TextStyle(fontSize: 11, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: res_height * 0.001),
-                ],
-              ),
-            ),
+            // SizedBox(height: res_height * 0.005),
+            // Container(
+            //   child: Column(
+            //     crossAxisAlignment: CrossAxisAlignment.center,
+            //     mainAxisAlignment: MainAxisAlignment.center,
+            //     children: [
+            //       Text('$tx', style: TextStyle(fontSize: 15)),
+            //       SizedBox(height: res_height * 0.003),
+            //       Text(
+            //         '${dx.toString()} \$',
+            //         style: TextStyle(fontSize: 13),
+            //         textAlign: TextAlign.left,
+            //       ),
+            //       Row(
+            //         crossAxisAlignment: CrossAxisAlignment.center,
+            //         mainAxisAlignment: MainAxisAlignment.center,
+            //         children: [
+            //           Text('$rt ', style: TextStyle(fontSize: 11)),
+            //           Text(
+            //             '$rv',
+            //             style: TextStyle(fontSize: 11, color: Colors.grey),
+            //           ),
+            //         ],
+            //       ),
+            //       SizedBox(height: res_height * 0.001),
+            //     ],
+            //   ),
+            // ),
             SizedBox(height: res_height * 0.001),
           ],
         ),
