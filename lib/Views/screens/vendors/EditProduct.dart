@@ -628,1500 +628,1873 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   @override
   Widget build(BuildContext context) {
-    double res_width = MediaQuery.of(context).size.width;
-    double res_height = MediaQuery.of(context).size.height;
+
+    double width = MediaQuery.of(context).size.width;
+
     return Scaffold(
+      backgroundColor: Color(0xfff5f5f5),
+
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: Text(
-          'Edit Product',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-            fontSize: 19,
-          ),
-        ),
-        leading: InkWell(
-          onTap: () {
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios,color: Colors.black),
+          onPressed: (){
             Get.back();
-            // Get.to(() => ProductListScreen(side: false));
           },
-          borderRadius: BorderRadius.circular(50),
-          child: Icon(Icons.arrow_back, color: Colors.black),
+        ),
+        title: Text(
+          "List Product",
+          style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold
+          ),
         ),
       ),
-      body: Container(
-        width: double.infinity,
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Container(
-                width: res_width * 0.9,
-                child: Column(
-                  children: [
-                    SizedBox(height: res_height * 0.01),
-                    Row(
-                      children: [
-                        Text(
-                          'Product Name',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.normal,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ],
+
+      body: SingleChildScrollView(
+
+        padding: EdgeInsets.symmetric(horizontal:16),
+
+        child: Column(
+
+          crossAxisAlignment: CrossAxisAlignment.start,
+
+          children: [
+
+            /// PRODUCT IMAGE
+
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Stack(
+                children: [
+
+                  Container(
+                    height: 200,
+                    width: double.infinity,
+                    child: imageFileList.isEmpty
+                        ? Image.asset(
+                      "assets/slicing/blankuser.jpeg",
+                      fit: BoxFit.cover,
+                    )
+                        : Image.file(
+                      File(imageFileList.first.path),
+                      fit: BoxFit.cover,
                     ),
-                    SizedBox(height: res_height * 0.01),
-                    Container(
-                      child: Text(
-                        'This information helps you and your customers identify the products on orders, documents and in the online store',
-                        style: TextStyle(fontSize: 11, color: Colors.black),
+                  ),
+
+                  Positioned(
+                    top: 15,
+                    left: 15,
+                    child: ElevatedButton.icon(
+                      onPressed: (){
+                        selectImages();
+                      },
+                      icon: Icon(Icons.upload,size:18),
+                      label: Text("Replace Image"),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black54
                       ),
                     ),
-                    SizedBox(height: res_height * 0.01),
-                    Container(
-                      height: 50,
-                      width: res_width * 0.9,
-                      child: TextField(
-                        controller: nameController,
-                        decoration: InputDecoration(
-                          // hintText: widget.name,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15.0),
-                          ),
-                          enabledBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(
-                              color: kprimaryColor,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.all(Radius.circular(15)),
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(
-                              color: kprimaryColor,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.all(Radius.circular(15)),
+                  ),
+
+                  Positioned(
+                    bottom: 15,
+                    right: 15,
+                    child: ElevatedButton.icon(
+                      onPressed: (){
+                        selectImages();
+                      },
+                      icon: Icon(Icons.add),
+                      label: Text("Add"),
+                    ),
+                  )
+
+                ],
+              ),
+            ),
+
+            SizedBox(height:20),
+
+            /// IMAGE THUMBNAILS
+
+            SizedBox(
+              height:70,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: imageFileList.length,
+                itemBuilder:(context,index){
+
+                  return Stack(
+                    children:[
+
+                      Container(
+                        margin: EdgeInsets.only(right:10),
+                        width:70,
+                        height:70,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.file(
+                            File(imageFileList[index].path),
+                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: res_height * 0.02),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          // 'Add Photo or Video',
-                          "Update Photo",
-                          style: TextStyle(
-                            fontWeight: FontWeight.normal,
-                            color: Colors.black,
-                            fontSize: 13,
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () {
-                            selectImages();
+
+                      Positioned(
+                        right:5,
+                        top:5,
+                        child: GestureDetector(
+                          onTap:(){
+                            setState(() {
+                              imageFileList.removeAt(index);
+                            });
                           },
-                          child: Icon(Icons.image, color: Colors.black),
+                          child: CircleAvatar(
+                            radius:10,
+                            backgroundColor: Colors.black,
+                            child: Icon(Icons.close,size:12,color: Colors.white),
+                          ),
                         ),
-                      ],
-                    ),
-                    SizedBox(height: res_height * 0.02),
+                      )
+                    ],
+                  );
+                },
+              ),
+            ),
 
-                    SizedBox(
-                      height: 150,
-                      child:
-                          imgLoader
-                              ? Center(child: Text("Updating Images"))
-                              : ApiRepository
-                                      .shared
-                                      .getProductsByIdList!
-                                      .data![1]
-                                      .images!
-                                      .length >
-                                  0
-                              // imageList.length > 0
-                              ? ListView.separated(
-                                scrollDirection: Axis.horizontal,
-                                shrinkWrap: true,
-                                separatorBuilder:
-                                    (context, index) => SizedBox(width: 10),
-                                itemCount:
-                                    ApiRepository
-                                        .shared
-                                        .getProductsByIdList!
-                                        .data![1]
-                                        .images!
-                                        .length,
-                                // imageList.length,
-                                itemBuilder: (context, int index) {
-                                  // var img_id =
-                                  // var img = imageList[index];
-                                  var img =
-                                      ApiRepository
-                                          .shared
-                                          .getProductsByIdList!
-                                          .data![1]
-                                          .images![index]
-                                          .path;
-                                  var img_id =
-                                      ApiRepository
-                                          .shared
-                                          .getProductsByIdList!
-                                          .data![1]
-                                          .images![index]
-                                          .id;
-                                  return Stack(
-                                    children: [
-                                      Container(
-                                        child: Image.network(
-                                          AppUrl.baseUrlM + img.toString(),
-                                        ),
-                                      ),
-                                      Positioned(
-                                        bottom: 2,
-                                        left: 4,
-                                        child: InkWell(
-                                          onTap: () {
-                                            deleteProductImage(img_id);
-                                          },
-                                          child: Icon(
-                                            Icons.delete,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              )
-                              : Text("loading"),
-                    ),
-                    SizedBox(height: res_height * 0.01),
-                    imageFileList.length > 0
-                        ? SizedBox(
-                          height: 150,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            // physics: NeverScrollableScrollPhysics(),
-                            shrinkWrap: true,
-                            separatorBuilder:
-                                (context, index) => SizedBox(width: 10),
-                            itemCount: imageFileList.length,
-                            itemBuilder: (context, int index) {
-                              return Stack(
-                                children: [
-                                  Container(
-                                    child: Image.file(
-                                      File(imageFileList[index].path),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    bottom: 2,
-                                    left: 4,
-                                    child: InkWell(
-                                      onTap: () {
-                                        setState(() {
-                                          imageFileList.removeAt(index);
-                                          imagesPath.removeAt(index);
-                                        });
-                                      },
-                                      child: Icon(
-                                        Icons.delete,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        )
-                        : SizedBox(),
-                    SizedBox(height: res_height * 0.02),
-                    Center(
-                      child: InkWell(
-                        onTap: () async {
-                          img_button ? null : updateImage();
-                        },
-                        child: Container(
-                          width: 250,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color:
-                                img_button
-                                    ? kprimaryColor.withAlpha(128)
-                                    : kprimaryColor,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Center(
-                            child: Text(
-                              img_button ? "Updating .." : "Update Image",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: res_height * 0.01),
+            SizedBox(height:20),
 
-                    // Row(
-                    //   mainAxisAlignment: MainAxisAlignment.start,
-                    //   children: [
-                    //     //     // Container(
-                    //     //     //   child: Row(
-                    //     //     //     children: [
-                    //     //     //       tag(),
-                    //     //     //       SizedBox(
-                    //     //     //         width: res_width * 0.01,
-                    //     //     //       ),
-                    //     //     //       tag(),
-                    //     //     //       SizedBox(
-                    //     //     //         width: res_width * 0.01,
-                    //     //     //       ),
-                    //     //     //       tag(),
-                    //     //     //     ],
-                    //     //     //   ),
-                    //     //     // ),
-                    //     Row(
-                    //       children: [
-                    //         Text(
-                    //           'Discount',
-                    //           style: TextStyle(
-                    //             fontWeight: FontWeight.bold,
-                    //             fontSize: 17,
-                    //           ),
-                    //         ),
-                    //         Transform.scale(
-                    //           scale: 0.6,
-                    //           child: CupertinoSwitch(
-                    //             activeColor: Color.fromARGB(255, 210, 210, 210),
-                    //             trackColor: Color.fromARGB(255, 235, 235, 235),
-                    //             thumbColor: switchnot ? Color.fromARGB(255, 173, 173, 173) : Color(0xff00ff01),
-                    //             value: switchnot,
-                    //             onChanged: (value) {
-                    //               setState(() {
-                    //                 negotiationVisibility = !negotiationVisibility;
-                    //                 switchnot = value;
-                    //               });
-                    //             },
-                    //           ),
-                    //         ),
-                    //       ],
-                    //     )
-                    //   ],
-                    // ),
-                    // SizedBox(
-                    //   height: res_height * 0.01,
-                    // ),
-                    Row(
-                      children: [
-                        Text(
-                          'Specs',
-                          style: TextStyle(
-                            fontWeight: FontWeight.normal,
-                            color: Colors.black,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: res_height * 0.01),
-                    Container(
-                      height: 50,
-                      width: res_width * 0.9,
-                      child: TextField(
-                        controller: specsController,
-                        decoration: InputDecoration(
-                          // hintText:
-                          //     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. ",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15.0),
-                          ),
-                          enabledBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(
-                              color: kprimaryColor,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.all(Radius.circular(15)),
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(
-                              color: kprimaryColor,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.all(Radius.circular(15)),
-                          ),
-                        ),
-                      ),
-                    ),
+            /// PRODUCT NAME
 
-                    SizedBox(height: res_height * 0.01),
-                    Row(
-                      children: [
-                        Text(
-                          'Description',
-                          style: TextStyle(
-                            fontWeight: FontWeight.normal,
-                            color: Colors.black,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: res_height * 0.01),
-                    Container(
-                      height: 50,
-                      width: res_width * 0.9,
-                      child: TextField(
-                        controller: descriptionController,
-                        decoration: InputDecoration(
-                          // hintText:
-                          //     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. ",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15.0),
-                          ),
-                          enabledBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(
-                              color: kprimaryColor,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.all(Radius.circular(15)),
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(
-                              color: kprimaryColor,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.all(Radius.circular(15)),
-                          ),
-                        ),
-                      ),
-                    ),
+            Text("Product Name",style: TextStyle(fontWeight: FontWeight.bold)),
 
-                    SizedBox(height: res_height * 0.01),
-                    Row(
-                      children: [
-                        Text(
-                          'Rent Price',
-                          style: TextStyle(
-                            fontWeight: FontWeight.normal,
-                            color: Colors.black,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: res_height * 0.01),
-                    Container(
-                      height: 50,
-                      width: res_width * 0.9,
-                      child: TextField(
-                        controller: rentPriceController,
-                        decoration: InputDecoration(
-                          // hintText: 'Add Price',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15.0),
-                          ),
-                          enabledBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(
-                              color: kprimaryColor,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.all(Radius.circular(15)),
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(
-                              color: kprimaryColor,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.all(Radius.circular(15)),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: res_height * 0.01),
-                    Row(
-                      children: [
-                        Text(
-                          'Security Deposit',
-                          style: TextStyle(
-                            fontWeight: FontWeight.normal,
-                            color: Colors.black,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: res_height * 0.01),
-                    Container(
-                      height: 50,
-                      width: res_width * 0.9,
-                      child: TextField(
-                        keyboardType: TextInputType.number,
-                        controller: SecurityDepositeController,
-                        decoration: InputDecoration(
-                          hintText: 'Add Security Deposit',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15.0),
-                          ),
-                          enabledBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(
-                              color: kprimaryColor,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.all(Radius.circular(15)),
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(
-                              color: kprimaryColor,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.all(Radius.circular(15)),
-                          ),
-                        ),
-                      ),
-                    ),
+            SizedBox(height:8),
 
-                    // SizedBox(
-                    //   height: res_height * 0.01,
-                    // ),
-                    SizedBox(height: res_height * 0.01),
-                    Row(
-                      children: [
-                        Text(
-                          'Delivery Charges',
-                          style: TextStyle(
-                            fontWeight: FontWeight.normal,
-                            color: Colors.black,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: res_height * 0.01),
-                    Container(
-                      height: 50,
-                      width: res_width * 0.9,
-                      child: TextField(
-                        controller: deliverychargesController,
-                        decoration: InputDecoration(
-                          // hintText: 'Add Price',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15.0),
-                          ),
-                          enabledBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(
-                              color: kprimaryColor,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.all(Radius.circular(15)),
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(
-                              color: kprimaryColor,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.all(Radius.circular(15)),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // SizedBox(
-                    //   height: res_height * 0.01,
-                    // ),
-                    // Visibility(
-                    //   visible: negotiationVisibility,
-                    //   child: Row(
-                    //     children: [
-                    //       Text(
-                    //         'Discount',
-                    //         style: TextStyle(
-                    //           fontWeight: FontWeight.normal,
-                    //           color: Colors.black,
-                    //           fontSize: 15,
-                    //         ),
-                    //       ),
-                    //     ],
-                    //   ),
-                    // ),
-                    // SizedBox(
-                    //   height: res_height * 0.01,
-                    // ),
-                    // Visibility(
-                    //   visible: negotiationVisibility,
-                    //   child: Container(
-                    //     height: 50,
-                    //     width: res_width * 0.9,
-                    //     child: TextField(
-                    //       controller: negotiationController,
-                    //       decoration: InputDecoration(
-                    //         // hintText: 'Enter Amount',
-                    //         border: OutlineInputBorder(
-                    //           borderRadius: BorderRadius.circular(15.0),
-                    //         ),
-                    //         enabledBorder: const OutlineInputBorder(
-                    //           borderSide: const BorderSide(color: kprimaryColor, width: 1),
-                    //           borderRadius: BorderRadius.all(Radius.circular(15)),
-                    //         ),
-                    //         focusedBorder: const OutlineInputBorder(
-                    //           borderSide: const BorderSide(color: kprimaryColor, width: 1),
-                    //           borderRadius: BorderRadius.all(Radius.circular(15)),
-                    //         ),
-                    //       ),
-                    //     ),
-                    //   ),
-                    // ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Instant Rent',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 17,
-                          ),
-                        ),
-                        Transform.scale(
-                          scale: 0.6,
-                          child: CupertinoSwitch(
-                            activeTrackColor: Color.fromARGB(
-                              255,
-                              210,
-                              210,
-                              210,
-                            ),
-                            inactiveTrackColor: Color.fromARGB(
-                              255,
-                              235,
-                              235,
-                              235,
-                            ),
-                            thumbColor:
-                                insRentSwitchNot
-                                    ? Color.fromARGB(255, 173, 173, 173)
-                                    : Color(0xff00ff01),
-                            value: insRentSwitchNot,
-                            onChanged: (value) {
-                              setState(() {
-                                insRentSwitchNot = value;
-                              });
-                            },
-                          ),
-                        ),
-                        // Row(
-                        //   children: [
-                        //     Text(
-                        //       'Messaging',
-                        //       style: TextStyle(
-                        //         fontWeight: FontWeight.bold,
-                        //         fontSize: 17,
-                        //       ),
-                        //     ),
-                        //     Transform.scale(
-                        //       scale: 0.6,
-                        //       child: CupertinoSwitch(
-                        //         activeColor: Color.fromARGB(255, 210, 210, 210),
-                        //         trackColor: Color.fromARGB(255, 235, 235, 235),
-                        //         thumbColor: messageSwitchNot
-                        //             ? Color(0xff00ff01)
-                        //             : Color.fromARGB(255, 173, 173, 173),
-                        //         // ? Color.fromARGB(255, 173, 173, 173)
-                        //         // : Color(0xff00ff01),
-                        //         value: messageSwitchNot,
-                        //         onChanged: (value) {
-                        //           setState(() {
-                        //             messageSwitchNot = value;
-                        //                 "messageSwitchNot ${messageSwitchNot}");
-                        //           });
-                        //         },
-                        //       ),
-                        //     ),
-                        //   ],
-                        // )
-                      ],
-                    ),
-                    SizedBox(height: res_height * 0.01),
-                    Container(
-                      width: double.infinity,
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            Container(
-                              width: res_width * 0.9,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Text('Price'),
-                                  // SizedBox(
-                                  //   height: res_height * 0.005,
-                                  // ),
-                                  // Container(
-                                  //   height: 50,
-                                  //   width: res_width * 0.9,
-                                  //   child: TextField(
-                                  //     controller: price_2_Controller,
-                                  //     decoration: InputDecoration(
-                                  //       // hintText: '500 \$',
-                                  //       border: OutlineInputBorder(
-                                  //         borderRadius:
-                                  //             BorderRadius.circular(15.0),
-                                  //       ),
-                                  //       enabledBorder: const OutlineInputBorder(
-                                  //         borderSide: const BorderSide(
-                                  //             color: kprimaryColor, width: 1),
-                                  //         borderRadius: BorderRadius.all(
-                                  //             Radius.circular(15)),
-                                  //       ),
-                                  //       focusedBorder: const OutlineInputBorder(
-                                  //         borderSide: const BorderSide(
-                                  //             color: kprimaryColor, width: 1),
-                                  //         borderRadius: BorderRadius.all(
-                                  //             Radius.circular(15)),
-                                  //       ),
-                                  //     ),
-                                  //   ),
-                                  // ),
-                                  // Container(
-                                  //   height: 50,
-                                  //   width: res_width * 0.9,
-                                  //   child: TextField(
-                                  //     decoration: InputDecoration(
-                                  //         enabledBorder: OutlineInputBorder(
-                                  //             borderRadius: BorderRadius.circular(15),
-                                  //             borderSide: BorderSide(
-                                  //                 color: kprimaryColor, width: 1)),
-                                  //         filled: true,
-                                  //         fillColor: Colors.white,
-                                  //         hintText: "Rs 500",
-                                  //         hintStyle: TextStyle(color: Colors.grey)),
-                                  //   ),
-                                  // ),
-                                  // SizedBox(
-                                  //   height: res_height * 0.01,
-                                  // ),
-                                  // Text('Per'),
-                                  // SizedBox(
-                                  //   height: res_height * 0.005,
-                                  // ),
-                                  // Container(
-                                  //   height: 50,
-                                  //   width: res_width * 0.9,
-                                  //   child: TextField(
-                                  //     controller: perController,
-                                  //     decoration: InputDecoration(
-                                  //       // hintText: 'Per',
-                                  //       border: OutlineInputBorder(
-                                  //         borderRadius:
-                                  //             BorderRadius.circular(15.0),
-                                  //       ),
-                                  //       enabledBorder: const OutlineInputBorder(
-                                  //         borderSide: const BorderSide(
-                                  //             color: kprimaryColor, width: 1),
-                                  //         borderRadius: BorderRadius.all(
-                                  //             Radius.circular(15)),
-                                  //       ),
-                                  //       focusedBorder: const OutlineInputBorder(
-                                  //         borderSide: const BorderSide(
-                                  //             color: kprimaryColor, width: 1),
-                                  //         borderRadius: BorderRadius.all(
-                                  //             Radius.circular(15)),
-                                  //       ),
-                                  //     ),
-                                  //   ),
-                                  // ),
-                                  // SizedBox(
-                                  //   height: res_height * 0.01,
-                                  // ),
-                                  catLoader
-                                      ? SizedBox()
-                                      : Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text('Category'),
-                                          SizedBox(height: res_height * 0.01),
-                                          Container(
-                                            height: 50,
-                                            width: res_width * 0.9,
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(15),
-                                              border: Border.all(
-                                                color: kprimaryColor,
-                                              ),
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(
-                                                top: 12.0,
-                                                left: 12.0,
-                                              ),
-                                              child: Text(cat_value),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                  SizedBox(height: res_height * 0.01),
-                                  // Padding(
-                                  //   padding: const EdgeInsets.only(top: 5),
-                                  //   child: Center(
-                                  //     child: Container(
-                                  //       child: DropdownButtonFormField(
-                                  //         hint: Text(
-                                  //             'Select option'), // Not necessary for Option 1
-
-                                  //         items: [
-                                  //           {
-                                  //             "value": "Login",
-                                  //             "label": "Login"
-                                  //           },
-                                  //           {
-                                  //             "value": "Create",
-                                  //             "label": "Create"
-                                  //           },
-                                  //           {"value": "Read", "label": "Read"},
-                                  //           {
-                                  //             "value": "Update",
-                                  //             "label": "Update"
-                                  //           },
-                                  //           {
-                                  //             "value": "Delete",
-                                  //             "label": "Delete"
-                                  //           },
-                                  //           {
-                                  //             "value": "Print",
-                                  //             "label": "Print"
-                                  //           },
-                                  //           {
-                                  //             "value": "Email",
-                                  //             "label": "Email"
-                                  //           },
-                                  //           {"value": "Sms", "label": "Sms"},
-                                  //           {
-                                  //             "value": "Upload Image",
-                                  //             "label": "Upload Image"
-                                  //           },
-                                  //           {
-                                  //             "value": "Read All",
-                                  //             "label": "Read All"
-                                  //           }
-                                  //         ].map((category) {
-                                  //           return new DropdownMenuItem(
-                                  //               value: category['value'],
-                                  //               child: Text(
-                                  //                 category['label'].toString(),
-                                  //                 style: TextStyle(
-                                  //                     color: Color(0xffbdbdbd),
-                                  //                     fontFamily:
-                                  //                         'UbuntuRegular'),
-                                  //               ));
-                                  //         }).toList(),
-                                  //         onChanged: (newValue) {
-                                  //           setState(() {
-                                  //             var _selectActionsText;
-                                  //             _selectActionsText.text =
-                                  //                 newValue;
-                                  //           });
-                                  //         },
-                                  //         decoration: new InputDecoration(
-                                  //           border: new OutlineInputBorder(
-                                  //             borderSide: const BorderSide(
-                                  //                 color: kprimaryColor,
-                                  //                 width: 1),
-                                  //             borderRadius:
-                                  //                 const BorderRadius.all(
-                                  //               const Radius.circular(15.0),
-                                  //             ),
-                                  //           ),
-                                  //           enabledBorder:
-                                  //               new OutlineInputBorder(
-                                  //             borderSide: const BorderSide(
-                                  //                 color: kprimaryColor,
-                                  //                 width: 1),
-                                  //             borderRadius:
-                                  //                 const BorderRadius.all(
-                                  //               const Radius.circular(15.0),
-                                  //             ),
-                                  //           ),
-                                  //           filled: true,
-                                  //           hintStyle: new TextStyle(
-                                  //               color: Color(0xffbdbdbd),
-                                  //               fontFamily: 'UbuntuRegular'),
-                                  //           fillColor: Colors.white70,
-                                  //           focusedBorder: OutlineInputBorder(
-                                  //             borderSide: const BorderSide(
-                                  //                 color: kprimaryColor,
-                                  //                 width: 1),
-                                  //             borderRadius:
-                                  //                 const BorderRadius.all(
-                                  //               const Radius.circular(15.0),
-                                  //             ),
-                                  //           ),
-                                  //         ),
-                                  //       ),
-                                  //     ),
-                                  //   ),
-                                  // ),
-                                  //                       var currencies = [
-                                  //     "Food",
-                                  //     "Transport",
-                                  //     "Personal",
-                                  //     "Shopping",
-                                  //     "Medical",
-                                  //     "Rent",
-                                  //     "Movie",
-                                  //     "Salary"
-                                  //   ];
-
-                                  //  FormField<String>(
-                                  //           builder: (FormFieldState<String> state) {
-                                  //             return InputDecorator(
-                                  //               decoration: InputDecoration(
-                                  //                   labelStyle: textStyle,
-                                  //                   errorStyle: TextStyle(color: Colors.redAccent, fontSize: 16.0),
-                                  //                   hintText: 'Please select expense',
-                                  //                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(5.0))),
-                                  //               isEmpty: _currentSelectedValue == '',
-                                  //               child: DropdownButtonHideUnderline(
-                                  //                 child: DropdownButton<String>(
-                                  //                   value: _currentSelectedValue,
-                                  //                   isDense: true,
-                                  //                   onChanged: (String newValue) {
-                                  //                     setState(() {
-                                  //                       _currentSelectedValue = newValue;
-                                  //                       state.didChange(newValue);
-                                  //                     });
-                                  //                   },
-                                  //                   items: _currencies.map((String value) {
-                                  //                     return DropdownMenuItem<String>(
-                                  //                       value: value,
-                                  //                       child: Text(value),
-                                  //                     );
-                                  //                   }).toList(),
-                                  //                 ),
-                                  //               ),
-                                  //             );
-                                  //           },
-                                  //         )
-                                  // dropdown('Day'),
-                                  // DropdownButtonFormField(items: items, onChanged: onChanged)
-                                  // DropdownButton<String>(
-                                  //   // value: dropdownValue,
-                                  //   // icon: const Icon(
-                                  //   //   Icons.keyboard_arrow_down,
-                                  //   //   size: 1,
-                                  //   // ),
-                                  //   // elevation: 16,
-                                  //   // style: const TextStyle(color: Colors.deepPurple),
-                                  //   // underline: Container(
-                                  //   //   height: 2,
-                                  //   //   color: Colors.deepPurpleAccent,
-                                  //   // ),
-                                  //   onChanged: (String? newValue) {
-                                  //     setState(() {
-                                  //       dropdownValue = newValue!;
-                                  //     });
-                                  //   },
-                                  //   items: <String>['1', '2', '3', '4']
-                                  //       .map<DropdownMenuItem<String>>((String value) {
-                                  //     return DropdownMenuItem<String>(
-                                  //       value: value,
-                                  //       child: Text(value),
-                                  //     );
-                                  //   }).toList(),
-                                  // ),
-                                  // dropdown('Day'),
-                                  SizedBox(height: res_height * 0.01),
-
-                                  Text('Edit Category'),
-                                  SizedBox(height: res_height * 0.005),
-                                  Container(
-                                    height: 50,
-                                    width: res_width * 0.9,
-                                    child:
-                                        cats_loader
-                                            ? Center(child: Text("Loading"))
-                                            : FutureBuilder(
-                                              builder: (
-                                                BuildContext context,
-                                                AsyncSnapshot<dynamic> snapshot,
-                                              ) {
-                                                return DropdownButton<String>(
-                                                  value: cat_value,
-                                                  icon: const Icon(
-                                                    Icons.arrow_downward,
-                                                    color: Colors.black,
-                                                  ),
-                                                  elevation: 16,
-                                                  style: const TextStyle(
-                                                    color: darkBlue,
-                                                  ),
-                                                  underline: Container(
-                                                    height: 2,
-                                                    color: darkBlue,
-                                                  ),
-                                                  onChanged: (String? value) {
-                                                    // This is called when the user selects an item.
-                                                    setState(() {
-                                                      cat_value = value;
-                                                      dropdownValue = value!;
-                                                      selected_id =
-                                                          items_id[items
-                                                              .indexOf(
-                                                                dropdownValue,
-                                                              )];
-                                                      sub_id = [];
-                                                      sub_items = [];
-                                                      sub_cat_value = "";
-                                                      selected_sub_id = "";
-                                                      getSubCategory(
-                                                        selected_id,
-                                                      );
-                                                    });
-                                                  },
-                                                  items:
-                                                      items.map<
-                                                        DropdownMenuItem<String>
-                                                      >((String value) {
-                                                        return DropdownMenuItem<
-                                                          String
-                                                        >(
-                                                          value: value,
-                                                          child: Text(value),
-                                                        );
-                                                      }).toList(),
-                                                );
-                                              },
-                                              future: null,
-                                            ),
-                                  ),
-                                  SizedBox(height: res_height * 0.005),
-                                  sub_catLoader
-                                      ? Text("Loading")
-                                      : Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text('Sub Category'),
-                                          SizedBox(height: res_height * 0.01),
-                                          Container(
-                                            height: 50,
-                                            width: res_width * 0.9,
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(15),
-                                              border: Border.all(
-                                                color: kprimaryColor,
-                                              ),
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(
-                                                top: 12.0,
-                                                left: 12.0,
-                                              ),
-                                              child: Text(sub_cat_value),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                  SizedBox(height: res_height * 0.01),
-                                  // sub_catLoader ? SizedBox() :
-                                  // Container(child: Padding(
-                                  //   padding: const EdgeInsets.only(top: 12.0, left: 12),
-                                  //   child: Text("Select Sub Category"),
-                                  // ),),
-                                  // SizedBox(
-                                  //   height: res_height * 0.01,
-                                  // ),
-                                  Container(
-                                    height: 50,
-                                    width: res_width * 0.9,
-                                    child:
-                                        sub_cats_loader
-                                            ? SizedBox(
-                                              height: 25,
-                                              width: 25,
-                                              child: Text(""),
-                                            )
-                                            : FutureBuilder(
-                                              builder: (
-                                                BuildContext context,
-                                                AsyncSnapshot<dynamic> snapshot,
-                                              ) {
-                                                return DropdownButton<String>(
-                                                  value: sub_cat_value,
-                                                  icon: const Icon(
-                                                    Icons.arrow_downward,
-                                                  ),
-                                                  elevation: 16,
-                                                  style: const TextStyle(
-                                                    color: darkBlue,
-                                                  ),
-                                                  underline: Container(
-                                                    height: 2,
-                                                    color: darkBlue,
-                                                  ),
-                                                  onChanged: (String? value) {
-                                                    // This is called when the user selects an item.
-                                                    setState(() {
-                                                      sub_cat_value = value;
-                                                      sub_dropdownvalue =
-                                                          value!;
-                                                      selected_sub_id =
-                                                          sub_items_id[sub_items
-                                                              .indexOf(value)];
-                                                    });
-                                                  },
-                                                  items:
-                                                      sub_items.map<
-                                                        DropdownMenuItem<String>
-                                                      >((String value) {
-                                                        return DropdownMenuItem<
-                                                          String
-                                                        >(
-                                                          value: value,
-                                                          child: Text(value),
-                                                        );
-                                                      }).toList(),
-                                                );
-                                              },
-                                              future: null,
-                                            ),
-                                  ),
-                                  SizedBox(height: res_height * 0.01),
-                                  // dropdown('Select'),
-                                  // Padding(
-                                  //   padding: const EdgeInsets.only(top: 5),
-                                  //   child: Center(
-                                  //     child: Container(
-                                  //       child: DropdownButtonFormField(
-                                  //         hint: Text(ApiRepository
-                                  //             .shared
-                                  //             .getCategoryByIdModelList!
-                                  //             .data![0]
-                                  //             .name
-                                  //             .toString()), // Not necessary for Option 1
-
-                                  //         items: [
-                                  //           {
-                                  //             "value": "Login",
-                                  //             "label": "Login"
-                                  //           },
-                                  //           {
-                                  //             "value": "Create",
-                                  //             "label": "Create"
-                                  //           },
-                                  //           {"value": "Read", "label": "Read"},
-                                  //           {
-                                  //             "value": "Update",
-                                  //             "label": "Update"
-                                  //           },
-                                  //           {
-                                  //             "value": "Delete",
-                                  //             "label": "Delete"
-                                  //           },
-                                  //           {
-                                  //             "value": "Print",
-                                  //             "label": "Print"
-                                  //           },
-                                  //           {
-                                  //             "value": "Email",
-                                  //             "label": "Email"
-                                  //           },
-                                  //           {"value": "Sms", "label": "Sms"},
-                                  //           {
-                                  //             "value": "Upload Image",
-                                  //             "label": "Upload Image"
-                                  //           },
-                                  //           {
-                                  //             "value": "Read All",
-                                  //             "label": "Read All"
-                                  //           }
-                                  //         ].map((category) {
-                                  //           return new DropdownMenuItem(
-                                  //               value: category['value'],
-                                  //               child: Text(
-                                  //                 category['label'].toString(),
-                                  //                 style: TextStyle(
-                                  //                     color: Color(0xffbdbdbd),
-                                  //                     fontFamily:
-                                  //                         'UbuntuRegular'),
-                                  //               ));
-                                  //         }).toList(),
-                                  //         onChanged: (newValue) {
-                                  //           setState(() {
-                                  //             var _selectActionsText;
-                                  //             _selectActionsText.text =
-                                  //                 newValue;
-                                  //           });
-                                  //         },
-                                  //         decoration: new InputDecoration(
-                                  //           border: new OutlineInputBorder(
-                                  //             borderSide: const BorderSide(
-                                  //                 color: kprimaryColor,
-                                  //                 width: 1),
-                                  //             borderRadius:
-                                  //                 const BorderRadius.all(
-                                  //               const Radius.circular(15.0),
-                                  //             ),
-                                  //           ),
-                                  //           enabledBorder:
-                                  //               new OutlineInputBorder(
-                                  //             borderSide: const BorderSide(
-                                  //                 color: kprimaryColor,
-                                  //                 width: 1),
-                                  //             borderRadius:
-                                  //                 const BorderRadius.all(
-                                  //               const Radius.circular(15.0),
-                                  //             ),
-                                  //           ),
-                                  //           filled: true,
-                                  //           hintStyle: new TextStyle(
-                                  //               color: kprimaryColor,
-                                  //               fontFamily: 'UbuntuRegular'),
-                                  //           fillColor: Colors.white70,
-                                  //           focusedBorder: OutlineInputBorder(
-                                  //             borderSide: const BorderSide(
-                                  //                 color: kprimaryColor,
-                                  //                 width: 1),
-                                  //             borderRadius:
-                                  //                 const BorderRadius.all(
-                                  //               const Radius.circular(15.0),
-                                  //             ),
-                                  //           ),
-                                  //         ),
-                                  //       ),
-                                  //     ),
-                                  //   ),
-                                  // ),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        flex: 1,
-                                        child: _myRadioButton(
-                                          title: "Free Pickup",
-                                          value: 0,
-                                          onChanged:
-                                              (newValue) => setState(() {
-                                                _groupValue = newValue;
-                                                // freePU = newValue.toString();
-                                                locationBD = "0";
-                                                freePU = "1";
-                                              }),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 1,
-                                        child: _myRadioButton(
-                                          title: "Location Based Delivery",
-                                          value: 1,
-                                          onChanged:
-                                              (newValue) => setState(() {
-                                                _groupValue = newValue;
-                                                locationBD = "1";
-                                                freePU = "0";
-                                              }),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: res_height * 0.005),
-                                  itemdtl('Product Availibility', 1),
-                                  SizedBox(height: res_height * 0.005),
-                                  // itemdtl('Discount Availibility', 2),
-                                  // SizedBox(
-                                  //   height: res_height * 0.01,
-                                  // ),
-                                  // GestureDetector(
-                                  //   // onTap: () {
-                                  //   //   Get.to(() => GeneratePromoCode());
-                                  //   // },
-                                  //   child: Center(
-                                  //     child: Container(
-                                  //       width: 398,
-                                  //       height: 58,
-                                  //       decoration: BoxDecoration(
-                                  //           color: kprimaryColor,
-                                  //           borderRadius:
-                                  //               BorderRadius.circular(12)),
-                                  //       child: Center(
-                                  //         child: Text(
-                                  //           'Add Promo Code',
-                                  //           style: TextStyle(
-                                  //               fontWeight: FontWeight.bold,
-                                  //               fontSize: 15),
-                                  //         ),
-                                  //       ),
-                                  //     ),
-                                  //   ),
-                                  // ),
-                                  // SizedBox(
-                                  //   height: res_height * 0.02,
-                                  // ),
-                                  // Text('Price'),
-                                  // SizedBox(
-                                  //   height: res_height * 0.005,
-                                  // ),
-                                  // Container(
-                                  //   height: 50,
-                                  //   width: res_width * 0.7,
-                                  //   child: TextField(
-                                  //     decoration: InputDecoration(
-                                  //       hintText: '###############',
-                                  //       border: OutlineInputBorder(
-                                  //         borderRadius:
-                                  //             BorderRadius.circular(15.0),
-                                  //       ),
-                                  //       enabledBorder: const OutlineInputBorder(
-                                  //         borderSide: const BorderSide(
-                                  //             color: kprimaryColor, width: 1),
-                                  //         borderRadius: BorderRadius.all(
-                                  //             Radius.circular(15)),
-                                  //       ),
-                                  //       focusedBorder: const OutlineInputBorder(
-                                  //         borderSide: const BorderSide(
-                                  //             color: kprimaryColor, width: 1),
-                                  //         borderRadius: BorderRadius.all(
-                                  //             Radius.circular(15)),
-                                  //       ),
-                                  //     ),
-                                  //   ),
-                                  // ),
-                                  // SizedBox(
-                                  //   height: res_height * 0.01,
-                                  // ),
-                                  // Row(
-                                  //   children: [
-                                  //     Text(
-                                  //       'Price',
-                                  //       style: TextStyle(
-                                  //         fontWeight: FontWeight.normal,
-                                  //         color: Colors.black,
-                                  //         fontSize: 15,
-                                  //       ),
-                                  //     ),
-                                  //   ],
-                                  // ),
-                                  // SizedBox(
-                                  //   height: res_height * 0.01,
-                                  // ),
-                                  // Container(
-                                  //   height: 50,
-                                  //   width: res_width * 0.9,
-                                  //   child: TextField(
-                                  //     controller: price_1_Controller,
-                                  //     decoration: InputDecoration(
-                                  //       // hintText: 'Enter Amount',
-                                  //       border: OutlineInputBorder(
-                                  //         borderRadius:
-                                  //             BorderRadius.circular(15.0),
-                                  //       ),
-                                  //       enabledBorder: const OutlineInputBorder(
-                                  //         borderSide: const BorderSide(
-                                  //             color: kprimaryColor, width: 1),
-                                  //         borderRadius: BorderRadius.all(
-                                  //             Radius.circular(15)),
-                                  //       ),
-                                  //       focusedBorder: const OutlineInputBorder(
-                                  //         borderSide: const BorderSide(
-                                  //             color: kprimaryColor, width: 1),
-                                  //         borderRadius: BorderRadius.all(
-                                  //             Radius.circular(15)),
-                                  //       ),
-                                  //     ),
-                                  //   ),
-                                  // ),
-                                  // SizedBox(
-                                  //   height: res_height * 0.01,
-                                  // ),
-                                  // Text('Discount'),
-                                  // SizedBox(
-                                  //   height: res_height * 0.005,
-                                  // ),
-                                  Row(
-                                    children: [
-                                      // Container(
-                                      //   height: 50,
-                                      //   width: res_width * 0.4,
-                                      //   child: TextField(
-                                      //     controller: discountController,
-                                      //     decoration: InputDecoration(
-                                      //       // hintText: '%',
-                                      //       border: OutlineInputBorder(
-                                      //         borderRadius:
-                                      //             BorderRadius.circular(15.0),
-                                      //       ),
-                                      //       enabledBorder:
-                                      //           const OutlineInputBorder(
-                                      //         borderSide: const BorderSide(
-                                      //             color: kprimaryColor,
-                                      //             width: 1),
-                                      //         borderRadius: BorderRadius.all(
-                                      //             Radius.circular(15)),
-                                      //       ),
-                                      //       focusedBorder:
-                                      //           const OutlineInputBorder(
-                                      //         borderSide: const BorderSide(
-                                      //             color: kprimaryColor,
-                                      //             width: 1),
-                                      //         borderRadius: BorderRadius.all(
-                                      //             Radius.circular(15)),
-                                      //       ),
-                                      //     ),
-                                      //   ),
-                                      // ),
-                                      // Container(
-                                      //   height: 50,
-                                      //   width: res_width * 0.4,
-                                      //   child: TextField(
-                                      //     decoration: InputDecoration(
-                                      //       enabledBorder: OutlineInputBorder(
-                                      //           borderRadius: BorderRadius.circular(15),
-                                      //           borderSide: BorderSide(
-                                      //               color: kprimaryColor, width: 1)),
-                                      //       filled: true,
-                                      //       fillColor: Colors.white,
-                                      //       // hintText: "Rs 500",
-                                      //       // hintStyle: TextStyle(color: Colors.grey)),
-                                      //     ),
-                                      //   ),
-                                      // ),
-                                      // SizedBox(
-                                      //   width: res_width * 0.05,
-                                      // ),
-                                      // Text(
-                                      //   '%',
-                                      //   style: TextStyle(
-                                      //       fontSize: 25, color: Colors.grey),
-                                      // )
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(height: res_height * 0.02),
-                            // Align(
-                            //     alignment: Alignment.topLeft,
-                            //     child: Text("Related Products")),
-                            // ListView.builder(
-                            //   shrinkWrap: true,
-                            //   physics: NeverScrollableScrollPhysics(),
-                            //   itemCount: ApiRepository
-                            //       .shared.getRelatedProductsList?.data?.length,
-                            //   itemBuilder: (BuildContext context, int index) {
-                            //     var name = ApiRepository.shared
-                            //         .getRelatedProductsList!.data![index].name
-                            //         .toString();
-                            //     var id =ApiRepository.shared
-                            //         .getRelatedProductsList!.data![index].id
-                            //         .toString();
-                            //     relProdArray.add(name);
-                            //     return ListTile(
-                            //       title: Text(name),
-                            //       trailing: Text(id),
-                            // trailing: relProdArray
-                            //           .contains(name)
-                            //       ?
-                            //        InkWell(
-                            //           onTap: () {
-                            //             setState(() {
-                            //              relProdArray
-                            //                   .remove(name);
-                            //             });
-                            //           },
-                            //           child: Icon(Icons.delete_outline))
-                            //       : InkWell(
-                            //           onTap: () {
-                            //             setState(() {
-                            //               relProdArray
-                            //                   .add(name);
-                            //             });
-                            //           },
-                            //           child: Icon(Icons.add))
-                            //     );
-                            //   },
-                            // ),
-                            SizedBox(height: res_height * 0.01),
-                            GestureDetector(
-                              onTap: () {
-                                final bottomcontroller = Get.put(
-                                  BottomController(),
-                                );
-                                bottomcontroller.navBarChange(1);
-                                Get.to(() => MainScreen());
-                              },
-                              child: Center(
-                                child: InkWell(
-                                  onTap: () {
-                                    product_update_button ? null : prodUpdate();
-                                  },
-                                  child: Container(
-                                    width: 380,
-                                    height: 58,
-                                    decoration: BoxDecoration(
-                                      color:
-                                          product_update_button
-                                              ? kprimaryColor.withOpacity(0.5)
-                                              : kprimaryColor,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        product_update_button
-                                            ? "Updating .."
-                                            : 'Update',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: res_height * 0.02),
-                          ],
-                        ),
-                      ),
-                    ),
-                    // GestureDetector(
-                    //   onTap: () {
-                    //     Get.to(() => AddProduct2Screen());
-                    //   },
-                    //   child: Container(
-                    //     width: 398,
-                    //     height: 58,
-                    //     child: Center(
-                    //       child: Text(
-                    //         'Next',
-                    //         style: TextStyle(
-                    //             fontWeight: FontWeight.bold, fontSize: 19),
-                    //       ),
-                    //     ),
-                    //     decoration: BoxDecoration(
-                    //         color: kprimaryColor,
-                    //         borderRadius: BorderRadius.circular(14)),
-                    //   ),
-                    // ),
-                    SizedBox(height: res_height * 0.02),
-                  ],
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(
+                filled:true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
                 ),
               ),
-            ],
-          ),
+            ),
+
+            SizedBox(height:20),
+
+            /// DESCRIPTION
+
+            Text("Description",style: TextStyle(fontWeight: FontWeight.bold)),
+
+            SizedBox(height:8),
+
+            TextField(
+              controller: descriptionController,
+              maxLines:3,
+              decoration: InputDecoration(
+                filled:true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+            ),
+
+            SizedBox(height:20),
+
+            /// RENT PRICE
+
+            Text("Rent Price",style: TextStyle(fontWeight: FontWeight.bold)),
+
+            SizedBox(height:8),
+
+            TextField(
+              controller: rentPriceController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.attach_money),
+                filled:true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+            ),
+
+            SizedBox(height:20),
+
+            /// SECURITY + DELIVERY
+
+            Row(
+              children: [
+
+                Expanded(
+                  child: TextField(
+                    controller: SecurityDepositeController,
+                    decoration: InputDecoration(
+                      labelText:"Security Deposit",
+                      prefixIcon: Icon(Icons.attach_money),
+                      filled:true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                  ),
+                ),
+
+                SizedBox(width:10),
+
+                Expanded(
+                  child: TextField(
+                    controller: deliverychargesController,
+                    decoration: InputDecoration(
+                      labelText:"Delivery Charges",
+                      prefixIcon: Icon(Icons.attach_money),
+                      filled:true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                  ),
+                )
+              ],
+            ),
+
+            SizedBox(height:20),
+
+            /// INSTANT RENT SWITCH
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Instant Rent",
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text(
+                      "Allow customers to rent instantly",
+                      style: TextStyle(fontSize:12,color: Colors.grey),
+                    )
+                  ],
+                ),
+
+                CupertinoSwitch(
+                  value: insRentSwitchNot,
+                  onChanged:(value){
+                    setState(() {
+                      insRentSwitchNot = value;
+                    });
+                  },
+                )
+              ],
+            ),
+
+            SizedBox(height:20),
+
+            /// CATEGORY
+
+            Text("Category",style: TextStyle(fontWeight: FontWeight.bold)),
+
+            SizedBox(height:8),
+
+            Container(
+              padding: EdgeInsets.symmetric(horizontal:12),
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.grey.shade300)
+              ),
+              child: DropdownButton<String>(
+                value: cat_value,
+                isExpanded:true,
+                underline: SizedBox(),
+                items: items.map((String value){
+                  return DropdownMenuItem(
+                    value:value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                onChanged:(value){
+                  setState(() {
+                    cat_value = value;
+                  });
+                },
+              ),
+            ),
+
+            SizedBox(height:20),
+
+            /// SUB CATEGORY
+
+            Text("Sub Category",style: TextStyle(fontWeight: FontWeight.bold)),
+
+            SizedBox(height:8),
+
+            Container(
+              padding: EdgeInsets.symmetric(horizontal:12),
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.grey.shade300)
+              ),
+              child: DropdownButton<String>(
+                value: sub_cat_value,
+                isExpanded:true,
+                underline: SizedBox(),
+                items: sub_items.map((String value){
+                  return DropdownMenuItem(
+                    value:value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                onChanged:(value){
+                  setState(() {
+                    sub_cat_value = value;
+                  });
+                },
+              ),
+            ),
+
+            SizedBox(height:30),
+
+            /// UPDATE BUTTON
+
+            SizedBox(
+              width: double.infinity,
+              height:55,
+              child: ElevatedButton(
+
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kprimaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+
+                onPressed:(){
+                  product_update_button ? null : prodUpdate();
+                },
+
+                child: Text(
+                  product_update_button ? "Updating..." : "List Product",
+                  style: TextStyle(
+                    fontSize:16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+
+            SizedBox(height:40)
+          ],
         ),
       ),
     );
   }
+
+  // @override
+  // Widget build(BuildContext context) {
+  //   double res_width = MediaQuery.of(context).size.width;
+  //   double res_height = MediaQuery.of(context).size.height;
+  //   return Scaffold(
+  //     appBar: AppBar(
+  //       backgroundColor: Colors.transparent,
+  //       elevation: 0,
+  //       centerTitle: true,
+  //       title: Text(
+  //         'Edit Product',
+  //         style: TextStyle(
+  //           fontWeight: FontWeight.bold,
+  //           color: Colors.black,
+  //           fontSize: 19,
+  //         ),
+  //       ),
+  //       leading: InkWell(
+  //         onTap: () {
+  //           Get.back();
+  //           // Get.to(() => ProductListScreen(side: false));
+  //         },
+  //         borderRadius: BorderRadius.circular(50),
+  //         child: Icon(Icons.arrow_back, color: Colors.black),
+  //       ),
+  //     ),
+  //     body: Container(
+  //       width: double.infinity,
+  //       child: SingleChildScrollView(
+  //         child: Column(
+  //           children: [
+  //             Container(
+  //               width: res_width * 0.9,
+  //               child: Column(
+  //                 children: [
+  //                   SizedBox(height: res_height * 0.01),
+  //                   Row(
+  //                     children: [
+  //                       Text(
+  //                         'Product Name',
+  //                         style: TextStyle(
+  //                           fontSize: 17,
+  //                           fontWeight: FontWeight.normal,
+  //                           color: Colors.black,
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                   SizedBox(height: res_height * 0.01),
+  //                   Container(
+  //                     child: Text(
+  //                       'This information helps you and your customers identify the products on orders, documents and in the online store',
+  //                       style: TextStyle(fontSize: 11, color: Colors.black),
+  //                     ),
+  //                   ),
+  //                   SizedBox(height: res_height * 0.01),
+  //                   Container(
+  //                     height: 50,
+  //                     width: res_width * 0.9,
+  //                     child: TextField(
+  //                       controller: nameController,
+  //                       decoration: InputDecoration(
+  //                         // hintText: widget.name,
+  //                         border: OutlineInputBorder(
+  //                           borderRadius: BorderRadius.circular(15.0),
+  //                         ),
+  //                         enabledBorder: const OutlineInputBorder(
+  //                           borderSide: const BorderSide(
+  //                             color: kprimaryColor,
+  //                             width: 1,
+  //                           ),
+  //                           borderRadius: BorderRadius.all(Radius.circular(15)),
+  //                         ),
+  //                         focusedBorder: const OutlineInputBorder(
+  //                           borderSide: const BorderSide(
+  //                             color: kprimaryColor,
+  //                             width: 1,
+  //                           ),
+  //                           borderRadius: BorderRadius.all(Radius.circular(15)),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ),
+  //                   SizedBox(height: res_height * 0.02),
+  //                   Row(
+  //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                     children: [
+  //                       Text(
+  //                         // 'Add Photo or Video',
+  //                         "Update Photo",
+  //                         style: TextStyle(
+  //                           fontWeight: FontWeight.normal,
+  //                           color: Colors.black,
+  //                           fontSize: 13,
+  //                         ),
+  //                       ),
+  //                       InkWell(
+  //                         onTap: () {
+  //                           selectImages();
+  //                         },
+  //                         child: Icon(Icons.image, color: Colors.black),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                   SizedBox(height: res_height * 0.02),
+  //
+  //                   SizedBox(
+  //                     height: 150,
+  //                     child:
+  //                         imgLoader
+  //                             ? Center(child: Text("Updating Images"))
+  //                             : ApiRepository
+  //                                     .shared
+  //                                     .getProductsByIdList!
+  //                                     .data![1]
+  //                                     .images!
+  //                                     .length >
+  //                                 0
+  //                             // imageList.length > 0
+  //                             ? ListView.separated(
+  //                               scrollDirection: Axis.horizontal,
+  //                               shrinkWrap: true,
+  //                               separatorBuilder:
+  //                                   (context, index) => SizedBox(width: 10),
+  //                               itemCount:
+  //                                   ApiRepository
+  //                                       .shared
+  //                                       .getProductsByIdList!
+  //                                       .data![1]
+  //                                       .images!
+  //                                       .length,
+  //                               // imageList.length,
+  //                               itemBuilder: (context, int index) {
+  //                                 // var img_id =
+  //                                 // var img = imageList[index];
+  //                                 var img =
+  //                                     ApiRepository
+  //                                         .shared
+  //                                         .getProductsByIdList!
+  //                                         .data![1]
+  //                                         .images![index]
+  //                                         .path;
+  //                                 var img_id =
+  //                                     ApiRepository
+  //                                         .shared
+  //                                         .getProductsByIdList!
+  //                                         .data![1]
+  //                                         .images![index]
+  //                                         .id;
+  //                                 return Stack(
+  //                                   children: [
+  //                                     Container(
+  //                                       child: Image.network(
+  //                                         AppUrl.baseUrlM + img.toString(),
+  //                                       ),
+  //                                     ),
+  //                                     Positioned(
+  //                                       bottom: 2,
+  //                                       left: 4,
+  //                                       child: InkWell(
+  //                                         onTap: () {
+  //                                           deleteProductImage(img_id);
+  //                                         },
+  //                                         child: Icon(
+  //                                           Icons.delete,
+  //                                           color: Colors.grey,
+  //                                         ),
+  //                                       ),
+  //                                     ),
+  //                                   ],
+  //                                 );
+  //                               },
+  //                             )
+  //                             : Text("loading"),
+  //                   ),
+  //                   SizedBox(height: res_height * 0.01),
+  //                   imageFileList.length > 0
+  //                       ? SizedBox(
+  //                         height: 150,
+  //                         child: ListView.separated(
+  //                           scrollDirection: Axis.horizontal,
+  //                           // physics: NeverScrollableScrollPhysics(),
+  //                           shrinkWrap: true,
+  //                           separatorBuilder:
+  //                               (context, index) => SizedBox(width: 10),
+  //                           itemCount: imageFileList.length,
+  //                           itemBuilder: (context, int index) {
+  //                             return Stack(
+  //                               children: [
+  //                                 Container(
+  //                                   child: Image.file(
+  //                                     File(imageFileList[index].path),
+  //                                   ),
+  //                                 ),
+  //                                 Positioned(
+  //                                   bottom: 2,
+  //                                   left: 4,
+  //                                   child: InkWell(
+  //                                     onTap: () {
+  //                                       setState(() {
+  //                                         imageFileList.removeAt(index);
+  //                                         imagesPath.removeAt(index);
+  //                                       });
+  //                                     },
+  //                                     child: Icon(
+  //                                       Icons.delete,
+  //                                       color: Colors.grey,
+  //                                     ),
+  //                                   ),
+  //                                 ),
+  //                               ],
+  //                             );
+  //                           },
+  //                         ),
+  //                       )
+  //                       : SizedBox(),
+  //                   SizedBox(height: res_height * 0.02),
+  //                   Center(
+  //                     child: InkWell(
+  //                       onTap: () async {
+  //                         img_button ? null : updateImage();
+  //                       },
+  //                       child: Container(
+  //                         width: 250,
+  //                         height: 50,
+  //                         decoration: BoxDecoration(
+  //                           color:
+  //                               img_button
+  //                                   ? kprimaryColor.withAlpha(128)
+  //                                   : kprimaryColor,
+  //                           borderRadius: BorderRadius.circular(12),
+  //                         ),
+  //                         child: Center(
+  //                           child: Text(
+  //                             img_button ? "Updating .." : "Update Image",
+  //                             style: TextStyle(
+  //                               fontWeight: FontWeight.bold,
+  //                               fontSize: 15,
+  //                             ),
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ),
+  //                   SizedBox(height: res_height * 0.01),
+  //
+  //                   // Row(
+  //                   //   mainAxisAlignment: MainAxisAlignment.start,
+  //                   //   children: [
+  //                   //     //     // Container(
+  //                   //     //     //   child: Row(
+  //                   //     //     //     children: [
+  //                   //     //     //       tag(),
+  //                   //     //     //       SizedBox(
+  //                   //     //     //         width: res_width * 0.01,
+  //                   //     //     //       ),
+  //                   //     //     //       tag(),
+  //                   //     //     //       SizedBox(
+  //                   //     //     //         width: res_width * 0.01,
+  //                   //     //     //       ),
+  //                   //     //     //       tag(),
+  //                   //     //     //     ],
+  //                   //     //     //   ),
+  //                   //     //     // ),
+  //                   //     Row(
+  //                   //       children: [
+  //                   //         Text(
+  //                   //           'Discount',
+  //                   //           style: TextStyle(
+  //                   //             fontWeight: FontWeight.bold,
+  //                   //             fontSize: 17,
+  //                   //           ),
+  //                   //         ),
+  //                   //         Transform.scale(
+  //                   //           scale: 0.6,
+  //                   //           child: CupertinoSwitch(
+  //                   //             activeColor: Color.fromARGB(255, 210, 210, 210),
+  //                   //             trackColor: Color.fromARGB(255, 235, 235, 235),
+  //                   //             thumbColor: switchnot ? Color.fromARGB(255, 173, 173, 173) : Color(0xff00ff01),
+  //                   //             value: switchnot,
+  //                   //             onChanged: (value) {
+  //                   //               setState(() {
+  //                   //                 negotiationVisibility = !negotiationVisibility;
+  //                   //                 switchnot = value;
+  //                   //               });
+  //                   //             },
+  //                   //           ),
+  //                   //         ),
+  //                   //       ],
+  //                   //     )
+  //                   //   ],
+  //                   // ),
+  //                   // SizedBox(
+  //                   //   height: res_height * 0.01,
+  //                   // ),
+  //                   Row(
+  //                     children: [
+  //                       Text(
+  //                         'Specs',
+  //                         style: TextStyle(
+  //                           fontWeight: FontWeight.normal,
+  //                           color: Colors.black,
+  //                           fontSize: 15,
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                   SizedBox(height: res_height * 0.01),
+  //                   Container(
+  //                     height: 50,
+  //                     width: res_width * 0.9,
+  //                     child: TextField(
+  //                       controller: specsController,
+  //                       decoration: InputDecoration(
+  //                         // hintText:
+  //                         //     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. ",
+  //                         border: OutlineInputBorder(
+  //                           borderRadius: BorderRadius.circular(15.0),
+  //                         ),
+  //                         enabledBorder: const OutlineInputBorder(
+  //                           borderSide: const BorderSide(
+  //                             color: kprimaryColor,
+  //                             width: 1,
+  //                           ),
+  //                           borderRadius: BorderRadius.all(Radius.circular(15)),
+  //                         ),
+  //                         focusedBorder: const OutlineInputBorder(
+  //                           borderSide: const BorderSide(
+  //                             color: kprimaryColor,
+  //                             width: 1,
+  //                           ),
+  //                           borderRadius: BorderRadius.all(Radius.circular(15)),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ),
+  //
+  //                   SizedBox(height: res_height * 0.01),
+  //                   Row(
+  //                     children: [
+  //                       Text(
+  //                         'Description',
+  //                         style: TextStyle(
+  //                           fontWeight: FontWeight.normal,
+  //                           color: Colors.black,
+  //                           fontSize: 15,
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                   SizedBox(height: res_height * 0.01),
+  //                   Container(
+  //                     height: 50,
+  //                     width: res_width * 0.9,
+  //                     child: TextField(
+  //                       controller: descriptionController,
+  //                       decoration: InputDecoration(
+  //                         // hintText:
+  //                         //     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. ",
+  //                         border: OutlineInputBorder(
+  //                           borderRadius: BorderRadius.circular(15.0),
+  //                         ),
+  //                         enabledBorder: const OutlineInputBorder(
+  //                           borderSide: const BorderSide(
+  //                             color: kprimaryColor,
+  //                             width: 1,
+  //                           ),
+  //                           borderRadius: BorderRadius.all(Radius.circular(15)),
+  //                         ),
+  //                         focusedBorder: const OutlineInputBorder(
+  //                           borderSide: const BorderSide(
+  //                             color: kprimaryColor,
+  //                             width: 1,
+  //                           ),
+  //                           borderRadius: BorderRadius.all(Radius.circular(15)),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ),
+  //
+  //                   SizedBox(height: res_height * 0.01),
+  //                   Row(
+  //                     children: [
+  //                       Text(
+  //                         'Rent Price',
+  //                         style: TextStyle(
+  //                           fontWeight: FontWeight.normal,
+  //                           color: Colors.black,
+  //                           fontSize: 15,
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                   SizedBox(height: res_height * 0.01),
+  //                   Container(
+  //                     height: 50,
+  //                     width: res_width * 0.9,
+  //                     child: TextField(
+  //                       controller: rentPriceController,
+  //                       decoration: InputDecoration(
+  //                         // hintText: 'Add Price',
+  //                         border: OutlineInputBorder(
+  //                           borderRadius: BorderRadius.circular(15.0),
+  //                         ),
+  //                         enabledBorder: const OutlineInputBorder(
+  //                           borderSide: const BorderSide(
+  //                             color: kprimaryColor,
+  //                             width: 1,
+  //                           ),
+  //                           borderRadius: BorderRadius.all(Radius.circular(15)),
+  //                         ),
+  //                         focusedBorder: const OutlineInputBorder(
+  //                           borderSide: const BorderSide(
+  //                             color: kprimaryColor,
+  //                             width: 1,
+  //                           ),
+  //                           borderRadius: BorderRadius.all(Radius.circular(15)),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ),
+  //                   SizedBox(height: res_height * 0.01),
+  //                   Row(
+  //                     children: [
+  //                       Text(
+  //                         'Security Deposit',
+  //                         style: TextStyle(
+  //                           fontWeight: FontWeight.normal,
+  //                           color: Colors.black,
+  //                           fontSize: 15,
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                   SizedBox(height: res_height * 0.01),
+  //                   Container(
+  //                     height: 50,
+  //                     width: res_width * 0.9,
+  //                     child: TextField(
+  //                       keyboardType: TextInputType.number,
+  //                       controller: SecurityDepositeController,
+  //                       decoration: InputDecoration(
+  //                         hintText: 'Add Security Deposit',
+  //                         border: OutlineInputBorder(
+  //                           borderRadius: BorderRadius.circular(15.0),
+  //                         ),
+  //                         enabledBorder: const OutlineInputBorder(
+  //                           borderSide: const BorderSide(
+  //                             color: kprimaryColor,
+  //                             width: 1,
+  //                           ),
+  //                           borderRadius: BorderRadius.all(Radius.circular(15)),
+  //                         ),
+  //                         focusedBorder: const OutlineInputBorder(
+  //                           borderSide: const BorderSide(
+  //                             color: kprimaryColor,
+  //                             width: 1,
+  //                           ),
+  //                           borderRadius: BorderRadius.all(Radius.circular(15)),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ),
+  //
+  //                   // SizedBox(
+  //                   //   height: res_height * 0.01,
+  //                   // ),
+  //                   SizedBox(height: res_height * 0.01),
+  //                   Row(
+  //                     children: [
+  //                       Text(
+  //                         'Delivery Charges',
+  //                         style: TextStyle(
+  //                           fontWeight: FontWeight.normal,
+  //                           color: Colors.black,
+  //                           fontSize: 15,
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                   SizedBox(height: res_height * 0.01),
+  //                   Container(
+  //                     height: 50,
+  //                     width: res_width * 0.9,
+  //                     child: TextField(
+  //                       controller: deliverychargesController,
+  //                       decoration: InputDecoration(
+  //                         // hintText: 'Add Price',
+  //                         border: OutlineInputBorder(
+  //                           borderRadius: BorderRadius.circular(15.0),
+  //                         ),
+  //                         enabledBorder: const OutlineInputBorder(
+  //                           borderSide: const BorderSide(
+  //                             color: kprimaryColor,
+  //                             width: 1,
+  //                           ),
+  //                           borderRadius: BorderRadius.all(Radius.circular(15)),
+  //                         ),
+  //                         focusedBorder: const OutlineInputBorder(
+  //                           borderSide: const BorderSide(
+  //                             color: kprimaryColor,
+  //                             width: 1,
+  //                           ),
+  //                           borderRadius: BorderRadius.all(Radius.circular(15)),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ),
+  //
+  //                   // SizedBox(
+  //                   //   height: res_height * 0.01,
+  //                   // ),
+  //                   // Visibility(
+  //                   //   visible: negotiationVisibility,
+  //                   //   child: Row(
+  //                   //     children: [
+  //                   //       Text(
+  //                   //         'Discount',
+  //                   //         style: TextStyle(
+  //                   //           fontWeight: FontWeight.normal,
+  //                   //           color: Colors.black,
+  //                   //           fontSize: 15,
+  //                   //         ),
+  //                   //       ),
+  //                   //     ],
+  //                   //   ),
+  //                   // ),
+  //                   // SizedBox(
+  //                   //   height: res_height * 0.01,
+  //                   // ),
+  //                   // Visibility(
+  //                   //   visible: negotiationVisibility,
+  //                   //   child: Container(
+  //                   //     height: 50,
+  //                   //     width: res_width * 0.9,
+  //                   //     child: TextField(
+  //                   //       controller: negotiationController,
+  //                   //       decoration: InputDecoration(
+  //                   //         // hintText: 'Enter Amount',
+  //                   //         border: OutlineInputBorder(
+  //                   //           borderRadius: BorderRadius.circular(15.0),
+  //                   //         ),
+  //                   //         enabledBorder: const OutlineInputBorder(
+  //                   //           borderSide: const BorderSide(color: kprimaryColor, width: 1),
+  //                   //           borderRadius: BorderRadius.all(Radius.circular(15)),
+  //                   //         ),
+  //                   //         focusedBorder: const OutlineInputBorder(
+  //                   //           borderSide: const BorderSide(color: kprimaryColor, width: 1),
+  //                   //           borderRadius: BorderRadius.all(Radius.circular(15)),
+  //                   //         ),
+  //                   //       ),
+  //                   //     ),
+  //                   //   ),
+  //                   // ),
+  //                   Row(
+  //                     mainAxisAlignment: MainAxisAlignment.start,
+  //                     children: [
+  //                       Text(
+  //                         'Instant Rent',
+  //                         style: TextStyle(
+  //                           fontWeight: FontWeight.bold,
+  //                           fontSize: 17,
+  //                         ),
+  //                       ),
+  //                       Transform.scale(
+  //                         scale: 0.6,
+  //                         child: CupertinoSwitch(
+  //                           activeTrackColor: Color.fromARGB(
+  //                             255,
+  //                             210,
+  //                             210,
+  //                             210,
+  //                           ),
+  //                           inactiveTrackColor: Color.fromARGB(
+  //                             255,
+  //                             235,
+  //                             235,
+  //                             235,
+  //                           ),
+  //                           thumbColor:
+  //                               insRentSwitchNot
+  //                                   ? Color.fromARGB(255, 173, 173, 173)
+  //                                   : Color(0xff00ff01),
+  //                           value: insRentSwitchNot,
+  //                           onChanged: (value) {
+  //                             setState(() {
+  //                               insRentSwitchNot = value;
+  //                             });
+  //                           },
+  //                         ),
+  //                       ),
+  //                       // Row(
+  //                       //   children: [
+  //                       //     Text(
+  //                       //       'Messaging',
+  //                       //       style: TextStyle(
+  //                       //         fontWeight: FontWeight.bold,
+  //                       //         fontSize: 17,
+  //                       //       ),
+  //                       //     ),
+  //                       //     Transform.scale(
+  //                       //       scale: 0.6,
+  //                       //       child: CupertinoSwitch(
+  //                       //         activeColor: Color.fromARGB(255, 210, 210, 210),
+  //                       //         trackColor: Color.fromARGB(255, 235, 235, 235),
+  //                       //         thumbColor: messageSwitchNot
+  //                       //             ? Color(0xff00ff01)
+  //                       //             : Color.fromARGB(255, 173, 173, 173),
+  //                       //         // ? Color.fromARGB(255, 173, 173, 173)
+  //                       //         // : Color(0xff00ff01),
+  //                       //         value: messageSwitchNot,
+  //                       //         onChanged: (value) {
+  //                       //           setState(() {
+  //                       //             messageSwitchNot = value;
+  //                       //                 "messageSwitchNot ${messageSwitchNot}");
+  //                       //           });
+  //                       //         },
+  //                       //       ),
+  //                       //     ),
+  //                       //   ],
+  //                       // )
+  //                     ],
+  //                   ),
+  //                   SizedBox(height: res_height * 0.01),
+  //                   Container(
+  //                     width: double.infinity,
+  //                     child: SingleChildScrollView(
+  //                       child: Column(
+  //                         children: [
+  //                           Container(
+  //                             width: res_width * 0.9,
+  //                             child: Column(
+  //                               crossAxisAlignment: CrossAxisAlignment.start,
+  //                               children: [
+  //                                 // Text('Price'),
+  //                                 // SizedBox(
+  //                                 //   height: res_height * 0.005,
+  //                                 // ),
+  //                                 // Container(
+  //                                 //   height: 50,
+  //                                 //   width: res_width * 0.9,
+  //                                 //   child: TextField(
+  //                                 //     controller: price_2_Controller,
+  //                                 //     decoration: InputDecoration(
+  //                                 //       // hintText: '500 \$',
+  //                                 //       border: OutlineInputBorder(
+  //                                 //         borderRadius:
+  //                                 //             BorderRadius.circular(15.0),
+  //                                 //       ),
+  //                                 //       enabledBorder: const OutlineInputBorder(
+  //                                 //         borderSide: const BorderSide(
+  //                                 //             color: kprimaryColor, width: 1),
+  //                                 //         borderRadius: BorderRadius.all(
+  //                                 //             Radius.circular(15)),
+  //                                 //       ),
+  //                                 //       focusedBorder: const OutlineInputBorder(
+  //                                 //         borderSide: const BorderSide(
+  //                                 //             color: kprimaryColor, width: 1),
+  //                                 //         borderRadius: BorderRadius.all(
+  //                                 //             Radius.circular(15)),
+  //                                 //       ),
+  //                                 //     ),
+  //                                 //   ),
+  //                                 // ),
+  //                                 // Container(
+  //                                 //   height: 50,
+  //                                 //   width: res_width * 0.9,
+  //                                 //   child: TextField(
+  //                                 //     decoration: InputDecoration(
+  //                                 //         enabledBorder: OutlineInputBorder(
+  //                                 //             borderRadius: BorderRadius.circular(15),
+  //                                 //             borderSide: BorderSide(
+  //                                 //                 color: kprimaryColor, width: 1)),
+  //                                 //         filled: true,
+  //                                 //         fillColor: Colors.white,
+  //                                 //         hintText: "Rs 500",
+  //                                 //         hintStyle: TextStyle(color: Colors.grey)),
+  //                                 //   ),
+  //                                 // ),
+  //                                 // SizedBox(
+  //                                 //   height: res_height * 0.01,
+  //                                 // ),
+  //                                 // Text('Per'),
+  //                                 // SizedBox(
+  //                                 //   height: res_height * 0.005,
+  //                                 // ),
+  //                                 // Container(
+  //                                 //   height: 50,
+  //                                 //   width: res_width * 0.9,
+  //                                 //   child: TextField(
+  //                                 //     controller: perController,
+  //                                 //     decoration: InputDecoration(
+  //                                 //       // hintText: 'Per',
+  //                                 //       border: OutlineInputBorder(
+  //                                 //         borderRadius:
+  //                                 //             BorderRadius.circular(15.0),
+  //                                 //       ),
+  //                                 //       enabledBorder: const OutlineInputBorder(
+  //                                 //         borderSide: const BorderSide(
+  //                                 //             color: kprimaryColor, width: 1),
+  //                                 //         borderRadius: BorderRadius.all(
+  //                                 //             Radius.circular(15)),
+  //                                 //       ),
+  //                                 //       focusedBorder: const OutlineInputBorder(
+  //                                 //         borderSide: const BorderSide(
+  //                                 //             color: kprimaryColor, width: 1),
+  //                                 //         borderRadius: BorderRadius.all(
+  //                                 //             Radius.circular(15)),
+  //                                 //       ),
+  //                                 //     ),
+  //                                 //   ),
+  //                                 // ),
+  //                                 // SizedBox(
+  //                                 //   height: res_height * 0.01,
+  //                                 // ),
+  //                                 catLoader
+  //                                     ? SizedBox()
+  //                                     : Column(
+  //                                       crossAxisAlignment:
+  //                                           CrossAxisAlignment.start,
+  //                                       children: [
+  //                                         Text('Category'),
+  //                                         SizedBox(height: res_height * 0.01),
+  //                                         Container(
+  //                                           height: 50,
+  //                                           width: res_width * 0.9,
+  //                                           decoration: BoxDecoration(
+  //                                             borderRadius:
+  //                                                 BorderRadius.circular(15),
+  //                                             border: Border.all(
+  //                                               color: kprimaryColor,
+  //                                             ),
+  //                                           ),
+  //                                           child: Padding(
+  //                                             padding: const EdgeInsets.only(
+  //                                               top: 12.0,
+  //                                               left: 12.0,
+  //                                             ),
+  //                                             child: Text(cat_value),
+  //                                           ),
+  //                                         ),
+  //                                       ],
+  //                                     ),
+  //                                 SizedBox(height: res_height * 0.01),
+  //                                 // Padding(
+  //                                 //   padding: const EdgeInsets.only(top: 5),
+  //                                 //   child: Center(
+  //                                 //     child: Container(
+  //                                 //       child: DropdownButtonFormField(
+  //                                 //         hint: Text(
+  //                                 //             'Select option'), // Not necessary for Option 1
+  //
+  //                                 //         items: [
+  //                                 //           {
+  //                                 //             "value": "Login",
+  //                                 //             "label": "Login"
+  //                                 //           },
+  //                                 //           {
+  //                                 //             "value": "Create",
+  //                                 //             "label": "Create"
+  //                                 //           },
+  //                                 //           {"value": "Read", "label": "Read"},
+  //                                 //           {
+  //                                 //             "value": "Update",
+  //                                 //             "label": "Update"
+  //                                 //           },
+  //                                 //           {
+  //                                 //             "value": "Delete",
+  //                                 //             "label": "Delete"
+  //                                 //           },
+  //                                 //           {
+  //                                 //             "value": "Print",
+  //                                 //             "label": "Print"
+  //                                 //           },
+  //                                 //           {
+  //                                 //             "value": "Email",
+  //                                 //             "label": "Email"
+  //                                 //           },
+  //                                 //           {"value": "Sms", "label": "Sms"},
+  //                                 //           {
+  //                                 //             "value": "Upload Image",
+  //                                 //             "label": "Upload Image"
+  //                                 //           },
+  //                                 //           {
+  //                                 //             "value": "Read All",
+  //                                 //             "label": "Read All"
+  //                                 //           }
+  //                                 //         ].map((category) {
+  //                                 //           return new DropdownMenuItem(
+  //                                 //               value: category['value'],
+  //                                 //               child: Text(
+  //                                 //                 category['label'].toString(),
+  //                                 //                 style: TextStyle(
+  //                                 //                     color: Color(0xffbdbdbd),
+  //                                 //                     fontFamily:
+  //                                 //                         'UbuntuRegular'),
+  //                                 //               ));
+  //                                 //         }).toList(),
+  //                                 //         onChanged: (newValue) {
+  //                                 //           setState(() {
+  //                                 //             var _selectActionsText;
+  //                                 //             _selectActionsText.text =
+  //                                 //                 newValue;
+  //                                 //           });
+  //                                 //         },
+  //                                 //         decoration: new InputDecoration(
+  //                                 //           border: new OutlineInputBorder(
+  //                                 //             borderSide: const BorderSide(
+  //                                 //                 color: kprimaryColor,
+  //                                 //                 width: 1),
+  //                                 //             borderRadius:
+  //                                 //                 const BorderRadius.all(
+  //                                 //               const Radius.circular(15.0),
+  //                                 //             ),
+  //                                 //           ),
+  //                                 //           enabledBorder:
+  //                                 //               new OutlineInputBorder(
+  //                                 //             borderSide: const BorderSide(
+  //                                 //                 color: kprimaryColor,
+  //                                 //                 width: 1),
+  //                                 //             borderRadius:
+  //                                 //                 const BorderRadius.all(
+  //                                 //               const Radius.circular(15.0),
+  //                                 //             ),
+  //                                 //           ),
+  //                                 //           filled: true,
+  //                                 //           hintStyle: new TextStyle(
+  //                                 //               color: Color(0xffbdbdbd),
+  //                                 //               fontFamily: 'UbuntuRegular'),
+  //                                 //           fillColor: Colors.white70,
+  //                                 //           focusedBorder: OutlineInputBorder(
+  //                                 //             borderSide: const BorderSide(
+  //                                 //                 color: kprimaryColor,
+  //                                 //                 width: 1),
+  //                                 //             borderRadius:
+  //                                 //                 const BorderRadius.all(
+  //                                 //               const Radius.circular(15.0),
+  //                                 //             ),
+  //                                 //           ),
+  //                                 //         ),
+  //                                 //       ),
+  //                                 //     ),
+  //                                 //   ),
+  //                                 // ),
+  //                                 //                       var currencies = [
+  //                                 //     "Food",
+  //                                 //     "Transport",
+  //                                 //     "Personal",
+  //                                 //     "Shopping",
+  //                                 //     "Medical",
+  //                                 //     "Rent",
+  //                                 //     "Movie",
+  //                                 //     "Salary"
+  //                                 //   ];
+  //
+  //                                 //  FormField<String>(
+  //                                 //           builder: (FormFieldState<String> state) {
+  //                                 //             return InputDecorator(
+  //                                 //               decoration: InputDecoration(
+  //                                 //                   labelStyle: textStyle,
+  //                                 //                   errorStyle: TextStyle(color: Colors.redAccent, fontSize: 16.0),
+  //                                 //                   hintText: 'Please select expense',
+  //                                 //                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(5.0))),
+  //                                 //               isEmpty: _currentSelectedValue == '',
+  //                                 //               child: DropdownButtonHideUnderline(
+  //                                 //                 child: DropdownButton<String>(
+  //                                 //                   value: _currentSelectedValue,
+  //                                 //                   isDense: true,
+  //                                 //                   onChanged: (String newValue) {
+  //                                 //                     setState(() {
+  //                                 //                       _currentSelectedValue = newValue;
+  //                                 //                       state.didChange(newValue);
+  //                                 //                     });
+  //                                 //                   },
+  //                                 //                   items: _currencies.map((String value) {
+  //                                 //                     return DropdownMenuItem<String>(
+  //                                 //                       value: value,
+  //                                 //                       child: Text(value),
+  //                                 //                     );
+  //                                 //                   }).toList(),
+  //                                 //                 ),
+  //                                 //               ),
+  //                                 //             );
+  //                                 //           },
+  //                                 //         )
+  //                                 // dropdown('Day'),
+  //                                 // DropdownButtonFormField(items: items, onChanged: onChanged)
+  //                                 // DropdownButton<String>(
+  //                                 //   // value: dropdownValue,
+  //                                 //   // icon: const Icon(
+  //                                 //   //   Icons.keyboard_arrow_down,
+  //                                 //   //   size: 1,
+  //                                 //   // ),
+  //                                 //   // elevation: 16,
+  //                                 //   // style: const TextStyle(color: Colors.deepPurple),
+  //                                 //   // underline: Container(
+  //                                 //   //   height: 2,
+  //                                 //   //   color: Colors.deepPurpleAccent,
+  //                                 //   // ),
+  //                                 //   onChanged: (String? newValue) {
+  //                                 //     setState(() {
+  //                                 //       dropdownValue = newValue!;
+  //                                 //     });
+  //                                 //   },
+  //                                 //   items: <String>['1', '2', '3', '4']
+  //                                 //       .map<DropdownMenuItem<String>>((String value) {
+  //                                 //     return DropdownMenuItem<String>(
+  //                                 //       value: value,
+  //                                 //       child: Text(value),
+  //                                 //     );
+  //                                 //   }).toList(),
+  //                                 // ),
+  //                                 // dropdown('Day'),
+  //                                 SizedBox(height: res_height * 0.01),
+  //
+  //                                 Text('Edit Category'),
+  //                                 SizedBox(height: res_height * 0.005),
+  //                                 Container(
+  //                                   height: 50,
+  //                                   width: res_width * 0.9,
+  //                                   child:
+  //                                       cats_loader
+  //                                           ? Center(child: Text("Loading"))
+  //                                           : FutureBuilder(
+  //                                             builder: (
+  //                                               BuildContext context,
+  //                                               AsyncSnapshot<dynamic> snapshot,
+  //                                             ) {
+  //                                               return DropdownButton<String>(
+  //                                                 value: cat_value,
+  //                                                 icon: const Icon(
+  //                                                   Icons.arrow_downward,
+  //                                                   color: Colors.black,
+  //                                                 ),
+  //                                                 elevation: 16,
+  //                                                 style: const TextStyle(
+  //                                                   color: darkBlue,
+  //                                                 ),
+  //                                                 underline: Container(
+  //                                                   height: 2,
+  //                                                   color: darkBlue,
+  //                                                 ),
+  //                                                 onChanged: (String? value) {
+  //                                                   // This is called when the user selects an item.
+  //                                                   setState(() {
+  //                                                     cat_value = value;
+  //                                                     dropdownValue = value!;
+  //                                                     selected_id =
+  //                                                         items_id[items
+  //                                                             .indexOf(
+  //                                                               dropdownValue,
+  //                                                             )];
+  //                                                     sub_id = [];
+  //                                                     sub_items = [];
+  //                                                     sub_cat_value = "";
+  //                                                     selected_sub_id = "";
+  //                                                     getSubCategory(
+  //                                                       selected_id,
+  //                                                     );
+  //                                                   });
+  //                                                 },
+  //                                                 items:
+  //                                                     items.map<
+  //                                                       DropdownMenuItem<String>
+  //                                                     >((String value) {
+  //                                                       return DropdownMenuItem<
+  //                                                         String
+  //                                                       >(
+  //                                                         value: value,
+  //                                                         child: Text(value),
+  //                                                       );
+  //                                                     }).toList(),
+  //                                               );
+  //                                             },
+  //                                             future: null,
+  //                                           ),
+  //                                 ),
+  //                                 SizedBox(height: res_height * 0.005),
+  //                                 sub_catLoader
+  //                                     ? Text("Loading")
+  //                                     : Column(
+  //                                       crossAxisAlignment:
+  //                                           CrossAxisAlignment.start,
+  //                                       children: [
+  //                                         Text('Sub Category'),
+  //                                         SizedBox(height: res_height * 0.01),
+  //                                         Container(
+  //                                           height: 50,
+  //                                           width: res_width * 0.9,
+  //                                           decoration: BoxDecoration(
+  //                                             borderRadius:
+  //                                                 BorderRadius.circular(15),
+  //                                             border: Border.all(
+  //                                               color: kprimaryColor,
+  //                                             ),
+  //                                           ),
+  //                                           child: Padding(
+  //                                             padding: const EdgeInsets.only(
+  //                                               top: 12.0,
+  //                                               left: 12.0,
+  //                                             ),
+  //                                             child: Text(sub_cat_value),
+  //                                           ),
+  //                                         ),
+  //                                       ],
+  //                                     ),
+  //                                 SizedBox(height: res_height * 0.01),
+  //                                 // sub_catLoader ? SizedBox() :
+  //                                 // Container(child: Padding(
+  //                                 //   padding: const EdgeInsets.only(top: 12.0, left: 12),
+  //                                 //   child: Text("Select Sub Category"),
+  //                                 // ),),
+  //                                 // SizedBox(
+  //                                 //   height: res_height * 0.01,
+  //                                 // ),
+  //                                 Container(
+  //                                   height: 50,
+  //                                   width: res_width * 0.9,
+  //                                   child:
+  //                                       sub_cats_loader
+  //                                           ? SizedBox(
+  //                                             height: 25,
+  //                                             width: 25,
+  //                                             child: Text(""),
+  //                                           )
+  //                                           : FutureBuilder(
+  //                                             builder: (
+  //                                               BuildContext context,
+  //                                               AsyncSnapshot<dynamic> snapshot,
+  //                                             ) {
+  //                                               return DropdownButton<String>(
+  //                                                 value: sub_cat_value,
+  //                                                 icon: const Icon(
+  //                                                   Icons.arrow_downward,
+  //                                                 ),
+  //                                                 elevation: 16,
+  //                                                 style: const TextStyle(
+  //                                                   color: darkBlue,
+  //                                                 ),
+  //                                                 underline: Container(
+  //                                                   height: 2,
+  //                                                   color: darkBlue,
+  //                                                 ),
+  //                                                 onChanged: (String? value) {
+  //                                                   // This is called when the user selects an item.
+  //                                                   setState(() {
+  //                                                     sub_cat_value = value;
+  //                                                     sub_dropdownvalue =
+  //                                                         value!;
+  //                                                     selected_sub_id =
+  //                                                         sub_items_id[sub_items
+  //                                                             .indexOf(value)];
+  //                                                   });
+  //                                                 },
+  //                                                 items:
+  //                                                     sub_items.map<
+  //                                                       DropdownMenuItem<String>
+  //                                                     >((String value) {
+  //                                                       return DropdownMenuItem<
+  //                                                         String
+  //                                                       >(
+  //                                                         value: value,
+  //                                                         child: Text(value),
+  //                                                       );
+  //                                                     }).toList(),
+  //                                               );
+  //                                             },
+  //                                             future: null,
+  //                                           ),
+  //                                 ),
+  //                                 SizedBox(height: res_height * 0.01),
+  //                                 // dropdown('Select'),
+  //                                 // Padding(
+  //                                 //   padding: const EdgeInsets.only(top: 5),
+  //                                 //   child: Center(
+  //                                 //     child: Container(
+  //                                 //       child: DropdownButtonFormField(
+  //                                 //         hint: Text(ApiRepository
+  //                                 //             .shared
+  //                                 //             .getCategoryByIdModelList!
+  //                                 //             .data![0]
+  //                                 //             .name
+  //                                 //             .toString()), // Not necessary for Option 1
+  //
+  //                                 //         items: [
+  //                                 //           {
+  //                                 //             "value": "Login",
+  //                                 //             "label": "Login"
+  //                                 //           },
+  //                                 //           {
+  //                                 //             "value": "Create",
+  //                                 //             "label": "Create"
+  //                                 //           },
+  //                                 //           {"value": "Read", "label": "Read"},
+  //                                 //           {
+  //                                 //             "value": "Update",
+  //                                 //             "label": "Update"
+  //                                 //           },
+  //                                 //           {
+  //                                 //             "value": "Delete",
+  //                                 //             "label": "Delete"
+  //                                 //           },
+  //                                 //           {
+  //                                 //             "value": "Print",
+  //                                 //             "label": "Print"
+  //                                 //           },
+  //                                 //           {
+  //                                 //             "value": "Email",
+  //                                 //             "label": "Email"
+  //                                 //           },
+  //                                 //           {"value": "Sms", "label": "Sms"},
+  //                                 //           {
+  //                                 //             "value": "Upload Image",
+  //                                 //             "label": "Upload Image"
+  //                                 //           },
+  //                                 //           {
+  //                                 //             "value": "Read All",
+  //                                 //             "label": "Read All"
+  //                                 //           }
+  //                                 //         ].map((category) {
+  //                                 //           return new DropdownMenuItem(
+  //                                 //               value: category['value'],
+  //                                 //               child: Text(
+  //                                 //                 category['label'].toString(),
+  //                                 //                 style: TextStyle(
+  //                                 //                     color: Color(0xffbdbdbd),
+  //                                 //                     fontFamily:
+  //                                 //                         'UbuntuRegular'),
+  //                                 //               ));
+  //                                 //         }).toList(),
+  //                                 //         onChanged: (newValue) {
+  //                                 //           setState(() {
+  //                                 //             var _selectActionsText;
+  //                                 //             _selectActionsText.text =
+  //                                 //                 newValue;
+  //                                 //           });
+  //                                 //         },
+  //                                 //         decoration: new InputDecoration(
+  //                                 //           border: new OutlineInputBorder(
+  //                                 //             borderSide: const BorderSide(
+  //                                 //                 color: kprimaryColor,
+  //                                 //                 width: 1),
+  //                                 //             borderRadius:
+  //                                 //                 const BorderRadius.all(
+  //                                 //               const Radius.circular(15.0),
+  //                                 //             ),
+  //                                 //           ),
+  //                                 //           enabledBorder:
+  //                                 //               new OutlineInputBorder(
+  //                                 //             borderSide: const BorderSide(
+  //                                 //                 color: kprimaryColor,
+  //                                 //                 width: 1),
+  //                                 //             borderRadius:
+  //                                 //                 const BorderRadius.all(
+  //                                 //               const Radius.circular(15.0),
+  //                                 //             ),
+  //                                 //           ),
+  //                                 //           filled: true,
+  //                                 //           hintStyle: new TextStyle(
+  //                                 //               color: kprimaryColor,
+  //                                 //               fontFamily: 'UbuntuRegular'),
+  //                                 //           fillColor: Colors.white70,
+  //                                 //           focusedBorder: OutlineInputBorder(
+  //                                 //             borderSide: const BorderSide(
+  //                                 //                 color: kprimaryColor,
+  //                                 //                 width: 1),
+  //                                 //             borderRadius:
+  //                                 //                 const BorderRadius.all(
+  //                                 //               const Radius.circular(15.0),
+  //                                 //             ),
+  //                                 //           ),
+  //                                 //         ),
+  //                                 //       ),
+  //                                 //     ),
+  //                                 //   ),
+  //                                 // ),
+  //                                 Row(
+  //                                   children: [
+  //                                     Expanded(
+  //                                       flex: 1,
+  //                                       child: _myRadioButton(
+  //                                         title: "Free Pickup",
+  //                                         value: 0,
+  //                                         onChanged:
+  //                                             (newValue) => setState(() {
+  //                                               _groupValue = newValue;
+  //                                               // freePU = newValue.toString();
+  //                                               locationBD = "0";
+  //                                               freePU = "1";
+  //                                             }),
+  //                                       ),
+  //                                     ),
+  //                                     Expanded(
+  //                                       flex: 1,
+  //                                       child: _myRadioButton(
+  //                                         title: "Location Based Delivery",
+  //                                         value: 1,
+  //                                         onChanged:
+  //                                             (newValue) => setState(() {
+  //                                               _groupValue = newValue;
+  //                                               locationBD = "1";
+  //                                               freePU = "0";
+  //                                             }),
+  //                                       ),
+  //                                     ),
+  //                                   ],
+  //                                 ),
+  //                                 SizedBox(height: res_height * 0.005),
+  //                                 itemdtl('Product Availibility', 1),
+  //                                 SizedBox(height: res_height * 0.005),
+  //                                 // itemdtl('Discount Availibility', 2),
+  //                                 // SizedBox(
+  //                                 //   height: res_height * 0.01,
+  //                                 // ),
+  //                                 // GestureDetector(
+  //                                 //   // onTap: () {
+  //                                 //   //   Get.to(() => GeneratePromoCode());
+  //                                 //   // },
+  //                                 //   child: Center(
+  //                                 //     child: Container(
+  //                                 //       width: 398,
+  //                                 //       height: 58,
+  //                                 //       decoration: BoxDecoration(
+  //                                 //           color: kprimaryColor,
+  //                                 //           borderRadius:
+  //                                 //               BorderRadius.circular(12)),
+  //                                 //       child: Center(
+  //                                 //         child: Text(
+  //                                 //           'Add Promo Code',
+  //                                 //           style: TextStyle(
+  //                                 //               fontWeight: FontWeight.bold,
+  //                                 //               fontSize: 15),
+  //                                 //         ),
+  //                                 //       ),
+  //                                 //     ),
+  //                                 //   ),
+  //                                 // ),
+  //                                 // SizedBox(
+  //                                 //   height: res_height * 0.02,
+  //                                 // ),
+  //                                 // Text('Price'),
+  //                                 // SizedBox(
+  //                                 //   height: res_height * 0.005,
+  //                                 // ),
+  //                                 // Container(
+  //                                 //   height: 50,
+  //                                 //   width: res_width * 0.7,
+  //                                 //   child: TextField(
+  //                                 //     decoration: InputDecoration(
+  //                                 //       hintText: '###############',
+  //                                 //       border: OutlineInputBorder(
+  //                                 //         borderRadius:
+  //                                 //             BorderRadius.circular(15.0),
+  //                                 //       ),
+  //                                 //       enabledBorder: const OutlineInputBorder(
+  //                                 //         borderSide: const BorderSide(
+  //                                 //             color: kprimaryColor, width: 1),
+  //                                 //         borderRadius: BorderRadius.all(
+  //                                 //             Radius.circular(15)),
+  //                                 //       ),
+  //                                 //       focusedBorder: const OutlineInputBorder(
+  //                                 //         borderSide: const BorderSide(
+  //                                 //             color: kprimaryColor, width: 1),
+  //                                 //         borderRadius: BorderRadius.all(
+  //                                 //             Radius.circular(15)),
+  //                                 //       ),
+  //                                 //     ),
+  //                                 //   ),
+  //                                 // ),
+  //                                 // SizedBox(
+  //                                 //   height: res_height * 0.01,
+  //                                 // ),
+  //                                 // Row(
+  //                                 //   children: [
+  //                                 //     Text(
+  //                                 //       'Price',
+  //                                 //       style: TextStyle(
+  //                                 //         fontWeight: FontWeight.normal,
+  //                                 //         color: Colors.black,
+  //                                 //         fontSize: 15,
+  //                                 //       ),
+  //                                 //     ),
+  //                                 //   ],
+  //                                 // ),
+  //                                 // SizedBox(
+  //                                 //   height: res_height * 0.01,
+  //                                 // ),
+  //                                 // Container(
+  //                                 //   height: 50,
+  //                                 //   width: res_width * 0.9,
+  //                                 //   child: TextField(
+  //                                 //     controller: price_1_Controller,
+  //                                 //     decoration: InputDecoration(
+  //                                 //       // hintText: 'Enter Amount',
+  //                                 //       border: OutlineInputBorder(
+  //                                 //         borderRadius:
+  //                                 //             BorderRadius.circular(15.0),
+  //                                 //       ),
+  //                                 //       enabledBorder: const OutlineInputBorder(
+  //                                 //         borderSide: const BorderSide(
+  //                                 //             color: kprimaryColor, width: 1),
+  //                                 //         borderRadius: BorderRadius.all(
+  //                                 //             Radius.circular(15)),
+  //                                 //       ),
+  //                                 //       focusedBorder: const OutlineInputBorder(
+  //                                 //         borderSide: const BorderSide(
+  //                                 //             color: kprimaryColor, width: 1),
+  //                                 //         borderRadius: BorderRadius.all(
+  //                                 //             Radius.circular(15)),
+  //                                 //       ),
+  //                                 //     ),
+  //                                 //   ),
+  //                                 // ),
+  //                                 // SizedBox(
+  //                                 //   height: res_height * 0.01,
+  //                                 // ),
+  //                                 // Text('Discount'),
+  //                                 // SizedBox(
+  //                                 //   height: res_height * 0.005,
+  //                                 // ),
+  //                                 Row(
+  //                                   children: [
+  //                                     // Container(
+  //                                     //   height: 50,
+  //                                     //   width: res_width * 0.4,
+  //                                     //   child: TextField(
+  //                                     //     controller: discountController,
+  //                                     //     decoration: InputDecoration(
+  //                                     //       // hintText: '%',
+  //                                     //       border: OutlineInputBorder(
+  //                                     //         borderRadius:
+  //                                     //             BorderRadius.circular(15.0),
+  //                                     //       ),
+  //                                     //       enabledBorder:
+  //                                     //           const OutlineInputBorder(
+  //                                     //         borderSide: const BorderSide(
+  //                                     //             color: kprimaryColor,
+  //                                     //             width: 1),
+  //                                     //         borderRadius: BorderRadius.all(
+  //                                     //             Radius.circular(15)),
+  //                                     //       ),
+  //                                     //       focusedBorder:
+  //                                     //           const OutlineInputBorder(
+  //                                     //         borderSide: const BorderSide(
+  //                                     //             color: kprimaryColor,
+  //                                     //             width: 1),
+  //                                     //         borderRadius: BorderRadius.all(
+  //                                     //             Radius.circular(15)),
+  //                                     //       ),
+  //                                     //     ),
+  //                                     //   ),
+  //                                     // ),
+  //                                     // Container(
+  //                                     //   height: 50,
+  //                                     //   width: res_width * 0.4,
+  //                                     //   child: TextField(
+  //                                     //     decoration: InputDecoration(
+  //                                     //       enabledBorder: OutlineInputBorder(
+  //                                     //           borderRadius: BorderRadius.circular(15),
+  //                                     //           borderSide: BorderSide(
+  //                                     //               color: kprimaryColor, width: 1)),
+  //                                     //       filled: true,
+  //                                     //       fillColor: Colors.white,
+  //                                     //       // hintText: "Rs 500",
+  //                                     //       // hintStyle: TextStyle(color: Colors.grey)),
+  //                                     //     ),
+  //                                     //   ),
+  //                                     // ),
+  //                                     // SizedBox(
+  //                                     //   width: res_width * 0.05,
+  //                                     // ),
+  //                                     // Text(
+  //                                     //   '%',
+  //                                     //   style: TextStyle(
+  //                                     //       fontSize: 25, color: Colors.grey),
+  //                                     // )
+  //                                   ],
+  //                                 ),
+  //                               ],
+  //                             ),
+  //                           ),
+  //                           SizedBox(height: res_height * 0.02),
+  //                           // Align(
+  //                           //     alignment: Alignment.topLeft,
+  //                           //     child: Text("Related Products")),
+  //                           // ListView.builder(
+  //                           //   shrinkWrap: true,
+  //                           //   physics: NeverScrollableScrollPhysics(),
+  //                           //   itemCount: ApiRepository
+  //                           //       .shared.getRelatedProductsList?.data?.length,
+  //                           //   itemBuilder: (BuildContext context, int index) {
+  //                           //     var name = ApiRepository.shared
+  //                           //         .getRelatedProductsList!.data![index].name
+  //                           //         .toString();
+  //                           //     var id =ApiRepository.shared
+  //                           //         .getRelatedProductsList!.data![index].id
+  //                           //         .toString();
+  //                           //     relProdArray.add(name);
+  //                           //     return ListTile(
+  //                           //       title: Text(name),
+  //                           //       trailing: Text(id),
+  //                           // trailing: relProdArray
+  //                           //           .contains(name)
+  //                           //       ?
+  //                           //        InkWell(
+  //                           //           onTap: () {
+  //                           //             setState(() {
+  //                           //              relProdArray
+  //                           //                   .remove(name);
+  //                           //             });
+  //                           //           },
+  //                           //           child: Icon(Icons.delete_outline))
+  //                           //       : InkWell(
+  //                           //           onTap: () {
+  //                           //             setState(() {
+  //                           //               relProdArray
+  //                           //                   .add(name);
+  //                           //             });
+  //                           //           },
+  //                           //           child: Icon(Icons.add))
+  //                           //     );
+  //                           //   },
+  //                           // ),
+  //                           SizedBox(height: res_height * 0.01),
+  //                           GestureDetector(
+  //                             onTap: () {
+  //                               final bottomcontroller = Get.put(
+  //                                 BottomController(),
+  //                               );
+  //                               bottomcontroller.navBarChange(1);
+  //                               Get.to(() => MainScreen());
+  //                             },
+  //                             child: Center(
+  //                               child: InkWell(
+  //                                 onTap: () {
+  //                                   product_update_button ? null : prodUpdate();
+  //                                 },
+  //                                 child: Container(
+  //                                   width: 380,
+  //                                   height: 58,
+  //                                   decoration: BoxDecoration(
+  //                                     color:
+  //                                         product_update_button
+  //                                             ? kprimaryColor.withOpacity(0.5)
+  //                                             : kprimaryColor,
+  //                                     borderRadius: BorderRadius.circular(12),
+  //                                   ),
+  //                                   child: Center(
+  //                                     child: Text(
+  //                                       product_update_button
+  //                                           ? "Updating .."
+  //                                           : 'Update',
+  //                                       style: TextStyle(
+  //                                         fontWeight: FontWeight.bold,
+  //                                         fontSize: 15,
+  //                                       ),
+  //                                     ),
+  //                                   ),
+  //                                 ),
+  //                               ),
+  //                             ),
+  //                           ),
+  //                           SizedBox(height: res_height * 0.02),
+  //                         ],
+  //                       ),
+  //                     ),
+  //                   ),
+  //                   // GestureDetector(
+  //                   //   onTap: () {
+  //                   //     Get.to(() => AddProduct2Screen());
+  //                   //   },
+  //                   //   child: Container(
+  //                   //     width: 398,
+  //                   //     height: 58,
+  //                   //     child: Center(
+  //                   //       child: Text(
+  //                   //         'Next',
+  //                   //         style: TextStyle(
+  //                   //             fontWeight: FontWeight.bold, fontSize: 19),
+  //                   //       ),
+  //                   //     ),
+  //                   //     decoration: BoxDecoration(
+  //                   //         color: kprimaryColor,
+  //                   //         borderRadius: BorderRadius.circular(14)),
+  //                   //   ),
+  //                   // ),
+  //                   SizedBox(height: res_height * 0.02),
+  //                 ],
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   tag() {
     double res_width = MediaQuery.of(context).size.width;

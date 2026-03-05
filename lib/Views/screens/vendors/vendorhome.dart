@@ -41,18 +41,84 @@ class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
   String? fullname;
   String? email;
   String? role;
+
   void profileData(BuildContext context) async {
     getUserDate()
         .then((value) async {
-          token = value.token.toString();
-          sourceId = value.id.toString();
-          fullname = value.name.toString();
-          email = value.email.toString();
-          role = value.role.toString();
+          setState(() {
+            token = value.token.toString();
+            sourceId = value.id.toString();
+            fullname = value.name.toString();
+            email = value.email.toString();
+            role = value.role.toString();
+          });
         })
         .onError((error, stackTrace) {
           if (kDebugMode) {}
         });
+  }
+
+  Widget profileCard() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.orange,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          /// USER INFO
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "My Profile",
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+
+                SizedBox(height: 5),
+
+                Text(
+                  fullname ?? "Loading...",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                SizedBox(height: 5),
+
+                Row(
+                  children: [
+                    Icon(Icons.email, color: Colors.white, size: 16),
+                    SizedBox(width: 5),
+                    Expanded(
+                      child: Text(
+                        email ?? "",
+                        style: TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 6),
+
+                Text(role ?? "", style: TextStyle(color: Colors.white)),
+              ],
+            ),
+          ),
+
+          /// PROFILE IMAGE
+          CircleAvatar(
+            radius: 35,
+            backgroundColor: Colors.white,
+            child: Icon(Icons.person, size: 40),
+          ),
+        ],
+      ),
+    );
   }
 
   seenNotification() {
@@ -62,6 +128,7 @@ class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
   bool isLoading1 = true;
   bool isError1 = false;
   bool isEmpty1 = false;
+
   getNotifications() {
     ApiRepository.shared.notifications(
       sourceId,
@@ -144,7 +211,95 @@ class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
     func();
   }
 
+  Widget featureCard(title, subtitle, icon) {
+    return GestureDetector(
+      onTap: () {
+        if (title == "Products") {
+          Get.to(() => ProductListScreen(side: false));
+        } else {
+          Get.to(() => OrderRequestScreen());
+        }
+      },
+      child: Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade200,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Image.asset(icon, height: 45),
+                Icon(Icons.arrow_forward_ios_sharp, color: Colors.black,size: 20,)
+              ],
+            ),
+            SizedBox(height: 10),
+            Text(
+              title,
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 4),
+            Text(subtitle, style: TextStyle(fontSize: 12)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget sectionHeader(title) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        Text("View all", style: TextStyle(color: Colors.orange)),
+      ],
+    );
+  }
+
+  Widget todayItem(name, date, amount) {
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundColor: Colors.pink.shade50,
+        child: Icon(Icons.arrow_upward, color: Colors.red),
+      ),
+      title: Text(name),
+      subtitle: Text(date),
+      trailing: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(amount, style: TextStyle(color: Colors.red)),
+          Container(
+            margin: EdgeInsets.only(top: 4),
+            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text("PAID", style: TextStyle(fontSize: 10)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget notificationItem(title, subtitle, time) {
+    return ListTile(
+      leading: CircleAvatar(radius: 5, backgroundColor: Colors.orange),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      trailing: Text(time),
+    );
+  }
+
   final GlobalKey<ScaffoldState> _key = GlobalKey();
+
   @override
   Widget build(BuildContext context) {
     double res_width = MediaQuery.of(context).size.width;
@@ -275,40 +430,118 @@ class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
         ),
 
         body: SingleChildScrollView(
-          child: Container(
-            width: double.infinity,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: res_height * 0.015),
+                /// SEARCH BAR
                 Container(
-                  width: res_width * 0.9,
-                  child: Center(
-                    child: Wrap(
-                      spacing: 15,
-                      runSpacing: 15,
-                      children: [
-                        contBox(
-                          txt: "Profile",
-                          img: 'assets/slicing/user_thick.png',
-                        ),
-                        contBox(
-                          txt: "Product",
-                          img:
-                              'assets/slicing/Icon awesome-shopping-basket@3x.png',
-                        ),
-                        contBox(txt: "Orders", img: 'assets/slicing/layer.png'),
-                        contBox(
-                          txt: "Transactions",
-                          img: 'assets/slicing/swap.png',
-                        ),
-                      ],
+                  padding: EdgeInsets.symmetric(horizontal: 15),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      icon: Icon(Icons.search),
+                      hintText: "Search by Product, Orders e.t.c",
+                      border: InputBorder.none,
                     ),
                   ),
+                ),
+
+                SizedBox(height: 20),
+
+                /// PROFILE CARD
+                profileCard(),
+
+                SizedBox(height: 20),
+
+                /// FEATURE BOXES
+                Row(
+                  children: [
+                    Expanded(
+                      child: featureCard(
+                        "Products",
+                        "Manage Products",
+                        "assets/newpacks/myproducts.png",
+                      ),
+                    ),
+                    SizedBox(width: 15),
+                    Expanded(
+                      child: featureCard(
+                        "My Order",
+                        "Track your rentals.",
+                        "assets/newpacks/myorders1.png",
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 25),
+
+                /// TODAY SECTION
+                sectionHeader("Today"),
+
+                todayItem("John Doe", "Aug 10, 2025", "-\$200.00"),
+                todayItem("John Doe", "Aug 10, 2025", "-\$200.00"),
+                todayItem("Mary Jane", "Aug 27, 2025", "-\$10.33"),
+
+                SizedBox(height: 25),
+
+                /// NOTIFICATIONS
+                sectionHeader("Latest Notifications"),
+
+                notificationItem(
+                  "Admin",
+                  "You've got a new rental request for your...",
+                  "8:12 PM",
+                ),
+                notificationItem(
+                  "Transfer Failed",
+                  "Your \$300 transfer to Emily Lee could not be...",
+                  "8:12 PM",
                 ),
               ],
             ),
           ),
         ),
+        // body: SingleChildScrollView(
+        //   child: Container(
+        //     width: double.infinity,
+        //     child: Column(
+        //       children: [
+        //         SizedBox(height: res_height * 0.015),
+        //         Container(
+        //           width: res_width * 0.9,
+        //           child: Center(
+        //             child: Wrap(
+        //               spacing: 15,
+        //               runSpacing: 15,
+        //               children: [
+        //                 contBox(
+        //                   txt: "Profile",
+        //                   img: 'assets/slicing/user_thick.png',
+        //                 ),
+        //                 contBox(
+        //                   txt: "Product",
+        //                   img:
+        //                       'assets/slicing/Icon awesome-shopping-basket@3x.png',
+        //                 ),
+        //                 contBox(txt: "Orders", img: 'assets/slicing/layer.png'),
+        //                 contBox(
+        //                   txt: "Transactions",
+        //                   img: 'assets/slicing/swap.png',
+        //                 ),
+        //               ],
+        //             ),
+        //           ),
+        //         ),
+        //       ],
+        //     ),
+        //   ),
+        // ),
       ),
     );
   }

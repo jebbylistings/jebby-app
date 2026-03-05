@@ -145,173 +145,256 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    double res_height = MediaQuery.of(context).size.height;
+
+    double width = MediaQuery.of(context).size.width;
+    double height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      key: _key,
-      drawer: DrawerScreen(),
+      backgroundColor: Colors.grey.shade100,
+
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        centerTitle: true,
-        title: Text(
-          'Products List',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-            fontSize: 19,
-          ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios,color: Colors.black),
+          onPressed: (){
+            Get.back();
+          },
         ),
-        leading:
-            widget.side
-                ? GestureDetector(
-                  onTap: () {
-                    _key.currentState!.openDrawer();
+      ),
+
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal:20),
+        child: Column(
+
+          crossAxisAlignment: CrossAxisAlignment.start,
+
+          children: [
+
+            /// TITLE + BUTTON
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+                    Text(
+                      "My Products",
+                      style: TextStyle(
+                          fontSize:28,
+                          fontWeight: FontWeight.bold),
+                    ),
+
+                    SizedBox(height:5),
+
+                    Text(
+                      "View and Edit your Products",
+                      style: TextStyle(
+                          color: Colors.grey,
+                          fontSize:16),
+                    )
+
+                  ],
+                ),
+
+                GestureDetector(
+                  onTap: (){
+                    if (profile.length == 0) {
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Complete Your Profile")));
+
+                    } else {
+                      Get.to(()=>AddProductScreen());
+                    }
                   },
-                  child: Padding(
-                    padding: const EdgeInsets.all(17.0),
-                    child: Container(
-                      child: Image.asset('assets/slicing/hamburger.png'),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                        horizontal:20,vertical:10),
+                    decoration: BoxDecoration(
+                        color: Colors.orange,
+                        borderRadius: BorderRadius.circular(30)),
+                    child: Text(
+                      "Add Product",
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
                 )
-                : InkWell(
-                  onTap: () {
-                    Get.back();
-                  },
-                  borderRadius: BorderRadius.circular(50),
-                  child: Container(
-                    child: Icon(Icons.arrow_back, color: Colors.black),
-                  ),
+              ],
+            ),
+
+            SizedBox(height:20),
+
+            /// SEARCH BAR
+
+            Container(
+              padding: EdgeInsets.symmetric(horizontal:15),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: TextField(
+                decoration: InputDecoration(
+                  icon: Icon(Icons.search),
+                  hintText: "Search by Product Name",
+                  border: InputBorder.none,
                 ),
-        actions: [
-          GestureDetector(
-            onTap: () {
-              if (profile.length == 0) {
-                final snackBar = new SnackBar(
-                  content: new Text("Complete Your Profile"),
-                );
-                ScaffoldMessenger.of(context).showSnackBar(snackBar);
-              } else {
-                Get.off(() => AddProductScreen());
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(right: 10),
-              child: Container(
-                width: 25,
-                height: 25,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: kprimaryColor,
-                ),
-                child: Center(child: Icon(Icons.add, color: Colors.black)),
               ),
             ),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Container(
-          width: double.infinity,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              SizedBox(height: res_height * 0.03),
-              isError
-                  ? Center(child: Text("Some error occured while loading data"))
+
+            SizedBox(height:20),
+
+            /// PRODUCT GRID
+
+            Expanded(
+              child: isError
+                  ? Center(child: Text("Error loading data"))
                   : isLoading
                   ? Center(child: CircularProgressIndicator())
                   : emptyData
-                  ? profile.length == 0
-                      ? Center(child: Text("Complete Your Profile"))
-                      : Center(child: Text("No Product Added"))
-                  : FutureBuilder(
-                    builder: (context, snapshot) {
-                      return GridView.builder(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 2.0,
-                          mainAxisSpacing: 1.0,
-                          childAspectRatio: 0.7,
-                        ),
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        itemCount:
-                            ApiRepository
-                                .shared
-                                .vendorProductsByIdList
-                                ?.data
-                                ?.length,
-                        itemBuilder: (context, int index) {
-                          var id =
-                              ApiRepository
-                                  .shared
-                                  .vendorProductsByIdList
-                                  ?.data?[index]
-                                  .id;
-                          var name =
-                              ApiRepository
-                                  .shared
-                                  .vendorProductsByIdList
-                                  ?.data?[index]
-                                  .name;
-                          var price =
-                              ApiRepository
-                                  .shared
-                                  .vendorProductsByIdList
-                                  ?.data?[index]
-                                  .price;
-                          var stars =
-                              ApiRepository
-                                  .shared
-                                  .vendorProductsByIdList
-                                  ?.data?[index]
-                                  .stars;
-                          var image =
-                              ApiRepository
-                                  .shared
-                                  .vendorProductsByIdList
-                                  ?.data?[index]
-                                  .image;
-                          var length =
-                              ApiRepository
-                                  .shared
-                                  .vendorProductsByIdList
-                                  ?.data?[index]
-                                  .length;
-                          return Container(
-                            child: Wrap(
-                              spacing: 1,
-                              runSpacing: 5,
-                              children: [
-                                itmBox(
-                                  img: AppUrl.baseUrlM + image.toString(),
-                                  dx: '\$${price}',
-                                  rv: length.toString(),
-                                  tx: name,
-                                  rt: stars,
-                                  id: id,
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      );
-                    },
-                    future: null,
-                  ),
-              // Container(
-              //   height: 100,
-              //   width: 100,
-              // )
-            ],
-          ),
+                  ? Center(child: Text("No Products Added"))
+                  : GridView.builder(
+
+                gridDelegate:
+                SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 15,
+                  mainAxisSpacing: 15,
+                  childAspectRatio: 0.7,
+                ),
+
+                itemCount: ApiRepository
+                    .shared
+                    .vendorProductsByIdList
+                    ?.data
+                    ?.length,
+
+                itemBuilder: (context,index){
+
+                  var product = ApiRepository
+                      .shared
+                      .vendorProductsByIdList!
+                      .data![index];
+
+                  return productCard(
+                      product.id,
+                      product.name,
+                      product.price,
+                      product.stars,
+                      product.image);
+
+                },
+              ),
+            )
+          ],
         ),
       ),
     );
   }
+  Widget productCard(id,name,price,stars,image){
 
+    return GestureDetector(
+
+      onTap: (){
+        Get.to(()=>ProductDetail2Screen(id:id));
+      },
+
+      child: Container(
+
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+        ),
+
+        child: Column(
+
+          crossAxisAlignment: CrossAxisAlignment.start,
+
+          children: [
+
+            /// IMAGE
+
+            Stack(
+              children: [
+
+                ClipRRect(
+                  borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(18)),
+                  child: CachedNetworkImage(
+                    imageUrl: AppUrl.baseUrlM + image.toString(),
+                    height:140,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+
+                Positioned(
+                  right:10,
+                  top:10,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                        horizontal:8,vertical:3),
+                    decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(10)),
+                    child: Text(
+                      "NEW",
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize:10),
+                    ),
+                  ),
+                )
+              ],
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+
+                crossAxisAlignment: CrossAxisAlignment.start,
+
+                children: [
+
+                  Text(
+                    name.toString(),
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize:14),
+                  ),
+
+                  SizedBox(height:5),
+
+                  Text(
+                    "\$ ${price}",
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize:16),
+                  ),
+
+                  SizedBox(height:5),
+
+                  RatingBarIndicator(
+                    rating: double.parse(stars.toString()),
+                    itemBuilder: (context,index)=>Icon(
+                        Icons.star,
+                        color: Colors.orange),
+                    itemCount: 5,
+                    itemSize: 16,
+                  )
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
   itmBox({img, tx, dx, rt, rv, id}) {
     double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;

@@ -13,8 +13,10 @@ class ProductProvider extends ChangeNotifier {
     // return data;
   }
 
-  fetchproducts() {
+  fetchproducts()
+  {
     notifyListeners();
     return data;
   }
+
 }

@@ -162,219 +162,206 @@ class _VendorNotificationsState extends State<VendorNotifications> {
 
   @override
   Widget build(BuildContext context) {
-    final GlobalKey<ScaffoldState> _key = GlobalKey();
 
     return Scaffold(
-      key: _key,
-      // drawer: DrawerScreen(),
+
+      backgroundColor: const Color(0xfff5f5f5),
+
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: Text(
-          'Notifications',
+
+        title: const Text(
+          "Notifications",
           style: TextStyle(
-            fontWeight: FontWeight.bold,
             color: Colors.black,
-            fontSize: 19,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
           ),
         ),
-        leading: InkWell(
-          onTap: () {
+
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back,color: Colors.black),
+          onPressed: (){
             Get.back();
           },
-          borderRadius: BorderRadius.circular(50),
-          child: Container(child: Icon(Icons.arrow_back, color: Colors.black)),
         ),
+
         actions: [
-          // GestureDetector(
-          //   onTap: () {
-          //     Get.to(() => RenterProfile());
-          //   },
-          //   child: Padding(
-          //     padding: const EdgeInsets.all(19.0),
-          //     child: Container(
-          //       child: Image.asset('assets/slicing/avatar.png'),
-          //     ),
-          //   ),
-          // )
+
+          Padding(
+            padding: const EdgeInsets.only(right:16),
+            child: CircleAvatar(
+              backgroundImage: AssetImage("assets/slicing/avatar.png"),
+            ),
+          )
         ],
       ),
-      // backgroundColor: Colors.grey,
-      body: SingleChildScrollView(
-        child: Container(
-          width: double.infinity,
-          child:
-              isLoading
-                  // ApiRepository.shared.getNotificationModelListApiStatus == false
-                  ? Center(
-                    child: SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(),
+
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+
+        padding: const EdgeInsets.symmetric(horizontal:16),
+
+        child: ListView.builder(
+
+          itemCount: ApiRepository
+              .shared
+              .getNotificationModelList!
+              .data!
+              .length,
+
+          itemBuilder: (context,index){
+
+            var data = ApiRepository
+                .shared
+                .getNotificationModelList!
+                .data![index];
+
+            String name = data.name.toString();
+            String desc = data.description.toString();
+            String id = data.id.toString();
+            String seen = data.seen_one.toString();
+            String date = data.createdAt.toString();
+
+            var formattedDate =
+            DateFormat('hh:mm a')
+                .format(DateTime.parse(date));
+
+            /// navigation data
+            var prodId = data.productId.toString();
+            var status = data.status;
+            var price = data.price.toString();
+            var negoId = data.negoId;
+
+            return GestureDetector(
+
+              onTap: () {
+
+                seenNotification(id);
+
+                name == "message"
+                    ? Get.to(()=>MessagesScreen())
+
+                    : name == "order"
+                    ? Get.to(()=>OrderRequestScreen())
+
+                    : name == "negotiation"
+                    ? Get.to(()=>NegotiationRequest(
+                  price: price,
+                  status: status,
+                  productId: prodId,
+                  negoId: negoId,
+                ))
+                    : null;
+              },
+
+              child: Container(
+
+                margin: const EdgeInsets.only(bottom:14),
+
+                padding: const EdgeInsets.all(16),
+
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+
+                child: Row(
+
+                  crossAxisAlignment: CrossAxisAlignment.start,
+
+                  children: [
+
+                    /// DOT
+
+                    Container(
+                      margin: const EdgeInsets.only(top:6),
+                      width:10,
+                      height:10,
+                      decoration: BoxDecoration(
+                        color: seen == "0"
+                            ? Colors.orange
+                            : Colors.grey,
+                        shape: BoxShape.circle,
+                      ),
                     ),
-                  )
-                  : ListView.separated(
-                    physics: NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    itemCount:
-                        ApiRepository
-                            .shared
-                            .getNotificationModelList!
-                            .data!
-                            .length,
-                    itemBuilder: (context, int index) {
-                      var name =
-                          ApiRepository
-                              .shared
-                              .getNotificationModelList!
-                              .data![index]
-                              .name
-                              .toString();
-                      var desc =
-                          ApiRepository
-                              .shared
-                              .getNotificationModelList!
-                              .data![index]
-                              .description
-                              .toString();
-                      var id =
-                          ApiRepository
-                              .shared
-                              .getNotificationModelList!
-                              .data![index]
-                              .id
-                              .toString();
-                      var seen_one =
-                          ApiRepository
-                              .shared
-                              .getNotificationModelList!
-                              .data![index]
-                              .seen_one
-                              .toString();
-                      var ind = index;
-                      var date =
-                          ApiRepository
-                              .shared
-                              .getNotificationModelList!
-                              .data![index]
-                              .createdAt
-                              .toString();
-                      var formattedDate = DateFormat(
-                        'dd-MM-yy',
-                      ).format(DateTime.parse(date));
-                      //
-                      var prodId =
-                          ApiRepository
-                              .shared
-                              .getNotificationModelList!
-                              .data![index]
-                              .productId
-                              .toString();
-                      var status =
-                          ApiRepository
-                              .shared
-                              .getNotificationModelList!
-                              .data![index]
-                              .status;
-                      var price =
-                          ApiRepository
-                              .shared
-                              .getNotificationModelList!
-                              .data![index]
-                              .price
-                              .toString();
-                      var negoId =
-                          ApiRepository
-                              .shared
-                              .getNotificationModelList!
-                              .data![index]
-                              .negoId;
-                      //
-                      // return card(name, count, desc, date, id, ind, seen);
-                      return GestureDetector(
-                        onTap: () {
-                          getNotifications();
-                          seenNotification(id);
-                          name == "message"
-                              ? Get.to(() => MessagesScreen())
-                              : name == "order"
-                              ? Get.to(() => OrderRequestScreen())
-                              : name == "negotiation"
-                              ? Get.to(
-                                () => NegotiationRequest(
-                                  price: price,
-                                  status: status,
-                                  productId: prodId,
-                                  negoId: negoId,
+
+                    const SizedBox(width:12),
+
+                    /// TEXT AREA
+
+                    Expanded(
+
+                      child: Column(
+
+                        crossAxisAlignment: CrossAxisAlignment.start,
+
+                        children: [
+
+                          Row(
+                            mainAxisAlignment:
+                            MainAxisAlignment.spaceBetween,
+
+                            children: [
+
+                              Text(
+                                name.capitalizeFirst!,
+                                style: const TextStyle(
+                                  fontSize:16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+
+                              Text(
+                                formattedDate,
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize:13,
                                 ),
                               )
-                              : null;
-                        },
-                        child:
-                            name == "admin"
-                                ? SizedBox()
-                                : Container(
-                                  width: double.infinity,
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.08,
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceAround,
-                                    children: [
-                                      Icon(Icons.notifications),
-                                      SizedBox(width: 10),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(name),
-                                          SizedBox(height: 4),
-                                          Container(
-                                            width:
-                                                MediaQuery.of(
-                                                  context,
-                                                ).size.width *
-                                                0.6,
-                                            child: Text(
-                                              desc,
-                                              style: TextStyle(
-                                                fontWeight:
-                                                    seen_one == "0"
-                                                        ? FontWeight.bold
-                                                        : FontWeight.normal,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      SizedBox(width: 10),
-                                      Text(formattedDate),
-                                      SizedBox(width: 2),
+                            ],
+                          ),
 
-                                      name == "admin"
-                                          ? Text("")
-                                          : GestureDetector(
-                                            onTap: () {
-                                              deleteNotification(id, ind);
-                                            },
-                                            child: Container(
-                                              child: Icon(Icons.close),
-                                            ),
-                                          ),
-                                    ],
-                                  ),
-                                ),
-                      );
-                    },
-                    separatorBuilder: (context, index) {
-                      return Divider();
-                    },
-                  ),
+                          const SizedBox(height:6),
+
+                          Text(
+                            desc,
+                            style: TextStyle(
+                              color: Colors.grey.shade700,
+                              fontSize:14,
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(width:6),
+
+                    /// DELETE BUTTON
+
+                    GestureDetector(
+                      onTap: (){
+                        deleteNotification(id,index);
+                      },
+                      child: const Icon(
+                        Icons.close,
+                        size:18,
+                        color: Colors.grey,
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
   }
+
 
   card(name, count, desc, time, id, ind, seen) {
     double res_width = MediaQuery.of(context).size.width;

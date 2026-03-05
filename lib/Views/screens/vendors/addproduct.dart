@@ -355,11 +355,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         title: Text(
-          'General Information',
+          'List Product',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.black,
@@ -371,26 +371,118 @@ class _AddProductScreenState extends State<AddProductScreen> {
             Get.back();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Icon(Icons.arrow_back, color: Colors.black),
+          child: Icon(Icons.arrow_back_ios, color: Colors.black),
         ),
       ),
       body: Container(
         width: double.infinity,
+        color: Colors.white,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
                 width: res_width * 0.9,
+                color: Colors.white,
                 child: Column(
                   children: [
+                    SizedBox(height: res_height * 0.01),
+                    Row(
+                      children: [
+                        Text(
+                          'Add Photo or Video',
+                          style: TextStyle(
+                            fontWeight: FontWeight.normal,
+                            color: Colors.grey,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: res_height * 0.01),
+                    imagesPath.length == 0
+                        ? Container(
+                      width: res_width * 0.9,
+                      height: res_height * 0.2,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Colors.grey,
+                          width: 0.5,
+                        ),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Container(
+                        width: res_width * 0.2,
+                        height: res_height * 0.15,
+                        // child: ImageIcon(
+                        //   AssetImage('assets/slicing/upload-cloud.png'),
+                        // ),
+                        child: InkWell(
+                          onTap: () {
+                            selectImages();
+                            // imagePath();
+                          },
+                          child: Icon(Icons.cloud_upload_rounded, size: 25),
+                        ),
+                      ),
+                    )
+                        : SizedBox(
+                      height: 100,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        shrinkWrap: true,
+                        separatorBuilder:
+                            (context, index) => SizedBox(width: 10),
+                        // physics: NeverScrollableScrollPhysics(),
+                        itemCount: imagesPath.length,
+                        itemBuilder: (context, int index) {
+                          return Stack(
+                            children: [
+                              InkWell(
+                                onTap: () {
+                                  reselectImage(index);
+                                },
+                                child: Image.file(
+                                  File(imageFileList[index].path),
+                                  fit: BoxFit.cover,
+                                  width: 100,
+                                  height: 100,
+                                ),
+                              ),
+                              Positioned(
+                                top: 5,
+                                right: 5,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      imagesPath.removeAt(index);
+                                      imageFileList.removeAt(index);
+                                    });
+                                  },
+                                  child: CircleAvatar(
+                                    radius: 12,
+                                    backgroundColor: Colors.red,
+                                    child: Icon(
+                                      Icons.close,
+                                      size: 15,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                    SizedBox(height: res_height * 0.01),
                     Row(
                       children: [
                         Text(
                           'Product Name',
                           style: TextStyle(
                             fontSize: 17,
-                            fontWeight: FontWeight.normal,
+                            fontWeight: FontWeight.bold,
                             color: Colors.black,
                           ),
                         ),
@@ -416,7 +508,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           ),
                           enabledBorder: const OutlineInputBorder(
                             borderSide: const BorderSide(
-                              color: kprimaryColor,
+                              color: Colors.grey,
                               width: 1,
                             ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
@@ -432,95 +524,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       ),
                     ),
                     SizedBox(height: res_height * 0.01),
-                    Row(
-                      children: [
-                        Text(
-                          'Add Photo or Video',
-                          style: TextStyle(
-                            fontWeight: FontWeight.normal,
-                            color: Colors.grey,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: res_height * 0.01),
-                    imagesPath.length == 0
-                        ? Container(
-                          width: res_width * 0.9,
-                          height: res_height * 0.2,
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: kprimaryColor,
-                              width: 0.5,
-                            ),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Container(
-                            width: res_width * 0.2,
-                            height: res_height * 0.15,
-                            // child: ImageIcon(
-                            //   AssetImage('assets/slicing/upload-cloud.png'),
-                            // ),
-                            child: InkWell(
-                              onTap: () {
-                                selectImages();
-                                // imagePath();
-                              },
-                              child: Icon(Icons.cloud_upload_rounded, size: 25),
-                            ),
-                          ),
-                        )
-                        : SizedBox(
-                          height: 100,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            shrinkWrap: true,
-                            separatorBuilder:
-                                (context, index) => SizedBox(width: 10),
-                            // physics: NeverScrollableScrollPhysics(),
-                            itemCount: imagesPath.length,
-                            itemBuilder: (context, int index) {
-                              return Stack(
-                                children: [
-                                  InkWell(
-                                    onTap: () {
-                                      reselectImage(index);
-                                    },
-                                    child: Image.file(
-                                      File(imageFileList[index].path),
-                                      fit: BoxFit.cover,
-                                      width: 100,
-                                      height: 100,
-                                    ),
-                                  ),
-                                  Positioned(
-                                    top: 5,
-                                    right: 5,
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          imagesPath.removeAt(index);
-                                          imageFileList.removeAt(index);
-                                        });
-                                      },
-                                      child: CircleAvatar(
-                                        radius: 12,
-                                        backgroundColor: Colors.red,
-                                        child: Icon(
-                                          Icons.close,
-                                          size: 15,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
-                    SizedBox(height: res_height * 0.01),
+
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -573,7 +577,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         Text(
                           'Specs',
                           style: TextStyle(
-                            fontWeight: FontWeight.normal,
+                            fontWeight: FontWeight.bold,
                             color: Colors.black,
                             fontSize: 15,
                           ),
@@ -593,7 +597,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           ),
                           enabledBorder: const OutlineInputBorder(
                             borderSide: const BorderSide(
-                              color: kprimaryColor,
+                              color: Colors.grey,
                               width: 1,
                             ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
@@ -614,7 +618,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         Text(
                           'Description',
                           style: TextStyle(
-                            fontWeight: FontWeight.normal,
+                            fontWeight: FontWeight.bold,
                             color: Colors.black,
                             fontSize: 15,
                           ),
@@ -634,7 +638,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           ),
                           enabledBorder: const OutlineInputBorder(
                             borderSide: const BorderSide(
-                              color: kprimaryColor,
+                              color: Colors.grey,
                               width: 1,
                             ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
@@ -655,7 +659,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         Text(
                           'Category',
                           style: TextStyle(
-                            fontWeight: FontWeight.normal,
+                        //    fontWeight: FontWeight.normal,
+                            fontWeight: FontWeight.bold,
                             color: Colors.black,
                             fontSize: 15,
                           ),
@@ -667,57 +672,43 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     Container(
                       height: 50,
                       width: res_width * 0.9,
-                      child:
-                          isLoading
-                              ? Center(
-                                child: SizedBox(
-                                  height: 25,
-                                  width: 25,
-                                  child: CircularProgressIndicator(),
-                                ),
-                              )
-                              : FutureBuilder(
-                                builder: (
-                                  BuildContext context,
-                                  AsyncSnapshot<dynamic> snapshot,
-                                ) {
-                                  return DropdownButton<String>(
-                                    value: dropdownValue,
-                                    icon: const Icon(Icons.arrow_downward),
-                                    elevation: 16,
-                                    style: const TextStyle(
-                                      color: Colors.deepPurple,
-                                    ),
-                                    underline: Container(
-                                      height: 2,
-                                      color: Colors.deepPurpleAccent,
-                                    ),
-                                    onChanged: (String? value) {
-                                      // This is called when the user selects an item.
-                                      setState(() {
-                                        dropdownValue = value!;
-                                        selected_id =
-                                            items_id[items.indexOf(
-                                              dropdownValue,
-                                            )];
-                                        sub_id = [];
-                                        sub_items = [];
-                                        getSubCategory(selected_id);
-                                      });
-                                    },
-                                    items:
-                                        items.map<DropdownMenuItem<String>>((
-                                          String value,
-                                        ) {
-                                          return DropdownMenuItem<String>(
-                                            value: value,
-                                            child: Text(value),
-                                          );
-                                        }).toList(),
-                                  );
-                                },
-                                future: null,
-                              ),
+                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey, width: 1),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: isLoading
+                          ? Center(
+                        child: SizedBox(
+                          height: 25,
+                          width: 25,
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                          : DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: dropdownValue,
+                          isExpanded: true,
+                          icon: const Icon(Icons.arrow_drop_down),
+                          style: const TextStyle(color: Colors.black),
+                          onChanged: (String? value) {
+                            setState(() {
+                              dropdownValue = value!;
+                              selected_id =
+                              items_id[items.indexOf(dropdownValue)];
+                              sub_id = [];
+                              sub_items = [];
+                              getSubCategory(selected_id);
+                            });
+                          },
+                          items: items.map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     ),
                     SizedBox(height: res_height * 0.01),
                     Row(
@@ -725,9 +716,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         Text(
                           'Sub Category',
                           style: TextStyle(
-                            fontWeight: FontWeight.normal,
+                            fontWeight: FontWeight.bold,
                             color: Colors.black,
                             fontSize: 15,
+
                           ),
                         ),
                       ],
@@ -736,65 +728,51 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     Container(
                       height: 50,
                       width: res_width * 0.9,
-                      child:
-                          sub_categoryLoader
-                              ? SizedBox(
-                                height: 25,
-                                width: 25,
-                                child: Text("Please Select The Category"),
-                              )
-                              : Visibility(
-                                visible: subCategoryVisibility,
-                                child: FutureBuilder(
-                                  builder: (
-                                    BuildContext context,
-                                    AsyncSnapshot<dynamic> snapshot,
-                                  ) {
-                                    return DropdownButton<String>(
-                                      value: sub_dropdownvalue,
-                                      icon: const Icon(Icons.arrow_downward),
-                                      elevation: 16,
-                                      style: const TextStyle(
-                                        color: Colors.deepPurple,
-                                      ),
-                                      underline: Container(
-                                        height: 2,
-                                        color: Colors.deepPurpleAccent,
-                                      ),
-                                      onChanged: (String? value) {
-                                        // This is called when the user selects an item.
-                                        setState(() {
-                                          sub_dropdownvalue = value!;
-                                          selected_sub_id =
-                                              sub_items_id[sub_items.indexOf(
-                                                sub_dropdownvalue,
-                                              )];
-                                        });
-                                      },
-                                      items:
-                                          sub_items
-                                              .map<DropdownMenuItem<String>>((
-                                                String value,
-                                              ) {
-                                                return DropdownMenuItem<String>(
-                                                  value: value,
-                                                  child: Text(value),
-                                                );
-                                              })
-                                              .toList(),
-                                    );
-                                  },
-                                  future: null,
-                                ),
-                              ),
+                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey, width: 1),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: sub_categoryLoader
+                          ? Center(
+                        child: Text(
+                          "Please Select The Category",
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      )
+                          : Visibility(
+                        visible: subCategoryVisibility,
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: sub_dropdownvalue,
+                            isExpanded: true,
+                            icon: const Icon(Icons.arrow_drop_down),
+                            style: const TextStyle(color: Colors.black),
+                            onChanged: (String? value) {
+                              setState(() {
+                                sub_dropdownvalue = value!;
+                                selected_sub_id =
+                                sub_items_id[sub_items.indexOf(sub_dropdownvalue)];
+                              });
+                            },
+                            items: sub_items.map<DropdownMenuItem<String>>((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
                     ),
+
                     SizedBox(height: res_height * 0.01),
                     Row(
                       children: [
                         Text(
                           'Rent Price per day',
                           style: TextStyle(
-                            fontWeight: FontWeight.normal,
+                            fontWeight: FontWeight.bold,
                             color: Colors.black,
                             fontSize: 15,
                           ),
@@ -815,7 +793,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           ),
                           enabledBorder: const OutlineInputBorder(
                             borderSide: const BorderSide(
-                              color: kprimaryColor,
+                              color: Colors.grey,
                               width: 1,
                             ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
@@ -836,7 +814,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         Text(
                           'Security Deposit',
                           style: TextStyle(
-                            fontWeight: FontWeight.normal,
+                            fontWeight: FontWeight.bold,
                             color: Colors.black,
                             fontSize: 15,
                           ),
@@ -857,7 +835,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           ),
                           enabledBorder: const OutlineInputBorder(
                             borderSide: const BorderSide(
-                              color: kprimaryColor,
+                              color: Colors.grey,
                               width: 1,
                             ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
@@ -878,7 +856,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         Text(
                           'Delivery Charges',
                           style: TextStyle(
-                            fontWeight: FontWeight.normal,
+                            fontWeight: FontWeight.bold,
                             color: Colors.black,
                             fontSize: 15,
                           ),
@@ -899,7 +877,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           ),
                           enabledBorder: const OutlineInputBorder(
                             borderSide: const BorderSide(
-                              color: kprimaryColor,
+                              color: Colors.grey,
                               width: 1,
                             ),
                             borderRadius: BorderRadius.all(Radius.circular(15)),
@@ -1024,7 +1002,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         Text(
                           'Related Products',
                           style: TextStyle(
-                            fontWeight: FontWeight.normal,
+                            fontWeight: FontWeight.bold,
                             color: Colors.black,
                             fontSize: 15,
                           ),
@@ -1145,6 +1123,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
       ),
     );
   }
+
+
 
   tag() {
     double res_width = MediaQuery.of(context).size.width;

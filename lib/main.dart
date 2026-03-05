@@ -116,9 +116,11 @@ class _SplashScreenState extends State<SplashScreen> {
       Timer(const Duration(seconds: 2), () {
         Get.offAll(() => MainScreen());
       });
-    } else {
-      String _name = sharedPreferences.getString('fullname') ?? "";
+    }
+    else
+    {
 
+      String _name = sharedPreferences.getString('fullname') ?? "";
       context.read<AuthViewModel>().userName = _name;
       if (_name == "Guest") {
         Timer(const Duration(seconds: 2), () {
@@ -127,7 +129,9 @@ class _SplashScreenState extends State<SplashScreen> {
       } else {
         splashServices.checkAuthentication(context);
       }
+
     }
+
   }
 
   @override
