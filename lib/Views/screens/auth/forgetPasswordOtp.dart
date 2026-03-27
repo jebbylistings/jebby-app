@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jebby/Views/helper/colors.dart';
+import 'package:jebby/res/color.dart';
 import 'package:jebby/utils/utils.dart';
-import 'package:lottie/lottie.dart';
 import 'package:otp_text_field/otp_text_field.dart';
 import 'package:otp_text_field/style.dart';
 import 'package:provider/provider.dart';
@@ -22,169 +22,145 @@ class ForgetPasswordOtpScreen extends StatefulWidget {
 class _ForgetPasswordOtpScreenState extends State<ForgetPasswordOtpScreen> {
   OtpFieldController otpController = OtpFieldController();
   String? OtpValue;
+
   @override
   Widget build(BuildContext context) {
     final authViewMode = Provider.of<AuthViewModel>(context);
     double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
-    return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage("assets/slicing/bg3.jpg"),
-          fit: BoxFit.cover,
+    final sentTo = widget.email ?? '';
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () => Get.back(),
+          icon: Icon(Icons.chevron_left, color: Colors.black, size: 28),
+          style: IconButton.styleFrom(
+            padding: EdgeInsets.zero,
+            minimumSize: Size(48, 48),
+          ),
         ),
       ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          leading: InkWell(
-            onTap: () {
-              Get.back();
-            },
-            borderRadius: BorderRadius.circular(50),
-            child: Icon(Icons.arrow_back, color: Colors.black),
-          ),
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-        ),
-        body: Container(
-          width: double.infinity,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: 24),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // SizedBox(
-              //   height: res_height * 0.175,
-              // ),
-              Container(
-                width: res_width * 0.9,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Lottie.asset(
-                      'assets/lottie/otp.json',
-                      width: res_width * 0.9,
-                      height: 200,
-                    ),
-                    SizedBox(height: res_height * 0.02),
-                    Center(
-                      child: Text(
-                        'OTP',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 30,
-                          color: darkBlue,
-                        ),
-                      ),
-                    ),
-                    Align(
-                      child: Text(
-                        "Enter OTP for recovery",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
+              SizedBox(height: res_height * 0.02),
+              Center(
+                child: Image.asset(
+                  'assets/slicing/otp.png',
+                  width: res_width * 0.5,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              SizedBox(height: res_height * 0.04),
+              Text(
+                'Enter confirmation code',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                  color: Colors.black87,
+                ),
+              ),
+              SizedBox(height: 12),
+              Text(
+                'A 4-digit code was sent to $sentTo',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.grey.shade600,
+                  height: 1.4,
                 ),
               ),
               SizedBox(height: res_height * 0.05),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 35),
-                child: Row(
-                  children: [
-                    Container(
-                      child: Text(
-                        "Email: " + widget.email.toString(),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: darkBlue,
-                        ),
-                      ),
-                    ),
-                  ],
+              Theme(
+                data: Theme.of(context).copyWith(
+                  textSelectionTheme: TextSelectionThemeData(
+                    cursorColor: AppColors.primaryColor,
+                    selectionColor: AppColors.primaryColor.withOpacity(0.3),
+                  ),
                 ),
-              ),
-              SizedBox(height: res_height * 0.02),
-              OTPTextField(
-                controller: otpController,
-                length: 4,
-                width: MediaQuery.of(context).size.width,
-                textFieldAlignment: MainAxisAlignment.spaceEvenly,
-                fieldWidth: 50,
-                obscureText: true,
-                fieldStyle: FieldStyle.box,
-                otpFieldStyle: OtpFieldStyle(
-                  backgroundColor: lightBlue,
-                  borderColor: darkBlue,
-                  enabledBorderColor: darkBlue,
-                  focusBorderColor: darkBlue,
+                child: OTPTextField(
+                  controller: otpController,
+                  length: 4,
+                  width: res_width,
+                  textFieldAlignment: MainAxisAlignment.spaceEvenly,
+                  fieldWidth: 64,
+                  fieldStyle: FieldStyle.box,
+                  otpFieldStyle: OtpFieldStyle(
+                    backgroundColor: Colors.white,
+                    borderColor: Colors.grey.shade300,
+                    enabledBorderColor: Colors.grey.shade300,
+                    focusBorderColor: AppColors.primaryColor,
+                  ),
+                  outlineBorderRadius: 12,
+                  style: TextStyle(
+                    fontSize: 24,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  onChanged: (pin) {},
+                  onCompleted: (pin) {
+                    OtpValue = pin;
+                  },
                 ),
-                outlineBorderRadius: 8,
-                style: TextStyle(fontSize: 29, color: darkBlue),
-                onChanged: (pin) {},
-                onCompleted: (pin) {
-                  OtpValue = pin;
-                },
               ),
               SizedBox(height: res_height * 0.04),
-              InkWell(
-                onTap: () {
-                  if (otpController.toString() == "null") {
-                    Utils.flushBarErrorMessage("Please Enter Otp", context);
-                  } else {
-                    Map data = {"email": widget.email, "otp": OtpValue};
-                    // log(data.toString());
-                    authViewMode.otpForgetPasswordApi(data, context);
-                  }
-
-                  // Get.to(() => CreatePasswordScreen());
-                },
-                borderRadius: BorderRadius.circular(30),
-                child: Ink(
-                  height: res_height * 0.055,
-                  width: res_width * 0.9,
-                  child: Center(
-                    child: Text(
-                      'Continue',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  decoration: BoxDecoration(
-                    color: darkBlue,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                ),
-              ),
-              SizedBox(height: res_height * 0.01),
               InkWell(
                 onTap: () {
                   Map data = {'email': widget.email.toString()};
                   authViewMode.forgetPasswordApi(data, context, "forgot");
                 },
-                child: Container(
-                  height: res_height * 0.055,
-                  width: res_width * 0.5,
-                  child: Center(
-                    child: Text(
-                      'Resend OTP',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
-                        decoration: TextDecoration.underline,
-                      ),
-                    ),
+                child: Text(
+                  'Resend code',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: darkBlue,
                   ),
-                  // decoration: BoxDecoration(
-                  //     color: kprimaryColor,
-                  //     borderRadius: BorderRadius.circular(14)),
                 ),
               ),
+              SizedBox(height: res_height * 0.04),
+              SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (OtpValue == null || OtpValue!.isEmpty) {
+                      Utils.flushBarErrorMessage(
+                          "Please Enter Otp", context);
+                    } else {
+                      Map data = {
+                        "email": widget.email,
+                        "otp": OtpValue,
+                      };
+                      authViewMode.otpForgetPasswordApi(data, context);
+                    }
+                  },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryColor,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                        ),
+                  child: Text(
+                    'Continue',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: res_height * 0.02),
             ],
           ),
         ),

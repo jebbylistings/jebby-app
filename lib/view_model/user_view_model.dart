@@ -47,6 +47,12 @@ class UserViewModel with ChangeNotifier {
     sp.setString('fullname', user.name.toString());
     sp.setString('email', user.email.toString());
     sp.setString('phoneNumber', user.phoneNumber.toString());
+    final incomingAddress = user.address?.trim();
+    if (incomingAddress != null &&
+        incomingAddress.isNotEmpty &&
+        incomingAddress != 'null') {
+      sp.setString('address', incomingAddress);
+    }
     sp.setString('role', user.role.toString());
     sp.setString('isGuest', user.isGuest.toString());
 
@@ -64,7 +70,12 @@ class UserViewModel with ChangeNotifier {
       sp.setString('email', updatedUser.email.toString());
       sp.setString('phoneNumber', updatedUser.phoneNumber.toString());
       sp.setString('image', updatedUser.image.toString());
-      sp.setString('address', updatedUser.address.toString());
+      final updatedAddress = updatedUser.address?.toString().trim();
+      if (updatedAddress != null &&
+          updatedAddress.isNotEmpty &&
+          updatedAddress != 'null') {
+        sp.setString('address', updatedAddress);
+      }
       sp.setString('latitude', updatedUser.latitude.toString());
       sp.setString('longitude', updatedUser.longitude.toString());
       sp.setString('number', updatedUser.number.toString());
@@ -117,17 +128,21 @@ class UserViewModel with ChangeNotifier {
     _name = sp.getString('fullname');
     _email = sp.getString('email');
     _phoneNumber = sp.getString('phoneNumber');
+    _address = sp.getString('address');
     _role = sp.getString('role');
+    if (_address == 'null' || _address?.trim().isEmpty == true) {
+      _address = null;
+    }
     String? isGuestUserString = sp.getString('isGuest');
     bool isGuest =
         (isGuestUserString != null && isGuestUserString == 'true')
             ? true
             : false;
-
     notifyListeners();
     return UserModel(
       token: token.toString(),
       id: id.toString(),
+      address: _address,
       name: name,
       email: email,
       phoneNumber: phoneNumber,

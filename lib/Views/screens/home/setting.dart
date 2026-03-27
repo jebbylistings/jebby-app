@@ -13,7 +13,6 @@ import 'package:jebby/Views/screens/agreements/JebbyAbout.dart';
 import 'package:jebby/Views/screens/agreements/privacyPolicy.dart';
 import 'package:jebby/Views/screens/auth/login.dart';
 import 'package:jebby/Views/screens/profile/editprofile.dart';
-import 'package:jebby/Views/screens/profile/myprofile.dart';
 import 'package:jebby/res/color.dart';
 import 'package:jebby/view_model/auth_view_model.dart';
 import 'package:provider/provider.dart';

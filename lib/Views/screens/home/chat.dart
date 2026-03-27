@@ -1,12 +1,9 @@
 import 'dart:async';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:jebby/Views/helper/colors.dart';
-import 'package:jebby/res/app_url.dart';
 import 'package:provider/provider.dart';
 import '../../../Services/provider/sign_in_provider.dart';
 import '../../../model/user_model.dart';
@@ -369,8 +366,10 @@ class _ChatState extends State<Chat> {
                     child: Padding(
                       padding: const EdgeInsets.only(left: 12),
                       child: TextField(
-                        cursorColor: Colors.white,
-                        style: TextStyle(color: Colors.white),
+                        cursorColor: Colors.black,
+                        style: TextStyle(
+                          color: Colors.black,
+                        ),
                         controller: _sendMessageController,
                         keyboardType: TextInputType.multiline,
                         minLines: 1,
@@ -378,7 +377,9 @@ class _ChatState extends State<Chat> {
                         decoration: InputDecoration(
                           border: InputBorder.none,
                           hintText: "Type a message",
-                          hintStyle: TextStyle(color: Colors.black),
+                          hintStyle: TextStyle(
+                            color: Colors.grey.shade500,
+                          ),
                         ),
                       ),
                     ),

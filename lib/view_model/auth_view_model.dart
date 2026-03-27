@@ -7,7 +7,7 @@ import 'package:jebby/Views/screens/auth/createnewpassword.dart';
 import 'package:jebby/Views/screens/auth/forgetPasswordOtp.dart';
 import 'package:jebby/Views/screens/auth/login.dart';
 import 'package:jebby/Views/screens/auth/stripe_onboarding.dart';
-import 'package:jebby/Views/screens/profile/myprofile.dart';
+import 'package:jebby/Views/screens/profile/userprofile.dart';
 import 'package:jebby/Views/screens/vendors/vendorhome.dart';
 import 'package:jebby/model/user_model.dart';
 import 'package:jebby/respository/auth_repository.dart';
@@ -71,6 +71,7 @@ class AuthViewModel with ChangeNotifier {
           email: value['email'].toString(),
           id: value['id'].toString(),
           role: value['role'].toString(),
+          address: value['address'].toString(),
         ));
         userName = value['name'].toString();
         

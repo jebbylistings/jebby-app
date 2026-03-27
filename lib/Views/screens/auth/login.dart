@@ -77,60 +77,53 @@ class _LoginScreenState extends State<LoginScreen> {
     double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
     final isTablet = res_width > 600;
+    // Compact layout so content fits without overflow on all iPhone sizes
+    final isCompact = res_height < 800;
+    final spacing1 = isCompact ? 0.008 : 0.022;
+    final spacing2 = isCompact ? 0.012 : 0.03;
+    final spacing3 = isCompact ? 0.008 : 0.02;
+    final spacing4 = isCompact ? 0.004 : 0.05;
+    final topImageHeight = isCompact ? res_height * 0.17 : res_height * 0.25;
 
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: AppColors.greyColor,
-      // appBar: AppBar(
-      //   automaticallyImplyLeading: false,
-      //   leading: GestureDetector(
-      //       // onTap: () {
-      //       //   Get.back();
-      //       // },
-      //       // child: Icon(
-      //       //   Icons.arrow_back,
-      //       //   color: Colors.black,
-      //       // ),
-      //       ),
-      //   elevation: 0,
-      //   backgroundColor: Colors.transparent,
-      // ),
-      body: SingleChildScrollView(
+      body: SafeArea(
+        top: true,
+        bottom: false,
         child: Container(
           width: double.infinity,
+          height: double.infinity,
           child: Column(
             children: [
-              SizedBox(height: res_height * 0.022),
+              SizedBox(height: res_height * spacing1),
               Container(
                 width: res_width * 0.9,
-                height: res_height*0.33,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Image.asset(
-                      'assets/lottie/welcomeloginimage.png',
-                      width: res_width * 0.95,
-                      height: 250,
-                      // fit: BoxFit.fill,
-                    ),
-                  ],
+                height: topImageHeight,
+                alignment: Alignment.center,
+                child: Image.asset(
+                  'assets/lottie/welcomeloginimage.png',
+                  width: res_width * 0.95,
+                  height: topImageHeight - 8,
+                  fit: BoxFit.contain,
                 ),
               ),
-          //    SizedBox(height: res_height * 0.03),
-              Container(
-                width: res_width,
-                height: res_height*0.7,
-                decoration: BoxDecoration(
+              Expanded(
+                child: Container(
+                  width: res_width,
+                  decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(30),
                     topRight: Radius.circular(30),
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: res_height * 0.03),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                    SizedBox(height: res_height * spacing2),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -144,14 +137,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                 'Welcome Back',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 30,
+                                  fontSize: isCompact ? 24 : 30,
                                   color: Colors.black,
                                 ),
                               ),
                               Text(
                                 'Login to your account',
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: isCompact ? 14 : 16,
                                   color: Colors.black,
                                   fontWeight: FontWeight.w300,
                                 ),
@@ -162,7 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
 
-                    SizedBox(height: res_height * 0.03),
+                    SizedBox(height: res_height * spacing2),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
 
@@ -186,6 +179,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                             decoration: InputDecoration(
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: isCompact ? 12 : 16,
+                              ),
                               //  prefixIcon: Icon(Icons.email, color: darkBlue),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(15.0),
@@ -221,7 +218,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
 
-                    SizedBox(height: res_height * 0.03),
+                    SizedBox(height: res_height * spacing2),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -236,6 +233,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                             decoration: InputDecoration(
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: isCompact ? 12 : 16,
+                              ),
                               suffixIcon: InkWell(
                                 onTap: () {
 
@@ -287,7 +288,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
 
-                    SizedBox(height: res_height * 0.02),
+                    SizedBox(height: res_height * spacing3),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -308,7 +309,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: res_height * 0.03),
+                    SizedBox(height: res_height * spacing2),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -348,7 +349,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                           borderRadius: BorderRadius.circular(15),
                           child: Container(
-                            height: res_height * 0.055,
+                            height: isCompact ? res_height * 0.046 : res_height * 0.055,
                             width: res_width * 0.9,
                             child: Center(
                               child: Text(
@@ -368,7 +369,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: res_height * 0.03),
+                    SizedBox(height: res_height * spacing2),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -397,7 +398,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: res_height * 0.02),
+                    SizedBox(height: res_height * spacing3),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -429,7 +430,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     //     ],
                     //   ),
                     // ),
-                    SizedBox(height: res_height * 0.01),
+                    SizedBox(height: res_height * spacing3),
                     // Row(
                     //   mainAxisAlignment: MainAxisAlignment.center,
                     //   children: [
@@ -464,101 +465,68 @@ class _LoginScreenState extends State<LoginScreen> {
                     //     ),
                     //   ],
                     // ),
-                    Container(
-                      width: res_width * 0.9,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // InkWell(
-                          //   onTap: (){
-                          //      context.read<FirebaseAuthMethods>().signInWithFacebook(context).then((value) {
-                          //       Get.to(() => MainScreen());
-                          //      }).catchError((err){
-                          //       log(err.toString());
-                          //      });
-
-                          //   },
-                          //   child: Container(
-                          //       width: res_width * 0.15,
-                          //       height: res_width * 0.15,
-                          //       child: Image.asset('assets/slicing/fb.png')),
-                          // ),
-                          RoundedLoadingButton(
-                            onPressed: () => {handleGoogleSignIn(_value)},
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: _socialButtonSize,
+                          height: _socialButtonSize,
+                          child: RoundedLoadingButton(
+                            onPressed: () => handleGoogleSignIn(_value),
                             controller: googleController,
                             successColor: Colors.red,
-                            width: 75,
+                            width: _socialButtonSize,
                             elevation: 0,
-                            borderRadius: 25,
+                            borderRadius: _socialButtonRadius,
                             valueColor: darkBlue,
                             color: Colors.white,
-                            child: Container(
-                              width: res_width * 0.15,
-                              height: res_width * 0.15,
-                              child: Image.asset('assets/slicing/googlesignin.png'),
+                            child: Center(
+                              child: Image.asset(
+                                'assets/slicing/google.png',
+                                width: 36,
+                                height: 36,
+                                fit: BoxFit.contain,
+                              ),
                             ),
                           ),
-                          RoundedLoadingButton(
-                            onPressed: () {
-                              handleFacebookAuth(_value);
-                            },
+                        ),
+                        SizedBox(width: 16),
+                        SizedBox(
+                          width: _socialButtonSize,
+                          height: _socialButtonSize,
+                          child: RoundedLoadingButton(
+                            onPressed: () => handleFacebookAuth(_value),
                             controller: facebookController,
                             successColor: Colors.blue,
-                            width: 75,
+                            width: _socialButtonSize,
                             elevation: 0,
-                            borderRadius: 25,
+                            borderRadius: _socialButtonRadius,
                             valueColor: darkBlue,
                             color: Colors.white,
-                            child: Container(
-                              width: res_width * 0.15,
-                              height: res_width * 0.15,
-                              child: Image.asset('assets/slicing/facebooksignin.png'),
+                            child: Center(
+                              child: Image.asset(
+                                'assets/slicing/fb.png',
+                                width: 36,
+                                height: 36,
+                                fit: BoxFit.contain,
+                              ),
                             ),
                           ),
-
-                          GetPlatform.isIOS
-                              ? IOSButton(res_width, isTablet)
-                              : SizedBox.shrink(),
-
-                          // : Container(
-                          //     height: res_width * 0.116,
-                          //     child: ElevatedButton.icon(
-                          //       onPressed: () {
-                          //         showPhoneNumberDialog(context, _phoneController, res_width);
-                          //       },
-                          //       label: Icon(
-                          //         Icons.phone,
-                          //         size: 28,
-                          //         color: darkBlue,
-                          //       ),
-                          //     )),
-
-                          // InkWell(
-                          //   onTap: () {
-                          //   // FirebaseAuthMethods(FirebaseAuth.instance).signInWithGoogle(context);
-                          //      context.read<FirebaseAuthMethods>().signInWithGoogle(context).then((value){
-                          //       Get.to(() => MainScreen());
-                          //      }).catchError((error){
-                          //       log(error.toString());
-                          //      });
-
-                          //       },
-                          //   child: Container(
-
-                          //       width: res_width * 0.15,
-                          //       height: res_width * 0.15,
-                          //       child: Image.asset('assets/slicing/google.png')),
-                          // )
-
-                          Container(
-                            height:
-                                isTablet
-                                    ? res_width * 0.055
-                                    : res_width * 0.127,
-                            width:
-                                isTablet ? res_width * 0.15 : res_width * 0.17,
-                            child: ElevatedButton.icon(
-                              onPressed: () {
+                        ),
+                        if (GetPlatform.isIOS) ...[
+                          SizedBox(width: 16),
+                          IOSButton(res_width, isTablet),
+                        ],
+                        SizedBox(width: 16),
+                        SizedBox(
+                          width: _socialButtonSize,
+                          height: _socialButtonSize,
+                          child: Material(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(_socialButtonRadius),
+                            elevation: 0,
+                            child: InkWell(
+                              onTap: () {
                                 getUserDate()
                                     .then((value) async {
                                       if (value.role.toString() == 'null' ||
@@ -583,18 +551,17 @@ class _LoginScreenState extends State<LoginScreen> {
                                     .onError((error, stackTrace) {
                                       if (kDebugMode) {}
                                     });
-
-                                //     // authViewMode.loginAsGuest(context);
                               },
-                              label: Icon(Icons.person, size: 28),
-                              style: ElevatedButton.styleFrom(elevation: 0),
+                              borderRadius: BorderRadius.circular(_socialButtonRadius),
+                              child: Center(
+                                child: Icon(Icons.person, size: 36, color: AppColors.primaryColor),
+                              ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: res_height * 0.02),
-                    // GetPlatform.isIOS
+                    SizedBox(height: res_height * spacing3),
                     //     ? Container(
                     //         height: res_width * 0.116,
                     //         child: ElevatedButton.icon(
@@ -630,10 +597,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     //     color: darkBlue,
                     //   ),
                     // ),
-                    SizedBox(height: res_height * 0.05),
-                  ],
+                    SizedBox(height: res_height * spacing4),
+                    SizedBox(height: MediaQuery.of(context).padding.bottom),
+                    ],
                 ),
               ),
+            ),
+            ),
             ],
           ),
         ),
@@ -890,27 +860,37 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
+  static const double _socialButtonSize = 75.0;
+  static const double _socialButtonRadius = 37.5;
+
   Widget IOSButton(res_width, isTablet) {
     if (GetPlatform.isIOS) {
-      return RoundedLoadingButton(
-        onPressed: () {
-          handleAppleAuth(_value);
-        },
-        controller: AppleController,
-        successColor: Colors.black,
-        width: 75,
-        valueColor: darkBlue,
-        elevation: 0,
-        borderRadius: 25,
-        color: Colors.white,
-        child: Container(
-          width: isTablet ? res_width * 0.15 : res_width * 0.15,
-          height: isTablet ? res_width * 0.03 : res_width * 0.08,
-          child: Image.asset('assets/slicing/aple.png'),
+      return SizedBox(
+        width: _socialButtonSize,
+        height: _socialButtonSize,
+        child: RoundedLoadingButton(
+          onPressed: () {
+            handleAppleAuth(_value);
+          },
+          controller: AppleController,
+          successColor: Colors.black,
+          width: _socialButtonSize,
+          valueColor: darkBlue,
+          elevation: 0,
+          borderRadius: _socialButtonRadius,
+          color: Colors.white,
+          child: Center(
+            child: Image.asset(
+              'assets/slicing/aple.png',
+              width: 36,
+              height: 36,
+              fit: BoxFit.contain,
+            ),
+          ),
         ),
       );
     }
-    return SizedBox.shrink();
+    return SizedBox(width: _socialButtonSize, height: _socialButtonSize);
   }
 }
 

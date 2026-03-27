@@ -11,7 +11,7 @@ import 'package:get/get.dart';
 import 'package:jebby/Views/controller/bottomcontroller.dart';
 import 'package:jebby/Views/helper/colors.dart';
 import 'package:jebby/Views/helper/global.dart';
-import 'package:jebby/Views/screens/home/category.dart';
+import 'package:jebby/Views/screens/home/FeaturedCategories.dart';
 import 'package:jebby/Views/screens/home/home.dart';
 import 'package:jebby/Views/screens/home/messages.dart';
 import 'package:http/http.dart' as http;
@@ -46,7 +46,7 @@ class _MainScreenState extends State<MainScreen> {
     HomeScreen(),
     // FavouriteScreen(),
     FilterScreeen(),
-    Category(),
+    FeaturedCategoriesScreen(),
     MessageScreen(),
     Settings(),
     MessagesScreen(),
@@ -57,7 +57,6 @@ class _MainScreenState extends State<MainScreen> {
     ProductListScreen(side: true),
     // Settings(),
     ProductListScreen(side: true),
-    // Category(),
     VendorNotifications(),
     Settings(),
     MessagesScreen(),
@@ -102,7 +101,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   cancelTimer() {
-    notiTimer().timer.cancel();
+    notiTimer().timer?.cancel();
     notiTimer().timer = null;
   }
 
@@ -130,10 +129,10 @@ class _MainScreenState extends State<MainScreen> {
   //   }
   // }
 
+  @override
   void dispose() {
+    cancelTimer();
     super.dispose();
-
-    timer.cancel();
   }
 
   void func() async {
@@ -187,7 +186,7 @@ class _MainScreenState extends State<MainScreen> {
         }
       },
       (error) {
-        if (error != null) {
+        if (error != null && mounted) {
           setState(() {
             isEmpty = false;
             isLoading = true;
@@ -708,7 +707,7 @@ class _MainScreenState extends State<MainScreen> {
 
     if (data["data"].length != 0) {}
 
-    if (data["data"].length != 0) {
+    if (data["data"].length != 0 && mounted) {
       setState(() {
         imagesapi = data["data"][0]["image"].toString();
         nameapi = data["data"][0]["name"].toString();
@@ -720,7 +719,7 @@ class _MainScreenState extends State<MainScreen> {
     if (response.statusCode == 200) {
       SharedPreferences updatePrefrences =
           await SharedPreferences.getInstance();
-      if (data["data"].length != 0) {
+      if (data["data"].length != 0 && mounted) {
         setState(() {
           updatePrefrences.setString(
             'fullname',

@@ -1,15 +1,19 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:get/get.dart';
-import 'package:jebby/Views/helper/colors.dart';
-import 'package:jebby/Views/helper/global.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'package:jebby/Views/screens/mainfolder/drawer.dart';
 import 'package:jebby/Views/screens/vendors/OrderReq.dart';
 import 'package:jebby/Views/screens/vendors/ProductList.dart';
 import 'package:jebby/Views/screens/vendors/notification.dart';
-import 'package:jebby/Views/screens/vendors/renterProfile.dart';
+import 'package:jebby/Views/screens/profile/userprofile.dart';
 import 'package:jebby/Views/screens/vendors/transactionlist.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -41,82 +45,244 @@ class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
   String? fullname;
   String? email;
   String? role;
+  String? profileAddress;
+  String? profileImage;
+  double averageRating = 4.0;
+  int totalReviews = 0;
+  String Url = dotenv.env['baseUrlM'] ?? '';
 
   void profileData(BuildContext context) async {
     getUserDate()
         .then((value) async {
-          setState(() {
-            token = value.token.toString();
-            sourceId = value.id.toString();
-            fullname = value.name.toString();
-            email = value.email.toString();
-            role = value.role.toString();
-          });
+          token = value.token.toString();
+          sourceId = value.id.toString();
+          fullname = value.name.toString();
+          email = value.email.toString();
+          role = value.role.toString();
+          getProductsApi(sourceId);
+          _fetchReviews(sourceId);
         })
         .onError((error, stackTrace) {
           if (kDebugMode) {}
         });
   }
 
-  Widget profileCard() {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.orange,
-        borderRadius: BorderRadius.circular(20),
+  Future getProductsApi(String id) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$Url/UserProfileGetById/$id'),
+      );
+      var data = jsonDecode(response.body.toString());
+      if (data["data"] != null && data["data"] is List && (data["data"] as List).isNotEmpty) {
+        final profile = data["data"][0];
+        final apiAddress = profile["address"]?.toString() ?? profile["location"]?.toString() ?? "";
+        final apiImage = profile["image"]?.toString() ?? "";
+        final apiName = profile["name"]?.toString() ?? "";
+        if (mounted) {
+          setState(() {
+            profileAddress = apiAddress;
+            profileImage = apiImage;
+            if (apiName.isNotEmpty) fullname = apiName;
+          });
+        }
+        final prefs = await SharedPreferences.getInstance();
+        prefs.setString('address', apiAddress);
+        prefs.setString('image', apiImage);
+        if (apiName.isNotEmpty) prefs.setString('fullname', apiName);
+      }
+    } catch (e) {
+      if (kDebugMode) {}
+    }
+  }
+
+  Widget _buildProfileAvatar() {
+    final sp = context.read<SignInProvider>();
+    final hasApiImage = profileImage != null && profileImage != "null" && profileImage!.trim().isNotEmpty;
+    final imageUrl = hasApiImage
+        ? (profileImage!.startsWith('http')
+            ? profileImage!
+            : '${Url}${profileImage!.startsWith('/') ? '' : '/'}$profileImage')
+        : null;
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      return CircleAvatar(
+        radius: 38,
+        backgroundColor: Colors.white,
+        child: CachedNetworkImage(
+          imageUrl: imageUrl,
+          imageBuilder: (context, imageProvider) => CircleAvatar(
+            radius: 36,
+            backgroundImage: imageProvider,
+          ),
+          placeholder: (context, url) => CircleAvatar(
+            radius: 36,
+            backgroundColor: Colors.grey.shade200,
+            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.grey),
+          ),
+          errorWidget: (context, url, error) => CircleAvatar(
+            radius: 36,
+            backgroundColor: Colors.grey.shade200,
+            child: Icon(Icons.person, size: 44, color: Colors.grey),
+          ),
+        ),
+      );
+    }
+    if (sp.imageUrl != null && sp.imageUrl != "null" && sp.imageUrl!.trim().isNotEmpty) {
+      return CircleAvatar(
+        radius: 38,
+        backgroundColor: Colors.white,
+        child: CachedNetworkImage(
+          imageUrl: sp.imageUrl!,
+          imageBuilder: (context, imageProvider) => CircleAvatar(
+            radius: 36,
+            backgroundImage: imageProvider,
+          ),
+          placeholder: (context, url) => CircleAvatar(
+            radius: 36,
+            backgroundColor: Colors.grey.shade200,
+            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.grey),
+          ),
+          errorWidget: (context, url, error) => CircleAvatar(
+            radius: 36,
+            backgroundColor: Colors.grey.shade200,
+            child: Icon(Icons.person, size: 44, color: Colors.grey),
+          ),
+        ),
+      );
+    }
+    return CircleAvatar(
+      radius: 38,
+      backgroundColor: Colors.white,
+      child: CircleAvatar(
+        radius: 36,
+        backgroundColor: Colors.grey.shade200,
+        child: Icon(Icons.person, size: 44, color: Colors.grey),
       ),
-      child: Row(
-        children: [
-          /// USER INFO
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    );
+  }
+
+  void _fetchReviews(String id) {
+    ApiRepository.shared.reviewsByVendorId(
+      id,
+      (reviewsData) {
+        if (mounted && reviewsData.data != null && reviewsData.data!.isNotEmpty) {
+          double sum = 0;
+          for (var r in reviewsData.data!) {
+            sum += (r.stars ?? 0).toDouble();
+          }
+          setState(() {
+            averageRating = sum / reviewsData.data!.length;
+            totalReviews = reviewsData.totalreviews ?? reviewsData.data!.length;
+          });
+        }
+      },
+      (error) {},
+    );
+  }
+
+  Widget profileCard() {
+    return GestureDetector(
+      onTap: () async {
+        await Get.to(() => RenterProfile());
+        if (mounted) profileData(context);
+      },
+      child: Container(
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Color(0xFFFBA104),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 12,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   "My Profile",
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-
-                SizedBox(height: 5),
-
-                Text(
-                  fullname ?? "Loading...",
-                  style: TextStyle(
+                  style: GoogleFonts.inter(
                     color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-
-                SizedBox(height: 5),
-
-                Row(
-                  children: [
-                    Icon(Icons.email, color: Colors.white, size: 16),
-                    SizedBox(width: 5),
-                    Expanded(
-                      child: Text(
-                        email ?? "",
-                        style: TextStyle(color: Colors.white, fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
-
-                SizedBox(height: 6),
-
-                Text(role ?? "", style: TextStyle(color: Colors.white)),
+                Icon(Icons.chevron_right, color: Colors.white, size: 28, weight: 700),
               ],
             ),
-          ),
-
-          /// PROFILE IMAGE
-          CircleAvatar(
-            radius: 35,
-            backgroundColor: Colors.white,
-            child: Icon(Icons.person, size: 40),
-          ),
-        ],
+            SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        fullname ?? "Loading...",
+                        style: GoogleFonts.inter(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(Icons.location_on, color: Colors.white, size: 16),
+                          SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              (profileAddress == null || profileAddress!.trim().isEmpty || profileAddress == "null")
+                                  ? "Add your address"
+                                  : profileAddress!,
+                              style: GoogleFonts.inter(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 8),
+                      Row(
+                        children: [
+                          RatingBarIndicator(
+                            rating: averageRating,
+                            itemBuilder: (context, index) => Icon(
+                              Icons.star,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                            itemCount: 5,
+                            itemSize: 18,
+                            direction: Axis.horizontal,
+                            unratedColor: Colors.white.withOpacity(0.3),
+                          ),
+                          SizedBox(width: 6),
+                          Text(
+                            "($totalReviews Reviews)",
+                            style: GoogleFonts.inter(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 12),
+                _buildProfileAvatar(),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -191,10 +357,10 @@ class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
     notiTimer().timer = null;
   }
 
+  @override
   void dispose() {
+    notiTimer().timer?.cancel();
     super.dispose();
-
-    timer.cancel();
   }
 
   void func() async {
@@ -207,7 +373,9 @@ class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
   void initState() {
     super.initState();
     getData();
-    profileData(context);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) profileData(context);
+    });
     func();
   }
 
@@ -221,80 +389,213 @@ class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
         }
       },
       child: Container(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: Colors.grey.shade200,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 10,
+              offset: Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Image.asset(icon, height: 45),
-                Icon(Icons.arrow_forward_ios_sharp, color: Colors.black,size: 20,)
+                Image.asset(icon, height: 48, width: 48),
+                Icon(Icons.chevron_right, color: Colors.black54, size: 24),
               ],
             ),
-            SizedBox(height: 10),
+            SizedBox(height: 12),
             Text(
               title,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: GoogleFonts.inter(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: Colors.black87,
+              ),
             ),
             SizedBox(height: 4),
-            Text(subtitle, style: TextStyle(fontSize: 12)),
+            Text(
+              subtitle,
+              style: GoogleFonts.inter(fontSize: 13, color: Colors.black54, fontWeight: FontWeight.w400),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget sectionHeader(title) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        Text("View all", style: TextStyle(color: Colors.orange)),
-      ],
+  Widget _sectionCard({required String title, required List<Widget> children}) {
+    return Container(
+      padding: EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+            Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  if (title == "Today") {
+                    Get.to(() => TransactionListScreen());
+                  } else {
+                    Get.to(() => VendorNotifications());
+                  }
+                },
+                child: Text(
+                  "View all",
+                  style: GoogleFonts.inter(
+                    color: Color(0xFFFBA104),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16),
+          ...children,
+        ],
+      ),
     );
   }
 
   Widget todayItem(name, date, amount) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: Colors.pink.shade50,
-        child: Icon(Icons.arrow_upward, color: Colors.red),
-      ),
-      title: Text(name),
-      subtitle: Text(date),
-      trailing: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 10),
+      child: Row(
         children: [
-          Text(amount, style: TextStyle(color: Colors.red)),
-          Container(
-            margin: EdgeInsets.only(top: 4),
-            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(10),
+          CircleAvatar(
+            radius: 22,
+            backgroundColor: Color(0xFFFFE4EC),
+            child: Icon(Icons.north_east, color: Colors.red, size: 22),
+          ),
+          SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  date,
+                  style: GoogleFonts.inter(fontSize: 13, color: Colors.grey.shade600, fontWeight: FontWeight.w400),
+                ),
+              ],
             ),
-            child: Text("PAID", style: TextStyle(fontSize: 10)),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                amount,
+                style: GoogleFonts.inter(
+                  color: Colors.red,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
+              ),
+              SizedBox(height: 4),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  "PAID",
+                  style: GoogleFonts.inter(fontSize: 10, color: Colors.black, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget notificationItem(title, subtitle, time) {
-    return ListTile(
-      leading: CircleAvatar(radius: 5, backgroundColor: Colors.orange),
-      title: Text(title),
-      subtitle: Text(subtitle),
-      trailing: Text(time),
+  Widget notificationItem(title, subtitle, time, {Color? dotColor}) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: EdgeInsets.only(top: 6),
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: dotColor ?? Color(0xFFFBA104),
+              shape: BoxShape.circle,
+            ),
+          ),
+          SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: Colors.black54,
+                    height: 1.3,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          Text(
+            time,
+            style: GoogleFonts.inter(fontSize: 13, color: Colors.grey.shade600, fontWeight: FontWeight.w400),
+          ),
+        ],
+      ),
     );
   }
 
@@ -302,9 +603,6 @@ class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    double res_width = MediaQuery.of(context).size.width;
-    double res_height = MediaQuery.of(context).size.height;
-
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -318,15 +616,17 @@ class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
         key: _key,
 
         drawer: DrawerScreen(stack: "vendor"),
+        backgroundColor: Colors.grey.shade50,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: Colors.white,
           elevation: 0,
-          centerTitle: true,
+          centerTitle: false,
+          titleSpacing: 0,
           title: Text(
             'Home',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
+            style: GoogleFonts.inter(
+              fontWeight: FontWeight.w700,
+              color: Colors.black87,
               fontSize: 19,
             ),
           ),
@@ -337,126 +637,118 @@ class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
             borderRadius: BorderRadius.circular(50),
             child: Padding(
               padding: const EdgeInsets.all(17.0),
-              child: Container(
-                child: Image.asset('assets/slicing/hamburger.png'),
-              ),
+              child: Image.asset(
+              'assets/slicing/mingcute_menu-fill.png',
+              color: Colors.black,
+            ),
             ),
           ),
           actions: [
+            SizedBox(width: 8),
             Stack(
+              clipBehavior: Clip.none,
               children: [
-                GestureDetector(
-                  onTap: () {
-                    seenNotification();
-                    Get.to(() => VendorNotifications());
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                      top: 18.0,
-                      bottom: 18.0,
-                      right: 7,
-                    ),
-                    child: Icon(Icons.notifications_none, color: Colors.black),
-                  ),
-                ),
-                // IconButton(
-                //   icon: Icon(
-                //     Icons.notifications,
-                //     color: Colors.black,
-                //   ),
-                //   onPressed: () {
-                //     Get.to(() => VendorNotifications());
-                //   },
-                // ),
-                isLoading1
-                    ? SizedBox()
-                    : ApiRepository.shared.getNotificationModelList!.unseen
-                            .toString() ==
-                        "0"
-                    ? SizedBox()
-                    : Positioned(
-                      top: 4,
-                      right: 0,
-                      child: Container(
-                        padding: EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: kprimaryColor,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        constraints: BoxConstraints(
-                          minWidth: 16,
-                          minHeight: 16,
-                        ),
-                        child: Text(
-                          isLoading1
-                              ? ""
-                              : ApiRepository
-                                      .shared
-                                      .getNotificationModelList!
-                                      .unseen
-                                      .toString() ==
-                                  "0"
-                              ? ""
-                              : ApiRepository
-                                  .shared
-                                  .getNotificationModelList!
-                                  .unseen
-                                  .toString(),
-                          // style: TextStyle(color: Colors.white),
-                          style: TextStyle(color: Colors.white, fontSize: 10),
-                          textAlign: TextAlign.center,
+                Material(
+                  color: Colors.white,
+                  shape: CircleBorder(side: BorderSide(color: Colors.grey.shade300, width: 1)),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: () {
+                      seenNotification();
+                      Get.to(() => VendorNotifications());
+                    },
+                    child: SizedBox(
+                      height: 36,
+                      width: 36,
+                      child: Center(
+                        child: Image.asset(
+                          'assets/slicing/notificationnew.png',
+                          height: 20,
+                          width: 20,
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ),
+                  ),
+                ),
+                if (!isLoading1 &&
+                    ApiRepository.shared.getNotificationModelList?.unseen.toString() != "0" &&
+                    ApiRepository.shared.getNotificationModelList != null)
+                  Positioned(
+                    top: -2,
+                    right: -2,
+                    child: Container(
+                      padding: EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Color(0xFFFBA104),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      constraints: BoxConstraints(minWidth: 16, minHeight: 16),
+                      child: Text(
+                        ApiRepository.shared.getNotificationModelList!.unseen.toString(),
+                        style: TextStyle(color: Colors.white, fontSize: 10),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
               ],
             ),
-            GestureDetector(
-              onTap: () {
-                Get.to(() => RenterProfile());
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 19.0,
-                  vertical: 18.0,
-                ),
-                child: Icon(
-                  Icons.person_outline,
-                  color: Colors.black,
-                  size: 25,
+            SizedBox(width: 10),
+            Material(
+              color: Colors.white,
+              shape: CircleBorder(side: BorderSide(color: Colors.grey.shade300, width: 1)),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () => Get.to(() => RenterProfile()),
+                child: SizedBox(
+                  height: 36,
+                  width: 36,
+                  child: Center(
+                    child: Image.asset(
+                      'assets/slicing/personnew.png',
+                      height: 20,
+                      width: 20,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                 ),
               ),
             ),
+            SizedBox(width: 12),
           ],
         ),
 
         body: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 /// SEARCH BAR
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 15),
+                  height: 50,
+                  padding: EdgeInsets.symmetric(horizontal: 18),
                   decoration: BoxDecoration(
                     color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(25),
                   ),
                   child: TextField(
                     decoration: InputDecoration(
-                      icon: Icon(Icons.search),
                       hintText: "Search by Product, Orders e.t.c",
+                      hintStyle: GoogleFonts.inter(color: Colors.grey.shade600, fontSize: 15, fontWeight: FontWeight.w400),
+                      prefixIcon: Icon(Icons.search, color: Colors.grey.shade500, size: 22),
                       border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(vertical: 14),
                     ),
                   ),
                 ),
 
-                SizedBox(height: 20),
+                SizedBox(height: 24),
 
                 /// PROFILE CARD
                 profileCard(),
 
-                SizedBox(height: 20),
+                SizedBox(height: 24),
 
                 /// FEATURE BOXES
                 Row(
@@ -468,7 +760,7 @@ class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
                         "assets/newpacks/myproducts.png",
                       ),
                     ),
-                    SizedBox(width: 15),
+                    SizedBox(width: 16),
                     Expanded(
                       child: featureCard(
                         "My Order",
@@ -479,29 +771,38 @@ class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
                   ],
                 ),
 
-                SizedBox(height: 25),
+                SizedBox(height: 24),
 
                 /// TODAY SECTION
-                sectionHeader("Today"),
+                _sectionCard(
+                  title: "Today",
+                  children: [
+                    todayItem("John Doe", "Aug 10, 2025", "-\$200.00"),
+                    todayItem("John Doe", "Aug 10, 2025", "-\$200.00"),
+                    todayItem("Mary Jane", "Aug 27, 2025", "-\$10.33"),
+                  ],
+                ),
 
-                todayItem("John Doe", "Aug 10, 2025", "-\$200.00"),
-                todayItem("John Doe", "Aug 10, 2025", "-\$200.00"),
-                todayItem("Mary Jane", "Aug 27, 2025", "-\$10.33"),
-
-                SizedBox(height: 25),
+                SizedBox(height: 24),
 
                 /// NOTIFICATIONS
-                sectionHeader("Latest Notifications"),
-
-                notificationItem(
-                  "Admin",
-                  "You've got a new rental request for your...",
-                  "8:12 PM",
-                ),
-                notificationItem(
-                  "Transfer Failed",
-                  "Your \$300 transfer to Emily Lee could not be...",
-                  "8:12 PM",
+                _sectionCard(
+                  title: "Latest Notifications",
+                  children: [
+                    notificationItem(
+                      "Admin",
+                      "You've got a new rental request for your...",
+                      "8:12 PM",
+                      dotColor: Color(0xFFFBA104),
+                    ),
+                    Divider(height: 1),
+                    notificationItem(
+                      "Transfer Failed",
+                      "Your \$300 transfer to Emily Lee could not be...",
+                      "8:12 PM",
+                      dotColor: Color(0xFFFBA104),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -574,7 +875,7 @@ class _VendrosHomeScreenState extends State<VendrosHomeScreen> {
             height: res_height * 0.2,
             decoration: BoxDecoration(
               border: Border.all(color: Colors.white, width: 2),
-              color: kprimaryColor,
+              color: Color(0xFFFBA104),
               borderRadius: BorderRadius.all(Radius.circular(18)),
               boxShadow: [
                 BoxShadow(

@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jebby/Views/helper/colors.dart';
 import 'package:jebby/Views/screens/mainfolder/homemain.dart';
-// import 'package:jebby/screens/home/profile/myprofile.dart';
-import 'package:jebby/Views/screens/profile/myprofile.dart';
+import 'package:jebby/Views/screens/profile/userprofile.dart';
 
 class ProductList extends StatefulWidget {
   const ProductList({Key? key}) : super(key: key);

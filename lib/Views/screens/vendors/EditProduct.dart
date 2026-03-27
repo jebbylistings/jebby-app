@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/cupertino.dart';
@@ -8,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:jebby/Views/helper/colors.dart';
 import 'package:provider/provider.dart';
 import 'package:dio/dio.dart' as d;
@@ -18,8 +21,6 @@ import '../../../model/user_model.dart';
 import '../../../res/app_url.dart';
 import '../../../view_model/apiServices.dart';
 import '../../../view_model/user_view_model.dart';
-import '../../controller/bottomcontroller.dart';
-import '../mainfolder/homemain.dart';
 
 class EditProductScreen extends StatefulWidget {
   final dynamic category_id;
@@ -59,7 +60,7 @@ class EditProductScreen extends StatefulWidget {
 class _EditProductScreenState extends State<EditProductScreen> {
   String Url = dotenv.env['baseUrlM'] ?? 'No url found';
   // bool switchnot = false;
-  bool insRentSwitchNot = false;
+  bool insRentSwitchNot = true; // Match add/edit screenshot default (switch ON)
   bool messageSwitchNot = false;
   bool product_update_button = false;
   bool img_button = false;
@@ -69,7 +70,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
   bool switchnot = true;
   // var imageList = [];
   // var imageID = [];
-  var relProdArray = [];
   bool catLoader = true;
   bool catError = false;
   bool sub_catLoader = true;
@@ -128,11 +128,82 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   var price_2 =
       ApiRepository.shared.getProductsByIdList?.data![0].price.toString();
+
+  // Index of the image currently shown in the big preview.
+  int _activeImageIndex = 0;
   late var name_length;
   late var category_name;
   late var category_id;
   late var cat_value;
   late var sub_cat_value;
+
+  // -----------------------------
+  // Redesigned UI state (matches screenshots)
+  // -----------------------------
+  bool productAvailabilitySwitch = true;
+
+  // Location (for Location Based Delivery)
+  final TextEditingController _locationController = TextEditingController();
+  String? locationLat;
+  String? locationLng;
+  List<dynamic> _placeList = [];
+  String _sessionToken = '1234567890';
+
+  // Dropdown values shown in the second screenshot.
+  String materialValue = "Wooden";
+  String conditionValue = "New";
+  String finishValue = "Simple Finish";
+  String styleValue = "Minimal";
+  String yearMadeValue = "2025";
+
+  final List<String> _materialOptions = ["Wooden", "Plastic", "Metal", "Other"];
+  final List<String> _conditionOptions = ["New", "Used", "Refurbished"];
+  final List<String> _finishOptions = ["Simple Finish", "Glossy", "Matte"];
+  final List<String> _styleOptions = ["Minimal", "Classic", "Modern"];
+  final List<String> _yearOptions = [
+    "2018",
+    "2019",
+    "2020",
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025",
+  ];
+
+  void _syncSpecsFromDropdowns() {
+    // Keep backend compatibility: backend expects a single `specifications` string.
+    specsController.text =
+        "Material: $materialValue, Condition: $conditionValue, Finish: $finishValue, Style: $styleValue, Year Made: $yearMadeValue";
+  }
+
+  Future<void> pickAvailabilityFromDate() async {
+    final initial = DateTime.tryParse(pasd.toString()) ?? DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime.now().subtract(const Duration(days: 3650)),
+      lastDate: DateTime(2035),
+    );
+    if (picked == null) return;
+    setState(() {
+      pasd = DateFormat('yyyy-MM-dd').format(picked);
+    });
+  }
+
+  Future<void> pickAvailabilityToDate() async {
+    final initial = DateTime.tryParse(paed.toString()) ?? DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime.now().subtract(const Duration(days: 3650)),
+      lastDate: DateTime(2035),
+    );
+    if (picked == null) return;
+    setState(() {
+      paed = DateFormat('yyyy-MM-dd').format(picked);
+    });
+  }
 
   void initState() {
     assign();
@@ -188,6 +259,44 @@ class _EditProductScreenState extends State<EditProductScreen> {
             : int.parse(locationBD.toString());
     deliverychargesController.text = widget.delivery_charges;
     SecurityDepositeController.text = security_deposit.toString();
+    final data0 = ApiRepository.shared.getProductsByIdList?.data?[0];
+    if (data0 != null) {
+      if (data0.latitude != null) locationLat = data0.latitude.toString();
+      if (data0.longitude != null) locationLng = data0.longitude.toString();
+    }
+  }
+
+  void _onLocationChanged() {
+    getSuggestion(_locationController.text);
+  }
+
+  void getSuggestion(String input) async {
+    final kPLACES_API_KEY =
+        dotenv.env['kPLACES_API_KEY'] ?? 'No secret key found';
+    if (input.isEmpty) {
+      setState(() => _placeList = []);
+      return;
+    }
+    try {
+      final baseURL =
+          'https://maps.googleapis.com/maps/api/place/autocomplete/json';
+      final request =
+          '$baseURL?input=$input&key=$kPLACES_API_KEY&sessiontoken=$_sessionToken';
+      final response = await http.get(Uri.parse(request));
+      if (response.statusCode == 200 && mounted) {
+        setState(() {
+          _placeList = json.decode(response.body)['predictions'] ?? [];
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _placeList = []);
+    }
+  }
+
+  @override
+  void dispose() {
+    _locationController.dispose();
+    super.dispose();
   }
 
   getCatId() {
@@ -366,14 +475,61 @@ class _EditProductScreenState extends State<EditProductScreen> {
     try {
       List<XFile>? selectedImages = await ImagePicker().pickMultiImage();
       if (selectedImages.isNotEmpty) {
-        for (XFile image in selectedImages) {
-          var temp_image = File(image.path);
-          imagesPath.add(temp_image);
+        const int maxImages = 4;
+        final remaining = maxImages - imageFileList.length;
+        if (remaining <= 0) return;
+
+        final imagesToAdd = selectedImages.take(remaining).toList();
+        for (XFile image in imagesToAdd) {
+          final tempImage = File(image.path);
+          imagesPath.add(tempImage);
         }
-        imageFileList.addAll(selectedImages);
+        imageFileList.addAll(imagesToAdd);
+        _activeImageIndex = imageFileList.length - 1;
       }
       setState(() {});
     } catch (e) {}
+  }
+
+  // Adds exactly one image (matches the "+ Add" behavior in screenshots).
+  void addOneImage() async {
+    try {
+      const int maxImages = 4;
+      if (imageFileList.length >= maxImages) return;
+
+      final XFile? image = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+      );
+      if (image == null) return;
+      final tempImage = File(image.path);
+      setState(() {
+        imagesPath.add(tempImage);
+        imageFileList.add(image);
+        _activeImageIndex = imageFileList.length - 1;
+      });
+    } catch (_) {}
+  }
+
+  // Replaces the currently selected image in the preview.
+  void replaceFirstImage() async {
+    try {
+      final XFile? image = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+      );
+      if (image == null) return;
+      final tempImage = File(image.path);
+      setState(() {
+        if (imageFileList.isEmpty || imagesPath.isEmpty) {
+          imagesPath = [tempImage];
+          imageFileList = [image];
+          _activeImageIndex = 0;
+        } else {
+          final idx = _activeImageIndex.clamp(0, imageFileList.length - 1);
+          imagesPath[idx] = tempImage;
+          imageFileList[idx] = image;
+        }
+      });
+    } catch (_) {}
   }
 
   Future<GetProductsByProductId> getProductsById(
@@ -540,6 +696,15 @@ class _EditProductScreenState extends State<EditProductScreen> {
     // price_1_Controller.text.toString().isNotEmpty &&
     // discountController.text.toString().isNotEmpty
     ) {
+      if (locationBD == "1" && (locationLat == null || locationLng == null)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Please enter and select a location for delivery"),
+          ),
+        );
+        setState(() => product_update_button = false);
+        return;
+      }
       ApiRepository.shared.productUpdate(
         id,
         selected_id,
@@ -554,7 +719,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                 : negotiationController.text.toString()
             : "0",
         widget.product_id,
-        relProdArray,
+        [],
         widget.product_id,
         id,
         // price_2_Controller.text.toString(),
@@ -578,6 +743,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
         "1",
         deliverychargesController.text.toString(),
         SecurityDepositeController.text.toString(),
+        locationLat ?? "0",
+        locationLng ?? "0",
       );
     } else {
       final snackBar = new SnackBar(content: new Text("Fields can't be empty"));
@@ -628,9 +795,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   @override
   Widget build(BuildContext context) {
-
-    double width = MediaQuery.of(context).size.width;
-
     return Scaffold(
       backgroundColor: Color(0xfff5f5f5),
 
@@ -639,289 +803,711 @@ class _EditProductScreenState extends State<EditProductScreen> {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios,color: Colors.black),
-          onPressed: (){
+          icon: Icon(Icons.arrow_back_ios, color: Colors.black),
+          onPressed: () {
             Get.back();
           },
         ),
         title: Text(
           "List Product",
-          style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold
-          ),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
       ),
 
       body: SingleChildScrollView(
-
-        padding: EdgeInsets.symmetric(horizontal:16),
+        padding: EdgeInsets.symmetric(horizontal: 16),
 
         child: Column(
-
           crossAxisAlignment: CrossAxisAlignment.start,
 
           children: [
-
             /// PRODUCT IMAGE
-
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
-              child: Stack(
-                children: [
-
-                  Container(
-                    height: 200,
-                    width: double.infinity,
-                    child: imageFileList.isEmpty
-                        ? Image.asset(
-                      "assets/slicing/blankuser.jpeg",
-                      fit: BoxFit.cover,
-                    )
-                        : Image.file(
-                      File(imageFileList.first.path),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-
-                  Positioned(
-                    top: 15,
-                    left: 15,
-                    child: ElevatedButton.icon(
-                      onPressed: (){
-                        selectImages();
-                      },
-                      icon: Icon(Icons.upload,size:18),
-                      label: Text("Replace Image"),
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black54
+              child: Container(
+                height: 200,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color:
+                      imageFileList.isEmpty
+                          ? Colors.grey.shade300
+                          : Colors.white,
+                  border:
+                      imageFileList.isEmpty
+                          ? Border.all(color: Colors.grey.shade400, width: 1)
+                          : null,
+                ),
+                child: Stack(
+                  children: [
+                    if (imageFileList.isNotEmpty)
+                      Positioned.fill(
+                        child: Image.file(
+                          File(imageFileList[_activeImageIndex].path),
+                          fit: BoxFit.cover,
+                        ),
                       ),
-                    ),
-                  ),
 
-                  Positioned(
-                    bottom: 15,
-                    right: 15,
-                    child: ElevatedButton.icon(
-                      onPressed: (){
-                        selectImages();
-                      },
-                      icon: Icon(Icons.add),
-                      label: Text("Add"),
-                    ),
-                  )
-
-                ],
-              ),
-            ),
-
-            SizedBox(height:20),
-
-            /// IMAGE THUMBNAILS
-
-            SizedBox(
-              height:70,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: imageFileList.length,
-                itemBuilder:(context,index){
-
-                  return Stack(
-                    children:[
-
-                      Container(
-                        margin: EdgeInsets.only(right:10),
-                        width:70,
-                        height:70,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.file(
-                            File(imageFileList[index].path),
-                            fit: BoxFit.cover,
+                    if (imageFileList.isEmpty)
+                      Center(
+                        child: _glassPill(
+                          onTap: addOneImage,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 22,
+                            vertical: 14,
+                          ),
+                          backgroundColor: const Color(
+                            0xFF000000,
+                          ).withOpacity(0.25),
+                          borderColor: kprimaryColor.withOpacity(0.95),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.add,
+                                size: 18,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 10),
+                              const Text(
+                                "Add Image",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
 
+                    if (imageFileList.isNotEmpty && imageFileList.length < 4)
                       Positioned(
-                        right:5,
-                        top:5,
-                        child: GestureDetector(
-                          onTap:(){
-                            setState(() {
-                              imageFileList.removeAt(index);
-                            });
-                          },
-                          child: CircleAvatar(
-                            radius:10,
-                            backgroundColor: Colors.black,
-                            child: Icon(Icons.close,size:12,color: Colors.white),
+                        top: 15,
+                        left: 15,
+                        child: _glassPill(
+                          onTap: replaceFirstImage,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 10,
+                          ),
+                          backgroundColor: const Color(
+                            0xFF000000,
+                          ).withOpacity(0.25),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.upload,
+                                size: 18,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 10),
+                              const Text(
+                                "Replace Image",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      )
-                    ],
-                  );
-                },
+                      ),
+
+                    if (imageFileList.isNotEmpty && imageFileList.length < 4)
+                      Positioned(
+                        bottom: 15,
+                        right: 15,
+                        child: _glassPill(
+                          onTap: addOneImage,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          backgroundColor: const Color(
+                            0xFF000000,
+                          ).withOpacity(0.25),
+                          borderColor: kprimaryColor.withOpacity(0.95),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                "Add",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              const Icon(
+                                Icons.add,
+                                size: 18,
+                                color: Colors.white,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
 
-            SizedBox(height:20),
+            SizedBox(height: imageFileList.isEmpty ? 8 : 20),
+            if (imageFileList.isNotEmpty)
+              SizedBox(
+                height: 86,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount:
+                      imageFileList.isEmpty
+                          ? 0
+                          : (imageFileList.length < 4
+                              ? imageFileList.length + 1
+                              : imageFileList.length),
+                  itemBuilder: (context, index) {
+                    const maxImages = 4;
+                    final showAddTile =
+                        imageFileList.length < maxImages &&
+                        index == imageFileList.length;
+                    if (showAddTile) {
+                      final activeDots =
+                          imageFileList.length < 3 ? imageFileList.length : 3;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: GestureDetector(
+                          onTap: addOneImage,
+                          child: Container(
+                            width: 92,
+                            height: 86,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.add,
+                                  size: 26,
+                                  color: Colors.grey.shade400,
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: List.generate(3, (i) {
+                                    return Container(
+                                      width: 5,
+                                      height: 5,
+                                      margin: const EdgeInsets.symmetric(
+                                        horizontal: 3,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color:
+                                            i < activeDots
+                                                ? kprimaryColor
+                                                : Colors.grey.shade400,
+                                      ),
+                                    );
+                                  }),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    final imageIndex = index;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(18),
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _activeImageIndex = imageIndex;
+                                });
+                              },
+                              child: Opacity(
+                                opacity: 0.78,
+                                child: Image.file(
+                                  File(imageFileList[imageIndex].path),
+                                  width: 92,
+                                  height: 86,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            right: 8,
+                            top: 8,
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  if (imageIndex < imagesPath.length) {
+                                    imagesPath.removeAt(imageIndex);
+                                  }
+                                  imageFileList.removeAt(imageIndex);
+                                  if (_activeImageIndex > imageIndex) {
+                                    _activeImageIndex--;
+                                  }
+                                  if (imageFileList.isEmpty) {
+                                    _activeImageIndex = 0;
+                                  } else if (_activeImageIndex >=
+                                      imageFileList.length) {
+                                    _activeImageIndex =
+                                        imageFileList.length - 1;
+                                  }
+                                });
+                              },
+                              child: CircleAvatar(
+                                radius: 13,
+                                backgroundColor: Colors.black,
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+            SizedBox(height: imageFileList.isEmpty ? 8 : 20),
 
             /// PRODUCT NAME
+            Text(
+              "Product Name",
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+                color: Colors.black,
+              ),
+            ),
 
-            Text("Product Name",style: TextStyle(fontWeight: FontWeight.bold)),
+            SizedBox(height: 8),
 
-            SizedBox(height:8),
-
-            TextField(
-              controller: nameController,
-              decoration: InputDecoration(
-                filled:true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
+            SizedBox(
+              height: 48,
+              child: TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 0,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.grey.shade400,
+                      width: 1,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: kprimaryColor, width: 1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.black,
                 ),
               ),
             ),
 
-            SizedBox(height:20),
+            SizedBox(height: 20),
 
             /// DESCRIPTION
+            Text(
+              "Description",
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+                color: Colors.black,
+              ),
+            ),
 
-            Text("Description",style: TextStyle(fontWeight: FontWeight.bold)),
+            SizedBox(height: 8),
 
-            SizedBox(height:8),
-
-            TextField(
-              controller: descriptionController,
-              maxLines:3,
-              decoration: InputDecoration(
-                filled:true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
+            SizedBox(
+              height: 80,
+              child: TextField(
+                controller: descriptionController,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.grey.shade400,
+                      width: 1,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: kprimaryColor, width: 1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.black,
                 ),
               ),
             ),
 
-            SizedBox(height:20),
+            SizedBox(height: 20),
 
             /// RENT PRICE
+            Text(
+              "Rent Price",
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+                color: Colors.black,
+              ),
+            ),
 
-            Text("Rent Price",style: TextStyle(fontWeight: FontWeight.bold)),
+            SizedBox(height: 8),
 
-            SizedBox(height:8),
-
-            TextField(
-              controller: rentPriceController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                prefixIcon: Icon(Icons.attach_money),
-                filled:true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
+            SizedBox(
+              height: 48,
+              child: TextField(
+                controller: rentPriceController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white,
+                  prefixIconConstraints: const BoxConstraints(
+                    minWidth: 46,
+                    minHeight: 48,
+                  ),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(left: 12, right: 6),
+                    child: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color(0xFF1E88E5),
+                      ),
+                      child: const Icon(
+                        Icons.attach_money,
+                        size: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.fromLTRB(8, 10, 14, 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.grey.shade400,
+                      width: 1,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: kprimaryColor, width: 1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.black,
                 ),
               ),
             ),
 
-            SizedBox(height:20),
+            SizedBox(height: 20),
 
             /// SECURITY + DELIVERY
-
             Row(
               children: [
-
                 Expanded(
-                  child: TextField(
-                    controller: SecurityDepositeController,
-                    decoration: InputDecoration(
-                      labelText:"Security Deposit",
-                      prefixIcon: Icon(Icons.attach_money),
-                      filled:true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Security Deposit',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black,
+                          fontSize: 15,
+                        ),
                       ),
-                    ),
+                      SizedBox(height: 8),
+                      SizedBox(
+                        height: 48,
+                        child: TextField(
+                          controller: SecurityDepositeController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            prefixIconConstraints: const BoxConstraints(
+                              minWidth: 46,
+                              minHeight: 48,
+                            ),
+                            prefixIcon: Padding(
+                              padding: const EdgeInsets.only(
+                                left: 12,
+                                right: 6,
+                              ),
+                              child: Container(
+                                width: 28,
+                                height: 28,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Color(0xFF1E88E5),
+                                ),
+                                child: const Icon(
+                                  Icons.lock_rounded,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.fromLTRB(
+                              8,
+                              10,
+                              14,
+                              10,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade400,
+                                width: 1,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: kprimaryColor,
+                                width: 1,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          style: GoogleFonts.inter(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-
-                SizedBox(width:10),
-
+                SizedBox(width: 12),
                 Expanded(
-                  child: TextField(
-                    controller: deliverychargesController,
-                    decoration: InputDecoration(
-                      labelText:"Delivery Charges",
-                      prefixIcon: Icon(Icons.attach_money),
-                      filled:true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Delivery Charges',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black,
+                          fontSize: 15,
+                        ),
                       ),
-                    ),
+                      SizedBox(height: 8),
+                      SizedBox(
+                        height: 48,
+                        child: TextField(
+                          controller: deliverychargesController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            prefixIconConstraints: const BoxConstraints(
+                              minWidth: 46,
+                              minHeight: 48,
+                            ),
+                            prefixIcon: Padding(
+                              padding: const EdgeInsets.only(
+                                left: 12,
+                                right: 6,
+                              ),
+                              child: Container(
+                                width: 28,
+                                height: 28,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Color(0xFF1E88E5),
+                                ),
+                                child: const Icon(
+                                  Icons.local_shipping_rounded,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.fromLTRB(
+                              8,
+                              10,
+                              14,
+                              10,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade400,
+                                width: 1,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: kprimaryColor,
+                                width: 1,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          style: GoogleFonts.inter(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                )
+                ),
               ],
             ),
 
-            SizedBox(height:20),
+            SizedBox(height: 20),
 
             /// INSTANT RENT SWITCH
-
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
                   children: [
-                    Text("Instant Rent",
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text(
-                      "Allow customers to rent instantly",
-                      style: TextStyle(fontSize:12,color: Colors.grey),
-                    )
+                    Icon(Icons.bolt_rounded, size: 30, color: darkBlue),
+                    SizedBox(width: 10),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Instant Rent',
+                              style: GoogleFonts.inter(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'We provide sturdy and comfortable wood',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-
+                SizedBox(width: 10),
                 CupertinoSwitch(
                   value: insRentSwitchNot,
-                  onChanged:(value){
+                  activeColor: darkBlue,
+                  thumbColor: Colors.white,
+                  trackColor: lightBlue,
+                  onChanged: (value) {
                     setState(() {
                       insRentSwitchNot = value;
                     });
                   },
-                )
+                ),
               ],
             ),
 
-            SizedBox(height:20),
+            SizedBox(height: 20),
 
             /// CATEGORY
+            Text(
+              "Category",
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+                color: Colors.black,
+              ),
+            ),
 
-            Text("Category",style: TextStyle(fontWeight: FontWeight.bold)),
-
-            SizedBox(height:8),
+            SizedBox(height: 8),
 
             Container(
-              padding: EdgeInsets.symmetric(horizontal:12),
+              height: 48,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(color: Colors.grey.shade300)
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
               ),
               child: DropdownButton<String>(
                 value: cat_value,
-                isExpanded:true,
+                isExpanded: true,
                 underline: SizedBox(),
-                items: items.map((String value){
-                  return DropdownMenuItem(
-                    value:value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                onChanged:(value){
+                icon: Icon(Icons.arrow_drop_down, color: Colors.grey.shade600),
+                items:
+                    items.map((String value) {
+                      return DropdownMenuItem(
+                        value: value,
+                        child: Text(
+                          value,
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w400,
+                            fontSize: 15,
+                            color: Colors.black,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                onChanged: (value) {
                   setState(() {
                     cat_value = value;
                   });
@@ -929,32 +1515,48 @@ class _EditProductScreenState extends State<EditProductScreen> {
               ),
             ),
 
-            SizedBox(height:20),
+            SizedBox(height: 20),
 
             /// SUB CATEGORY
+            Text(
+              "Sub Category",
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+                color: Colors.black,
+              ),
+            ),
 
-            Text("Sub Category",style: TextStyle(fontWeight: FontWeight.bold)),
-
-            SizedBox(height:8),
+            SizedBox(height: 8),
 
             Container(
-              padding: EdgeInsets.symmetric(horizontal:12),
+              height: 48,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(color: Colors.grey.shade300)
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
               ),
               child: DropdownButton<String>(
                 value: sub_cat_value,
-                isExpanded:true,
+                isExpanded: true,
                 underline: SizedBox(),
-                items: sub_items.map((String value){
-                  return DropdownMenuItem(
-                    value:value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                onChanged:(value){
+                icon: Icon(Icons.arrow_drop_down, color: Colors.grey.shade600),
+                items:
+                    sub_items.map((String value) {
+                      return DropdownMenuItem(
+                        value: value,
+                        child: Text(
+                          value,
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w400,
+                            fontSize: 15,
+                            color: Colors.black,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                onChanged: (value) {
                   setState(() {
                     sub_cat_value = value;
                   });
@@ -962,15 +1564,426 @@ class _EditProductScreenState extends State<EditProductScreen> {
               ),
             ),
 
-            SizedBox(height:30),
+            SizedBox(height: 20),
+
+            Row(
+              children: [
+                Text(
+                  "Delivery Type",
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+
+            // DELIVERY TYPE (Free Pickup / Location based)
+            Container(
+              height: 52,
+              width: MediaQuery.of(context).size.width * 0.9,
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE9EAF2),
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _groupValue = 0;
+                          locationBD = "0";
+                          freePU = "1";
+                        });
+                      },
+                      child: Container(
+                        height: 40,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color:
+                              _groupValue == 0
+                                  ? kprimaryColor
+                                  : Colors.transparent,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Text(
+                          "Free Pickup",
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color:
+                                _groupValue == 0
+                                    ? Colors.white
+                                    : const Color(0xFF0F172A),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _groupValue = 1;
+                          freePU = "0";
+                          locationBD = "1";
+                        });
+                      },
+                      child: Container(
+                        height: 40,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color:
+                              _groupValue == 1
+                                  ? kprimaryColor
+                                  : Colors.transparent,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Text(
+                          "Location based",
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color:
+                                _groupValue == 1
+                                    ? Colors.white
+                                    : const Color(0xFF0F172A),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            SizedBox(height: 14),
+
+            // Location (for Location Based Delivery)
+            if (_groupValue == 1) ...[
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Location",
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: Colors.black,
+                  ),
+                  textAlign: TextAlign.left,
+                ),
+              ),
+              SizedBox(height: 6),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade400, width: 1),
+                ),
+                child: TextField(
+                  controller: _locationController,
+                  onChanged: (_) => _onLocationChanged(),
+                  decoration: InputDecoration(
+                    hintText: "Enter address",
+                    hintStyle: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 14,
+                    ),
+                  ),
+                  style: GoogleFonts.inter(fontSize: 14),
+                ),
+              ),
+              if (_placeList.isNotEmpty)
+                Container(
+                  constraints: BoxConstraints(maxHeight: 200),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade300, width: 1),
+                  ),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _placeList.length,
+                    itemBuilder: (context, index) {
+                      final prediction = _placeList[index];
+                      final name = prediction["description"] ?? "";
+                      return ListTile(
+                        dense: true,
+                        leading: Icon(
+                          Icons.pin_drop,
+                          color: kprimaryColor,
+                          size: 22,
+                        ),
+                        title: Text(
+                          name,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: Colors.black87,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        onTap: () async {
+                          _locationController.text = name;
+                          try {
+                            List<Location> locations =
+                                await locationFromAddress(name);
+                            if (locations.isNotEmpty && mounted) {
+                              setState(() {
+                                locationLat =
+                                    locations.last.latitude.toString();
+                                locationLng =
+                                    locations.last.longitude.toString();
+                                _placeList = [];
+                              });
+                            }
+                          } catch (e) {
+                            if (mounted) setState(() => _placeList = []);
+                          }
+                        },
+                      );
+                    },
+                  ),
+                ),
+              SizedBox(height: 14),
+            ],
+
+            // PRODUCT AVAILABILITY + FROM/TO dates
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Product Availability",
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        "We provide sturdy and comfortable wood",
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            SizedBox(height: 12),
+
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "From",
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black,
+                        ),
+                      ),
+                      SizedBox(height: 6),
+                      GestureDetector(
+                        onTap: pickAvailabilityFromDate,
+                        child: Container(
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.grey.shade400,
+                              width: 1,
+                            ),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 0,
+                          ),
+                          alignment: Alignment.centerLeft,
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_month_outlined,
+                                size: 20,
+                                color: kprimaryColor,
+                              ),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  DateFormat(
+                                    'dd/MM/yyyy',
+                                  ).format(DateTime.parse(pasd.toString())),
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    color: Colors.black,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "To",
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black,
+                        ),
+                      ),
+                      SizedBox(height: 6),
+                      GestureDetector(
+                        onTap: pickAvailabilityToDate,
+                        child: Container(
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.grey.shade400,
+                              width: 1,
+                            ),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 0,
+                          ),
+                          alignment: Alignment.centerLeft,
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_month_outlined,
+                                size: 20,
+                                color: kprimaryColor,
+                              ),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  DateFormat(
+                                    'dd/MM/yyyy',
+                                  ).format(DateTime.parse(paed.toString())),
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    color: Colors.black,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            SizedBox(height: 18),
+
+            // Product Specifications
+            Row(
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Product Specifications',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                        fontSize: 15,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      "We provide sturdy and comfortable wood",
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+            _specDropdown("Material", materialValue, _materialOptions, (v) {
+              setState(() {
+                materialValue = v!;
+                _syncSpecsFromDropdowns();
+              });
+            }),
+            SizedBox(height: 12),
+            _specDropdown("Condition", conditionValue, _conditionOptions, (v) {
+              setState(() {
+                conditionValue = v!;
+                _syncSpecsFromDropdowns();
+              });
+            }),
+            SizedBox(height: 12),
+            _specDropdown("Finish", finishValue, _finishOptions, (v) {
+              setState(() {
+                finishValue = v!;
+                _syncSpecsFromDropdowns();
+              });
+            }),
+            SizedBox(height: 12),
+            _specDropdown("Style", styleValue, _styleOptions, (v) {
+              setState(() {
+                styleValue = v!;
+                _syncSpecsFromDropdowns();
+              });
+            }),
+            SizedBox(height: 12),
+            _specDropdown("Year Made", yearMadeValue, _yearOptions, (v) {
+              setState(() {
+                yearMadeValue = v!;
+                _syncSpecsFromDropdowns();
+              });
+            }),
+            SizedBox(height: 16),
 
             /// UPDATE BUTTON
-
             SizedBox(
               width: double.infinity,
-              height:55,
+              height: 55,
               child: ElevatedButton(
-
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kprimaryColor,
                   shape: RoundedRectangleBorder(
@@ -978,21 +1991,22 @@ class _EditProductScreenState extends State<EditProductScreen> {
                   ),
                 ),
 
-                onPressed:(){
+                onPressed: () {
                   product_update_button ? null : prodUpdate();
                 },
 
                 child: Text(
                   product_update_button ? "Updating..." : "List Product",
                   style: TextStyle(
-                    fontSize:16,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
               ),
             ),
 
-            SizedBox(height:40)
+            SizedBox(height: 40),
           ],
         ),
       ),
@@ -3144,13 +4158,86 @@ class _EditProductScreenState extends State<EditProductScreen> {
   //   );
   // }
 
-  _myRadioButton({title, value, onChanged}) {
-    return RadioListTile(
-      value: value,
-      groupValue: _groupValue,
-      onChanged: onChanged,
-      title: Text(title),
-      activeColor: kprimaryColor,
+  Widget _glassPill({
+    required VoidCallback onTap,
+    required Widget child,
+    required EdgeInsets padding,
+    Color? backgroundColor,
+    Color? borderColor,
+    double blurSigma = 10,
+    BorderRadius borderRadius = const BorderRadius.all(Radius.circular(30)),
+  }) {
+    final bg = backgroundColor ?? const Color(0xFF517A94).withOpacity(0.22);
+    final bd = borderColor;
+
+    return ClipRRect(
+      borderRadius: borderRadius,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+        child: Container(
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: borderRadius,
+            border: bd == null ? null : Border.all(color: bd, width: 1.5),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: borderRadius,
+              onTap: onTap,
+              child: Padding(padding: padding, child: child),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _specDropdown(
+    String label,
+    String value,
+    List<String> options,
+    ValueChanged<String?> onChanged,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: Colors.black,
+          ),
+        ),
+        SizedBox(height: 6),
+        Container(
+          height: 44,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.grey.shade300, width: 1),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: value,
+              isExpanded: true,
+              underline: SizedBox(),
+              icon: Icon(Icons.arrow_drop_down, color: Colors.grey.shade600),
+              items:
+                  options
+                      .map(
+                        (v) =>
+                            DropdownMenuItem<String>(value: v, child: Text(v)),
+                      )
+                      .toList(),
+              onChanged: onChanged,
+              style: const TextStyle(color: Colors.black),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

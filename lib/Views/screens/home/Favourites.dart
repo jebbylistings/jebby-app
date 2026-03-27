@@ -4,7 +4,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:get/get.dart';
 import 'package:jebby/Views/screens/auth/ProductDetail.dart';
 // import 'package:jebby/screens/home/profile/myprofile.dart';
-import 'package:jebby/Views/screens/profile/myprofile.dart';
+import 'package:jebby/Views/screens/profile/userprofile.dart';
 import 'package:jebby/res/app_url.dart';
 import 'package:jebby/view_model/apiServices.dart';
 import 'package:provider/provider.dart';

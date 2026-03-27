@@ -3,6 +3,7 @@ class UserModel {
   String? name;
   String? email;
   String? phoneNumber;
+  String? address;
   String? id;
   String? role;
   String? source;
@@ -13,6 +14,7 @@ class UserModel {
     this.status,
     this.name,
     this.email,
+    this.address,
     this.id,
     this.role,
     this.source,
@@ -25,6 +27,7 @@ class UserModel {
     status = json['status'];
     name = json['name'];
     email = json['email'];
+    address = json['address'];
     id = json['id'];
     role = json['role'];
     source = json['source'];
@@ -37,6 +40,7 @@ class UserModel {
     data['status'] = this.status;
     data['name'] = this.name;
     data['email'] = this.email;
+    data['address'] = this.address;
     data['id'] = this.id;
     data['role'] = this.role;
     data['source'] = this.source;

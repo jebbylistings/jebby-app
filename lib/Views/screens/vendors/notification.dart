@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:jebby/Views/screens/vendors/OrderReq.dart';
 import 'package:jebby/Views/screens/vendors/negotiationRequest.dart';
@@ -11,7 +12,7 @@ import 'package:provider/provider.dart';
 import '../../../Services/provider/sign_in_provider.dart';
 import '../../../model/deleteNotificationModel.dart';
 import '../../../model/getNotificationModel.dart';
-import '../../../model/user_model.dart';
+import '../../../model/user_model.dart' hide Data;
 import '../../../res/app_url.dart';
 import '../../../view_model/apiServices.dart';
 import '../../../view_model/user_view_model.dart';
@@ -28,8 +29,12 @@ class _VendorNotificationsState extends State<VendorNotifications> {
   Future getData() async {
     final sp = context.read<SignInProvider>();
     final usp = context.read<UserViewModel>();
-    usp.getUser();
-    sp.getDataFromSharedPreferences();
+    await usp.getUpdatedUser();
+    await sp.getDataFromSharedPreferences();
+    profileImage = (usp.image ?? sp.imageUrl ?? '').toString();
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<UserModel> getUserDate() => UserViewModel().getUser();
@@ -39,6 +44,7 @@ class _VendorNotificationsState extends State<VendorNotifications> {
   String? fullname;
   String? email;
   String? role;
+  String? profileImage;
   void profileData(BuildContext context) async {
     getUserDate()
         .then((value) async {
@@ -47,6 +53,9 @@ class _VendorNotificationsState extends State<VendorNotifications> {
           fullname = value.name.toString();
           email = value.email.toString();
           role = value.role.toString();
+          if (mounted) {
+            setState(() {});
+          }
 
           // seenNotification();
 
@@ -162,262 +171,244 @@ class _VendorNotificationsState extends State<VendorNotifications> {
 
   @override
   Widget build(BuildContext context) {
-
+    final notificationsData =
+        ApiRepository.shared.getNotificationModelList?.data ?? [];
     return Scaffold(
-
       backgroundColor: const Color(0xfff5f5f5),
-
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-
-        title: const Text(
+        title: Text(
           "Notifications",
           style: TextStyle(
             color: Colors.black,
-            fontWeight: FontWeight.bold,
             fontSize: 22,
+            fontWeight: FontWeight.w700,
+            fontFamily: GoogleFonts.inter().fontFamily,
           ),
         ),
-
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back,color: Colors.black),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: (){
             Get.back();
           },
         ),
-
         actions: [
-
           Padding(
-            padding: const EdgeInsets.only(right:16),
-            child: CircleAvatar(
-              backgroundImage: AssetImage("assets/slicing/avatar.png"),
-            ),
-          )
+            padding: const EdgeInsets.only(right: 16),
+            child: _buildUserAvatar(),
+          ),
         ],
       ),
-
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-
-        padding: const EdgeInsets.symmetric(horizontal:16),
-
-        child: ListView.builder(
-
-          itemCount: ApiRepository
-              .shared
-              .getNotificationModelList!
-              .data!
-              .length,
-
-          itemBuilder: (context,index){
-
-            var data = ApiRepository
-                .shared
-                .getNotificationModelList!
-                .data![index];
-
-            String name = data.name.toString();
-            String desc = data.description.toString();
-            String id = data.id.toString();
-            String seen = data.seen_one.toString();
-            String date = data.createdAt.toString();
-
-            var formattedDate =
-            DateFormat('hh:mm a')
-                .format(DateTime.parse(date));
-
-            /// navigation data
-            var prodId = data.productId.toString();
-            var status = data.status;
-            var price = data.price.toString();
-            var negoId = data.negoId;
-
-            return GestureDetector(
-
-              onTap: () {
-
-                seenNotification(id);
-
-                name == "message"
-                    ? Get.to(()=>MessagesScreen())
-
-                    : name == "order"
-                    ? Get.to(()=>OrderRequestScreen())
-
-                    : name == "negotiation"
-                    ? Get.to(()=>NegotiationRequest(
-                  price: price,
-                  status: status,
-                  productId: prodId,
-                  negoId: negoId,
-                ))
-                    : null;
-              },
-
-              child: Container(
-
-                margin: const EdgeInsets.only(bottom:14),
-
-                padding: const EdgeInsets.all(16),
-
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
+          : notificationsData.isEmpty
+              ? Center(
+                  child: Text(
+                    "No notifications yet",
+                    style: TextStyle(
+                      color: Colors.black54,
+                      fontSize: 15,
+                      fontFamily: GoogleFonts.inter().fontFamily,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                )
+              : ListView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  children: _buildGroupedNotificationSections(notificationsData),
                 ),
+    );
+  }
 
-                child: Row(
+  List<Widget> _buildGroupedNotificationSections(List<Data> data) {
+    final Map<String, List<Data>> grouped = {};
+    for (final item in data) {
+      final createdAtRaw = item.createdAt?.toString();
+      final createdAt = DateTime.tryParse(createdAtRaw ?? '') ?? DateTime.now();
+      final key = _sectionLabel(createdAt);
+      grouped.putIfAbsent(key, () => []);
+      grouped[key]!.add(item);
+    }
 
-                  crossAxisAlignment: CrossAxisAlignment.start,
-
-                  children: [
-
-                    /// DOT
-
-                    Container(
-                      margin: const EdgeInsets.only(top:6),
-                      width:10,
-                      height:10,
-                      decoration: BoxDecoration(
-                        color: seen == "0"
-                            ? Colors.orange
-                            : Colors.grey,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-
-                    const SizedBox(width:12),
-
-                    /// TEXT AREA
-
-                    Expanded(
-
-                      child: Column(
-
-                        crossAxisAlignment: CrossAxisAlignment.start,
-
-                        children: [
-
-                          Row(
-                            mainAxisAlignment:
-                            MainAxisAlignment.spaceBetween,
-
-                            children: [
-
-                              Text(
-                                name.capitalizeFirst!,
-                                style: const TextStyle(
-                                  fontSize:16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-
-                              Text(
-                                formattedDate,
-                                style: const TextStyle(
-                                  color: Colors.grey,
-                                  fontSize:13,
-                                ),
-                              )
-                            ],
-                          ),
-
-                          const SizedBox(height:6),
-
-                          Text(
-                            desc,
-                            style: TextStyle(
-                              color: Colors.grey.shade700,
-                              fontSize:14,
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(width:6),
-
-                    /// DELETE BUTTON
-
-                    GestureDetector(
-                      onTap: (){
-                        deleteNotification(id,index);
-                      },
-                      child: const Icon(
-                        Icons.close,
-                        size:18,
-                        color: Colors.grey,
-                      ),
-                    )
-                  ],
+    final List<Widget> sections = [];
+    grouped.forEach((sectionTitle, items) {
+      sections.add(
+        Container(
+          margin: const EdgeInsets.only(bottom: 18),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                sectionTitle,
+                style: TextStyle(
+                  fontSize: 32 / 2,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF212121),
+                  fontFamily: GoogleFonts.inter().fontFamily,
                 ),
               ),
-            );
-          },
+              const SizedBox(height: 8),
+              ...List.generate(items.length, (index) {
+                final item = items[index];
+                return _notificationTile(
+                  item,
+                  showDivider: index != items.length - 1,
+                );
+              }),
+            ],
+          ),
+        ),
+      );
+    });
+    return sections;
+  }
+
+  String _sectionLabel(DateTime date) {
+    final now = DateTime.now();
+    final d = DateTime(date.year, date.month, date.day);
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    if (d == today) return "Today";
+    if (d == yesterday) return "Yesterday";
+    return DateFormat('MMM dd yyyy, EEEE').format(date);
+  }
+
+  Widget _notificationTile(Data data, {required bool showDivider}) {
+    final name = (data.name ?? '').toString();
+    final desc = (data.description ?? '').toString();
+    final id = (data.id ?? '').toString();
+    final seen = data.seen_one.toString();
+    final date = data.createdAt?.toString() ?? '';
+    final formattedDate = DateFormat('hh:mm a')
+        .format(DateTime.tryParse(date) ?? DateTime.now());
+    final prodId = data.productId.toString();
+    final status = data.status;
+    final price = data.price.toString();
+    final negoId = data.negoId;
+
+    return InkWell(
+      onTap: () {
+        seenNotification(id);
+        if (name == "message") {
+          Get.to(() => MessagesScreen());
+        } else if (name == "order") {
+          Get.to(() => OrderRequestScreen());
+        } else if (name == "negotiation") {
+          Get.to(
+            () => NegotiationRequest(
+              price: price,
+              status: status,
+              productId: prodId,
+              negoId: negoId,
+            ),
+          );
+        }
+      },
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 2),
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(top: 6),
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: seen == "0"
+                        ? const Color(0xFFF59D0A)
+                        : const Color(0xFFF2D04F),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              name.capitalizeFirst ?? '',
+                              style: TextStyle(
+                                fontSize: 31 / 2,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF1B1B1F),
+                                fontFamily: GoogleFonts.inter().fontFamily,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            formattedDate,
+                            style: TextStyle(
+                              color: Color(0xFF7C7C84),
+                              fontSize: 26 / 2,
+                              fontWeight: FontWeight.w400,
+                              fontFamily: GoogleFonts.inter().fontFamily,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        desc,
+                        style: TextStyle(
+                          color: Color(0xFF6D6D75),
+                          fontSize: 16,
+                          height: 1.3,
+                          fontFamily: GoogleFonts.inter().fontFamily,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (showDivider) ...[
+              const SizedBox(height: 10),
+              const Divider(
+                thickness: 1,
+                height: 1,
+                color: Color(0xFFE2E2E8),
+              ),
+            ],
+          ],
         ),
       ),
     );
   }
 
+  Widget _buildUserAvatar() {
+    final image = (profileImage ?? '').trim();
+    final bool hasImage = image.isNotEmpty && image.toLowerCase() != 'null';
+    final String imageUrl =
+        image.startsWith('http') ? image : '${AppUrl.baseUrlM}$image';
 
-  card(name, count, desc, time, id, ind, seen) {
-    double res_width = MediaQuery.of(context).size.width;
-    return GestureDetector(
-      onTap: () {
-        name == "message" ? Get.to(() => MessagesScreen()) : null;
-      },
-      child: Container(
-        width: res_width * 0.9,
-        // height: res_height * 0.09,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Icon(Icons.notifications),
-              SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(name),
-                  SizedBox(height: 4),
-                  Container(
-                    width: MediaQuery.of(context).size.width * 0.6,
-                    child: Text(
-                      desc,
-                      style: TextStyle(
-                        fontWeight:
-                            seen == "0" ? FontWeight.bold : FontWeight.normal,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Text(time),
-              SizedBox(width: 10),
-              GestureDetector(
-                onTap: () {
-                  name == "admin" ? null : deleteNotification(id, ind);
-                },
-                child: name == "admin" ? null : Icon(Icons.close_outlined),
-              ),
-            ],
-          ),
-          //  ListTile(
-          //   leading: Icon(Icons.notifications),
-          //   title: Text(name),
-          //   subtitle: Text(desc),
-          //   trailing: SizedBox(child: Row(children: [Text(time), Text("x")],),),
-          // )
-        ),
-      ),
+    return CircleAvatar(
+      radius: 18,
+      backgroundColor: Colors.grey.shade200,
+      backgroundImage: hasImage ? NetworkImage(imageUrl) : null,
+      child: hasImage
+          ? null
+          : const Icon(
+              Icons.person,
+              color: Colors.black54,
+              size: 20,
+            ),
     );
   }
 }

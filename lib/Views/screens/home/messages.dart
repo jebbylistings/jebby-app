@@ -14,7 +14,7 @@ import '../../../res/app_url.dart';
 import '../../../view_model/apiServices.dart';
 import '../../../view_model/user_view_model.dart';
 import '../home/Messages(32).dart';
-import '../profile/myprofile.dart';
+import '../profile/userprofile.dart';
 import '../vendors/negotiationScreeen.dart';
 
 class MessageScreen extends StatefulWidget {

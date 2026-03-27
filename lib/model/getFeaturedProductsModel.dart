@@ -80,6 +80,9 @@ class Data {
   String? length;
   String? image;
   String? delivery_charges;
+  String? address;
+  String? latitude;
+  String? longitude;
 
   Data({
     this.id,
@@ -99,6 +102,9 @@ class Data {
     this.length,
     this.image,
     this.delivery_charges,
+    this.address,
+    this.latitude,
+    this.longitude,
   });
 
   Data.fromJson(Map<String, dynamic> json) {
@@ -119,6 +125,18 @@ class Data {
     length = json['length'];
     image = json['image'];
     delivery_charges = json['delivery_charges'];
+    address =
+        json['address']?.toString() ??
+        json['location']?.toString() ??
+        json['vendor_address']?.toString();
+    latitude =
+        json['latitude']?.toString() ??
+        json['lat']?.toString() ??
+        json['vendor_latitude']?.toString();
+    longitude =
+        json['longitude']?.toString() ??
+        json['lng']?.toString() ??
+        json['vendor_longitude']?.toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -140,6 +158,9 @@ class Data {
     data['length'] = this.length;
     data['image'] = this.image;
     data['delivery_charges'] = this.delivery_charges;
+    data['address'] = this.address;
+    data['latitude'] = this.latitude;
+    data['longitude'] = this.longitude;
     return data;
   }
 }

@@ -6,8 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:get/get.dart';
-import 'package:jebby/Views/helper/colors.dart';
-import 'package:jebby/Views/screens/mainfolder/drawer.dart';
 import 'package:jebby/Views/screens/vendors/Productdetail2.dart';
 import 'package:jebby/Views/screens/vendors/addproduct.dart';
 import 'package:jebby/res/app_url.dart';
@@ -17,6 +15,7 @@ import '../../../Services/provider/sign_in_provider.dart';
 import '../../../model/user_model.dart';
 import '../../../view_model/apiServices.dart';
 import '../../../view_model/user_view_model.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 
 class ProductListScreen extends StatefulWidget {
@@ -27,8 +26,9 @@ class ProductListScreen extends StatefulWidget {
 }
 
 class _ProductListScreenState extends State<ProductListScreen> {
-  final GlobalKey<ScaffoldState> _key = GlobalKey();
   String Url = dotenv.env['baseUrlM'] ?? 'No url found';
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   bool emptyData = false;
   bool isLoading = true;
@@ -144,26 +144,53 @@ class _ProductListScreenState extends State<ProductListScreen> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-
-    double width = MediaQuery.of(context).size.width;
-    double height = MediaQuery.of(context).size.height;
-
-    return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+    const Color textColor = Color(0xFF1A1A1A);
+    final interStyle = GoogleFonts.inter(color: textColor);
+    final textTheme = GoogleFonts.interTextTheme(
+      Theme.of(context).textTheme.apply(
+        bodyColor: textColor,
+        displayColor: textColor,
+      ),
+    );
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textTheme: textTheme,
+        appBarTheme: AppBarTheme(
+          titleTextStyle: GoogleFonts.inter(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          hintStyle: GoogleFonts.inter(color: Colors.grey),
+          labelStyle: GoogleFonts.inter(color: textColor),
+        ),
+      ),
+      child: Scaffold(
+      backgroundColor: const Color(0xFFF3F3F5),
 
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios,color: Colors.black),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: (){
             Get.back();
           },
         ),
       ),
 
-      body: Padding(
+      body: DefaultTextStyle(
+        style: interStyle,
+        child: Padding(
         padding: const EdgeInsets.symmetric(horizontal:20),
         child: Column(
 
@@ -183,18 +210,22 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
                     Text(
                       "My Products",
-                      style: TextStyle(
-                          fontSize:28,
-                          fontWeight: FontWeight.bold),
+                      style: GoogleFonts.inter(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: textColor,
+                      ),
                     ),
 
-                    SizedBox(height:5),
+                    SizedBox(height:10),
 
                     Text(
                       "View and Edit your Products",
-                      style: TextStyle(
-                          color: Colors.grey,
-                          fontSize:16),
+                      style: GoogleFonts.inter(
+                        color: const Color(0xFF72747A),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                      ),
                     )
 
                   ],
@@ -215,13 +246,14 @@ class _ProductListScreenState extends State<ProductListScreen> {
                     padding: EdgeInsets.symmetric(
                         horizontal:20,vertical:10),
                     decoration: BoxDecoration(
-                        color: Colors.orange,
+                        color: const Color(0xFFF6AE02),
                         borderRadius: BorderRadius.circular(30)),
                     child: Text(
                       "Add Product",
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                           color: Colors.white,
-                          fontWeight: FontWeight.bold),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600),
                     ),
                   ),
                 )
@@ -233,16 +265,40 @@ class _ProductListScreenState extends State<ProductListScreen> {
             /// SEARCH BAR
 
             Container(
-              padding: EdgeInsets.symmetric(horizontal:15),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: Colors.grey.shade200,
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(30),
               ),
               child: TextField(
+                controller: _searchController,
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value.trim().toLowerCase();
+                  });
+                },
                 decoration: InputDecoration(
-                  icon: Icon(Icons.search),
+                  icon: Padding(
+                    padding: const EdgeInsets.all(2),
+                    child: Image.asset(
+                      'assets/slicing/searchnew.png',
+                      width: 20,
+                      height: 20,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                   hintText: "Search by Product Name",
+                  hintStyle: GoogleFonts.inter(
+                    color: const Color(0xFF9A9AA1),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                  ),
                   border: InputBorder.none,
+                ),
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF2A2A2E),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
             ),
@@ -253,33 +309,54 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
             Expanded(
               child: isError
-                  ? Center(child: Text("Error loading data"))
+                  ? Center(
+                      child: Text(
+                        "Error loading data",
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w400,
+                          color: const Color(0xFF6D6D75),
+                        ),
+                      ),
+                    )
                   : isLoading
                   ? Center(child: CircularProgressIndicator())
                   : emptyData
-                  ? Center(child: Text("No Products Added"))
-                  : GridView.builder(
+                  ? Center(
+                      child: Text(
+                        "No Products Added",
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w400,
+                          color: const Color(0xFF6D6D75),
+                        ),
+                      ),
+                    )
+                  : Builder(
+                      builder: (_) {
+                        final allProducts =
+                            ApiRepository.shared.vendorProductsByIdList?.data ??
+                                [];
+                        final filteredProducts = allProducts.where((product) {
+                          final productName =
+                              (product.name ?? '').toString().toLowerCase();
+                          return _searchQuery.isEmpty ||
+                              productName.contains(_searchQuery);
+                        }).toList();
+                        return GridView.builder(
+                padding: EdgeInsets.zero,
 
                 gridDelegate:
-                SliverGridDelegateWithFixedCrossAxisCount(
+                const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  crossAxisSpacing: 15,
-                  mainAxisSpacing: 15,
-                  childAspectRatio: 0.7,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 12,
+                  mainAxisExtent: 225,
                 ),
 
-                itemCount: ApiRepository
-                    .shared
-                    .vendorProductsByIdList
-                    ?.data
-                    ?.length,
+                itemCount: filteredProducts.length,
 
                 itemBuilder: (context,index){
 
-                  var product = ApiRepository
-                      .shared
-                      .vendorProductsByIdList!
-                      .data![index];
+                  final product = filteredProducts[index];
 
                   return productCard(
                       product.id,
@@ -289,14 +366,20 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       product.image);
 
                 },
-              ),
+              );
+                      },
+                    ),
             )
           ],
         ),
+        ),
+      ),
       ),
     );
   }
   Widget productCard(id,name,price,stars,image){
+    final parsedRating = double.tryParse(stars.toString()) ?? 0;
+    final int filledStars = parsedRating.round().clamp(0, 5);
 
     return GestureDetector(
 
@@ -308,7 +391,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
         ),
 
         child: Column(
@@ -324,10 +407,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
                 ClipRRect(
                   borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(18)),
+                      top: Radius.circular(16)),
                   child: CachedNetworkImage(
                     imageUrl: AppUrl.baseUrlM + image.toString(),
-                    height:140,
+                    height: 118,
                     width: double.infinity,
                     fit: BoxFit.cover,
                   ),
@@ -340,13 +423,14 @@ class _ProductListScreenState extends State<ProductListScreen> {
                     padding: EdgeInsets.symmetric(
                         horizontal:8,vertical:3),
                     decoration: BoxDecoration(
-                        color: Colors.black54,
+                        color: Colors.grey.shade500,
                         borderRadius: BorderRadius.circular(10)),
                     child: Text(
                       "NEW",
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                           color: Colors.white,
-                          fontSize:10),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600),
                     ),
                   ),
                 )
@@ -354,7 +438,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
             ),
 
             Padding(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
               child: Column(
 
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -363,30 +447,42 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
                   Text(
                     name.toString(),
-                    style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize:14),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 31 / 2,
+                      color: const Color(0xFF2A2A2E),
+                    ),
                   ),
 
                   SizedBox(height:5),
 
                   Text(
                     "\$ ${price}",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize:16),
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 38 / 2,
+                      color: const Color(0xFF1D1D21),
+                    ),
                   ),
 
-                  SizedBox(height:5),
-
-                  RatingBarIndicator(
-                    rating: double.parse(stars.toString()),
-                    itemBuilder: (context,index)=>Icon(
-                        Icons.star,
-                        color: Colors.orange),
-                    itemCount: 5,
-                    itemSize: 16,
-                  )
+                  const SizedBox(height: 5),
+                  Row(
+                    children: List.generate(5, (index) {
+                      final active = index < filledStars;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 2),
+                        child: Icon(
+                          active ? Icons.star : Icons.star_border,
+                          color: active
+                              ? const Color(0xFFF6AE02)
+                              : const Color(0xFFC6C8CF),
+                          size: 18,
+                        ),
+                      );
+                    }),
+                  ),
                 ],
               ),
             )

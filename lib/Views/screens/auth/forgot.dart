@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:jebby/Views/helper/colors.dart';
-import 'package:lottie/lottie.dart';
+import 'package:jebby/res/color.dart';
 import 'package:provider/provider.dart';
 
 import '../../../utils/utils.dart';
@@ -18,165 +17,156 @@ class _ForgotScreenState extends State<ForgotScreen> {
   TextEditingController _emailController = TextEditingController();
 
   @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final authViewMode = Provider.of<AuthViewModel>(context);
-
     double res_width = MediaQuery.of(context).size.width;
-    double res_height = MediaQuery.of(context).size.height;
-    return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage("assets/slicing/bg3.jpg"),
-          fit: BoxFit.cover,
+
+    return Scaffold(
+      backgroundColor: AppColors.greyColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () => Get.back(),
+          icon: Icon(Icons.arrow_back, color: Colors.black, size: 28),
+          style: IconButton.styleFrom(
+            padding: EdgeInsets.zero,
+            minimumSize: Size(48, 48),
+          ),
         ),
       ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: InkWell(
-            onTap: () {
-              Get.back();
-            },
-            borderRadius: BorderRadius.circular(50),
-            child: Icon(Icons.arrow_back, color: Colors.black),
-          ),
-        ),
-        body: Container(
-          width: double.infinity,
-          child: Column(
-            children: [
-              // SizedBox(
-              //   height: res_height * 0.175,
-              // ),
-              Container(
-                width: res_width * 0.9,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 30),
-                      child: Lottie.asset(
-                        'assets/lottie/forget_password.json',
-                        width: res_width * 0.9,
-                        height: 200,
-                      ),
-                    ),
-                    SizedBox(height: res_height * 0.04),
-                    Center(
-                      child: Text(
+      body: SafeArea(
+        top: true,
+        bottom: false,
+        child: Column(
+          children: [
+            // Upper section: padlock illustration on grey background
+            Expanded(
+              flex: 45,
+              child: Center(
+                child: Image.asset(
+                  'assets/slicing/padlock.png',
+                  width: res_width * 0.5,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+            // Lower section: white card with form
+            Expanded(
+              flex: 55,
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
+                  ),
+                ),
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(24, 28, 24, 24 + MediaQuery.of(context).padding.bottom),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
                         'Forgot Password',
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 30,
-                          color: darkBlue,
+                          fontSize: 28,
+                          color: Colors.black,
+                          fontFamily: "Inter, Regular"
                         ),
                       ),
-                    ),
-                    Align(
-                      child: Text(
-                        "Can't remember your password?",
+                      SizedBox(height: 12),
+                      Text(
+                        "No worries. Enter your email address below and we'll send you a link to reset your password.",
+                        textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: Colors.black87,
+                          height: 1.4,
+                          fontFamily: "Inter, Regular"
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: res_height * 0.05),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Text('Email'),
-                  // SizedBox(
-                  //   height: res_height * 0.01,
-                  // ),
-                  Container(
-                    width: res_width * 0.9,
-                    child: TextFormField(
-                      controller: _emailController,
-                      autocorrect: false,
-                      // controller: userEmailController,
-                      validator: (text) {
-                        if (text == null ||
-                            text.isEmpty ||
-                            !text.contains("@")) {
-                          return 'Enter correct email';
-                        }
-                        return null;
-                      },
-                      style: TextStyle(
-                        color: darkBlue,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      decoration: InputDecoration(
-                        prefixIcon: Icon(Icons.email, color: darkBlue),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15.0),
+                      SizedBox(height: 24),
+                      TextFormField(
+                        controller: _emailController,
+                        autocorrect: false,
+                        validator: (text) {
+                          if (text == null || text.isEmpty || !text.contains("@")) {
+                            return 'Enter correct email';
+                          }
+                          return null;
+                        },
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w500,
                         ),
-                        enabledBorder: const OutlineInputBorder(
-                          borderSide: const BorderSide(
-                            color: darkBlue,
-                            width: 1,
+                        decoration: InputDecoration(
+                          hintText: "Email Address",
+                          hintStyle: TextStyle(
+                            color: AppColors.darkGreyColor,
+                            fontWeight: FontWeight.normal,
                           ),
-                          borderRadius: BorderRadius.all(Radius.circular(15)),
-                        ),
-                        focusedBorder: const OutlineInputBorder(
-                          borderSide: const BorderSide(
-                            color: darkBlue,
-                            width: 1,
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15),
                           ),
-                          borderRadius: BorderRadius.all(Radius.circular(15)),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.darkGreyColor, width: 1),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: AppColors.primaryColor, width: 2),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
                         ),
-                        filled: true,
-                        hintStyle: TextStyle(
-                          color: darkBlue,
-                          fontWeight: FontWeight.bold,
+                      ),
+                      SizedBox(height: 28),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 54,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (_emailController.text.isEmpty) {
+                              Utils.flushBarErrorMessage('Please enter email', context);
+                            } else {
+                              Map data = {'email': _emailController.text.toString()};
+                              authViewMode.forgetPasswordApi(data, context, "forgot");
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryColor,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                          child: Text(
+                            'Continue',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
                         ),
-                        hintText: "Enter Your Email Address",
-                        fillColor: lightBlue,
                       ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: res_height * 0.04),
-              InkWell(
-                onTap: () {
-                  if (_emailController.text.isEmpty) {
-                    Utils.flushBarErrorMessage('Please enter email', context);
-                  } else {
-                    Map data = {'email': _emailController.text.toString()};
-                    authViewMode.forgetPasswordApi(data, context, "forgot");
-                  }
-                },
-                borderRadius: BorderRadius.circular(30),
-                child: Ink(
-                  height: res_height * 0.055,
-                  width: res_width * 0.9,
-                  child: Center(
-                    child: Text(
-                      'Continue',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  decoration: BoxDecoration(
-                    color: darkBlue,
-                    borderRadius: BorderRadius.circular(30),
+                    ],
                   ),
                 ),
               ),
-              SizedBox(height: res_height * 0.1),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:get/get.dart';
-import 'package:jebby/Views/controller/bottomcontroller.dart';
 import 'package:jebby/Views/helper/colors.dart';
 import 'package:jebby/Views/screens/agreements/insuranceAndIndemnifications.dart';
 import 'package:jebby/Views/screens/agreements/rentalAgreement.dart';
@@ -10,7 +9,7 @@ import 'package:jebby/Views/screens/agreements/termsAndConditions.dart';
 import 'package:jebby/Views/screens/agreements/transportAndInstallationPolicy.dart';
 import 'package:jebby/Views/screens/vendors/EditProduct.dart';
 import 'package:jebby/Views/screens/vendors/reveiew.dart';
-import 'package:getwidget/getwidget.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:jebby/res/app_url.dart';
 
 import '../../../view_model/apiServices.dart';
@@ -25,6 +24,15 @@ class ProductDetail2Screen extends StatefulWidget {
 }
 
 class _ProductDetail2ScreenState extends State<ProductDetail2Screen> {
+  static const Color _accent = Color(0xFFF6AE02);
+  static const Color _pageBg = Color(0xFFF3F3F5);
+  static const Color _labelGrey = Color(0xFF72747A);
+  static const Color _bodyGrey = Color(0xFF6D6D75);
+  static const Color _titleDark = Color(0xFF1B1B1F);
+
+  final PageController _pageController = PageController();
+  int _carouselIndex = 0;
+
   String dropdownValue = 'One';
   bool isLoading = true;
   bool isError = false;
@@ -51,9 +59,16 @@ class _ProductDetail2ScreenState extends State<ProductDetail2Screen> {
   var stars = "";
   var delivery_charges = null;
 
+  @override
   void initState() {
-    getProducts(widget.id.toString());
     super.initState();
+    getProducts(widget.id.toString());
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   void getProducts(id) {
@@ -243,283 +258,631 @@ class _ProductDetail2ScreenState extends State<ProductDetail2Screen> {
     );
   }
 
+  double get _avgRating =>
+      double.tryParse(stars.toString())?.clamp(0, 5) ?? 0;
+
+  int get _reviewCount => int.tryParse(length.toString()) ?? 0;
+
+  List<MapEntry<String, String>> _parsedSpecs() {
+    final raw = specifications?.toString() ?? '';
+    final out = <MapEntry<String, String>>[];
+    for (final line in raw.split(RegExp(r'\r?\n'))) {
+      final t = line.trim();
+      if (t.isEmpty) continue;
+      final idx = t.indexOf(':');
+      if (idx > 0) {
+        out.add(MapEntry(
+          t.substring(0, idx).trim(),
+          t.substring(idx + 1).trim(),
+        ));
+      }
+    }
+    if (out.isEmpty) {
+      return const [
+        MapEntry('Material', 'Wooden'),
+        MapEntry('Condition', 'New'),
+        MapEntry('Finish', 'Simple Finish'),
+        MapEntry('Style', 'Minimal'),
+      ];
+    }
+    return out;
+  }
+
+  List<double> _starBarWeights() {
+    final r = _avgRating;
+    return List.generate(5, (i) {
+      final star = 5 - i;
+      final d = (r - star).abs();
+      return (1.0 - d / 4.5).clamp(0.12, 1.0);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-
-    double width = MediaQuery.of(context).size.width;
-    double height = MediaQuery.of(context).size.height;
+    final height = MediaQuery.of(context).size.height;
+    final specs = _parsedSpecs();
+    final barWeights = _starBarWeights();
+    final carouselCount = imagesList.isEmpty ? 1 : imagesList.length;
 
     return Scaffold(
-
-      backgroundColor: Colors.grey.shade200,
-
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back,color: Colors.black),
-          onPressed: (){
-            Get.back();
-          },
-        ),
-      ),
-
+      backgroundColor: _pageBg,
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : isError
-          ? Center(child: Text("Error Loading Product"))
-          : Column(
-
-        children: [
-
-          /// IMAGE SLIDER
-
-          SizedBox(
-            height: height * 0.35,
-
-            child: PageView.builder(
-
-              itemCount: imagesList.length,
-
-              itemBuilder: (context,index){
-
-                return CachedNetworkImage(
-                  imageUrl:
-                  AppUrl.baseUrlM + imagesList[index].toString(),
-                  fit: BoxFit.cover,
-                );
-              },
-            ),
-          ),
-
-          /// PRODUCT DETAILS
-
-          Expanded(
-            child: Container(
-
-              width: double.infinity,
-
-              padding: EdgeInsets.all(20),
-
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(25),
-                ),
-              ),
-
-              child: SingleChildScrollView(
-
-                child: Column(
-
-                  crossAxisAlignment: CrossAxisAlignment.start,
-
+              ? Center(
+                  child: Text(
+                    'Error Loading Product',
+                    style: GoogleFonts.inter(),
+                  ),
+                )
+              : Stack(
                   children: [
-
-                    /// TITLE + RATING
-
-                    Row(
-                      mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween,
-                      children: [
-
-                        Expanded(
-                          child: Text(
-                            name.toString(),
-                            style: TextStyle(
-                              fontSize:22,
-                              fontWeight: FontWeight.bold,
+                    CustomScrollView(
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: _buildImageHeader(height, carouselCount),
+                        ),
+                        SliverToBoxAdapter(
+                          child: Transform.translate(
+                            offset: const Offset(0, -22),
+                            child: Container(
+                              width: double.infinity,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(24),
+                                ),
+                              ),
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(20, 28, 20, 120),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            name.toString(),
+                                            style: GoogleFonts.inter(
+                                              fontSize: 22,
+                                              fontWeight: FontWeight.w700,
+                                              color: _titleDark,
+                                              height: 1.2,
+                                            ),
+                                          ),
+                                        ),
+                                        RatingBarIndicator(
+                                          rating: _avgRating,
+                                          itemBuilder: (context, index) =>
+                                              const Icon(
+                                            Icons.star_rounded,
+                                            color: _accent,
+                                          ),
+                                          itemCount: 5,
+                                          itemSize: 22,
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Rental Price',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w400,
+                                            color: _labelGrey,
+                                          ),
+                                        ),
+                                        Text(
+                                          '€ $price',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w700,
+                                            color: _accent,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      description.toString(),
+                                      style: GoogleFonts.inter(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w400,
+                                        color: _bodyGrey,
+                                        height: 1.45,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Divider(
+                                        height: 1,
+                                        thickness: 1,
+                                        color: Colors.grey.shade200),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'Product Specifications',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w700,
+                                        color: _titleDark,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ...specs.map(
+                                        (e) => _specDividerRow(e.key, e.value)),
+                                    const SizedBox(height: 8),
+                                    Divider(
+                                        height: 1,
+                                        thickness: 1,
+                                        color: Colors.grey.shade200),
+                                    Theme(
+                                      data: Theme.of(context).copyWith(
+                                          dividerColor: Colors.transparent),
+                                      child: ExpansionTile(
+                                        tilePadding: EdgeInsets.zero,
+                                        initiallyExpanded: false,
+                                        title: Text(
+                                          'Service Agreements',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.w700,
+                                            color: _titleDark,
+                                          ),
+                                        ),
+                                        iconColor: _titleDark,
+                                        collapsedIconColor: _titleDark,
+                                        children: [
+                                          _agreementRow(
+                                            'Rental Agreement',
+                                            () => Get.to(
+                                                () => RentalAgreement()),
+                                          ),
+                                          _agreementRow(
+                                            'Terms & Conditions',
+                                            () => Get.to(
+                                                () => TermsAndCondition()),
+                                          ),
+                                          _agreementRow(
+                                            'Insurance & Indemnifications Policy',
+                                            () => Get.to(() =>
+                                                InsuranceAndIndemnification()),
+                                          ),
+                                          _agreementRow(
+                                            'Transportation & Installation Policy',
+                                            () => Get.to(() =>
+                                                TransportAndInstallationPolicy()),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Divider(
+                                        height: 1,
+                                        thickness: 1,
+                                        color: Colors.grey.shade200),
+                                    Theme(
+                                      data: Theme.of(context).copyWith(
+                                          dividerColor: Colors.transparent),
+                                      child: ExpansionTile(
+                                        tilePadding: EdgeInsets.zero,
+                                        initiallyExpanded: true,
+                                        controlAffinity:
+                                            ListTileControlAffinity.trailing,
+                                        title: Text(
+                                          'Ratings & Reviews',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.w700,
+                                            color: _titleDark,
+                                          ),
+                                        ),
+                                        iconColor: const Color(0xFFC4C4CC),
+                                        collapsedIconColor:
+                                            const Color(0xFFC4C4CC),
+                                        children: [
+                                          const SizedBox(height: 4),
+                                          Container(
+                                            width: double.infinity,
+                                            padding: const EdgeInsets.fromLTRB(
+                                                0, 8, 0, 8),
+                                            color: Colors.white,
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    SizedBox(
+                                                      width: 108,
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .center,
+                                                        children: [
+                                                          Text(
+                                                            _avgRating
+                                                                .toStringAsFixed(
+                                                              _avgRating ==
+                                                                      _avgRating
+                                                                          .roundToDouble()
+                                                                  ? 0
+                                                                  : 2,
+                                                            ),
+                                                            style: GoogleFonts
+                                                                .inter(
+                                                              fontSize: 40,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w700,
+                                                              color:
+                                                                  _titleDark,
+                                                              height: 1,
+                                                            ),
+                                                          ),
+                                                          const SizedBox(
+                                                              height: 8),
+                                                          Text(
+                                                            '$_reviewCount Reviews',
+                                                            textAlign:
+                                                                TextAlign
+                                                                    .center,
+                                                            style: GoogleFonts
+                                                                .inter(
+                                                              fontSize: 13,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w400,
+                                                              color:
+                                                                  _labelGrey,
+                                                            ),
+                                                          ),
+                                                          const SizedBox(
+                                                              height: 10),
+                                                          RatingBarIndicator(
+                                                            rating:
+                                                                _avgRating,
+                                                            itemCount: 5,
+                                                            itemSize: 16,
+                                                            itemBuilder:
+                                                                (context,
+                                                                        index) =>
+                                                                    const Icon(
+                                                              Icons
+                                                                  .star_rounded,
+                                                              color: _accent,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 12),
+                                                    Expanded(
+                                                      child: Column(
+                                                        children:
+                                                            List.generate(
+                                                                5, (i) {
+                                                          final star = 5 - i;
+                                                          final w =
+                                                              barWeights[i];
+                                                          final pct = (w * 100)
+                                                              .round();
+                                                          return Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .only(
+                                                                    bottom:
+                                                                        8),
+                                                            child: Row(
+                                                              children: [
+                                                                Row(
+                                                                  mainAxisSize:
+                                                                      MainAxisSize
+                                                                          .min,
+                                                                  children: [
+                                                                    Text(
+                                                                      '$star',
+                                                                      style: GoogleFonts
+                                                                          .inter(
+                                                                        fontSize:
+                                                                            13,
+                                                                        fontWeight:
+                                                                            FontWeight.w500,
+                                                                        color:
+                                                                            _titleDark,
+                                                                      ),
+                                                                    ),
+                                                                    const SizedBox(
+                                                                        width:
+                                                                            4),
+                                                                    Icon(
+                                                                      Icons
+                                                                          .star_rounded,
+                                                                      size:
+                                                                          14,
+                                                                      color:
+                                                                          _accent,
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                                const SizedBox(
+                                                                    width: 8),
+                                                                Expanded(
+                                                                  child:
+                                                                      ClipRRect(
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                            999),
+                                                                    child:
+                                                                        LinearProgressIndicator(
+                                                                      value: w,
+                                                                      minHeight:
+                                                                          8,
+                                                                      backgroundColor:
+                                                                          Colors.grey.shade200,
+                                                                      valueColor:
+                                                                          const AlwaysStoppedAnimation<Color>(
+                                                                        _accent,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                const SizedBox(
+                                                                    width: 8),
+                                                                SizedBox(
+                                                                  width: 38,
+                                                                  child: Text(
+                                                                    '$pct%',
+                                                                    textAlign:
+                                                                        TextAlign
+                                                                            .right,
+                                                                    style: GoogleFonts
+                                                                        .inter(
+                                                                      fontSize:
+                                                                          12,
+                                                                      fontWeight:
+                                                                          FontWeight.w400,
+                                                                      color:
+                                                                          _labelGrey,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          );
+                                                        }),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 16),
+                                                Align(
+                                                  alignment:
+                                                      Alignment.centerLeft,
+                                                  child: TextButton(
+                                                    style:
+                                                        TextButton.styleFrom(
+                                                      backgroundColor:
+                                                          _accent,
+                                                      foregroundColor:
+                                                          Colors.white,
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                        horizontal: 28,
+                                                        vertical: 12,
+                                                      ),
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(28),
+                                                      ),
+                                                    ),
+                                                    onPressed: () {
+                                                      if (prodID != null &&
+                                                          stars
+                                                              .toString()
+                                                              .isNotEmpty) {
+                                                        Get.to(
+                                                          () =>
+                                                              VendorReviewScreen(
+                                                            stars: stars,
+                                                            reviewsLenght: length
+                                                                .toString(),
+                                                            prodID: prodID,
+                                                          ),
+                                                        );
+                                                      }
+                                                    },
+                                                    child: Text(
+                                                      'Read More',
+                                                      style:
+                                                          GoogleFonts.inter(
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        fontSize: 14,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                         ),
-
-                        RatingBarIndicator(
-                          rating: double.parse(stars),
-                          itemBuilder: (context,index)=>Icon(
-                              Icons.star,
-                              color: Colors.orange),
-                          itemCount:5,
-                          itemSize:18,
-                        )
                       ],
                     ),
-
-                    SizedBox(height:15),
-
-                    /// PRICE
-
-                    Row(
-                      mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween,
-                      children: [
-
-                        Text(
-                          "Rental Price",
-                          style: TextStyle(
-                              fontSize:16,
-                              fontWeight: FontWeight.w500),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: Material(
+                        elevation: 12,
+                        shadowColor: Colors.black26,
+                        color: Colors.white,
+                        child: SafeArea(
+                          top: false,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: Colors.red,
+                                      side: const BorderSide(color: Colors.red),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      ApiRepository.shared
+                                          .deleteProductsById(prodID);
+                                    },
+                                    child: Text(
+                                      'Delete',
+                                      style: GoogleFonts.inter(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  flex: 2,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: kprimaryColor,
+                                      foregroundColor: Colors.white,
+                                      elevation: 0,
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      Get.to(
+                                        () => EditProductScreen(
+                                          category_id: categoryID,
+                                          sub_category_id: subCategoryID,
+                                          name: name,
+                                          price: price,
+                                          specifications: specifications,
+                                          description: description,
+                                          negotiation: negotiation,
+                                          product_id: product_id,
+                                          relProd: [],
+                                          images: images,
+                                          imageID: imageID,
+                                          messageStatus: message,
+                                          delivery_charges: delivery_charges,
+                                        ),
+                                      );
+                                    },
+                                    child: Text(
+                                      'Edit Product',
+                                      style: GoogleFonts.inter(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-
-                        Text(
-                          "€ $price",
-                          style: TextStyle(
-                              fontSize:18,
-                              color: Colors.orange,
-                              fontWeight: FontWeight.bold),
-                        )
-                      ],
-                    ),
-
-                    SizedBox(height:15),
-
-                    /// DESCRIPTION
-
-                    Text(
-                      description.toString(),
-                      style: TextStyle(
-                          color: Colors.grey,
-                          height:1.4),
-                    ),
-
-                    SizedBox(height:20),
-
-                    Divider(),
-
-                    /// SPECIFICATIONS
-
-                    Text(
-                      "Product Specifications",
-                      style: TextStyle(
-                          fontSize:18,
-                          fontWeight: FontWeight.bold),
-                    ),
-
-                    SizedBox(height:10),
-
-                    specRow("Material","Wooden"),
-                    specRow("Condition","New"),
-                    specRow("Finish","Simple Finish"),
-                    specRow("Style","Minimal"),
-
-                    SizedBox(height:20),
-
-                    Divider(),
-
-                    /// SERVICE AGREEMENTS
-
-                    ExpansionTile(
-
-                      title: Text(
-                        "Service Agreements",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold),
                       ),
-
-                      children: [
-
-                        agreementItem(
-                          "Rental Agreement",
-                              ()=>Get.to(()=>RentalAgreement()),
-                        ),
-
-                        agreementItem(
-                          "Terms & Conditions",
-                              ()=>Get.to(()=>TermsAndCondition()),
-                        ),
-
-                        agreementItem(
-                          "Insurance & Indemnifications Policy",
-                              ()=>Get.to(()=>InsuranceAndIndemnification()),
-                        ),
-
-                        agreementItem(
-                          "Transportation & Installation Policy",
-                              ()=>Get.to(()=>TransportAndInstallationPolicy()),
-                        ),
-
-                      ],
                     ),
-
-                    SizedBox(height:80)
                   ],
+                ),
+    );
+  }
+
+  Widget _buildImageHeader(double screenHeight, int carouselCount) {
+    final h = screenHeight * 0.36;
+    return SizedBox(
+      height: h,
+      width: double.infinity,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          PageView.builder(
+            controller: _pageController,
+            onPageChanged: (i) => setState(() => _carouselIndex = i),
+            itemCount: carouselCount,
+            itemBuilder: (context, index) {
+              if (imagesList.isEmpty) {
+                return ColoredBox(
+                  color: Colors.grey.shade300,
+                  child: Icon(Icons.image_not_supported_outlined,
+                      size: 48, color: Colors.grey.shade600),
+                );
+              }
+              return CachedNetworkImage(
+                imageUrl: AppUrl.baseUrlM + imagesList[index].toString(),
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: h,
+              );
+            },
+          ),
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Material(
+                  color: Colors.white.withOpacity(0.92),
+                  shape: const CircleBorder(),
+                  child: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.black, size: 22),
+                    onPressed: () => Get.back(),
+                  ),
                 ),
               ),
             ),
           ),
-
-          /// BOTTOM BUTTONS
-
-          Container(
-            padding: EdgeInsets.all(15),
-            color: Colors.white,
-
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 12,
             child: Row(
-
-              children: [
-
-                Expanded(
-                  child: OutlinedButton.icon(
-
-                    icon: Icon(Icons.delete,color: Colors.red),
-
-                    label: Text("Delete",
-                        style: TextStyle(color: Colors.red)),
-
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.red),
-                      padding: EdgeInsets.symmetric(vertical:14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-
-                    onPressed: (){
-                      ApiRepository.shared.deleteProductsById(prodID);
-                    },
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(carouselCount, (i) {
+                final active = _carouselIndex == i;
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: active ? 20 : 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: active
+                        ? _accent
+                        : Colors.white.withOpacity(0.75),
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                ),
-
-                SizedBox(width:15),
-
-                Expanded(
-                  child: ElevatedButton.icon(
-
-                    icon: Icon(Icons.edit,color: Colors.white,),
-
-                    label: Text("Edit Product",style: TextStyle(
-                      color: Colors.white
-                    ),),
-
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kprimaryColor,
-                      padding: EdgeInsets.symmetric(vertical:14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-
-                    onPressed: (){
-
-                      Get.to(()=>EditProductScreen(
-                        category_id: categoryID,
-                        sub_category_id: subCategoryID,
-                        name: name,
-                        price: price,
-                        specifications: specifications,
-                        description: description,
-                        negotiation: negotiation,
-                        product_id: product_id,
-                        relProd: [],
-                        images: images,
-                        imageID: imageID,
-                        messageStatus: message,
-                        delivery_charges: delivery_charges,
-                      ));
-
-                    },
-                  ),
-                )
-              ],
+                );
+              }),
             ),
           )
         ],
@@ -527,39 +890,59 @@ class _ProductDetail2ScreenState extends State<ProductDetail2Screen> {
     );
   }
 
-  Widget specRow(title,value){
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical:8),
-
-      child: Row(
-
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-        children: [
-
-          Text(
-            title,
-            style: TextStyle(color: Colors.grey),
+  Widget _specDividerRow(String title, String value) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                    color: _labelGrey,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  value,
+                  textAlign: TextAlign.right,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: _titleDark,
+                  ),
+                ),
+              ),
+            ],
           ),
-
-          Text(
-            value,
-            style: TextStyle(fontWeight: FontWeight.w500),
-          ),
-        ],
-      ),
+        ),
+        Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
+      ],
     );
   }
 
-  Widget agreementItem(title,onTap){
-
+  Widget _agreementRow(String title, VoidCallback onTap) {
     return ListTile(
-
-      title: Text(title),
-
-      trailing: Icon(Icons.arrow_forward_ios,size:14),
-
+      dense: true,
+      contentPadding: EdgeInsets.zero,
+      title: Text(
+        title,
+        style: GoogleFonts.inter(
+          fontSize: 15,
+          fontWeight: FontWeight.w400,
+          color: _titleDark,
+        ),
+      ),
+      trailing:
+          Icon(Icons.chevron_right, size: 20, color: Colors.grey.shade500),
       onTap: onTap,
     );
   }

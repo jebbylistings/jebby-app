@@ -1,408 +1,292 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:jebby/Views/controller/bottomcontroller.dart';
-import 'package:jebby/Views/helper/colors.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_navigation/get_navigation.dart';
+import 'package:jebby/Services/product_services.dart';
+import 'package:jebby/Views/screens/home/SubCategory.dart';
+import 'package:jebby/model/sub_category_list_model.dart';
 
-import 'package:get/get.dart';
-import 'package:jebby/Views/screens/profile/myprofile.dart';
-import 'package:jebby/model/categoryList_model.dart';
-import 'package:jebby/view_model/apiServices.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../res/app_url.dart';
-import '../../../res/color.dart';
 import '../../../view_model/category_get_View_model.dart';
-import 'Electronics.dart';
-import 'messages.dart';
 
-class Category extends StatefulWidget {
-  const Category({Key? key}) : super(key: key);
+class ElectronicsScreen extends StatefulWidget {
+  final String? id;
+  final String? categoryname;
+  final String? pictureurl;
 
-  @override
-  State<Category> createState() => _CategoryState();
-}
-class _CircleAction extends StatelessWidget {
-  const _CircleAction({
-    required this.onTap,
-    this.icon,
-    this.image,
-    this.size = 20,
+  const ElectronicsScreen({
+    super.key,
+    this.categoryname,
+    this.id,
+    this.pictureurl,
   });
 
-  final VoidCallback onTap;
-  final IconData? icon;
-  final ImageProvider? image; // 👈 custom image support
-  final double size; // 👈 size controller
-
   @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: SizedBox(
-          height: 36,
-          width: 36,
-          child: Center(
-            child:
-            image != null
-                ? Image(
-              image: image!,
-              height: size,
-              width: size,
-              fit: BoxFit.contain,
-            )
-                : Icon(icon, size: size, color: Colors.black87),
-          ),
-        ),
-      ),
-    );
-  }
+  State<ElectronicsScreen> createState() => _ElectronicsScreenState();
 }
 
-class _CategoryState extends State<Category> {
-  bool isLoading = true;
-  bool isError = false;
-  bool emptyData = false;
-  final GlobalKey<ScaffoldState> _key = GlobalKey();
-  TextEditingController searchController = TextEditingController();
-  CategoryList? _categoryList;
-  List<Data> results = [];
+class _ElectronicsScreenState extends State<ElectronicsScreen> {
+  final ProductServices _productServices = ProductServices();
+  /// Cache Future<int> so FutureBuilder gets the same future on rebuild and shows the count.
+  final Map<String, Future<int>> _productCountFutures = {};
 
-  getProducts() {
-    ApiRepository.shared.getCategoryList(
-      (List) => {
-        if (this.mounted)
-          {
-            if (List.data!.length == 0)
-              {
-                setState(() {
-                  isLoading = false;
-                  isError = false;
-                  emptyData = true;
-                  _categoryList = List;
-                }),
-              }
-            else
-              {
-                setState(() {
-                  _categoryList = List;
-                  // runFilter(widget.word.toString());
-                  isLoading = false;
-                  isError = false;
-                  emptyData = false;
-                }),
-              },
-          },
-      },
-      (error) => {
-        if (this.mounted)
-          {
-            if (error != null)
-              {
-                setState(() {
-                  isError = true;
-                  isLoading = false;
-                  emptyData = false;
-                }),
-              },
-          },
+  String _categoryDescription(String? rawName) {
+    final name = (rawName ?? '').trim();
+    if (name.isEmpty) {
+      return 'Explore top picks curated for every style and need. Browse subcategories to quickly find the right rental item for you.';
+    }
+    return 'Discover popular $name rentals curated for quality, comfort, and everyday use. Browse subcategories to find the perfect match for your needs.';
+  }
+
+  Future<int> _getProductCount(String subcategoryId) {
+    return _productCountFutures.putIfAbsent(
+      subcategoryId,
+      () async {
+        try {
+          final result = await _productServices.getProducts(subcategoryId);
+          return result?.data?.length ?? 0;
+        } catch (_) {
+          return 0;
+        }
       },
     );
   }
 
-  void runFilter() {
-    if (searchController.text.isEmpty) {
-      results = _categoryList!.data!;
-    } else {
-      results =
-          _categoryList!.data!
-              .where(
-                (product) => product.name!.toLowerCase().contains(
-                  searchController.text.toLowerCase(),
-                ),
-              )
-              .toList();
-    }
-  }
-
-  String? role;
-
-  void getRole() async {
-    final SharedPreferences sp = await SharedPreferences.getInstance();
-    role = sp.getString("role").toString();
-  }
-
+  @override
   void initState() {
-    getProducts();
-    getRole();
     super.initState();
   }
 
-
-
   @override
   Widget build(BuildContext context) {
-    double res_height = MediaQuery.of(context).size.height;
+    GetAPiFromModel getAPiFromModel = GetAPiFromModel();
+    double scrimStrength = 0.15;
     double res_width = MediaQuery.of(context).size.width;
 
-    GetAPiFromModel getAPiFromModel = GetAPiFromModel();
-    final bottomctrl = Get.put(BottomController());
-
     return Scaffold(
-      key: _key,
-      // drawer: DrawerScreen(),
+      backgroundColor: Colors.white,
+      // backgroundColor: Colors.transparent,
       // appBar: AppBar(
       //   backgroundColor: Colors.transparent,
+      //   automaticallyImplyLeading: false,
       //   elevation: 0,
-      //   centerTitle: true,
-      //   title: Text(
-      //     'Categories',
-      //     style: TextStyle(
-      //       fontWeight: FontWeight.bold,
-      //       color: Colors.black,
-      //       fontSize: 19,
-      //     ),
-      //   ),
       //   leading: InkWell(
       //     onTap: () {
-      //       bottomctrl.navBarChange(0);
       //       Get.back();
-      //       // _key.currentState!.openDrawer();
       //     },
       //     borderRadius: BorderRadius.circular(50),
       //     child: Icon(Icons.arrow_back, color: Colors.black),
       //   ),
-      //   actions: [
-      //     Visibility(
-      //       visible: role != null && role != "Guest",
-      //       child: GestureDetector(
-      //         onTap: () {
-      //           Get.to(() => MyProfileScreen());
-      //         },
-      //         child: Padding(
-      //           padding: const EdgeInsets.all(19.0),
-      //           child: Icon(
-      //             Icons.person_outline,
-      //             color: Colors.black,
-      //             size: 25,
-      //           ),
-      //         ),
-      //       ),
-      //     ),
-      //   ],
       // ),
-
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(120),
+        preferredSize: const Size.fromHeight(350),
         child: Builder(
           builder: (context) {
-            final top = MediaQuery.of(context).padding.top;
-            const radius = 26.0;
 
             return AnnotatedRegion<SystemUiOverlayStyle>(
               value: SystemUiOverlayStyle.light,
               child: Material(
                 color: Colors.transparent,
                 child: Stack(
+                  fit: StackFit.expand,
                   children: [
+                    // Background image
+                    // Image(
+                    //   image: imageProvider,
+                    //   fit: BoxFit.cover,
+                    // ),
+                    CachedNetworkImage(
+                      imageUrl: widget.pictureurl!,
+                      fit: BoxFit.cover,
+                      placeholder:
+                          (context, url) => Center(
+                            child:
+                                CircularProgressIndicator(), // Loading spinner
+                          ),
+                      errorWidget:
+                          (context, url, error) => Icon(
+                            Icons.error,
+                            color: Colors.red,
+                          ), // Display an error icon
+                    ),
+
+                    // Universal darken layer (ensures white text works on any image)
+                    Container(color: Colors.black.withOpacity(scrimStrength)),
+
+                    // Extra bottom gradient for stronger contrast near text
                     Container(
-                      height: 120,
                       decoration: const BoxDecoration(
-                        color: AppColors.primaryColor,
-                        borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(radius),
-                          bottomRight: Radius.circular(radius),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black54,
+                            Colors.black87,
+                          ],
+                          stops: [0.3, 0.7, 1.0],
                         ),
                       ),
-                      padding: EdgeInsets.fromLTRB(16, top + 12, 16, 18),
-                      child: Row(
+                    ),
+
+                    // Content
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(26, 66, 16, 14),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-
-
-                          const SizedBox(width: 12),
-
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Featured Categories',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w800,
-                                    height: 1.1,
-                                  ),
-                                ),
-
-                              ],
+                          InkWell(
+                            onTap: () {
+                              Get.back();
+                            },
+                            borderRadius: BorderRadius.circular(50),
+                            child: Icon(
+                              Icons.arrow_back_ios,
+                              color: Colors.white,
                             ),
-                          ),
-
-                          const SizedBox(width: 12),
-
-                          Row(
-                            children: [
-                              Visibility(
-                                visible: role != null && role != "Guest",
-                                child: _CircleAction(
-                                  onTap: () {
-                                    Get.to(() => MessageScreen());
-                                  },
-                                  image: const AssetImage(
-                                    'assets/slicing/notificationnew.png',
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(width: 10),
-                              Visibility(
-                                visible: role != null && role != "Guest",
-                                child: _CircleAction(
-                                  onTap: () {
-                                    Get.to(() => MyProfileScreen());
-                                  },
-                                  image: const AssetImage(
-                                    'assets/slicing/personnew.png',
-                                  ),
-                                ),
-                              ),
-                            ],
                           ),
                         ],
                       ),
                     ),
-
-
                   ],
                 ),
+                // child: Stack(
+                //   children: [
+                //     Container(
+                //       height: 400,
+                //       decoration: BoxDecoration(
+                //         image: DecorationImage(
+                //           image: NetworkImage(widget.pictureurl!),
+                //         ),
+                //         borderRadius: BorderRadius.only(
+                //           bottomLeft: Radius.circular(radius),
+                //           bottomRight: Radius.circular(radius),
+                //         ),
+                //       ),
+                //       padding: EdgeInsets.fromLTRB(16, top + 12, 16, 18),
+                //     ),
+                //
+                //     Positioned(
+                //       top: 10,
+                //       left: 10,
+                //       child: InkWell(
+                //         onTap: () {
+                //           Get.back();
+                //         },
+                //         borderRadius: BorderRadius.circular(50),
+                //         child: Icon(Icons.arrow_back, color: Colors.black),
+                //       ),
+                //     ),
+                //   ],
+                // ),
               ),
             );
           },
         ),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: res_height * 0.03),
-              //! Search Bar Commented out
-              // Container(
-              //   // width: res_width * 0.9,
-              //   child: TextFormField(
-              //     onChanged: (value) {},
-              //     controller: searchController,
-              //     decoration: InputDecoration(
-              //       hintStyle: TextStyle(color: Colors.grey),
-              //       suffixIcon: IconButton(
-              //         onPressed: () {
-              //           if (searchController.text.isNotEmpty) {
-              //             runFilter();
-              //           }
-              //         },
-              //         icon: Icon(
-              //           Icons.search_outlined,
-              //           color: Colors.grey,
-              //         ),
-              //       ),
-              //       hintText: "Search Category",
-              //       border: OutlineInputBorder(
-              //         borderRadius: BorderRadius.circular(15.0),
-              //       ),
-              //       enabledBorder: OutlineInputBorder(
-              //         borderSide: BorderSide(color: kprimaryColor, width: 1),
-              //         borderRadius: BorderRadius.circular(15),
-              //       ),
-              //       focusedBorder: OutlineInputBorder(
-              //         borderSide: BorderSide(color: kprimaryColor, width: 1),
-              //         borderRadius: BorderRadius.circular(15),
-              //       ),
-              //     ),
-              //   ),
-              // ),
-              // SizedBox(height: res_height * 0.03),
-              // Padding(
-              //   padding: EdgeInsets.symmetric(horizontal: 10),
-              //   child: Text(
-              //     'Featured Categories',
-              //     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              //   ),
-              // ),
-              SizedBox(height: res_height * 0.01),
-              FutureBuilder(
-                future: getAPiFromModel.getCategoryList(),
-                builder: (context, AsyncSnapshot snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
-                  } else {
-                    final data = snapshot.data!.data;
-                    // return Wrap(
-                    //   spacing: 1,
-                    //   runSpacing: 5,
-                    //   children: List.generate(snapshot.data!.data!.length, (
-                    //     index,
-                    //   ) {
-                    //     return data[index].status == 1
-                    //         ? contBox(
-                    //           txt: data[index].name,
-                    //           img: '${AppUrl.baseUrlM}${data[index].image}',
-                    //           id: data[index].id.toString(),
-                    //         )
-                    //         : SizedBox.shrink(); // Use SizedBox.shrink() to render nothing
-                    //   }),
-                    // );
-                    return Container(
-                      width: res_width,
-                      child: GridView.builder(
-                        padding: const EdgeInsets.all(6),
-                        //                        physics: const BouncingScrollPhysics(),
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
 
-                        itemCount: snapshot.data!.data!.length,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 14,
-                          mainAxisSpacing: 14,
-                          // Wider than tall to match your screenshot card shape
-                          childAspectRatio: 1.2,
-                        ),
-                        itemBuilder: (context, index) {
-                          // final item = items[index];
+      body: Container(
+        color: Colors.white,
+        width: double.infinity,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 20),
+                Container(
+                  child: Text(
+                    "${widget.categoryname}",
+                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                SizedBox(height: 6),
+                Container(
+                  width: res_width * 0.9,
+                  child: Text(
+                    _categoryDescription(widget.categoryname),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w300),
+                  ),
+                ),
 
-                          return contBox(
-                            txt: data![index].name,
-                            img: '${AppUrl.baseUrlM}${data[index].image}',
-                            id: data[index].id.toString(),
+                SizedBox(height: 10),
+                SizedBox(
+                  height: 600,
+                  child: FutureBuilder(
+                    future: getAPiFromModel.getSubCategoryList(
+                      widget.id.toString(),
+                    ),
+                    builder: (
+                      context,
+                      AsyncSnapshot<SubCategoryList> snapshot,
+                    ) {
+                      final data = snapshot.data?.data;
+                      if (!snapshot.hasData) {
+                        return Center(child: CircularProgressIndicator());
+                      } else {
+                        if (snapshot.data!.data!.length != 0) {
+
+                          return Container(
+                            width: res_width,
+                            child: GridView.builder(
+                              padding: const EdgeInsets.all(6),
+                              //                        physics: const BouncingScrollPhysics(),
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),
+
+                              itemCount: snapshot.data!.data!.length,
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 14,
+                                mainAxisSpacing: 14,
+                                // Wider than tall to match your screenshot card shape
+                                childAspectRatio: 1.2,
+                              ),
+                              itemBuilder: (context, index) {
+                                final subcategoryId = data![index].id.toString();
+                                return FutureBuilder<int>(
+                                  future: _getProductCount(subcategoryId),
+                                  builder: (context, countSnapshot) {
+                                    final count = countSnapshot.hasData
+                                        ? countSnapshot.data
+                                        : null;
+                                    return contBox(
+                                      txt: data[index].name,
+                                      img: '${AppUrl.baseUrlM}${data[index].image}',
+                                      id: subcategoryId,
+                                      itemCount: count,
+                                    );
+                                  },
+                                );
+                              },
+                            ),
                           );
-                        },
-                      ),
-                    );
-                  }
-                },
-              ),
-              SizedBox(height: res_height * 0.07),
-            ],
+                        } else {
+                          return Padding(
+                            padding: const EdgeInsets.all(3.0),
+                            child: Text(
+                              "No data available",
+                              style: TextStyle(fontSize: 14),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  contBox({txt, img, id}) {
+  contBox({txt, img, id, int? itemCount}) {
     double res_width = MediaQuery.of(context).size.width;
-    double res_height = MediaQuery.of(context).size.height;
-    double responsiveFontSize = res_width * 0.035;
     double borderRadius = 20;
     double scrimStrength = 0.05;
     return Material(
@@ -411,7 +295,13 @@ class _CategoryState extends State<Category> {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
-          Get.to(() => ElectronicsScreen(categoryname: txt, id: id,pictureurl: img,));
+          Get.to(
+                () => Electronics2(
+              parentCategoryName: widget.categoryname.toString(),
+              subcategoryName: txt.toString(),
+              subcategoryId: id.toString(),
+            ),
+          );
         },
         child: SizedBox(
           width: res_width * 0.45,
@@ -467,17 +357,20 @@ class _CategoryState extends State<Category> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          "$txt",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            height: 1.1,
-                            letterSpacing: -0.2,
-                            shadows: [
-                              Shadow(blurRadius: 4, color: Colors.black54),
-                            ],
+                        Container(
+                          width:res_width*0.27,
+                          child: Text(
+                            "$txt",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              height: 1.1,
+                              letterSpacing: -0.2,
+                              shadows: [
+                                Shadow(blurRadius: 4, color: Colors.black54),
+                              ],
+                            ),
                           ),
                         ),
                         Icon(
@@ -489,11 +382,15 @@ class _CategoryState extends State<Category> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '0 Subcategories',
+                      itemCount != null
+                          ? (itemCount == 1
+                              ? '1 item'
+                              : '$itemCount items')
+                          : '...',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.95),
                         fontWeight: FontWeight.w500,
-                        fontSize: 14,
+                        fontSize: 12,
                         shadows: const [
                           Shadow(blurRadius: 3, color: Colors.black45),
                         ],
@@ -507,117 +404,6 @@ class _CategoryState extends State<Category> {
         ),
       ),
     );
-    // return GestureDetector(
-    //   onTap: () {
-    //     Get.to(() => ElectronicsScreen(categoryname: txt, id: id));
-    //   },
-    //   child: Padding(
-    //     padding: const EdgeInsets.all(5.5),
-    //     child: Column(
-    //       children: [
-    //         SizedBox(height: 10),
-    //         Container(
-    //           margin: EdgeInsets.only(left: 5, top: 5),
-    //           width: res_width * 0.25,
-    //           height: res_height * 0.12,
-    //           decoration: BoxDecoration(
-    //             border: Border.all(color: Colors.white, width: 2),
-    //             color: kprimaryColor,
-    //             borderRadius: BorderRadius.all(Radius.circular(18)),
-    //             boxShadow: [
-    //               BoxShadow(
-    //                 color: Colors.grey,
-    //                 blurRadius: 5,
-    //                 offset: Offset(2, 1), // Shadow position
-    //               ),
-    //             ],
-    //           ),
-    //           child: Padding(
-    //             padding: const EdgeInsets.all(12.0),
-    //             child: ClipOval(
-    //               child: CachedNetworkImage(
-    //                 imageUrl: '$img',
-    //                 fit: BoxFit.cover,
-    //                 placeholder:
-    //                     (context, url) => Center(
-    //                       child: CircularProgressIndicator(), // Loading spinner
-    //                     ),
-    //                 errorWidget:
-    //                     (context, url, error) => Icon(
-    //                       Icons.error,
-    //                       color: Colors.red,
-    //                     ), // Display an error icon
-    //               ),
-    //             ),
-    //           ),
-    //         ),
-    //         SizedBox(height: 6),
-    //         SizedBox(
-    //           width: res_width * 0.27,
-    //           child: Center(
-    //             child: Text(
-    //               "$txt",
-    //               style: TextStyle(fontSize: responsiveFontSize),
-    //               overflow: TextOverflow.ellipsis, // Specify overflow behavior
-    //               maxLines: 1, // Limit to a single line
-    //             ),
-    //           ),
-    //         ),
-    //       ],
-    //     ),
-    //   ),
-    // );
-  }
 
-  contBox1({txt, img, id}) {
-    double res_width = MediaQuery.of(context).size.width;
-    double res_height = MediaQuery.of(context).size.height;
-    double responsiveFontSize = res_width * 0.035;
-    return GestureDetector(
-      onTap: () {
-        Get.to(() => ElectronicsScreen(categoryname: txt, id: id));
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(5.5),
-        child: Column(
-          children: [
-            SizedBox(height: 10),
-            Container(
-              margin: EdgeInsets.only(left: 5, top: 5),
-              width: res_width * 0.25,
-              height: res_height * 0.12,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.white, width: 2),
-                color: kprimaryColor,
-                borderRadius: BorderRadius.all(Radius.circular(18)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey,
-                    blurRadius: 5,
-                    offset: Offset(2, 1), // Shadow position
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Image.network('$img'),
-              ),
-            ),
-            SizedBox(height: 6),
-            SizedBox(
-              width: res_width * 0.27,
-              child: Center(
-                child: Text(
-                  "$txt",
-                  style: TextStyle(fontSize: responsiveFontSize),
-                  overflow: TextOverflow.ellipsis, // Specify overflow behavior
-                  maxLines: 1, // Limit to a single line
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

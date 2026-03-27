@@ -2,19 +2,18 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart' as d;
 
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:jebby/Views/helper/colors.dart';
-import 'package:jebby/Views/screens/profile/myprofile.dart';
+import 'package:jebby/Views/screens/profile/userprofile.dart';
 
 import 'package:jebby/model/user_model.dart';
 import 'package:jebby/utils/utilities/dialog/error_dialog.dart';
@@ -27,7 +26,6 @@ import '../../../Services/provider/sign_in_provider.dart';
 import '../../../utils/overlay_support.dart';
 import '../../../view_model/apiServices.dart';
 import '../../../view_model/user_view_model.dart';
-import '../vendors/renterProfile.dart';
 
 class EditProfile extends StatefulWidget {
   const EditProfile({Key? key}) : super(key: key);
@@ -120,20 +118,25 @@ class _EditProfileState extends State<EditProfile> {
     getSuggestion(_locationController.text);
   }
 
-  _onChanged2() {
-    getSuggestion1(_ShippingAddressController.text);
-  }
-
   void _showAlert(String message) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('File Size Exceeded'),
-          content: Text(message),
+          title: Text(
+            'File Size Exceeded',
+            style: GoogleFonts.inter(fontWeight: FontWeight.w700),
+          ),
+          content: Text(
+            message,
+            style: GoogleFonts.inter(fontWeight: FontWeight.w400),
+          ),
           actions: <Widget>[
             TextButton(
-              child: Text('OK'),
+              child: Text(
+                'OK',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -160,30 +163,6 @@ class _EditProfileState extends State<EditProfile> {
       if (response.statusCode == 200) {
         setState(() {
           _placeList = json.decode(response.body)['predictions'];
-        });
-      } else {
-        throw Exception('Failed to load predictions');
-      }
-    } catch (e) {
-      // toastMessage('success');
-    }
-  }
-
-  void getSuggestion1(String input) async {
-    String kPLACES_API_KEY =
-        dotenv.env['kPLACES_API_KEY'] ?? 'No secret key found';
-
-    try {
-      String baseURL =
-          'https://maps.googleapis.com/maps/api/place/autocomplete/json';
-      String request =
-          '$baseURL?input=$input&key=$kPLACES_API_KEY&sessiontoken=$_sessionToken';
-      var response = await http.get(Uri.parse(request));
-      // log('mydata');
-      // log(response.body.toString());
-      if (response.statusCode == 200) {
-        setState(() {
-          _placeList1 = json.decode(response.body)['predictions'];
         });
       } else {
         throw Exception('Failed to load predictions');
@@ -229,7 +208,6 @@ class _EditProfileState extends State<EditProfile> {
   String _sessionToken = '1234567890';
   var vuid = new Uuid();
   List<dynamic> _placeList = [];
-  List<dynamic> _placeList1 = [];
   var selected = "standard";
 
   void getUserData() {
@@ -338,17 +316,22 @@ class _EditProfileState extends State<EditProfile> {
     _emailController.text = sp.email.toString();
     double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
-    return Scaffold(
+    return Theme(
+      data: Theme.of(
+        context,
+      ).copyWith(textTheme: GoogleFonts.interTextTheme(Theme.of(context).textTheme)),
+      child: Scaffold(
+      backgroundColor: const Color(0xFFF2F2F2),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color(0xFFF2F2F2),
         elevation: 0,
         centerTitle: true,
         title: Text(
           'Edit Profile',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w700,
             color: Colors.black,
-            fontSize: 19,
+            fontSize: 18,
           ),
         ),
         leading: InkWell(
@@ -356,7 +339,7 @@ class _EditProfileState extends State<EditProfile> {
             Get.back();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Icon(Icons.arrow_back, color: Colors.black),
+          child: Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
         ),
       ),
       body: Container(
@@ -375,76 +358,71 @@ class _EditProfileState extends State<EditProfile> {
                       },
                       child: Stack(
                         clipBehavior: Clip.none,
+                        alignment: Alignment.topCenter,
                         children: [
                           Container(
-                            width: 400,
-                            height: 200,
-                            padding: EdgeInsets.only(bottom: 40),
-                            decoration: BoxDecoration(),
+                            width: double.infinity,
+                            height: 170,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
                             child:
-                                _image != null
-                                    ? Image.file(
-                                      _image!.absolute,
-                                      fit: BoxFit.cover,
-                                    )
-                                    : back_image_api.toString() == "null"
-                                    ? sp.imageUrl.toString() == "null"
-                                        ? Image.asset(
-                                          "assets/slicing/blankuser.jpeg",
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(24),
+                                  child: _image != null
+                                      ? Image.file(
+                                          _image!.absolute,
                                           fit: BoxFit.cover,
                                         )
-                                        : CachedNetworkImage(
-                                          imageUrl: "${sp.imageUrl}",
-                                          fit: BoxFit.cover,
-                                          placeholder:
-                                              (context, url) => Center(
-                                                child:
-                                                    CircularProgressIndicator(),
-                                              ),
-                                          errorWidget:
-                                              (context, url, error) => Center(
-                                                child: Icon(Icons.error),
-                                              ),
-                                        )
-                                    : CachedNetworkImage(
-                                      imageUrl: "${Url}${back_image_api}",
-                                      fit: BoxFit.cover,
-                                      placeholder:
-                                          (context, url) => Center(
-                                            child: CircularProgressIndicator(),
-                                          ),
-                                      errorWidget:
-                                          (context, url, error) =>
-                                              Center(child: Icon(Icons.error)),
-                                    ),
+                                      : (back_image_api.toString().trim().isEmpty ||
+                                              back_image_api.toString() == "null")
+                                          ? Image.asset(
+                                              "assets/slicing/placeholder.png",
+                                              fit: BoxFit.cover,
+                                            )
+                                          : Image.network(
+                                              Url + back_image_api,
+                                              fit: BoxFit.cover,
+                                              loadingBuilder: (context, child, loadingProgress) {
+                                                if (loadingProgress == null) return child;
+                                                return Image.asset(
+                                                  "assets/slicing/placeholder.png",
+                                                  fit: BoxFit.cover,
+                                                );
+                                              },
+                                              errorBuilder: (context, error, stackTrace) {
+                                                return Image.asset(
+                                                  "assets/slicing/placeholder.png",
+                                                  fit: BoxFit.cover,
+                                                );
+                                              },
+                                            ),
+                                ),
                           ),
                           Positioned(
-                            bottom: 50,
-                            right: -17,
-                            child: Container(
-                              height: 36,
-                              child: RawMaterialButton(
-                                onPressed: () {
-                                  getGalleryImage();
-                                },
-                                elevation: 1,
-                                fillColor: Color(0xFF4285F4),
-                                child: Icon(
+                            right: 14,
+                            bottom: 18,
+                            child: GestureDetector(
+                              onTap: () {
+                                getGalleryImage();
+                              },
+                              child: Container(
+                                height: 34,
+                                width: 34,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFF6AE02),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
                                   Icons.camera_alt_rounded,
                                   color: Colors.white,
+                                  size: 18,
                                 ),
-                                // Image.asset(
-                                //   "assets/slicing/Ellipse 67@3x.png",
-                                //   scale: 1.5,
-                                // ),
-                                // padding: EdgeInsets.all(2),
-                                shape: CircleBorder(),
                               ),
                             ),
                           ),
                           Positioned(
-                            left: 15,
-                            bottom: 10,
+                            bottom: -52,
                             child: GestureDetector(
                               onTap: () {
                                 getGalleryImage1();
@@ -452,84 +430,42 @@ class _EditProfileState extends State<EditProfile> {
                               child: Stack(
                                 clipBehavior: Clip.none,
                                 children: [
-                                  CircleAvatar(
-                                    radius: 40,
-                                    child:
-                                        _image1 != null
-                                            ? CircleAvatar(
-                                              radius: 40,
+                                  Container(
+                                    child: CircleAvatar(
+                                      radius: 50,
+                                      child: _image1 != null
+                                          ? CircleAvatar(
+                                              radius: 50,
                                               backgroundImage: FileImage(
                                                 _image1!.absolute,
                                               ),
                                             )
-                                            : imagesapi.toString() == "null"
-                                            ? sp.imageUrl.toString() == "null"
-                                                ? CircleAvatar(
-                                                  radius: 40,
-                                                  backgroundImage: AssetImage(
-                                                    "assets/slicing/blankuser.jpeg",
-                                                  ),
-                                                )
-                                                : CachedNetworkImage(
-                                                  imageUrl: "${sp.imageUrl}",
-                                                  imageBuilder:
-                                                      (
-                                                        context,
-                                                        imageProvider,
-                                                      ) => CircleAvatar(
-                                                        radius: 40,
-                                                        backgroundImage:
-                                                            imageProvider,
-                                                      ),
-                                                  placeholder:
-                                                      (context, url) =>
-                                                          CircularProgressIndicator(), // Placeholder widget
-                                                  errorWidget:
-                                                      (context, url, error) =>
-                                                          Icon(
-                                                            Icons.error,
-                                                            size: 40,
-                                                          ), // Error widget
-                                                )
-                                            : CachedNetworkImage(
-                                              imageUrl: "${Url}${imagesapi}",
-                                              imageBuilder:
-                                                  (context, imageProvider) =>
-                                                      CircleAvatar(
-                                                        radius: 40,
-                                                        backgroundImage:
-                                                            imageProvider,
-                                                      ),
-                                              placeholder:
-                                                  (context, url) =>
-                                                      CircularProgressIndicator(), // Placeholder widget
-                                              errorWidget:
-                                                  (context, url, error) => Icon(
-                                                    Icons.error,
-                                                    size: 40,
-                                                  ), // Error widget
+                                          : CircleAvatar(
+                                              radius: 50,
+                                              backgroundImage:
+                                                  _profileImageProvider(),
                                             ),
+                                    ),
                                   ),
                                   Positioned(
-                                    bottom: -12,
-                                    right: 18,
+                                    bottom: 0,
+                                    right: 0,
                                     child: GestureDetector(
                                       onTap: () {
                                         getGalleryImage1();
                                       },
                                       child: Container(
-                                        height: 36,
+                                        height: 32,
+                                        width: 32,
                                         alignment: Alignment.center,
-                                        decoration: BoxDecoration(
-                                          color: Color(0xFF4285F4),
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFFF6AE02),
                                           shape: BoxShape.circle,
                                         ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Icon(
-                                            Icons.camera_alt_rounded,
-                                            color: Colors.white,
-                                          ),
+                                        child: const Icon(
+                                          Icons.camera_alt_rounded,
+                                          color: Colors.white,
+                                          size: 16,
                                         ),
                                       ),
                                     ),
@@ -541,36 +477,28 @@ class _EditProfileState extends State<EditProfile> {
                         ],
                       ),
                     ),
-                    SizedBox(height: res_height * 0.02),
-                    Row(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              width: res_width * 0.9,
-                              child: Text(
-                                nameapi == "null"
-                                    ? sp.name.toString() == "null"
-                                        ? fullname.toString()
-                                        : sp.name.toString()
-                                    : nameapi.toString(),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 32,
-                                ),
-                              ),
-                            ),
-                            Text(
-                              "Verified User",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                    SizedBox(height: res_height * 0.08),
+                    Text(
+                      nameapi == "null"
+                          ? sp.name.toString() == "null"
+                              ? fullname.toString()
+                              : sp.name.toString()
+                          : nameapi.toString(),
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 24,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Verified User",
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                     Txtfld("Name", _nameController, ""),
                     TxtfldforEmail(
@@ -678,6 +606,11 @@ class _EditProfileState extends State<EditProfile> {
                                 ),
                               ),
                               title: Text(_placeList[index]["description"]),
+                              titleTextStyle: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.black87,
+                              ),
                             );
                           } else {
                             return SizedBox.shrink();
@@ -780,110 +713,7 @@ class _EditProfileState extends State<EditProfile> {
                     //   },
                     //   title: Text(_placeList[index]["description"]),
                     // );
-                    role != "1"
-                        ? Container(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(height: res_height * 0.02),
-                              Text('Shipping Address'),
-                              SizedBox(height: res_height * 0.005),
-                              Container(
-                                height: 70,
-                                width: res_width * 0.9,
-                                child: TextField(
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _onChanged2();
-                                    });
-                                  },
-                                  maxLines: 1,
-                                  controller: _ShippingAddressController,
-                                  decoration: InputDecoration(
-                                    // hintText:placholder,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(15.0),
-                                    ),
-                                    enabledBorder: const OutlineInputBorder(
-                                      borderSide: const BorderSide(
-                                        color: kprimaryColor,
-                                        width: 1,
-                                      ),
-                                      borderRadius: BorderRadius.all(
-                                        Radius.circular(15),
-                                      ),
-                                    ),
-                                    focusedBorder: const OutlineInputBorder(
-                                      borderSide: const BorderSide(
-                                        color: kprimaryColor,
-                                        width: 1,
-                                      ),
-                                      borderRadius: BorderRadius.all(
-                                        Radius.circular(15),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                        : Container(),
-                    SizedBox(
-                      // height: MediaQuery.of(context).size.height*0.1,
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        physics: ScrollPhysics(),
-                        itemCount: _placeList1.length,
-                        itemBuilder: ((context, index) {
-                          String name = _placeList1[index]["description"];
-
-                          if (_ShippingAddressController.text.isEmpty) {
-                            return Text("");
-                          } else if (name.toLowerCase().contains(
-                            _ShippingAddressController.text.toLowerCase(),
-                          )) {
-                            return ListTile(
-                              onTap: () async {
-                                _ShippingAddressController.text =
-                                    _placeList1[index]["description"];
-                                List<Location> location =
-                                    await locationFromAddress(
-                                      _placeList1[index]["description"],
-                                    );
-                                log(
-                                  "Latitiude : " +
-                                      location.last.latitude.toString(),
-                                );
-                                log(
-                                  "Longitude : " +
-                                      location.last.longitude.toString(),
-                                );
-
-                                setState(() {
-                                  _ShippingAddressController.removeListener(
-                                    () {},
-                                  );
-                                  Latitiude = location.last.latitude.toString();
-                                  Longitude =
-                                      location.last.longitude.toString();
-                                  _placeList1 = [];
-                                });
-                              },
-                              leading: CircleAvatar(
-                                child: Icon(
-                                  Icons.pin_drop,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              title: Text(_placeList1[index]["description"]),
-                            );
-                          } else {
-                            return SizedBox.shrink();
-                          }
-                        }),
-                      ),
-                    ),
+                    const SizedBox.shrink(),
 
                     //////////////////////////////////////
                     SizedBox(height: res_height * 0.02),
@@ -1273,20 +1103,21 @@ class _EditProfileState extends State<EditProfile> {
                         ////////////////////For Tests
                       },
                       child: Container(
-                        height: res_height * 0.06,
+                        height: 58,
                         width: res_width * 0.9,
                         child: Center(
                           child: Text(
                             'Save',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 19,
+                            style: GoogleFonts.inter(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 18,
+                              color: Colors.white,
                             ),
                           ),
                         ),
                         decoration: BoxDecoration(
-                          color: kprimaryColor,
-                          borderRadius: BorderRadius.circular(14),
+                          color: const Color(0xFFF6AE02),
+                          borderRadius: BorderRadius.circular(16),
                         ),
                       ),
                     ),
@@ -1298,7 +1129,18 @@ class _EditProfileState extends State<EditProfile> {
           ),
         ),
       ),
+    ),
     );
+  }
+
+  ImageProvider _profileImageProvider() {
+    final path = imagesapi.toString().trim();
+    final hasImage = path.isNotEmpty && path != "null";
+    if (!hasImage) {
+      return const AssetImage("assets/slicing/blankuser.jpeg");
+    }
+    final imageUrl = path.toLowerCase().startsWith('http') ? path : Url + path;
+    return NetworkImage(imageUrl);
   }
 
   Txtfld(txt, _controller, hintText) {
@@ -1309,27 +1151,37 @@ class _EditProfileState extends State<EditProfile> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(height: res_height * 0.02),
-          Text(txt),
+          Text(
+            txt,
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2E2E2E),
+            ),
+          ),
           SizedBox(height: res_height * 0.005),
           Container(
-            height: 70,
+            height: 48,
             width: res_width * 0.9,
             child: TextField(
               maxLines: 1,
               controller: _controller,
               decoration: InputDecoration(
                 hintText: hintText,
-                // hintText:placholder,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 16,
+                ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15.0),
+                  borderRadius: BorderRadius.circular(16.0),
                 ),
                 enabledBorder: const OutlineInputBorder(
-                  borderSide: const BorderSide(color: kprimaryColor, width: 1),
-                  borderRadius: BorderRadius.all(Radius.circular(15)),
+                  borderSide: BorderSide(color: Color(0xFFCECED3), width: 1),
+                  borderRadius: BorderRadius.all(Radius.circular(16)),
                 ),
                 focusedBorder: const OutlineInputBorder(
-                  borderSide: const BorderSide(color: kprimaryColor, width: 1),
-                  borderRadius: BorderRadius.all(Radius.circular(15)),
+                  borderSide: BorderSide(color: Color(0xFFCECED3), width: 1),
+                  borderRadius: BorderRadius.all(Radius.circular(16)),
                 ),
               ),
             ),
@@ -1347,10 +1199,17 @@ class _EditProfileState extends State<EditProfile> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(height: res_height * 0.02),
-          Text(txt),
+          Text(
+            txt,
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2E2E2E),
+            ),
+          ),
           SizedBox(height: res_height * 0.005),
           Container(
-            height: 70,
+            height: 62,
             width: res_width * 0.9,
             child: TextField(
               onChanged: (value) {
@@ -1361,17 +1220,20 @@ class _EditProfileState extends State<EditProfile> {
               maxLines: 1,
               controller: _locationController,
               decoration: InputDecoration(
-                // hintText:placholder,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 16,
+                ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15.0),
+                  borderRadius: BorderRadius.circular(16.0),
                 ),
                 enabledBorder: const OutlineInputBorder(
-                  borderSide: const BorderSide(color: kprimaryColor, width: 1),
-                  borderRadius: BorderRadius.all(Radius.circular(15)),
+                  borderSide: BorderSide(color: Color(0xFFCECED3), width: 1),
+                  borderRadius: BorderRadius.all(Radius.circular(16)),
                 ),
                 focusedBorder: const OutlineInputBorder(
-                  borderSide: const BorderSide(color: kprimaryColor, width: 1),
-                  borderRadius: BorderRadius.all(Radius.circular(15)),
+                  borderSide: BorderSide(color: Color(0xFFCECED3), width: 1),
+                  borderRadius: BorderRadius.all(Radius.circular(16)),
                 ),
               ),
             ),
@@ -1389,26 +1251,37 @@ class _EditProfileState extends State<EditProfile> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(height: res_height * 0.02),
-          Text(txt),
+          Text(
+            txt,
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2E2E2E),
+            ),
+          ),
           SizedBox(height: res_height * 0.005),
           Container(
-            height: 70,
+            height: 48,
             width: res_width * 0.9,
             child: TextField(
               readOnly: true,
               controller: _controller,
               decoration: InputDecoration(
                 hintText: placholder,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 16,
+                ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15.0),
+                  borderRadius: BorderRadius.circular(16.0),
                 ),
                 enabledBorder: const OutlineInputBorder(
-                  borderSide: const BorderSide(color: kprimaryColor, width: 1),
-                  borderRadius: BorderRadius.all(Radius.circular(15)),
+                  borderSide: BorderSide(color: Color(0xFFCECED3), width: 1),
+                  borderRadius: BorderRadius.all(Radius.circular(16)),
                 ),
                 focusedBorder: const OutlineInputBorder(
-                  borderSide: const BorderSide(color: kprimaryColor, width: 1),
-                  borderRadius: BorderRadius.all(Radius.circular(15)),
+                  borderSide: BorderSide(color: Color(0xFFCECED3), width: 1),
+                  borderRadius: BorderRadius.all(Radius.circular(16)),
                 ),
               ),
             ),

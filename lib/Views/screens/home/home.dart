@@ -7,23 +7,25 @@ import 'package:get/get.dart';
 import 'package:jebby/Services/provider/sign_in_provider.dart';
 import 'package:jebby/Views/helper/colors.dart';
 import 'package:jebby/Views/screens/auth/ProductDetail.dart';
-import 'package:jebby/Views/screens/home/Categoriesss.dart';
-import 'package:jebby/Views/screens/home/Electronics.dart';
+import 'package:jebby/Views/controller/bottomcontroller.dart';
+import 'package:jebby/Views/screens/home/Category.dart';
 import 'package:http/http.dart' as http;
 import '../../../model/getFeaturedProductsModel.dart' as datamodel;
 
 import 'package:jebby/Views/screens/home/messages.dart';
 import 'package:jebby/Views/screens/mainfolder/drawer.dart';
-import 'package:jebby/Views/screens/profile/myprofile.dart';
+import 'package:jebby/Views/screens/profile/userprofile.dart';
 import 'package:intl/intl.dart';
 import 'package:jebby/Views/screens/home/searchData.dart';
 import 'package:jebby/model/categoryList_model.dart';
+import 'package:jebby/model/sub_category_list_model.dart';
 import 'package:jebby/res/color.dart';
 import 'package:jebby/view_model/auth_view_model.dart';
 import 'package:jebby/view_model/category_get_View_model.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../model/user_model.dart';
 import '../../../res/app_url.dart';
@@ -63,15 +65,18 @@ class _HomeScreenState extends State<HomeScreen> {
   String? fullname;
   String? email;
   String? role;
+  String? address;
 
   void profileData(BuildContext context) async {
     getUserDate()
         .then((value) async {
+          print("sdsdsdsdsdsdsds: ${value.address.toString()}");
           token = value.token.toString();
           sourceId = value.id.toString();
           fullname = value.name.toString();
           email = value.email.toString();
           role = value.role.toString();
+          address = value.address.toString();
         })
         .onError((error, stackTrace) {
           if (kDebugMode) {}
@@ -86,21 +91,6 @@ class _HomeScreenState extends State<HomeScreen> {
     ApiRepository.shared.featuredProducts(
       (List) {
         if (this.mounted) {
-          //List.data!.add(RelatedProducts(id: 1,productId: 1,relatedProductId: 1,)) ;
-          List.data!.add(
-            datamodel.Data(
-              image:
-                  "https://ik.imagekit.io/bdxxrsiix/15dd61ccbf734ed731469433dcf97363a454ec45.jpg",
-              id: 1,
-              subcategoryId: 1,
-              name: 'OUTDOORS',
-              specifications: 'Outdoor Folding Chairs – Perfect for Parties',
-              price: 100,
-              isReview: 0,
-              stars: '5',
-            ),
-          );
-
           if (List.data!.length == 0) {
             setState(() {
               isLoading = false;
@@ -113,6 +103,8 @@ class _HomeScreenState extends State<HomeScreen> {
               isError = false;
               isEmpty = false;
             });
+            unawaited(_primeCategorySubcategoryNames(List.data!));
+            unawaited(_primeFeaturedLocations(List.data!));
           }
         }
       },
@@ -217,7 +209,6 @@ class _HomeScreenState extends State<HomeScreen> {
     getFeaturedProducts();
     getData();
     profileData(context);
-    getCategoryList();
     func();
   }
 
@@ -226,12 +217,138 @@ class _HomeScreenState extends State<HomeScreen> {
   double starss = 0.0;
   final GlobalKey<ScaffoldState> _key = GlobalKey();
 
+  /// Cached so the category future is not recreated on every build (avoids repeated loading).
+  /// Lazy init so it works after hot reload (initState may not run again).
+  late Future<CategoryList> _categoryListFuture = GetAPiFromModel().getCategoryList();
+
+  final GetAPiFromModel _categoryApi = GetAPiFromModel();
+  final Map<String, Future<SubCategoryList>> _subcategoryFutures = {};
+  final Map<String, String> _categoryNameMap = {};
+  final Map<String, String> _subcategoryNameMap = {};
+  final Map<String, String> _productLocationTextById = {};
+
+  Future<SubCategoryList> _getSubcategoryFuture(String categoryId) {
+    return _subcategoryFutures.putIfAbsent(
+      categoryId,
+      () => _categoryApi.getSubCategoryList(categoryId),
+    );
+  }
+
+  String _categorySubcategoryLabel(dynamic categoryId, dynamic subcategoryId) {
+    final categoryKey = categoryId?.toString() ?? '';
+    final subcategoryKey = subcategoryId?.toString() ?? '';
+    final categoryName = _categoryNameMap[categoryKey] ?? categoryKey;
+    final subcategoryName =
+        _subcategoryNameMap['$categoryKey-$subcategoryKey'] ?? subcategoryKey;
+
+    if (categoryName.isEmpty && subcategoryName.isEmpty) {
+      return 'Category - Sub Category';
+    }
+    return '$categoryName - $subcategoryName';
+  }
+
+  String _formatLocationText(dynamic address, dynamic latitude, dynamic longitude) {
+    final rawAddress = address?.toString().trim() ?? '';
+    final lat = double.tryParse(latitude?.toString() ?? '');
+    final lng = double.tryParse(longitude?.toString() ?? '');
+
+    final coordRegex = RegExp(r'^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$');
+    final looksLikeCoords = rawAddress.isNotEmpty && coordRegex.hasMatch(rawAddress);
+
+    if (rawAddress.isNotEmpty && !looksLikeCoords) {
+      return rawAddress;
+    }
+
+    if (lat != null && lng != null) {
+      return 'Lat ${lat.toStringAsFixed(4)}, Lng ${lng.toStringAsFixed(4)}';
+    }
+
+    if (looksLikeCoords) {
+      return rawAddress;
+    }
+
+    return 'Location unavailable';
+  }
+
+  String _resolveProductLocation(datamodel.Data item) {
+    final productId = item.id?.toString() ?? '';
+    if (productId.isNotEmpty && _productLocationTextById.containsKey(productId)) {
+      return _productLocationTextById[productId]!;
+    }
+    return _formatLocationText(item.address, item.latitude, item.longitude);
+  }
+
+  Future<void> _primeCategorySubcategoryNames(
+    List<datamodel.Data> featuredItems,
+  ) async {
+    try {
+      final categoryList = await _categoryListFuture;
+      for (final category in categoryList.data ?? <dynamic>[]) {
+        final id = category.id?.toString();
+        final name = category.name?.toString() ?? '';
+        if (id != null && id.isNotEmpty && name.isNotEmpty) {
+          _categoryNameMap[id] = name;
+        }
+      }
+
+      final categoryIds =
+          featuredItems
+              .map((e) => e.categoryId?.toString() ?? '')
+              .where((id) => id.isNotEmpty)
+              .toSet();
+
+      for (final categoryId in categoryIds) {
+        final subCategoryList = await _getSubcategoryFuture(categoryId);
+        for (final subCategory in subCategoryList.data ?? <dynamic>[]) {
+          final subId = subCategory.id?.toString();
+          final subName = subCategory.name?.toString() ?? '';
+          if (subId != null && subId.isNotEmpty && subName.isNotEmpty) {
+            _subcategoryNameMap['$categoryId-$subId'] = subName;
+          }
+        }
+      }
+
+      if (mounted) setState(() {});
+    } catch (_) {}
+  }
+
+  Future<void> _primeFeaturedLocations(List<datamodel.Data> featuredItems) async {
+    try {
+      for (final item in featuredItems) {
+        final productId = item.id?.toString() ?? '';
+        if (productId.isEmpty || _productLocationTextById.containsKey(productId)) {
+          continue;
+        }
+
+        final initial = _formatLocationText(item.address, item.latitude, item.longitude);
+        if (initial != 'Location unavailable') {
+          _productLocationTextById[productId] = initial;
+          continue;
+        }
+
+        final detail = await ApiRepository.shared.getProductsById((_) {}, (_) {}, productId);
+        final detailItem =
+            (detail.data != null && detail.data!.isNotEmpty) ? detail.data!.first : null;
+        if (detailItem == null) continue;
+
+        final detailText = _formatLocationText(
+          null,
+          detailItem.latitude?.toString(),
+          detailItem.longitude?.toString(),
+        );
+        if (detailText != 'Location unavailable') {
+          _productLocationTextById[productId] = detailText;
+        }
+      }
+      if (mounted) setState(() {});
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     context.watch<AuthViewModel>();
     double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
-    GetAPiFromModel getAPiFromModel = GetAPiFromModel();
 
     return Container(
       width: double.infinity,
@@ -407,7 +524,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   SizedBox(height: 6),
                                   Text(
-                                    '123 Maple Street, CA 1200',
+                                    (address != null &&
+                                            address!.trim().isNotEmpty)
+                                        ? address!
+                                        : 'Address not available',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
@@ -469,6 +589,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
         ),
+        backgroundColor: Colors.white,
         body: SingleChildScrollView(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 10),
@@ -545,11 +666,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Container(
                         child: Text(
-                          'Featured Items!',
-                          style: TextStyle(
-                            fontSize: 16,
+                          'Featured Items',
+                          style: GoogleFonts.inter(
+                            fontSize: 18,
                             color: Colors.black,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w700,
                           ),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
@@ -569,56 +690,59 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: EdgeInsets.symmetric(horizontal: 10),
                   child: Text("No items available currently"),
                 )
-                    : GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 1,
-                    crossAxisSpacing: 2.0,
-                    mainAxisSpacing: 5.0,
-                    childAspectRatio: 1.5,
-
+                    : SizedBox(
+                  height: res_height * 0.31,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    itemCount:
+                        ApiRepository
+                            .shared
+                            .getFeaturedProductsModelList!
+                            .data!
+                            .length,
+                    itemBuilder: (context, int index) {
+                      var data =
+                          ApiRepository
+                              .shared
+                              .getFeaturedProductsModelList!
+                              .data![index];
+                      var price = data.price;
+                      var reviews = data.isReview.toString();
+                      var name = data.name.toString();
+                      var id = data.id.toString();
+                      var specs = data.specifications.toString();
+                      var desc = data.serviceAgreements.toString();
+                      var userId = data.userId.toString();
+                      var msg = data.isMessage;
+                      var image = data.image.toString();
+                      var stars = data.stars.toString();
+                      var delivery_charges = data.delivery_charges.toString();
+                      return SizedBox(
+                        width: res_width * 0.92,
+                        child: itmBox(
+                          img: image,
+                          dx: price,
+                          rv: '(${reviews} Reveiws)',
+                          tx: '$name',
+                          categoryText: _categorySubcategoryLabel(
+                            data.categoryId,
+                            data.subcategoryId,
+                          ),
+                          locationText: _resolveProductLocation(data),
+                          rt: stars,
+                          id: id,
+                          specs: specs,
+                          userId: userId,
+                          desc: desc,
+                          msg: msg,
+                          delivery_charges: delivery_charges,
+                        ),
+                      );
+                    },
                   ),
-                  shrinkWrap: true,
-                  padding: EdgeInsets.zero,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount:
-                  ApiRepository
-                      .shared
-                      .getFeaturedProductsModelList!
-                      .data!
-                      .length,
-                  itemBuilder: (context, int index) {
-                    var data =
-                    ApiRepository
-                        .shared
-                        .getFeaturedProductsModelList!
-                        .data![index];
-                    var price = data.price;
-                    var reviews = data.isReview.toString();
-                    var name = data.name.toString();
-                    var id = data.id.toString();
-                    var specs = data.specifications.toString();
-                    var desc = data.serviceAgreements.toString();
-                    var userId = data.userId.toString();
-                    var msg = data.isMessage;
-                    var image = data.image.toString();
-                    var stars = data.stars.toString();
-                    var delivery_charges = data.delivery_charges.toString();
-                    return itmBox(
-                      img: image,
-                      dx: price,
-                      rv: '(${reviews} Reveiws)',
-                      tx: '${name}',
-                      rt: stars,
-                      id: id,
-                      specs: specs,
-                      userId: userId,
-                      desc: desc,
-                      msg: msg,
-                      delivery_charges: delivery_charges,
-                    );
-                  },
                 ),
-                //SizedBox(height: res_height * 0.001),
+                SizedBox(height: res_height * 0.02),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Row(
@@ -627,17 +751,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       Container(
                         child: Text(
                           'Discover',
-                          style: TextStyle(
+                          style: GoogleFonts.inter(
                             fontSize: 18,
                             color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                          ),
+                            fontWeight: FontWeight.w700,
+                          )
                         ),
                       ),
                       SizedBox(height: 10),
                       GestureDetector(
                         onTap: () {
-                          Get.to(() => CategoriesssScreen());
+                          Get.find<BottomController>().navBarChange(2);
                         },
                         child: Container(
                           child: Text(
@@ -652,61 +776,89 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
-                FutureBuilder(
-                  future: getAPiFromModel.getCategoryList(),
+                SizedBox(height: res_height * 0.01),
+                FutureBuilder<CategoryList>(
+                  future: _categoryListFuture,
                   builder: (
                     BuildContext context,
                     AsyncSnapshot<CategoryList> snapshot,
                   ) {
-                    if (!snapshot.hasData) {
-                      return Center(child: CircularProgressIndicator());
-                    } else {
-                      final data = snapshot.data!.data;
-
-                      return Container(
-                        width: res_width,
-                        child: GridView.builder(
-                          padding: const EdgeInsets.all(6),
-                          //                        physics: const BouncingScrollPhysics(),
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-
-                          itemCount: snapshot.data!.data!.length,
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 14,
-                            mainAxisSpacing: 14,
-                            // Wider than tall to match your screenshot card shape
-                            childAspectRatio: 1.2,
+                    if (snapshot.hasError) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24),
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.error_outline, size: 48, color: Colors.grey),
+                              SizedBox(height: 8),
+                              Text(
+                                'Could not load categories',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                snapshot.error.toString().replaceFirst('Exception: ', ''),
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 12, color: Colors.grey),
+                              ),
+                            ],
                           ),
-                          itemBuilder: (context, index) {
-                            // final item = items[index];
-
-                            return contBox(
-                              txt: data![index].name,
-                              img: '${AppUrl.baseUrlM}${data[index].image}',
-                              id: data[index].id.toString(),
-                            );
-                          },
                         ),
                       );
-
-                      // return Wrap(
-                      //   spacing: 1,
-                      //   runSpacing: 5,
-                      //   children: List.generate(snapshot.data!.data!.length, (
-                      //     index,
-                      //   ) {
-                      //     return data![index].status == 0
-                      //         ? Text("")
-                      //         : contBox(
-                      //           txt: data[index].name,
-                      //           img: '${AppUrl.baseUrlM}${data[index].image}',
-                      //           id: data[index].id.toString(),
-                      //         );
-                      //   }),
-                      // );
                     }
+                    if (!snapshot.hasData) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    final list = snapshot.data!.data;
+                    if (list == null || list.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24),
+                        child: Center(
+                          child: Text(
+                            'No categories available',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ),
+                      );
+                    }
+                    return Container(
+                      width: res_width,
+                      child: GridView.builder(
+                        padding: const EdgeInsets.all(6),
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: list.length,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 14,
+                          mainAxisSpacing: 14,
+                          childAspectRatio: 1.2,
+                        ),
+                        itemBuilder: (context, index) {
+                          final item = list[index];
+                          final categoryId = item.id.toString();
+                          return FutureBuilder<SubCategoryList>(
+                            future: _getSubcategoryFuture(categoryId),
+                            builder: (context, subSnapshot) {
+                              final count = subSnapshot.hasData &&
+                                      subSnapshot.data!.data != null
+                                  ? subSnapshot.data!.data!.length
+                                  : null;
+                              return contBox(
+                                txt: item.name,
+                                img: '${AppUrl.baseUrlM}${item.image}',
+                                id: categoryId,
+                                subcategoryCount: count,
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    );
                   },
                 ),
                 SizedBox(height: res_height * 0.02),
@@ -720,7 +872,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  contBox({txt, img, id}) {
+  contBox({txt, img, id, int? subcategoryCount}) {
     double res_width = MediaQuery.of(context).size.width;
     double res_height = MediaQuery.of(context).size.height;
     double responsiveFontSize = res_width * 0.035;
@@ -814,7 +966,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '0 Subcategories',
+                      subcategoryCount != null
+                          ? (subcategoryCount == 1
+                              ? '1 Subcategory'
+                              : '$subcategoryCount Subcategories')
+                          : '...',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.95),
                         fontWeight: FontWeight.w500,
@@ -832,71 +988,13 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
-
-    return GestureDetector(
-      onTap: () {
-        Get.to(() => ElectronicsScreen(categoryname: txt, id: id));
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(5.5),
-        child: Column(
-          children: [
-            Container(
-              margin: EdgeInsets.only(top: 5, left: 5),
-              width: res_width * 0.25,
-              height: res_height * 0.12,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.white, width: 2),
-                color: kprimaryColor,
-                borderRadius: BorderRadius.all(Radius.circular(18)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey,
-                    blurRadius: 5,
-                    offset: Offset(2, 1), // Shadow position
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: ClipOval(
-                  child: CachedNetworkImage(
-                    imageUrl: '$img',
-                    fit: BoxFit.cover,
-                    placeholder:
-                        (context, url) => Center(
-                          child: CircularProgressIndicator(), // Loading spinner
-                        ),
-                    errorWidget:
-                        (context, url, error) => Icon(
-                          Icons.error,
-                          color: Colors.red,
-                        ), // Display an error icon
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 6),
-            SizedBox(
-              width: res_width * 0.27,
-              child: Center(
-                child: Text(
-                  "$txt",
-                  style: TextStyle(fontSize: responsiveFontSize),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   itmBox({
     img,
     tx,
+    categoryText,
+    locationText,
     dx,
     rt,
     rv,
@@ -908,7 +1006,6 @@ class _HomeScreenState extends State<HomeScreen> {
     delivery_charges,
   }) {
     double res_height = MediaQuery.of(context).size.height;
-    double res_width = MediaQuery.of(context).size.width;
 
     return GestureDetector(
       onTap: () {
@@ -934,25 +1031,32 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Container(
               height: res_height * 0.27,
-              width: res_width,
+              width: double.infinity,
               decoration: BoxDecoration(),
               child: ClipRRect(
                 borderRadius: BorderRadius.all(Radius.circular(25)),
                 child: Stack(
                   children: [
-                    CachedNetworkImage(
-                      imageUrl: id == "1" ? img : AppUrl.baseUrlM + img,
-                      fit: BoxFit.cover,
-                      placeholder:
-                          (context, url) => Center(
-                            child:
-                                CircularProgressIndicator(), // Loading spinner
-                          ),
-                      errorWidget:
-                          (context, url, error) => Icon(
-                            Icons.error,
-                            color: Colors.red,
-                          ), // Display an error icon
+                    Positioned.fill(
+                      child: CachedNetworkImage(
+                        imageUrl: id == "1" ? img : AppUrl.baseUrlM + img,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                        placeholder:
+                            (context, url) => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                        errorWidget:
+                            (context, url, error) => Container(
+                              color: Colors.grey.shade300,
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.image_not_supported_outlined,
+                                color: Colors.white70,
+                              ),
+                            ),
+                      ),
                     ),
 
                     // Dark gradient overlay (bottom)
@@ -1032,7 +1136,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "$tx",
+                            "${(categoryText != null && categoryText.toString().trim().isNotEmpty) ? categoryText : 'Category - Sub Category'}",
                             style: TextStyle(
                               color: Colors.white70,
                               fontSize: 12,
@@ -1042,7 +1146,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           SizedBox(height: 6),
                           Text(
-                            "Outdoor Folding Chairs – Perfect for Parties",
+                            "$tx",
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 18,
@@ -1059,7 +1163,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               SizedBox(width: 4),
                               Text(
-                                "Downtown LA, 2 miles away",
+                                "${locationText ?? 'Location unavailable'}",
                                 style: TextStyle(
                                   color: Colors.white70,
                                   fontSize: 14,
@@ -1231,15 +1335,11 @@ class CurvedHeaderAppBar extends StatelessWidget
 class _CircleAction extends StatelessWidget {
   const _CircleAction({
     required this.onTap,
-    this.icon,
-    this.image,
-    this.size = 20,
+    required this.image,
   });
 
   final VoidCallback onTap;
-  final IconData? icon;
-  final ImageProvider? image; // 👈 custom image support
-  final double size; // 👈 size controller
+  final ImageProvider image;
 
   @override
   Widget build(BuildContext context) {
@@ -1253,15 +1353,14 @@ class _CircleAction extends StatelessWidget {
           height: 36,
           width: 36,
           child: Center(
-            child:
-                image != null
-                    ? Image(
-                      image: image!,
-                      height: size,
-                      width: size,
-                      fit: BoxFit.contain,
-                    )
-                    : Icon(icon, size: size, color: Colors.black87),
+            child: SizedBox(
+              height: 20,
+              width: 20,
+              child: Image(
+                image: image,
+                fit: BoxFit.contain,
+              ),
+            ),
           ),
         ),
       ),

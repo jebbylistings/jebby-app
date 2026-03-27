@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jebby/Views/helper/colors.dart';
 import 'package:dotted_border/dotted_border.dart';
-import 'package:jebby/Views/screens/profile/myprofile.dart';
+import 'package:jebby/Views/screens/profile/userprofile.dart';
 
 class TypeReviewsScreen extends StatefulWidget {
   const TypeReviewsScreen({super.key});

@@ -23,10 +23,9 @@ import 'package:jebby/Views/screens/home/MyTransactions.dart';
 import 'package:jebby/Views/screens/home/returnproduct.dart';
 import 'package:jebby/Views/screens/home/setting.dart';
 import 'package:jebby/Views/screens/mainfolder/homemain.dart';
-import 'package:jebby/Views/screens/profile/myprofile.dart';
+import 'package:jebby/Views/screens/profile/userprofile.dart';
 import 'package:jebby/Views/screens/vendors/orderrequest.dart';
 import 'package:jebby/Views/screens/vendors/productreturn.dart';
-import 'package:jebby/Views/screens/vendors/renterProfile.dart';
 import 'package:jebby/Views/screens/vendors/transactionlist.dart';
 import 'package:jebby/Views/screens/vendors/vendorhome.dart';
 import 'package:jebby/Views/screens/auth/stripe_onboarding.dart';
@@ -189,10 +188,10 @@ class _DrawerScreenState extends State<DrawerScreen> {
   Widget getGuestDrawer(double res_width, double res_height, double ffem) {
     final sp = context.watch<SignInProvider>();
     final usp = context.watch<UserViewModel>();
+    final textScaleFactor = MediaQuery.of(context).textScaler.scale(1.0);
 
     return Container(
       width: res_width * 0.85,
-      height: res_height,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
@@ -201,14 +200,34 @@ class _DrawerScreenState extends State<DrawerScreen> {
         ),
       ),
       child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Column(
-              children: [
-                SizedBox(height: res_height * 0.04),
+        child: Padding(
+          padding: const EdgeInsets.only(left: 30.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: res_height * 0.06),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  GestureDetector(
+                    onTap: () => Get.back(),
+                    child: Image.asset(
+                      'assets/newpacks/close-circle.png',
+                      color: Colors.black,
+                      width: 30,
+                      height: 30,
+                    ),
+                  ),
+                  SizedBox(width: 20),
+                ],
+              ),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                SizedBox(height: 0),
                 Padding(
-                  padding: const EdgeInsets.only(left: 10),
+                  padding: EdgeInsets.zero,
                   child: Column(
                     children: [
                       isLoadingImage
@@ -264,18 +283,21 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           Text(
                             usp.name == "null"
                                 ? sp.name.toString() == "null"
-                                    ? "user name"
+                                    ? "Guest"
                                     : sp.name.toString()
                                 : usp.name.toString(),
-                            style: TextStyle(fontSize: 26, color: Colors.black),
+                            style: TextStyle(
+                              fontSize: 26 * textScaleFactor,
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           Text(
                             usp.email.toString() == "null"
-                                ? sp.name.toString()
+                                ? sp.email.toString()
                                 : sp.email.toString(),
                             style: TextStyle(
-                              fontFamily: '',
-                              fontSize: 15,
+                              fontSize: 15 * textScaleFactor,
                               color: Colors.black,
                             ),
                           ),
@@ -284,785 +306,418 @@ class _DrawerScreenState extends State<DrawerScreen> {
                     ],
                   ),
                 ),
-                SizedBox(height: res_height * 0.04),
-                Container(
-                  width: res_width * 0.9,
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.white, width: 0.2),
-                    ),
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        shaka = 1;
-                      });
-                      if (bottomctrl.navigationBarIndexValue != 0) {
-                        bottomctrl.navBarChange(0);
-                      } else {
-                        bottomctrl.navBarChange(2);
-                      }
-                    },
-                    child: Container(
-                      width: res_width * 0.7,
-                      height: res_height * 0.041,
-                      decoration: BoxDecoration(
-                        color:
-                            shaka == 1 ? Color(0xFF4285F4) : Colors.transparent,
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(20),
-                          bottomRight: Radius.circular(20),
-                        ),
-                      ),
-                      child: Container(
-                        width: res_width * 0.4,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 20, bottom: 5),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Row(
-                              children: [
-                                Icon(Icons.home_outlined, color: Colors.white),
-                                SizedBox(width: 20),
-                                Text(
-                                  "Home",
-                                  textAlign: TextAlign.left,
-                                  style: TextStyle(
-                                    fontSize: 18 * ffem,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 15),
-                Container(
-                  width: res_width * 0.9,
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.white, width: 0.2),
-                    ),
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        shaka = 4;
-                      });
-                      Get.to(MyOrdersScreen());
-                    },
-                    child: Container(
-                      width: res_width * 0.7,
-                      height: res_height * 0.041,
-                      decoration: BoxDecoration(
-                        color:
-                            shaka == 4 ? Color(0xFF4285F4) : Colors.transparent,
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(20),
-                          bottomRight: Radius.circular(20),
-                        ),
-                      ),
-                      child: Container(
-                        width: res_width * 0.4,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 20, bottom: 5),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.list_alt_rounded,
-                                  color: Colors.white,
-                                ),
-                                SizedBox(width: 20),
-                                Text(
-                                  "My Orders",
-                                  textAlign: TextAlign.left,
-                                  style: TextStyle(
-                                    fontSize: 18 * ffem,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                SizedBox(height: 15),
-
-                Container(
-                  width: res_width * 0.9,
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.white, width: 0.2),
-                    ),
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        shaka = 6;
-                      });
-                      Get.to(ReturnProductScreen());
-                    },
-                    child: Container(
-                      width: res_width * 0.7,
-                      height: res_height * 0.041,
-                      decoration: BoxDecoration(
-                        color:
-                            shaka == 6 ? Color(0xFF4285F4) : Colors.transparent,
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(20),
-                          bottomRight: Radius.circular(20),
-                        ),
-                      ),
-                      child: Container(
-                        width: res_width * 0.4,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 20, bottom: 5),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.list_alt_rounded,
-                                  color: Colors.white,
-                                ),
-                                SizedBox(width: 20),
-                                Text(
-                                  "Return Product",
-                                  textAlign: TextAlign.left,
-                                  style: TextStyle(
-                                    fontSize: 18 * ffem,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                SizedBox(height: 15),
-                Container(
+                ],
+              ),
+              SizedBox(height: res_height * 0.04),
+              GestureDetector(
+                onTap: () {
+                  setState(() => shaka = 1);
+                  if (bottomctrl.navigationBarIndexValue != 0) {
+                    bottomctrl.navBarChange(0);
+                  } else {
+                    bottomctrl.navBarChange(2);
+                  }
+                },
+                child: Container(
                   width: res_width * 0.75,
-                  height: res_height * 0.059,
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(20),
-                      bottomRight: Radius.circular(20),
-                    ),
-                  ),
-                  child: Container(
-                    width: res_width * 0.4,
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        children: [
-                          // Icon(
-                          //   Icons.home_outlined,
-                          //   color: Colors.white,
-                          // ),
-                          // SizedBox(
-                          //   width: 20,
-                          // ),
-                          Text(
-                            "Legal",
-                            textAlign: TextAlign.left,
-                            style: TextStyle(
-                              fontSize: 23 * ffem,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 5),
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          'assets/newpacks/home.png',
+                          color: Colors.black,
+                          width: 20,
+                          height: 20,
+                        ),
+                        SizedBox(width: 20),
+                        Text(
+                          "Home",
+                          style: TextStyle(
+                            fontSize: 15 * textScaleFactor,
+                            color: Colors.black,
                           ),
-                        ],
-                      ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                SizedBox(height: 10),
-                Container(
-                  width: res_width * 0.9,
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.white, width: 0.2),
+              ),
+              SizedBox(height: 10),
+              Container(
+                  width: res_width * 0.7,
+                  child: Divider(color: Colors.grey.shade300)),
+              Container(
+                width: res_width * 0.7,
+                height: res_height * 0.059,
+                child: Row(
+                  children: [
+                    Text(
+                      "Legal",
+                      style: TextStyle(
+                        fontSize: 15 * textScaleFactor,
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        shaka = 10;
-                      });
-                      Get.to(() => TermsAndCondition());
-                    },
-                    child: Container(
-                      width: res_width * 0.7,
-                      height: res_height * 0.041,
-                      decoration: BoxDecoration(
-                        color:
-                            shaka == 10
-                                ? Color(0xFF4285F4)
-                                : Colors.transparent,
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(20),
-                          bottomRight: Radius.circular(20),
+                  ],
+                ),
+              ),
+              SizedBox(height: 15),
+              GestureDetector(
+                onTap: () {
+                  setState(() => shaka = 10);
+                  Get.to(() => TermsAndCondition());
+                },
+                child: Container(
+                  width: res_width * 0.75,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 5, left: 10),
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          'assets/newpacks/menu-board.png',
+                          color: Colors.black,
+                          width: 20,
+                          height: 20,
                         ),
-                      ),
-                      child: Container(
-                        width: res_width * 0.4,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 20, bottom: 5),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Row(
-                              children: [
-                                Icon(Icons.library_books, color: Colors.white),
-                                SizedBox(width: 20),
-                                Text(
-                                  "Terms & Conditions",
-                                  textAlign: TextAlign.left,
-                                  style: TextStyle(
-                                    fontSize: 18 * ffem,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        SizedBox(width: 20),
+                        Text(
+                          "Terms & Conditions",
+                          style: TextStyle(
+                            fontSize: 15 * textScaleFactor,
+                            color: Colors.black,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
-
-                SizedBox(height: 5),
-
-                Container(
-                  width: res_width * 0.9,
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.white, width: 0.2),
-                    ),
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        shaka = 11;
-                      });
-                      Get.to(() => PrivacyPolicy());
-                    },
-                    child: Container(
-                      width: res_width * 0.7,
-                      height: res_height * 0.041,
-                      decoration: BoxDecoration(
-                        color:
-                            shaka == 11
-                                ? Color(0xFF4285F4)
-                                : Colors.transparent,
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(20),
-                          bottomRight: Radius.circular(20),
+              ),
+              SizedBox(height: 25),
+              GestureDetector(
+                onTap: () {
+                  setState(() => shaka = 11);
+                  Get.to(() => PrivacyPolicy());
+                },
+                child: Container(
+                  width: res_width * 0.75,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 5, left: 10),
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          'assets/newpacks/note-text.png',
+                          color: Colors.black,
+                          width: 20,
+                          height: 20,
                         ),
-                      ),
-                      child: Container(
-                        width: res_width * 0.4,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 20, bottom: 5),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Row(
-                              children: [
-                                Icon(Icons.list_alt, color: Colors.white),
-                                SizedBox(width: 20),
-                                Text(
-                                  "Privacy Policy",
-                                  textAlign: TextAlign.left,
-                                  style: TextStyle(
-                                    fontSize: 18 * ffem,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        SizedBox(width: 20),
+                        Text(
+                          "Privacy Policy",
+                          style: TextStyle(
+                            fontSize: 15 * textScaleFactor,
+                            color: Colors.black,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
+              ),
                 // SizedBox(
-                //   height: res_height * 0.05,
-                // ),
-                SizedBox(height: 10),
-                Container(
-                  width: res_width * 0.9,
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.white, width: 0.2),
-                    ),
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        shaka = 12;
-                      });
-                      Get.to(TermLength());
-                    },
-                    child: Container(
-                      width: res_width * 0.7,
-                      height: res_height * 0.041,
-                      decoration: BoxDecoration(
-                        color:
-                            shaka == 12
-                                ? Color(0xFF4285F4)
-                                : Colors.transparent,
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(20),
-                          bottomRight: Radius.circular(20),
+              SizedBox(height: 25),
+              GestureDetector(
+                onTap: () {
+                  setState(() => shaka = 12);
+                  Get.to(TermLength());
+                },
+                child: Container(
+                  width: res_width * 0.75,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 5, left: 10),
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          'assets/newpacks/note-text.png',
+                          color: Colors.black,
+                          width: 20,
+                          height: 20,
                         ),
-                      ),
-                      child: Container(
-                        width: res_width * 0.4,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 20, bottom: 5),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Row(
-                              children: [
-                                Icon(Icons.list_alt, color: Colors.white),
-                                SizedBox(width: 20),
-                                Text(
-                                  "Copyright Policy",
-                                  textAlign: TextAlign.left,
-                                  style: TextStyle(
-                                    fontSize: 18 * ffem,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        SizedBox(width: 20),
+                        Text(
+                          "Copyright Policy",
+                          style: TextStyle(
+                            fontSize: 15 * textScaleFactor,
+                            color: Colors.black,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
-                SizedBox(height: 10),
-                Container(
-                  width: res_width * 0.9,
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.white, width: 0.2),
-                    ),
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        shaka = 13;
-                      });
-                      Get.to(RentalAgreement());
-                    },
-                    child: Container(
-                      width: res_width * 0.7,
-                      height: res_height * 0.041,
-                      decoration: BoxDecoration(
-                        color:
-                            shaka == 13
-                                ? Color(0xFF4285F4)
-                                : Colors.transparent,
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(20),
-                          bottomRight: Radius.circular(20),
+              ),
+              SizedBox(height: 25),
+              GestureDetector(
+                onTap: () {
+                  setState(() => shaka = 13);
+                  Get.to(RentalAgreement());
+                },
+                child: Container(
+                  width: res_width * 0.75,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 5, left: 10),
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          'assets/newpacks/note-text.png',
+                          color: Colors.black,
+                          width: 20,
+                          height: 20,
                         ),
-                      ),
-                      child: Container(
-                        width: res_width * 0.4,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 20),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Row(
-                              children: [
-                                Icon(Icons.list_alt, color: Colors.white),
-                                SizedBox(width: 20),
-                                Text(
-                                  "Rental Agreement",
-                                  textAlign: TextAlign.left,
-                                  style: TextStyle(
-                                    fontSize: 18 * ffem,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        SizedBox(width: 20),
+                        Text(
+                          "Rental Agreement",
+                          style: TextStyle(
+                            fontSize: 15 * textScaleFactor,
+                            color: Colors.black,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
-                SizedBox(height: 10),
-                Container(
-                  width: res_width * 0.9,
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.white, width: 0.2),
-                    ),
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        shaka = 14;
-                      });
-                      Get.to(usagePolicyAndLimitations());
-                    },
-                    child: Container(
-                      width: res_width * 0.7,
-                      height: res_height * 0.041,
-                      decoration: BoxDecoration(
-                        color:
-                            shaka == 14
-                                ? Color(0xFF4285F4)
-                                : Colors.transparent,
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(20),
-                          bottomRight: Radius.circular(20),
+              ),
+              SizedBox(height: 25),
+              GestureDetector(
+                onTap: () {
+                  setState(() => shaka = 14);
+                  Get.to(usagePolicyAndLimitations());
+                },
+                child: Container(
+                  width: res_width * 0.75,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 5, left: 10),
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          'assets/newpacks/menu-board.png',
+                          color: Colors.black,
+                          width: 20,
+                          height: 20,
                         ),
-                      ),
-                      child: Container(
-                        width: res_width * 0.4,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 20, bottom: 5),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.view_list_outlined,
-                                  color: Colors.white,
-                                ),
-                                SizedBox(width: 20),
-                                Text(
-                                  "Usage Policy & Limitations",
-                                  textAlign: TextAlign.left,
-                                  style: TextStyle(
-                                    fontSize: 18 * ffem,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        SizedBox(width: 20),
+                        Text(
+                          "Usage Policy & Limitations",
+                          style: TextStyle(
+                            fontSize: 15 * textScaleFactor,
+                            color: Colors.black,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
-                SizedBox(height: 10),
-                Container(
-                  width: res_width * 0.9,
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.white, width: 0.2),
-                    ),
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        shaka = 15;
-                      });
-                      Get.to(InsuranceAndIndemnification());
-                    },
-                    child: Container(
-                      width: res_width * 0.7,
-                      height: res_height * 0.041,
-                      decoration: BoxDecoration(
-                        color:
-                            shaka == 15
-                                ? Color(0xFF4285F4)
-                                : Colors.transparent,
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(20),
-                          bottomRight: Radius.circular(20),
+              ),
+              SizedBox(height: 25),
+              GestureDetector(
+                onTap: () {
+                  setState(() => shaka = 15);
+                  Get.to(InsuranceAndIndemnification());
+                },
+                child: Container(
+                  width: res_width * 0.75,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 5, left: 10),
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          'assets/newpacks/menu-board.png',
+                          color: Colors.black,
+                          width: 20,
+                          height: 20,
                         ),
-                      ),
-                      child: Container(
-                        width: res_width * 0.4,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 20, bottom: 5),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.view_list_outlined,
-                                  color: Colors.white,
-                                ),
-                                SizedBox(width: 20),
-                                Text(
-                                  "Insurance & Indemnifications Policy",
-                                  textAlign: TextAlign.left,
-                                  style: TextStyle(
-                                    fontSize: 18 * ffem,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        SizedBox(width: 20),
+                        Text(
+                          "Insurance & Indemnifications Policy",
+                          style: TextStyle(
+                            fontSize: 15 * textScaleFactor,
+                            color: Colors.black,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
-                SizedBox(height: 10),
-                Container(
-                  width: res_width * 0.9,
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.white, width: 0.2),
-                    ),
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        shaka = 16;
-                      });
-                      Get.to(TransportAndInstallationPolicy());
-                    },
-                    child: Container(
-                      width: res_width * 0.7,
-                      height: res_height * 0.041,
-                      decoration: BoxDecoration(
-                        color:
-                            shaka == 16
-                                ? Color(0xFF4285F4)
-                                : Colors.transparent,
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(20),
-                          bottomRight: Radius.circular(20),
+              ),
+              SizedBox(height: 25),
+              GestureDetector(
+                onTap: () {
+                  setState(() => shaka = 16);
+                  Get.to(TransportAndInstallationPolicy());
+                },
+                child: Container(
+                  width: res_width * 0.75,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 5, left: 10),
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          'assets/newpacks/menu-board.png',
+                          color: Colors.black,
+                          width: 20,
+                          height: 20,
                         ),
-                      ),
-                      child: Container(
-                        width: res_width * 0.4,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 20, bottom: 5),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.view_list_outlined,
-                                  color: Colors.white,
-                                ),
-                                SizedBox(width: 20),
-                                Text(
-                                  "Transportation & Installation Policy",
-                                  textAlign: TextAlign.left,
-                                  style: TextStyle(
-                                    fontSize: 18 * ffem * ffem,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        SizedBox(width: 20),
+                        Text(
+                          "Transportation & Installation Policy",
+                          style: TextStyle(
+                            fontSize: 15 * textScaleFactor,
+                            color: Colors.black,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
-                SizedBox(height: 10),
-                Container(
-                  width: res_width * 0.9,
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.white, width: 0.2),
-                    ),
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        shaka = 17;
-                      });
-                      Get.to(AboutAppScreen());
-                    },
-                    child: Container(
-                      width: res_width * 0.7,
-                      height: res_height * 0.041,
-                      decoration: BoxDecoration(
-                        color:
-                            shaka == 17
-                                ? Color(0xFF4285F4)
-                                : Colors.transparent,
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(20),
-                          bottomRight: Radius.circular(20),
+              ),
+              SizedBox(height: 25),
+              GestureDetector(
+                onTap: () {
+                  setState(() => shaka = 17);
+                  Get.to(AboutAppScreen());
+                },
+                child: Container(
+                  width: res_width * 0.75,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 5, left: 10),
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          'assets/newpacks/menu-board.png',
+                          color: Colors.black,
+                          width: 20,
+                          height: 20,
                         ),
-                      ),
-                      child: Container(
-                        width: res_width * 0.4,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 20, bottom: 5),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.view_list_outlined,
-                                  color: Colors.white,
-                                ),
-                                SizedBox(width: 20),
-                                Text(
-                                  "Maintenance & Warranties",
-                                  textAlign: TextAlign.left,
-                                  style: TextStyle(
-                                    fontSize: 18 * ffem,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        SizedBox(width: 20),
+                        Text(
+                          "Maintenance & Warranties",
+                          style: TextStyle(
+                            fontSize: 15 * textScaleFactor,
+                            color: Colors.black,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
-                SizedBox(height: 10),
-                Container(
-                  width: res_width * 0.9,
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.white, width: 0.2),
-                    ),
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        shaka = 18;
-                      });
-                      Get.to(Termination());
-                    },
-                    child: Container(
-                      width: res_width * 0.7,
-                      height: res_height * 0.041,
-                      decoration: BoxDecoration(
-                        color:
-                            shaka == 18
-                                ? Color(0xFF4285F4)
-                                : Colors.transparent,
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(20),
-                          bottomRight: Radius.circular(20),
+              ),
+              SizedBox(height: 25),
+              GestureDetector(
+                onTap: () {
+                  setState(() => shaka = 18);
+                  Get.to(Termination());
+                },
+                child: Container(
+                  width: res_width * 0.75,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 5, left: 10),
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          'assets/newpacks/menu-board.png',
+                          color: Colors.black,
+                          width: 20,
+                          height: 20,
                         ),
-                      ),
-                      child: Container(
-                        width: res_width * 0.4,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 20, bottom: 5),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.view_list_outlined,
-                                  color: Colors.white,
-                                ),
-                                SizedBox(width: 20),
-                                Text(
-                                  "Termination",
-                                  textAlign: TextAlign.left,
-                                  style: TextStyle(
-                                    fontSize: 18 * ffem,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        SizedBox(width: 20),
+                        Text(
+                          "Termination",
+                          style: TextStyle(
+                            fontSize: 15 * textScaleFactor,
+                            color: Colors.black,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
-                SizedBox(height: 60),
-              ],
-            ),
-
-            ///settings start here
-            Column(
-              children: [
-                Container(
-                  width: res_width * 0.9,
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.white, width: 0.2),
-                    ),
-                  ),
-                  child: GestureDetector(
-                    onTap: () async {
-                      SharedPreferences sharedPreferences =
-                          await SharedPreferences.getInstance();
-                      setState(() {
-                        // timer.cancel();
-                        sharedPreferences.setString('token', "");
-                        sharedPreferences.setString('role', "");
-                      });
-                      sharedPreferences.setBool("time", false);
-                      // setState(() {
-                      //   timer.cancel();
-                      //   // super.initState();
-                      // });
-                      final userPrefernece = Provider.of<UserViewModel>(
-                        context,
-                        listen: false,
-                      );
-                      userPrefernece.remove().then((value) {
-                        // Get.offAll(() => LoginScreen());
-                      });
-                      sp
-                          .userSignOut()
-                          .then((value) {
-                            Get.to(() => LoginScreen());
-                          })
-                          .catchError((e) {
-                            if (kDebugMode) {}
-                          });
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 20, bottom: 7),
-                      child: Row(
-                        children: [
-                          Icon(Icons.login_outlined, color: Colors.white),
-                          SizedBox(width: 20),
-                          Text(
-                            "Logout",
-                            style: TextStyle(
-                              fontSize: 18 * ffem,
-                              color: Colors.white,
-                            ),
+              ),
+              SizedBox(height: 15),
+              Container(
+                  width: res_width * 0.7,
+                  child: Divider(color: Colors.grey.shade300)),
+              SizedBox(height: 15),
+              GestureDetector(
+                onTap: () async {
+                  SharedPreferences sharedPreferences =
+                      await SharedPreferences.getInstance();
+                  setState(() {
+                    sharedPreferences.setString('token', "");
+                    sharedPreferences.setString('role', "");
+                  });
+                  sharedPreferences.setBool("time", false);
+                  final userPrefernece = Provider.of<UserViewModel>(
+                    context,
+                    listen: false,
+                  );
+                  userPrefernece.remove().then((value) {});
+                  sp.userSignOut().then((value) {
+                    Get.to(() => LoginScreen());
+                  }).catchError((e) {
+                    if (kDebugMode) {}
+                  });
+                },
+                child: Container(
+                  width: res_width * 0.75,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 5, left: 10),
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          'assets/newpacks/logout.png',
+                          color: Colors.black,
+                          width: 20,
+                          height: 20,
+                        ),
+                        SizedBox(width: 20),
+                        Text(
+                          "Logout",
+                          style: TextStyle(
+                            fontSize: 15 * textScaleFactor,
+                            color: Colors.black,
                           ),
-                        ],
-                      ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                SizedBox(height: 99),
-              ],
-            ),
-          ],
+              ),
+              SizedBox(height: res_height * 0.095),
+            ],
+          ),
         ),
       ),
     );
@@ -1086,13 +741,33 @@ class _DrawerScreenState extends State<DrawerScreen> {
       child: SingleChildScrollView(
         child:
             role == "1"
-                ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: res_height * 0.04),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 10),
-                      child: Column(
+                ? Padding(
+                  padding: const EdgeInsets.only(left: 30.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: res_height * 0.06),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              Get.back();
+                              widget.onCloseDrawer?.call();
+                            },
+                            child: Image.asset(
+                              'assets/newpacks/close-circle.png',
+                              color: Colors.black,
+                              width: 30,
+                              height: 30,
+                            ),
+                          ),
+                          SizedBox(width: 20),
+                        ],
+                      ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           isLoadingImage
                               ? CircleAvatar(
@@ -1151,6 +826,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                   style: TextStyle(
                                     fontSize: 26 * textScaleFactor,
                                     color: Colors.black,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 1,
@@ -1179,7 +855,6 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           ),
                         ],
                       ),
-                    ),
                     SizedBox(height: res_height * 0.01),
                     (usp.role == "1" || onboardingCompleted)
                         ? Center(
@@ -1189,13 +864,13 @@ class _DrawerScreenState extends State<DrawerScreen> {
                               Text(
                                 'Renter',
                                 style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
+                                  fontSize: 16,
+                                  color: Colors.black,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               Transform.scale(
-                                scale: 0.8,
+                                scale: 0.7,
                                 child: Switch(
                                   value: usp.role == "1",
                                   onChanged: (value) async {
@@ -1285,8 +960,8 @@ class _DrawerScreenState extends State<DrawerScreen> {
                               Text(
                                 'Provider',
                                 style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
+                                  fontSize: 16,
+                                  color: Colors.black,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -1331,15 +1006,8 @@ class _DrawerScreenState extends State<DrawerScreen> {
                             ),
                           ),
                         ),
-                    SizedBox(height: res_height * 0.04),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
-                        ),
-                      ),
-                      child: GestureDetector(
+                      SizedBox(height: res_height * 0.04),
+                      GestureDetector(
                         onTap: () {
                           setState(() {
                             shaka = 1;
@@ -1348,101 +1016,60 @@ class _DrawerScreenState extends State<DrawerScreen> {
                             bottomctrl.navBarChange(0);
                           } else {
                             Get.back();
+                            widget.onCloseDrawer?.call();
                           }
                         },
                         child: Container(
-                          width: res_width * 0.7,
-                          height: res_height * 0.041,
-                          decoration: BoxDecoration(
-                            color:
-                                shaka == 1
-                                    ? Color(0xFF4285F4)
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Container(
-                            width: res_width * 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 20,
-                                bottom: 5,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.home_outlined,
-                                      color: Colors.white,
-                                    ),
-                                    SizedBox(width: 20),
-                                    SizedBox(
-                                      width: res_width * 0.681,
-                                      child: Text(
-                                        "Home",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontSize: 15 * textScaleFactor,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 15),
-                    Container(
-                      width: res_width * 0.7,
-                      height: res_height * 0.059,
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(20),
-                          bottomRight: Radius.circular(20),
-                        ),
-                      ),
-                      child: Container(
-                        width: res_width * 0.4,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 20),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
+                          width: res_width * 0.75,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 5),
                             child: Row(
                               children: [
+                                Image.asset(
+                                  'assets/newpacks/home.png',
+                                  color: Colors.black,
+                                  width: 20,
+                                  height: 20,
+                                ),
+                                SizedBox(width: 20),
                                 Text(
-                                  "Account",
+                                  "Home",
                                   textAlign: TextAlign.left,
                                   style: TextStyle(
-                                    fontSize: 23 * ffem,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15 * textScaleFactor,
+                                    color: Colors.black,
                                   ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ],
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 5),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
+                      SizedBox(height: 10),
+                      Container(width: res_width * 0.7, child: Divider(
+                          color: Colors.grey.shade300,
+                      )),
+                      Container(
+                        width: res_width * 0.7,
+                        height: res_height * 0.059,
+                        child: Row(
+                          children: [
+                            Text(
+                              "Account",
+                              textAlign: TextAlign.left,
+                              style: TextStyle(
+                                fontSize: 15 * textScaleFactor,
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: GestureDetector(
+                      SizedBox(height: 10),
+                      GestureDetector(
                         onTap: () {
                           setState(() {
                             shaka = 2;
@@ -1450,128 +1077,71 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           Get.to(() => RenterProfile());
                         },
                         child: Container(
-                          width: res_width * 0.7,
-                          height: res_height * 0.041,
-                          decoration: BoxDecoration(
-                            color:
-                                shaka == 2
-                                    ? Color(0xFF4285F4)
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Container(
-                            width: res_width * 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 20,
-                                bottom: 5,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.person, color: Colors.white),
-                                    SizedBox(width: 20),
-                                    SizedBox(
-                                      width: res_width * 0.681,
-                                      child: Text(
-                                        "Profile",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontSize: 15 * textScaleFactor,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
+                          width: res_width * 0.75,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 5, left: 10),
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'assets/newpacks/frame.png',
+                                  color: Colors.black,
+                                  width: 20,
+                                  height: 20,
                                 ),
-                              ),
+                                SizedBox(width: 20),
+                                Text(
+                                  "Profile",
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(
+                                    fontSize: 15 * textScaleFactor,
+                                    color: Colors.black,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
-                        ),
-                      ),
-                      child: GestureDetector(
+                      SizedBox(height: 25),
+                      GestureDetector(
                         onTap: () {
                           setState(() {
                             shaka = 3;
                           });
                           Get.to(MessagesScreen());
-                          // if (bottomctrl.navigationBarIndexValue != 3) {
-                          //   bottomctrl.navBarChange(3);
-                          // } else {
-                          //   Get.back();
-                          // }
                         },
                         child: Container(
-                          width: res_width * 0.7,
-                          height: res_height * 0.041,
-                          decoration: BoxDecoration(
-                            color:
-                                shaka == 3
-                                    ? Color(0xFF4285F4)
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Container(
-                            width: res_width * 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 20,
-                                bottom: 5,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.chat, color: Colors.white),
-                                    SizedBox(width: 20),
-                                    SizedBox(
-                                      width: res_width * 0.681,
-                                      child: Text(
-                                        "Chat",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontSize: 15 * textScaleFactor,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
+                          width: res_width * 0.75,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 5, left: 10),
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'assets/newpacks/messages.png',
+                                  color: Colors.black,
+                                  width: 20,
+                                  height: 20,
                                 ),
-                              ),
+                                SizedBox(width: 20),
+                                Text(
+                                  "Chat",
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(
+                                    fontSize: 15 * textScaleFactor,
+                                    color: Colors.black,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
-                        ),
-                      ),
-                      child: GestureDetector(
+                      SizedBox(height: 25),
+                      GestureDetector(
                         onTap: () {
                           setState(() {
                             shaka = 4;
@@ -1579,64 +1149,35 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           Get.to(OrderRequests());
                         },
                         child: Container(
-                          width: res_width * 0.7,
-                          height: res_height * 0.041,
-                          decoration: BoxDecoration(
-                            color:
-                                shaka == 4
-                                    ? Color(0xFF4285F4)
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Container(
-                            width: res_width * 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 20,
-                                bottom: 5,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.list_alt_rounded,
-                                      color: Colors.white,
-                                    ),
-                                    SizedBox(width: 20),
-                                    SizedBox(
-                                      width: res_width * 0.681,
-                                      child: Text(
-                                        "My Orders List",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontSize: 15 * textScaleFactor,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
+                          width: res_width * 0.75,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 5, left: 10),
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'assets/newpacks/book.png',
+                                  color: Colors.black,
+                                  width: 20,
+                                  height: 20,
                                 ),
-                              ),
+                                SizedBox(width: 20),
+                                Text(
+                                  "My Orders List",
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(
+                                    fontSize: 15 * textScaleFactor,
+                                    color: Colors.black,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
-                        ),
-                      ),
-                      child: GestureDetector(
+                      SizedBox(height: 25),
+                      GestureDetector(
                         onTap: () {
                           setState(() {
                             shaka = 5;
@@ -1644,61 +1185,35 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           Get.to(TransactionListScreen());
                         },
                         child: Container(
-                          width: res_width * 0.7,
-                          height: res_height * 0.041,
-                          decoration: BoxDecoration(
-                            color:
-                                shaka == 5
-                                    ? Color(0xFF4285F4)
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Container(
-                            width: res_width * 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 20,
-                                bottom: 5,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.save_as, color: Colors.white),
-                                    SizedBox(width: 20),
-                                    SizedBox(
-                                      width: res_width * 0.681,
-                                      child: Text(
-                                        "Transaction List",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontSize: 15 * textScaleFactor,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
+                          width: res_width * 0.75,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 5, left: 10),
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'assets/newpacks/dollar-circle.png',
+                                  color: Colors.black,
+                                  width: 20,
+                                  height: 20,
                                 ),
-                              ),
+                                SizedBox(width: 20),
+                                Text(
+                                  "Transaction List",
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(
+                                    fontSize: 15 * textScaleFactor,
+                                    color: Colors.black,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
-                        ),
-                      ),
-                      child: GestureDetector(
+                      SizedBox(height: 25),
+                      GestureDetector(
                         onTap: () {
                           setState(() {
                             shaka = 6;
@@ -1706,98 +1221,56 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           Get.to(ProductReturnScreen());
                         },
                         child: Container(
-                          width: res_width * 0.7,
-                          height: res_height * 0.041,
-                          decoration: BoxDecoration(
-                            color:
-                                shaka == 6
-                                    ? Color(0xFF4285F4)
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Container(
-                            width: res_width * 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 20,
-                                bottom: 5,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.list_alt_rounded,
-                                      color: Colors.white,
-                                    ),
-                                    SizedBox(width: 20),
-                                    SizedBox(
-                                      width: res_width * 0.681,
-                                      child: Text(
-                                        "Return Product",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontSize: 15 * textScaleFactor,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 15),
-                    Container(
-                      width: res_width * 0.7,
-                      height: res_height * 0.059,
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(20),
-                          bottomRight: Radius.circular(20),
-                        ),
-                      ),
-                      child: Container(
-                        width: res_width * 0.4,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 20),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
+                          width: res_width * 0.75,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 5, left: 10),
                             child: Row(
                               children: [
+                                Image.asset(
+                                  'assets/newpacks/bag-tick.png',
+                                  color: Colors.black,
+                                  width: 20,
+                                  height: 20,
+                                ),
+                                SizedBox(width: 20),
                                 Text(
-                                  "Support",
+                                  "Return Product",
                                   textAlign: TextAlign.left,
                                   style: TextStyle(
-                                    fontSize: 23 * textScaleFactor,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15 * textScaleFactor,
+                                    color: Colors.black,
                                   ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ],
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
+                      SizedBox(height: 15),
+                      Container(width: res_width * 0.7, child: Divider(
+                          color: Colors.grey.shade300,
+                      )),
+                      Container(
+                        width: res_width * 0.7,
+                        height: res_height * 0.059,
+                        child: Row(
+                          children: [
+                            Text(
+                              "Support",
+                              textAlign: TextAlign.left,
+                              style: TextStyle(
+                                fontSize: 15 * textScaleFactor,
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: GestureDetector(
+                      SizedBox(height: 15),
+                      GestureDetector(
                         onTap: () {
                           setState(() {
                             shaka = 9;
@@ -1805,98 +1278,53 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           Get.to(() => ContactSupport());
                         },
                         child: Container(
-                          width: res_width * 0.7,
-                          height: res_height * 0.041,
-                          decoration: BoxDecoration(
-                            color:
-                                shaka == 9
-                                    ? Color(0xFF4285F4)
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Container(
-                            width: res_width * 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 20,
-                                bottom: 5,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.list_alt_rounded,
-                                      color: Colors.white,
-                                    ),
-                                    SizedBox(width: 20),
-                                    SizedBox(
-                                      width: res_width * 0.681,
-                                      child: Text(
-                                        "Provide Feedback",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontSize: 15 * textScaleFactor,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 15),
-                    Container(
-                      width: res_width * 0.7,
-                      height: res_height * 0.059,
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(20),
-                          bottomRight: Radius.circular(20),
-                        ),
-                      ),
-                      child: Container(
-                        width: res_width * 0.4,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 20),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
+                          width: res_width * 0.75,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 5, left: 10),
                             child: Row(
                               children: [
+                                Image.asset(
+                                  'assets/newpacks/message-text.png',
+                                  color: Colors.black,
+                                  width: 20,
+                                  height: 20,
+                                ),
+                                SizedBox(width: 20),
                                 Text(
-                                  "Legal",
+                                  "Provide Feedback",
                                   textAlign: TextAlign.left,
                                   style: TextStyle(
-                                    fontSize: 23 * textScaleFactor,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15 * textScaleFactor,
+                                    color: Colors.black,
                                   ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ],
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 5),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
+                      SizedBox(height: 15),
+                      Container(
+                        width: res_width * 0.7,
+                        height: res_height * 0.059,
+                        child: Row(
+                          children: [
+                            Text(
+                              "Legal",
+                              textAlign: TextAlign.left,
+                              style: TextStyle(
+                                fontSize: 15 * textScaleFactor,
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: GestureDetector(
+                      SizedBox(height: 15),
+                      GestureDetector(
                         onTap: () {
                           setState(() {
                             shaka = 10;
@@ -1904,64 +1332,35 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           Get.to(() => TermsAndCondition());
                         },
                         child: Container(
-                          width: res_width * 0.7,
-                          height: res_height * 0.041,
-                          decoration: BoxDecoration(
-                            color:
-                                shaka == 10
-                                    ? Color(0xFF4285F4)
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Container(
-                            width: res_width * 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 20,
-                                bottom: 5,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.library_books,
-                                      color: Colors.white,
-                                    ),
-                                    SizedBox(width: 20),
-                                    SizedBox(
-                                      width: res_width * 0.681,
-                                      child: Text(
-                                        "Terms & Conditions",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontSize: 15 * textScaleFactor,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
+                          width: res_width * 0.75,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 5, left: 10),
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'assets/newpacks/menu-board.png',
+                                  color: Colors.black,
+                                  width: 20,
+                                  height: 20,
                                 ),
-                              ),
+                                SizedBox(width: 20),
+                                Text(
+                                  "Terms & Conditions",
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(
+                                    fontSize: 15 * textScaleFactor,
+                                    color: Colors.black,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
-                        ),
-                      ),
-                      child: GestureDetector(
+                      SizedBox(height: 25),
+                      GestureDetector(
                         onTap: () {
                           setState(() {
                             shaka = 11;
@@ -1969,61 +1368,35 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           Get.to(() => PrivacyPolicy());
                         },
                         child: Container(
-                          width: res_width * 0.7,
-                          height: res_height * 0.041,
-                          decoration: BoxDecoration(
-                            color:
-                                shaka == 11
-                                    ? Color(0xFF4285F4)
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Container(
-                            width: res_width * 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 20,
-                                bottom: 5,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.list_alt, color: Colors.white),
-                                    SizedBox(width: 20),
-                                    SizedBox(
-                                      width: res_width * 0.681,
-                                      child: Text(
-                                        "Privacy Policy",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontSize: 15 * textScaleFactor,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
+                          width: res_width * 0.75,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 5, left: 10),
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'assets/newpacks/note-text.png',
+                                  color: Colors.black,
+                                  width: 20,
+                                  height: 20,
                                 ),
-                              ),
+                                SizedBox(width: 20),
+                                Text(
+                                  "Privacy Policy",
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(
+                                    fontSize: 15 * textScaleFactor,
+                                    color: Colors.black,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
-                        ),
-                      ),
-                      child: GestureDetector(
+                      SizedBox(height: 25),
+                      GestureDetector(
                         onTap: () {
                           setState(() {
                             shaka = 12;
@@ -2031,61 +1404,35 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           Get.to(TermLength());
                         },
                         child: Container(
-                          width: res_width * 0.7,
-                          height: res_height * 0.041,
-                          decoration: BoxDecoration(
-                            color:
-                                shaka == 12
-                                    ? Color(0xFF4285F4)
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Container(
-                            width: res_width * 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 20,
-                                bottom: 5,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.list_alt, color: Colors.white),
-                                    SizedBox(width: 20),
-                                    SizedBox(
-                                      width: res_width * 0.681,
-                                      child: Text(
-                                        "Copyright Policy",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontSize: 15 * textScaleFactor,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
+                          width: res_width * 0.75,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 5, left: 10),
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'assets/newpacks/note-text.png',
+                                  color: Colors.black,
+                                  width: 20,
+                                  height: 20,
                                 ),
-                              ),
+                                SizedBox(width: 20),
+                                Text(
+                                  "Copyright Policy",
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(
+                                    fontSize: 15 * textScaleFactor,
+                                    color: Colors.black,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
-                        ),
-                      ),
-                      child: GestureDetector(
+                      SizedBox(height: 25),
+                      GestureDetector(
                         onTap: () {
                           setState(() {
                             shaka = 13;
@@ -2093,58 +1440,35 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           Get.to(RentalAgreement());
                         },
                         child: Container(
-                          width: res_width * 0.7,
-                          height: res_height * 0.041,
-                          decoration: BoxDecoration(
-                            color:
-                                shaka == 13
-                                    ? Color(0xFF4285F4)
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Container(
-                            width: res_width * 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 20),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.list_alt, color: Colors.white),
-                                    SizedBox(width: 20),
-                                    SizedBox(
-                                      width: res_width * 0.681,
-                                      child: Text(
-                                        "Rental Agreement",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontSize: 15 * textScaleFactor,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
+                          width: res_width * 0.75,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 5, left: 10),
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'assets/newpacks/note-text.png',
+                                  color: Colors.black,
+                                  width: 20,
+                                  height: 20,
                                 ),
-                              ),
+                                SizedBox(width: 20),
+                                Text(
+                                  "Rental Agreement",
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(
+                                    fontSize: 15 * textScaleFactor,
+                                    color: Colors.black,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
-                        ),
-                      ),
-                      child: GestureDetector(
+                      SizedBox(height: 25),
+                      GestureDetector(
                         onTap: () {
                           setState(() {
                             shaka = 14;
@@ -2152,64 +1476,35 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           Get.to(usagePolicyAndLimitations());
                         },
                         child: Container(
-                          width: res_width * 0.7,
-                          height: res_height * 0.041,
-                          decoration: BoxDecoration(
-                            color:
-                                shaka == 14
-                                    ? Color(0xFF4285F4)
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Container(
-                            width: res_width * 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 20,
-                                bottom: 5,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.view_list_outlined,
-                                      color: Colors.white,
-                                    ),
-                                    SizedBox(width: 20),
-                                    SizedBox(
-                                      width: res_width * 0.681,
-                                      child: Text(
-                                        "Usage Policy & Limitations",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontSize: 15 * textScaleFactor,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
+                          width: res_width * 0.75,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 5, left: 10),
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'assets/newpacks/menu-board.png',
+                                  color: Colors.black,
+                                  width: 20,
+                                  height: 20,
                                 ),
-                              ),
+                                SizedBox(width: 20),
+                                Text(
+                                  "Usage Policy & Limitations",
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(
+                                    fontSize: 15 * textScaleFactor,
+                                    color: Colors.black,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
-                        ),
-                      ),
-                      child: GestureDetector(
+                      SizedBox(height: 25),
+                      GestureDetector(
                         onTap: () {
                           setState(() {
                             shaka = 15;
@@ -2217,64 +1512,35 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           Get.to(InsuranceAndIndemnification());
                         },
                         child: Container(
-                          width: res_width * 0.7,
-                          height: res_height * 0.041,
-                          decoration: BoxDecoration(
-                            color:
-                                shaka == 15
-                                    ? Color(0xFF4285F4)
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Container(
-                            width: res_width * 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 20,
-                                bottom: 5,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.view_list_outlined,
-                                      color: Colors.white,
-                                    ),
-                                    SizedBox(width: 20),
-                                    SizedBox(
-                                      width: res_width * 0.681,
-                                      child: Text(
-                                        "Insurance & Indemnifications Policy",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontSize: 15 * textScaleFactor,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
+                          width: res_width * 0.75,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 5, left: 10),
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'assets/newpacks/menu-board.png',
+                                  color: Colors.black,
+                                  width: 20,
+                                  height: 20,
                                 ),
-                              ),
+                                SizedBox(width: 20),
+                                Text(
+                                  "Insurance & Indemnifications Policy",
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(
+                                    fontSize: 15 * textScaleFactor,
+                                    color: Colors.black,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
-                        ),
-                      ),
-                      child: GestureDetector(
+                      SizedBox(height: 25),
+                      GestureDetector(
                         onTap: () {
                           setState(() {
                             shaka = 16;
@@ -2282,64 +1548,35 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           Get.to(TransportAndInstallationPolicy());
                         },
                         child: Container(
-                          width: res_width * 0.7,
-                          height: res_height * 0.041,
-                          decoration: BoxDecoration(
-                            color:
-                                shaka == 16
-                                    ? Color(0xFF4285F4)
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Container(
-                            width: res_width * 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 20,
-                                bottom: 5,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.view_list_outlined,
-                                      color: Colors.white,
-                                    ),
-                                    SizedBox(width: 20),
-                                    SizedBox(
-                                      width: res_width * 0.681,
-                                      child: Text(
-                                        "Transportation & Installation Policy",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontSize: 15 * textScaleFactor,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
+                          width: res_width * 0.75,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 5, left: 10),
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'assets/newpacks/menu-board.png',
+                                  color: Colors.black,
+                                  width: 20,
+                                  height: 20,
                                 ),
-                              ),
+                                SizedBox(width: 20),
+                                Text(
+                                  "Transportation & Installation Policy",
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(
+                                    fontSize: 15 * textScaleFactor,
+                                    color: Colors.black,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
-                        ),
-                      ),
-                      child: GestureDetector(
+                      SizedBox(height: 25),
+                      GestureDetector(
                         onTap: () {
                           setState(() {
                             shaka = 17;
@@ -2347,64 +1584,35 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           Get.to(AboutAppScreen());
                         },
                         child: Container(
-                          width: res_width * 0.7,
-                          height: res_height * 0.041,
-                          decoration: BoxDecoration(
-                            color:
-                                shaka == 17
-                                    ? Color(0xFF4285F4)
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Container(
-                            width: res_width * 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 20,
-                                bottom: 5,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.view_list_outlined,
-                                      color: Colors.white,
-                                    ),
-                                    SizedBox(width: 20),
-                                    SizedBox(
-                                      width: res_width * 0.681,
-                                      child: Text(
-                                        "Maintenance & Warranties",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontSize: 15 * textScaleFactor,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
+                          width: res_width * 0.75,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 5, left: 10),
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'assets/newpacks/menu-board.png',
+                                  color: Colors.black,
+                                  width: 20,
+                                  height: 20,
                                 ),
-                              ),
+                                SizedBox(width: 20),
+                                Text(
+                                  "Maintenance & Warranties",
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(
+                                    fontSize: 15 * textScaleFactor,
+                                    color: Colors.black,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
-                        ),
-                      ),
-                      child: GestureDetector(
+                      SizedBox(height: 25),
+                      GestureDetector(
                         onTap: () {
                           setState(() {
                             shaka = 18;
@@ -2412,142 +1620,80 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           Get.to(Termination());
                         },
                         child: Container(
-                          width: res_width * 0.7,
-                          height: res_height * 0.041,
-                          decoration: BoxDecoration(
-                            color:
-                                shaka == 18
-                                    ? Color(0xFF4285F4)
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(20),
-                              bottomRight: Radius.circular(20),
-                            ),
-                          ),
-                          child: Container(
-                            width: res_width * 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 20,
-                                bottom: 5,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.view_list_outlined,
-                                      color: Colors.white,
-                                    ),
-                                    SizedBox(width: 20),
-                                    SizedBox(
-                                      width: res_width * 0.681,
-                                      child: Text(
-                                        "Termination",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                          fontSize: 15 * textScaleFactor,
-                                          color: Colors.white,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
+                          width: res_width * 0.75,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 5, left: 10),
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'assets/newpacks/menu-board.png',
+                                  color: Colors.black,
+                                  width: 20,
+                                  height: 20,
                                 ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 60),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
-                        ),
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(color: Colors.white, width: 0.2),
-                          ),
-                        ),
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              shaka = 19;
-                            });
-                            if (bottomctrl.navigationBarIndexValue != 4) {
-                              bottomctrl.navBarChange(4);
-                            } else {
-                              Get.back();
-                            }
-                          },
-                          child: Container(
-                            width: res_width * 0.7,
-                            height: res_height * 0.041,
-                            decoration: BoxDecoration(
-                              color:
-                                  shaka == 19
-                                      ? Color(0xFF4285F4)
-                                      : Colors.transparent,
-                              borderRadius: BorderRadius.only(
-                                topRight: Radius.circular(20),
-                                bottomRight: Radius.circular(20),
-                              ),
-                            ),
-                            child: GestureDetector(
-                              child: Container(
-                                width: res_width * 0.4,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(
-                                    left: 20,
-                                    bottom: 5,
+                                SizedBox(width: 20),
+                                Text(
+                                  "Termination",
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(
+                                    fontSize: 15 * textScaleFactor,
+                                    color: Colors.black,
                                   ),
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.settings,
-                                          color: Colors.white,
-                                        ),
-                                        SizedBox(width: 20),
-                                        SizedBox(
-                                          width: res_width * 0.681,
-                                          child: Text(
-                                            "Settings",
-                                            textAlign: TextAlign.left,
-                                            style: TextStyle(
-                                              fontSize: 15 * textScaleFactor,
-                                              color: Colors.white,
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
-                                            maxLines: 1,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
-                              ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    Container(
-                      width: res_width * 0.9,
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Colors.white, width: 0.2),
+                      SizedBox(height: 15),
+                      Container(width: res_width * 0.7, child: Divider(
+                          color: Colors.grey.shade300,
+                      )),
+                      SizedBox(height: 15),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            shaka = 19;
+                          });
+                          if (bottomctrl.navigationBarIndexValue != 4) {
+                            bottomctrl.navBarChange(4);
+                          } else {
+                            Get.back();
+                            widget.onCloseDrawer?.call();
+                          }
+                        },
+                        child: Container(
+                          width: res_width * 0.75,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 5, left: 10),
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'assets/newpacks/setting-2.png',
+                                  color: Colors.black,
+                                  width: 20,
+                                  height: 20,
+                                ),
+                                SizedBox(width: 20),
+                                Text(
+                                  "Settings",
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(
+                                    fontSize: 15 * textScaleFactor,
+                                    color: Colors.black,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                      child: GestureDetector(
+                      SizedBox(height: 25),
+                      GestureDetector(
                         onTap: () async {
                           SharedPreferences sharedPreferences =
                               await SharedPreferences.getInstance();
@@ -2582,31 +1728,36 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                 if (kDebugMode) {}
                               });
                         },
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 20, bottom: 7),
-                          child: Row(
-                            children: [
-                              Icon(Icons.login_outlined, color: Colors.white),
-                              SizedBox(width: 20),
-                              SizedBox(
-                                width: res_width * 0.681,
-                                child: Text(
+                        child: Container(
+                          width: res_width * 0.75,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 5, left: 10),
+                            child: Row(
+                              children: [
+                                Image.asset(
+                                  'assets/newpacks/logout.png',
+                                  color: Colors.black,
+                                  width: 20,
+                                  height: 20,
+                                ),
+                                SizedBox(width: 20),
+                                Text(
                                   "Logout",
                                   style: TextStyle(
                                     fontSize: 15 * textScaleFactor,
-                                    color: Colors.white,
+                                    color: Colors.black,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 1,
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: res_height * 0.095),
-                  ],
+                      SizedBox(height: res_height * 0.095),
+                    ],
+                  ),
                 )
                 : Padding(
                   padding: const EdgeInsets.only(left: 30.0),
@@ -2730,13 +1881,13 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                 Text(
                                   'Renter',
                                   style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.white,
+                                    fontSize: 16,
+                                    color: Colors.black,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 Transform.scale(
-                                  scale: 0.8,
+                                  scale: 0.7,
                                   child: Switch(
                                     value: usp.role == "1",
                                     onChanged: (value) async {
@@ -2822,8 +1973,8 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                 Text(
                                   'Provider',
                                   style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.white,
+                                    fontSize: 16,
+                                    color: Colors.black,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -2853,7 +2004,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                             child: Text(
                               'Become Provider',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: Colors.black,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -3643,7 +2794,11 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         ),
                       ),
 
-                      SizedBox(height: 50),
+                      SizedBox(height: 15),
+                      Container(width: res_width * 0.7, child: Divider(
+                          color: Colors.grey.shade300,
+                      )),
+                      SizedBox(height: 15),
                       GestureDetector(
                         onTap: () {
                           setState(() {

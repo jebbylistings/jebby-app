@@ -636,6 +636,8 @@ class ApiRepository extends ChangeNotifier {
     message,
     delivery_charges,
     security_deposit,
+    latitude,
+    longitude,
 
     // onResponse(ProductUpdateModel list),
     // onError(error)
@@ -667,6 +669,8 @@ class ApiRepository extends ChangeNotifier {
       "isMessage": message,
       "delivery_charges": delivery_charges,
       "security_deposit": security_deposit,
+      "latitude": latitude,
+      "longitude": longitude,
     });
 
     final response = await http.post(
