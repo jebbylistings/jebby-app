@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:jebby/Views/helper/colors.dart';
 import 'package:jebby/Views/screens/auth/login.dart';
 import 'package:provider/provider.dart';
@@ -37,16 +38,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         leading: InkWell(
           onTap: () {
             Get.back();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Icon(Icons.arrow_back, color: Colors.black),
+          child: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
         ),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
       ),
       body: Container(
         width: double.infinity,
@@ -71,7 +73,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       // ),
                       Text(
                         'Create account!',
-                        style: TextStyle(
+                        style: GoogleFonts.inter(
                           fontWeight: FontWeight.bold,
                           fontSize: 30,
                           color: Colors.black,
@@ -79,7 +81,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       Text(
                         'Signup now to get started',
-                        style: TextStyle(
+                        style: GoogleFonts.inter(
                           fontSize: 16,
                           color: Colors.grey.shade700,
                           fontWeight: FontWeight.w300,
@@ -203,7 +205,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     // ),
                     Text(
                       'Name',
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                         color: Colors.black,
@@ -226,7 +228,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           }
                           return null;
                         },
-                        style: TextStyle(
+                        style: GoogleFonts.inter(
                           color: Colors.black,
                           fontWeight: FontWeight.bold,
                         ),
@@ -256,7 +258,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ),
                       //    filled: true,
-                          hintStyle: TextStyle(
+                          hintStyle: GoogleFonts.inter(
                             color: AppColors.darkGreyColor,
                             fontWeight: FontWeight.normal,
                           ),
@@ -277,7 +279,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     // ),
                     Text(
                       'Email',
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                         color: Colors.black,
@@ -300,7 +302,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           }
                           return null;
                         },
-                        style: TextStyle(
+                        style: GoogleFonts.inter(
                           color: Colors.black,
                           fontWeight: FontWeight.bold,
                         ),
@@ -328,7 +330,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ),
                           filled: true,
-                          hintStyle: TextStyle(
+                          hintStyle: GoogleFonts.inter(
                             color: AppColors.darkGreyColor,
                             fontWeight: FontWeight.normal,
                           ),
@@ -349,7 +351,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     // ),
                     Text(
                       'Password',
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                         color: Colors.black,
@@ -374,7 +376,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           }
                           return null;
                         },
-                        style: TextStyle(
+                        style: GoogleFonts.inter(
                           color: Colors.black,
                           fontWeight: FontWeight.bold,
                         ),
@@ -416,7 +418,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ),
                           filled: true,
-                          hintStyle: TextStyle(
+                          hintStyle: GoogleFonts.inter(
                             color: AppColors.darkGreyColor,
                             fontWeight: FontWeight.normal,
                           ),
@@ -451,7 +453,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           }
                           return null;
                         },
-                        style: TextStyle(
+                        style: GoogleFonts.inter(
                           color: Colors.black,
                           fontWeight: FontWeight.bold,
                         ),
@@ -492,7 +494,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ),
                           filled: true,
-                          hintStyle: TextStyle(
+                          hintStyle: GoogleFonts.inter(
                             color: AppColors.darkGreyColor,
                             fontWeight: FontWeight.normal,
                           ),
@@ -509,8 +511,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   () => CheckboxListTile(
                     title: Text(
                       "I agree to the Terms of Services and Privacy Policy",
-                      style: TextStyle(
-                        fontSize: 17,
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -607,7 +609,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Center(
                       child: Text(
                         'Register',
-                        style: TextStyle(
+                        style: GoogleFonts.inter(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                           color: Colors.white,
@@ -626,9 +628,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   children: [
                     Text(
                       "Already have an account? ",
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         fontWeight: FontWeight.bold,
-                        fontSize: 18,
+                        fontSize: 16,
                       ),
                     ),
                     InkWell(
@@ -637,7 +639,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                       child: Text(
                         'Signin',
-                        style: TextStyle(
+                        style: GoogleFonts.inter(
                           fontWeight: FontWeight.w800,
                           fontSize: 18,
                           decoration: TextDecoration.underline,

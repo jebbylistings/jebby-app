@@ -1,15 +1,16 @@
 import 'dart:convert';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:get/get.dart';
-import 'package:jebby/Views/helper/colors.dart';
-import 'package:jebby/res/app_url.dart';
-import 'package:jebby/view_model/getTax_modal.dart';
-import 'package:uuid/uuid.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:jebby/res/app_url.dart';
+import 'package:jebby/res/color.dart';
+import 'package:jebby/view_model/getTax_modal.dart';
+
 import '../../../view_model/apiServices.dart';
 
 class OrderConfirmationScreen extends StatefulWidget {
@@ -25,7 +26,8 @@ class OrderConfirmationScreen extends StatefulWidget {
   final dynamic userid;
   final dynamic vendorID;
 
-  OrderConfirmationScreen({
+  const OrderConfirmationScreen({
+    super.key,
     this.image,
     this.name,
     this.price,
@@ -40,44 +42,42 @@ class OrderConfirmationScreen extends StatefulWidget {
   });
 
   @override
-  State<OrderConfirmationScreen> createState() =>
-      _OrderConfirmationScreenState();
+  State<OrderConfirmationScreen> createState() => _OrderConfirmationScreenState();
 }
 
 class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
+  static const Color _pageBg = Color(0xFFF3F3F5);
+  static const Color _subtitleGrey = Color(0xFF72747A);
+  /// Same as `ProductDetails` (`_accent` / `_starInactive`) and `MyProducts.productCard`.
+  static const Color _starAccent = Color(0xFFF6AE02);
+  static const Color _starInactive = Color(0xFFC6C8CF);
+
   bool isLoading = true;
   bool isError = false;
-  bool emptyData = false;
 
   getProducts() {
     ApiRepository.shared.getProductsById(
-      (list) => {
-        if (this.mounted)
-          {
-            if (list.data!.length == 0)
-              {
-                setState(() {
-                  isLoading = false;
-                  isError = false;
-                }),
-              }
-            else
-              {
-                setState(() {
-                  isLoading = false;
-                  isError = false;
-                }),
-              },
-          },
+      (list) {
+        if (!mounted) return;
+        if (list.data!.isEmpty) {
+          setState(() {
+            isLoading = false;
+            isError = false;
+          });
+        } else {
+          setState(() {
+            isLoading = false;
+            isError = false;
+          });
+        }
       },
-      (error) => {
-        if (error != null)
-          {
-            setState(() {
-              isLoading = false;
-              isError = true;
-            }),
-          },
+      (error) {
+        if (error != null && mounted) {
+          setState(() {
+            isLoading = false;
+            isError = true;
+          });
+        }
       },
       widget.prodId.toString(),
     );
@@ -86,41 +86,28 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
   late var vendorAccountId;
   late var vendorPPEmail;
   bool orderVisibility = false;
-  var _locationController = TextEditingController();
+  final _locationController = TextEditingController();
 
   var newLocation = "";
 
   void getUserData() {
     ApiRepository.shared.userCredential(
-      (List) => {
-        if (this.mounted)
-          {
-            if (List.data!.length == 0)
-              {}
-            else
-              {
-                setState(() {
-                  vendorAccountId =
-                      ApiRepository
-                          .shared
-                          .getUserCredentialModelList!
-                          .data![0]
-                          .accountId
-                          .toString();
-                  vendorPPEmail =
-                      ApiRepository
-                          .shared
-                          .getUserCredentialModelList!
-                          .data![0]
-                          .paypalEmail
-                          .toString();
-                  orderVisibility = true;
-                }),
-              },
-          },
+      (List) {
+        if (!mounted) return;
+        if (List.data!.isNotEmpty) {
+          setState(() {
+            vendorAccountId =
+                ApiRepository.shared.getUserCredentialModelList!.data![0].accountId.toString();
+            vendorPPEmail =
+                ApiRepository.shared.getUserCredentialModelList!.data![0].paypalEmail.toString();
+            orderVisibility = true;
+          });
+        }
       },
-      (error) => {
-        if (error != null) {setState(() {})},
+      (error) {
+        if (error != null && mounted) {
+          setState(() {});
+        }
       },
       widget.vendorID.toString(),
     );
@@ -128,10 +115,10 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
 
   var Latitiude = "";
   var Longitude = "";
-  var uuid = new Uuid();
   List<dynamic> _placeList = [];
   String _sessionToken = '1234567890';
 
+  @override
   void dispose() {
     _locationController.dispose();
     super.dispose();
@@ -142,18 +129,13 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
   }
 
   void getSuggestion(String input) async {
-    String kPLACES_API_KEY =
-        dotenv.env['kPLACES_API_KEY'] ?? 'No secret key found';
+    String kPLACES_API_KEY = dotenv.env['kPLACES_API_KEY'] ?? 'No secret key found';
 
     try {
-      String baseURL =
-          'https://maps.googleapis.com/maps/api/place/autocomplete/json';
-      String request =
-          '$baseURL?input=$input&key=$kPLACES_API_KEY&sessiontoken=$_sessionToken';
+      String baseURL = 'https://maps.googleapis.com/maps/api/place/autocomplete/json';
+      String request = '$baseURL?input=$input&key=$kPLACES_API_KEY&sessiontoken=$_sessionToken';
       var response = await http.get(Uri.parse(request));
       jsonDecode(response.body);
-      // log('mydata');
-      // log(response.body.toString());
       if (response.statusCode == 200) {
         setState(() {
           _placeList = json.decode(response.body)['predictions'];
@@ -161,36 +143,29 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
       } else {
         throw Exception('Failed to load predictions');
       }
-    } catch (e) {
-      // toastMessage('success');
-    }
+    } catch (e) {}
   }
 
   String? zipCode;
   String? countryCode;
-  Future<void> _getZipCodeFromCoordinates(
-    double latitude,
-    double longitude,
-  ) async {
+
+  Future<void> _getZipCodeFromCoordinates(double latitude, double longitude) async {
     try {
-      List<Placemark> placemarks = await placemarkFromCoordinates(
-        latitude,
-        longitude,
-      );
+      List<Placemark> placemarks = await placemarkFromCoordinates(latitude, longitude);
       if (placemarks.isNotEmpty) {
         Placemark placemark = placemarks.first;
         zipCode = placemark.postalCode ?? '';
         countryCode = placemark.isoCountryCode ?? '';
         getSalesTax(placemark.postalCode ?? '');
-      } else {}
+      }
     } catch (e) {}
   }
 
   double taxValue = 0;
+
   Future<void> getSalesTax(zipcode) async {
     String apiKey = dotenv.env['apiKey'] ?? 'No secret key found';
-    final apiUrl =
-        'https://api.taxjar.com/v2/rates?zip=${zipcode}'; // API endpoint URL
+    final apiUrl = 'https://api.taxjar.com/v2/rates?zip=${zipcode}';
 
     final response = await http.get(
       Uri.parse(apiUrl),
@@ -201,459 +176,490 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
     );
 
     if (response.statusCode == 200) {
-      // Parse the JSON response
       final jsonResponse = json.decode(response.body);
-      // Access the tax rates
       final taxRates = jsonResponse['rate']['combined_rate'];
-      // Use taxRates for further processing
       setState(() {
-        // taxRate = double.parse(taxRates);
         taxValue = double.parse(taxRates);
       });
-    } else {
-      // Handle errors here
     }
   }
 
   var JebbyFee = 0;
   dynamic array = [];
-  late Map<String, dynamic> _data;
+  Map<String, dynamic> _data = {};
 
   Future<void> _loadData() async {
     try {
       final data = await GetJebbyfee.fetchData();
+      if (!mounted) return;
       setState(() {
         _data = data;
-        array = _data['data'];
+        array = _data['data'] ?? [];
+        JebbyFee = array.length > 0 ? int.parse(array[0]['jebby_fees'].toString()) : 0;
       });
-      JebbyFee =
-          array.length > 0 ? int.parse(array[0]['jebby_fees'].toString()) : 0;
     } catch (e) {}
   }
 
   bool locationVisibility = false;
 
+  int _priceInt() {
+    try {
+      return int.parse(widget.price.toString().trim());
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  /// Mirrors `ProductDetails._myProductsStyleStars`.
+  Widget _myProductsStyleStars(double rating, {double size = 18}) {
+    final filledStars = (rating.isNaN ? 0.0 : rating).round().clamp(0, 5);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (index) {
+        final active = index < filledStars;
+        return Padding(
+          padding: const EdgeInsets.only(right: 2),
+          child: Icon(
+            active ? Icons.star : Icons.star_border,
+            color: active ? _starAccent : _starInactive,
+            size: size,
+          ),
+        );
+      }),
+    );
+  }
+
+  String _productImageUrl() {
+    final p = widget.image?.toString().trim() ?? '';
+    if (p.isEmpty || p == 'null') return '';
+    if (p.toLowerCase().startsWith('http')) return p;
+    final base = AppUrl.baseUrlM;
+    if (base.endsWith('/')) return base + (p.startsWith('/') ? p.substring(1) : p);
+    return '$base/${p.startsWith('/') ? p.substring(1) : p}';
+  }
+
+  @override
   void initState() {
+    super.initState();
     _loadData();
     getUserData();
     getProducts();
     _getZipCodeFromCoordinates(widget.lat, widget.long);
-    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          "Order Confirmation",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: InkWell(
-          onTap: () {
-            Get.back();
-          },
-          borderRadius: BorderRadius.circular(50),
-          child: Icon(Icons.arrow_back, color: Colors.black),
-        ),
+    final textTheme = GoogleFonts.interTextTheme(
+      Theme.of(context).textTheme.apply(
+        bodyColor: const Color(0xFF1A1A1A),
+        displayColor: const Color(0xFF1A1A1A),
       ),
-      body: Container(
-        width: double.infinity,
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              children: [
-                Contbox(),
-                SizedBox(height: 10),
-                Container(
-                  width: 390,
-                  height: MediaQuery.of(context).size.height * 0.35,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withAlpha(51), // 0.2 * 255 = ~51
-                        spreadRadius: 5,
-                        blurRadius: 7,
-                        offset: Offset(0, 3), // changes position of shadow
-                      ),
-                    ],
-                    borderRadius: BorderRadius.all(Radius.circular(5)),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Column(
-                      children: [
-                        SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Container(
-                              child: Text(
-                                widget.username,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Container(
-                              width: 300,
-                              child: Text(
-                                widget.location,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.normal,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  locationVisibility = true;
-                                });
-                                // Get.to(() => ShippingAddressScreen(
-                                //       location: widget.location.toString(),
-                                //     ));
-                              },
-                              child: Container(
-                                child: Text(
-                                  "Change",
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.normal,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        locationVisibility
-                            ? TxtfldforLocation("Location", _locationController)
-                            : Text(""),
-                        SizedBox(
-                          height: MediaQuery.of(context).size.height * .1,
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            itemCount: _placeList.length,
-                            itemBuilder: ((context, index) {
-                              String name = _placeList[index]["description"];
+    );
 
-                              if (_locationController.text.isEmpty) {
-                                return Text("");
-                              } else if (name.toLowerCase().contains(
-                                _locationController.text.toLowerCase(),
-                              )) {
-                                return ListTile(
-                                  onTap: () async {
-                                    _locationController.text =
-                                        _placeList[index]["description"];
-                                    List<Location> location =
-                                        await locationFromAddress(
-                                          _placeList[index]["description"],
-                                        );
+    final p = _priceInt();
+    final jebbyLine = p * JebbyFee / 100;
+    final taxLine = taxValue * 100;
+    final total = (p + jebbyLine + taxLine).round();
+    final taxDisplay = taxLine.toString();
+    final jebbyDisplay = jebbyLine.toString();
 
-                                    setState(() {
-                                      _locationController.removeListener(() {});
-                                      Latitiude =
-                                          location.last.latitude.toString();
-                                      Longitude =
-                                          location.last.longitude.toString();
-                                      _getZipCodeFromCoordinates(
-                                        location.last.latitude,
-                                        location.last.longitude,
-                                      );
-                                      _placeList = [];
-                                    });
-                                  },
-                                  leading: CircleAvatar(
-                                    child: Icon(
-                                      Icons.pin_drop,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  title: Text(_placeList[index]["description"]),
-                                );
-                              } else {
-                                return Container();
-                              }
-                            }),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(height: 90),
-                subs("Sub Total", "${widget.price} \$"),
-                subs("Sales Tax", "${taxValue * 100} \$"),
-                subs(
-                  "Jebby Fee",
-                  "${int.parse(widget.price) * JebbyFee / 100} \$",
-                ),
-                subs(
-                  "Total",
-                  "${(int.parse(widget.price) + (int.parse(widget.price) * JebbyFee / 100) + (taxValue * 100)).round()} \$",
-                ),
-                SizedBox(height: 40),
-                GestureDetector(
-                  onTap: () {
-                    if (orderVisibility) {
-                      ApiRepository.shared.reOrderStripePayment(
-                        widget.price,
-                        vendorAccountId,
-                        context,
-                        widget.orderId,
-                        newLocation == "" ? widget.location : newLocation,
-                        ((int.parse(widget.price) * JebbyFee / 100) +
-                                (taxValue * 100))
-                            .round(),
-                      );
-                      //  Get.to(() => ReOrderPayment(
-                      //           accountId: vendorAccountId,
-                      //           paypalMail: vendorPPEmail,
-                      //           price: widget.price,
-                      //           orderId: widget.orderId,
-                      //           location: newLocation == "" ? widget.location : newLocation,
-                      //           applicationFee: ((int.parse(widget.price) * JebbyFee / 100) +  (taxValue * 100)).round()
-                      //         ));
-                    }
-                  },
-                  child: Container(
-                    height: 58,
-                    width: 371,
-                    child: Center(
-                      child: Text(
-                        'Pay Now',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 19,
-                        ),
-                      ),
-                    ),
-                    decoration: BoxDecoration(
-                      color:
-                          orderVisibility
-                              ? kprimaryColor
-                              : kprimaryColor.withAlpha(128),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 50),
-              ],
-            ),
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textTheme: textTheme,
+        appBarTheme: AppBarTheme(
+          titleTextStyle: GoogleFonts.inter(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
-    );
-  }
-
-  Contbox() {
-    return Column(
-      children: [
-        Container(
-          width: 391,
-          height: 169,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withAlpha(51), // 0.2 * 255 = ~51
-                spreadRadius: 5,
-                blurRadius: 7,
-                offset: Offset(0, 3), // changes position of shadow
+      child: Scaffold(
+        backgroundColor: _pageBg,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          foregroundColor: Colors.black,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+            onPressed: () => Get.back(),
+            style: IconButton.styleFrom(foregroundColor: Colors.black),
+          ),
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Order Confirmation',
+                style: GoogleFonts.inter(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Review your rental and pay to complete reorder.',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: _subtitleGrey,
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buildProductCard(),
+              const SizedBox(height: 16),
+              _buildDeliveryCard(),
+              const SizedBox(height: 16),
+              _buildSummaryCard(p, taxDisplay, jebbyDisplay, total),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: FilledButton(
+                  onPressed:
+                      orderVisibility
+                          ? () {
+                            ApiRepository.shared.reOrderStripePayment(
+                              widget.price,
+                              vendorAccountId,
+                              context,
+                              widget.orderId,
+                              newLocation == "" ? widget.location : newLocation,
+                              (jebbyLine + taxLine).round(),
+                            );
+                          }
+                          : null,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primaryColor,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: Colors.grey.shade300,
+                    disabledForegroundColor: Colors.grey.shade600,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'Pay now',
+                    style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                ),
               ),
             ],
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Container(
-                      width: 120,
-                      height: 119,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withAlpha(51), // 0.2 * 255 = ~51
-                            spreadRadius: 5,
-                            blurRadius: 7,
-                            offset: Offset(0, 3), // changes position of shadow
-                          ),
-                        ],
-                      ),
-                      child: Image.network(
-                        AppUrl.baseUrlM + widget.image.toString(),
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Container(
-                      height: 119,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 159,
-                            child: Text(
-                              widget.name,
-                              style: TextStyle(fontSize: 14),
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Text(
-                            "${widget.price} \$",
-                            style: TextStyle(fontSize: 14),
-                          ),
-                          isLoading
-                              ? Container()
-                              : Row(
-                                children: [
-                                  RatingBarIndicator(
-                                    rating: double.parse(
-                                      ApiRepository
-                                          .shared
-                                          .getProductsByIdList!
-                                          .data![0]
-                                          .stars
-                                          .toString(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProductCard() {
+    final url = _productImageUrl();
+    final prodList = ApiRepository.shared.getProductsByIdList?.data;
+
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      elevation: 1,
+      shadowColor: Colors.black12,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: SizedBox(
+                width: 88,
+                height: 88,
+                child:
+                    url.isEmpty
+                        ? ColoredBox(
+                          color: const Color(0xFFF5F5F5),
+                          child: Icon(Icons.image_outlined, color: Colors.grey.shade400),
+                        )
+                        : CachedNetworkImage(
+                          imageUrl: url,
+                          fit: BoxFit.cover,
+                          placeholder:
+                              (_, __) => ColoredBox(
+                                color: const Color(0xFFF5F5F5),
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.primaryColor.withValues(alpha: 0.6),
                                     ),
-                                    itemBuilder:
-                                        (context, index) => Icon(
-                                          Icons.star,
-                                          color: Colors.amber,
-                                        ),
-                                    itemCount: 5,
-                                    itemSize: 15,
-                                    direction: Axis.horizontal,
                                   ),
-                                  Text(
-                                    "(${ApiRepository.shared.getProductsByIdList!.data![0].length.toString()}) Reviews",
-                                    style: TextStyle(fontSize: 14),
-                                  ),
-                                ],
+                                ),
                               ),
-                          SizedBox(height: 10),
-                        ],
-                      ),
+                          errorWidget:
+                              (_, __, ___) => ColoredBox(
+                                color: const Color(0xFFF5F5F5),
+                                child: Icon(Icons.inventory_2_outlined, color: Colors.grey.shade500),
+                              ),
+                        ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.name?.toString() ?? '—',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '\$${widget.price}',
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black,
+                    ),
+                  ),
+                  if (!isLoading && !isError && prodList != null && prodList.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _myProductsStyleStars(
+                          double.tryParse(prodList[0].stars?.toString() ?? '0') ?? 0,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '(${prodList[0].length?.toString() ?? '0'}) Reviews',
+                          style: GoogleFonts.inter(fontSize: 13, color: _subtitleGrey),
+                        ),
+                      ],
                     ),
                   ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDeliveryCard() {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      elevation: 1,
+      shadowColor: Colors.black12,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Delivery address',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-                SizedBox(height: 16),
-                // Row(
-                //   mainAxisAlignment: MainAxisAlignment.spaceAround,
-                //   children: [
-                //     Container(
-                //       height: 44,
-                //       width: 170,
-                //       child: Center(
-                //         child: Text(
-                //           'Type Review',
-                //           style: TextStyle(
-                //               fontWeight: FontWeight.bold, fontSize: 19),
-                //         ),
-                //       ),
-                //       decoration: BoxDecoration(
-                //           color: kprimaryColor,
-                //           borderRadius: BorderRadius.circular(5)),
-                //     ),
-                //     Container(
-                //       height: 44,
-                //       width: 170,
-                //       child: Center(
-                //         child: Text(
-                //           'Reorder',
-                //           style: TextStyle(
-                //               fontWeight: FontWeight.bold, fontSize: 19),
-                //         ),
-                //       ),
-                //       decoration: BoxDecoration(
-                //           color: kprimaryColor,
-                //           borderRadius: BorderRadius.circular(5)),
-                //     ),
-                //   ],
-                // ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      locationVisibility = true;
+                    });
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primaryColor,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  child: Text(
+                    'Change',
+                    style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
+                  ),
+                ),
               ],
             ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  subs(txt, txt2) {
-    return Column(
-      children: [
-        SizedBox(height: 25),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [Text(txt), Text(txt2)],
-        ),
-        SizedBox(height: 20),
-        Container(width: 399, height: 1, color: Colors.grey),
-      ],
-    );
-  }
-
-  TxtfldforLocation(txt, _controller) {
-    double res_width = MediaQuery.of(context).size.width;
-    double res_height = MediaQuery.of(context).size.height;
-    return Container(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(height: res_height * 0.02),
-          Text(txt),
-          SizedBox(height: res_height * 0.005),
-          Container(
-            height: 70,
-            width: res_width * 0.9,
-            child: TextField(
-              onChanged: (value) {
-                setState(() {
-                  _onChanged();
-                  value != "" ? newLocation = value : null;
-                });
-              },
-              maxLines: 1,
-              controller: _locationController,
-              decoration: InputDecoration(
-                // hintText:placholder,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                ),
-                enabledBorder: const OutlineInputBorder(
-                  borderSide: const BorderSide(color: kprimaryColor, width: 1),
-                  borderRadius: BorderRadius.all(Radius.circular(15)),
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: const BorderSide(color: kprimaryColor, width: 1),
-                  borderRadius: BorderRadius.all(Radius.circular(15)),
+            const SizedBox(height: 4),
+            Text(
+              widget.username?.toString() ?? '',
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              widget.location?.toString() ?? '',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                height: 1.35,
+                color: _subtitleGrey,
+              ),
+            ),
+            if (locationVisibility) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Location',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: _subtitleGrey,
                 ),
               ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _locationController,
+                onChanged: (value) {
+                  setState(() {
+                    _onChanged();
+                    if (value.isNotEmpty) newLocation = value;
+                  });
+                },
+                style: GoogleFonts.inter(fontSize: 15),
+                decoration: InputDecoration(
+                  hintText: 'Search address',
+                  hintStyle: GoogleFonts.inter(color: Colors.grey),
+                  filled: true,
+                  fillColor: const Color(0xFFF5F5F7),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.primaryColor, width: 1.5),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                ),
+              ),
+              if (_locationController.text.isNotEmpty && _placeList.isNotEmpty)
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 220),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: _placeList.length,
+                    itemBuilder: (context, index) {
+                      String name = _placeList[index]["description"];
+                      if (!_locationController.text.isNotEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      if (!name.toLowerCase().contains(_locationController.text.toLowerCase())) {
+                        return const SizedBox.shrink();
+                      }
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        onTap: () async {
+                          _locationController.text = _placeList[index]["description"];
+                          List<Location> location = await locationFromAddress(
+                            _placeList[index]["description"],
+                          );
+
+                          setState(() {
+                            Latitiude = location.last.latitude.toString();
+                            Longitude = location.last.longitude.toString();
+                            _getZipCodeFromCoordinates(
+                              location.last.latitude,
+                              location.last.longitude,
+                            );
+                            _placeList = [];
+                          });
+                        },
+                        leading: CircleAvatar(
+                          backgroundColor: AppColors.primaryColor.withValues(alpha: 0.15),
+                          child: Icon(Icons.pin_drop, color: AppColors.primaryColor, size: 22),
+                        ),
+                        title: Text(
+                          _placeList[index]["description"],
+                          style: GoogleFonts.inter(fontSize: 14),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard(int p, String taxDisplay, String jebbyDisplay, int total) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      elevation: 1,
+      shadowColor: Colors.black12,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Column(
+          children: [
+            _summaryRow('Sub total', '\$$p'),
+            Divider(height: 24, color: Colors.grey.shade200),
+            _summaryRow('Sales tax', '\$$taxDisplay'),
+            Divider(height: 24, color: Colors.grey.shade200),
+            _summaryRow('Jebby fee', '\$$jebbyDisplay'),
+            Divider(height: 24, color: Colors.grey.shade200),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Total',
+                    style: GoogleFonts.inter(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    '\$$total',
+                    style: GoogleFonts.inter(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primaryColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _summaryRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              color: const Color(0xFF4A4A4F),
+            ),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],

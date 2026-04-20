@@ -1,23 +1,18 @@
 import 'dart:convert';
 import 'dart:async';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
-import 'package:jebby/Views/controller/bottomcontroller.dart';
 import 'package:jebby/Views/screens/home/filteredData.dart';
 import 'package:jebby/view_model/apiServices.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:jebby/Views/helper/colors.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:jebby/res/app_url.dart';
 
 import '../../../res/color.dart';
@@ -34,9 +29,10 @@ class _FilterScreeenState extends State<FilterScreeen> {
   var toDate = null;
   DateTime selectedDate = DateTime.now();
   DateTime selectedDate1 = DateTime.now();
+  DateTime _calendarMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  bool _isSelectingEnd = false;
   bool notSearch = true;
   double _Pvalue = 50;
-  double _Rvalue = 20;
   double _distanceValue = 10.0; // Distance filter in km
   var radius = 0;
   var price = 0;
@@ -79,9 +75,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
   Position? _currentPosition;
   String _currentAddress = '';
   Set<Marker> _markers = {};
-  bool _isMapLoading = true;
   bool _isLocationLoading = true;
-  bool _isLoadingProducts = false;
   bool _showMap = false;
   List<dynamic> _nearbyProducts = [];
 
@@ -210,10 +204,6 @@ class _FilterScreeenState extends State<FilterScreeen> {
   void _loadNearbyProducts() {
     if (_currentPosition == null) return;
 
-    setState(() {
-      _isLoadingProducts = true;
-    });
-
     // Fetch real products from API
     print('DEBUG: Starting to fetch all products from API...');
     ApiRepository.shared.allProducts(
@@ -247,7 +237,6 @@ class _FilterScreeenState extends State<FilterScreeen> {
             print('DEBUG: No products found in API response');
             setState(() {
               _nearbyProducts = [];
-              _isLoadingProducts = false;
             });
             _addProductMarkers();
           }
@@ -258,7 +247,6 @@ class _FilterScreeenState extends State<FilterScreeen> {
         if (this.mounted) {
           setState(() {
             _nearbyProducts = [];
-            _isLoadingProducts = false;
           });
           _addProductMarkers();
         }
@@ -275,7 +263,6 @@ class _FilterScreeenState extends State<FilterScreeen> {
     print(
       'DEBUG: Starting to fetch locations for ${_nearbyProducts.length} products',
     );
-    String Url = dotenv.env['baseUrlM'] ?? 'No url found';
 
     try {
       // For now, let's use a simpler approach - assign locations based on product ID
@@ -300,9 +287,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
 
       print('DEBUG: Finished assigning locations for all products');
       if (this.mounted) {
-        setState(() {
-          _isLoadingProducts = false;
-        });
+        setState(() {});
 
         // Add a small delay to ensure map is ready
         Future.delayed(Duration(milliseconds: 500), () {
@@ -314,9 +299,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
     } catch (e) {
       print('Error assigning product locations: $e');
       if (this.mounted) {
-        setState(() {
-          _isLoadingProducts = false;
-        });
+        setState(() {});
 
         // Add a small delay to ensure map is ready
         Future.delayed(Duration(milliseconds: 500), () {
@@ -357,46 +340,133 @@ class _FilterScreeenState extends State<FilterScreeen> {
       }
     }
 
+    final String productName = (product['name'] ?? 'Rental item').toString();
+    final String productPrice = product['price'] != null
+        ? '\$${product['price']}'
+        : 'Price not available';
+
     showDialog(
       context: context,
       builder:
-          (context) => AlertDialog(
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (imageUrl.isNotEmpty)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      imageUrl,
-                      width: 120,
-                      height: 120,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                SizedBox(height: 12),
-                Text(
-                  product['name'] ?? '',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                if (locationInfo.isNotEmpty) ...[
-                  SizedBox(height: 6),
-                  Text(
-                    locationInfo,
-                    style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-                    textAlign: TextAlign.center,
+          (context) => Dialog(
+            insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            backgroundColor: Colors.transparent,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.16),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
                   ),
                 ],
-                SizedBox(height: 6),
-                Text(product['price'] != null ? ' 24${product['price']}' : ''),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text('Close'),
               ),
-            ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (imageUrl.isNotEmpty)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Image.network(
+                        imageUrl,
+                        width: double.infinity,
+                        height: 170,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  else
+                    Container(
+                      width: double.infinity,
+                      height: 170,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Icon(
+                        Icons.image_outlined,
+                        size: 38,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                  const SizedBox(height: 14),
+                  Text(
+                    productName,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1B1B1F),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    productPrice,
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1B1B1F),
+                    ),
+                  ),
+                  if (locationInfo.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.only(top: 2),
+                          child: Icon(
+                            Icons.place_outlined,
+                            size: 16,
+                            color: Color(0xFF72747A),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            locationInfo,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFF72747A),
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.black87,
+                            side: BorderSide(color: Colors.grey.shade300),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            'Close',
+                            style: GoogleFonts.inter(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
     );
   }
@@ -556,15 +626,95 @@ class _FilterScreeenState extends State<FilterScreeen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Error'),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('OK'),
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.16),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-          ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF3F1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.error_outline,
+                        color: Color(0xFFE05848),
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Error',
+                        style: GoogleFonts.inter(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1B1B1F),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  message,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF72747A),
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: ElevatedButton.styleFrom(
+                          elevation: 0,
+                          backgroundColor: AppColors.primaryColor,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: Text(
+                          'OK',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         );
       },
     );
@@ -604,7 +754,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
                   Container(
                     child:
                         _isLocationLoading
-                            ? Center(child: CircularProgressIndicator())
+                            ? Center(child: CircularProgressIndicator(color: AppColors.primaryColor))
                             : GoogleMap(
                               initialCameraPosition: _initialCameraPosition,
                               onMapCreated: (GoogleMapController controller) {
@@ -858,7 +1008,6 @@ class _FilterScreeenState extends State<FilterScreeen> {
                   toDate = null;
                   fromDate = null;
                   _Pvalue = 50;
-                  _Rvalue = 20;
                 }),
                 Get.to(() => FilteredData(subCatname: sub_dropdownvalue)),
               },
@@ -881,38 +1030,60 @@ class _FilterScreeenState extends State<FilterScreeen> {
     });
   }
 
-  Future<void> _selectDate1(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: selectedDate,
-      firstDate: DateTime(2015, 8),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null && picked != selectedDate) {
-      setState(() {
-        selectedDate1 = picked;
-        toDate = DateFormat('yyyy-MM-dd').format(selectedDate1);
-      });
-    }
+  final DateFormat _apiDateFormat = DateFormat('yyyy-MM-dd');
+  final DateFormat _rangeTitleFormat = DateFormat('MMM d');
+
+  DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  bool _isWithinSelectedRange(DateTime day) {
+    final d = _dateOnly(day);
+    final start = _dateOnly(selectedDate);
+    final end = _dateOnly(selectedDate1);
+    return !d.isBefore(start) && !d.isAfter(end);
   }
 
-  var myFormat = DateFormat('yyyy-MM-dd');
-  var myFormat1 = DateFormat('dd/MM/yyyy');
-  var myFormat2 = DateFormat('MM/dd/yyyy');
+  DateTime _lastAllowedDate() {
+    final now = DateTime.now();
+    return DateTime(now.year + 1, now.month, now.day);
+  }
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: selectedDate,
-      firstDate: DateTime(2015, 8),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null && picked != selectedDate) {
-      setState(() {
-        selectedDate = picked;
-        fromDate = DateFormat('yyyy-MM-dd').format(selectedDate);
-      });
-    }
+  void _selectCalendarDay(DateTime day) {
+    final today = _dateOnly(DateTime.now());
+    final last = _dateOnly(_lastAllowedDate());
+    if (day.isBefore(today) || day.isAfter(last)) return;
+
+    setState(() {
+      if (!_isSelectingEnd) {
+        selectedDate = day;
+        selectedDate1 = day;
+        fromDate = _apiDateFormat.format(day);
+        toDate = _apiDateFormat.format(day);
+        _isSelectingEnd = true;
+        return;
+      }
+
+      if (day.isBefore(_dateOnly(selectedDate))) {
+        selectedDate = day;
+        selectedDate1 = day;
+      } else {
+        selectedDate1 = day;
+        _isSelectingEnd = false;
+      }
+      fromDate = _apiDateFormat.format(selectedDate);
+      toDate = _apiDateFormat.format(selectedDate1);
+    });
+  }
+
+  void _shiftCalendarMonth(int delta) {
+    final now = DateTime.now();
+    final earliest = DateTime(now.year, now.month);
+    final latest = DateTime(_lastAllowedDate().year, _lastAllowedDate().month);
+    final next = DateTime(_calendarMonth.year, _calendarMonth.month + delta);
+    if (next.isBefore(earliest) || next.isAfter(latest)) return;
+    setState(() => _calendarMonth = next);
   }
 
   void initState() {
@@ -921,33 +1092,24 @@ class _FilterScreeenState extends State<FilterScreeen> {
     super.initState();
   }
 
-  final bottomctrl = Get.put(BottomController());
-
   @override
   Widget build(BuildContext context) {
     var res_height = MediaQuery.of(context).size.height;
     var res_width = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        backgroundColor: AppColors.greyColor,
+        backgroundColor: Colors.grey.shade100,
         elevation: 0,
-        automaticallyImplyLeading: false,
-        leading: InkWell(
-          onTap: () {
-            bottomctrl.navBarChange(0);
-            Get.back();
-          },
-          borderRadius: BorderRadius.circular(50),
-          child: Icon(Icons.arrow_back_ios_new_outlined, color: Colors.black),
-        ),
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         title: Text(
           'Find Rentals',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+          style: GoogleFonts.inter(
+            color: Colors.black87,
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
           ),
         ),
         centerTitle: true,
@@ -973,10 +1135,14 @@ class _FilterScreeenState extends State<FilterScreeen> {
                         toDate = null;
                         fromDate = null;
                         _Pvalue = 50;
-                        _Rvalue = 20;
                         _distanceValue = 10.0;
                         selectedDate = DateTime.now();
                         selectedDate1 = DateTime.now();
+                        _calendarMonth = DateTime(
+                          DateTime.now().year,
+                          DateTime.now().month,
+                        );
+                        _isSelectingEnd = false;
                         _showMap = false;
                         dropdownValue = null;
                         sub_dropdownvalue = null;
@@ -1042,6 +1208,8 @@ class _FilterScreeenState extends State<FilterScreeen> {
 
                         // Search Button
                         _buildSearchButton(res_width, res_height),
+
+                        SizedBox(height: res_height * 0.04),
                       ],
                     ),
                   ),
@@ -1181,7 +1349,7 @@ class _FilterScreeenState extends State<FilterScreeen> {
           child: Stack(
             children: [
               _isLocationLoading
-                  ? Center(child: CircularProgressIndicator())
+                  ? Center(child: CircularProgressIndicator(color: AppColors.primaryColor))
                   : GoogleMap(
                     key: ValueKey('map_${_markers.length}'),
                     // Force rebuild when markers change
@@ -1304,6 +1472,16 @@ class _FilterScreeenState extends State<FilterScreeen> {
   }
 
   Widget _buildDateRangeSection(double res_width, double res_height) {
+    final today = _dateOnly(DateTime.now());
+    final lastAllowed = _lastAllowedDate();
+    final start = _dateOnly(selectedDate);
+    final end = _dateOnly(selectedDate1);
+    final monthFirst = DateTime(_calendarMonth.year, _calendarMonth.month, 1);
+    final int leadingEmpty = monthFirst.weekday % 7;
+    final int daysInMonth =
+        DateTime(_calendarMonth.year, _calendarMonth.month + 1, 0).day;
+    final bool isSingleDaySelection = _isSameDay(start, end);
+
     return Card(
       elevation: 0,
       color: Colors.white,
@@ -1318,88 +1496,236 @@ class _FilterScreeenState extends State<FilterScreeen> {
           children: [
             Text(
               'Rental Period',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+                color: const Color(0xFF1B1B1F),
+              ),
             ),
-            SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF7F7F9),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_today_outlined,
+                    size: 20,
+                    color: Color(0xFF0A143D),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    '${_rangeTitleFormat.format(start)} - ${_rangeTitleFormat.format(end)}',
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF0A143D),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF7F7F9),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Column(
+                children: [
+                  Row(
                     children: [
-                      Text(
-                        'From:',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                      _monthButton(Icons.chevron_left, () => _shiftCalendarMonth(-1)),
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            DateFormat('MMMM yyyy').format(_calendarMonth),
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF0A143D),
+                            ),
+                          ),
                         ),
                       ),
-                      SizedBox(height: 8),
-                      GestureDetector(
-                        onTap: () => _selectDate(context),
-                        child: Container(
-                          padding: EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: AppColors.darkGreyColor),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.calendar_today,
-                                color: AppColors.primaryColor,
-                                size: 16,
-                              ),
-                              SizedBox(width: 8),
-                              Text(
-                                myFormat2.format(selectedDate),
-                                style: TextStyle(fontSize: 14),
-                              ),
-                            ],
-                          ),
-                        ),
+                      _monthButton(
+                        Icons.chevron_right,
+                        () => _shiftCalendarMonth(1),
                       ),
                     ],
                   ),
-                ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'To:',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      GestureDetector(
-                        onTap: () => _selectDate1(context),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: const ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+                        .map(
+                          (d) => Expanded(
+                            child: Center(
+                              child: Text(
+                                d,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF59689A),
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                  const SizedBox(height: 4),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: leadingEmpty + daysInMonth,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 7,
+                      mainAxisSpacing: 2,
+                      crossAxisSpacing: 0,
+                      childAspectRatio: 1.3,
+                    ),
+                    itemBuilder: (context, index) {
+                      if (index < leadingEmpty) return const SizedBox.shrink();
+                      final dayNum = index - leadingEmpty + 1;
+                      final day = DateTime(
+                        _calendarMonth.year,
+                        _calendarMonth.month,
+                        dayNum,
+                      );
+                      final disabled = day.isBefore(today) || day.isAfter(lastAllowed);
+                      final isStart = _isSameDay(day, start);
+                      final isEnd = _isSameDay(day, end);
+                      final inRange = _isWithinSelectedRange(day);
+                      final row = index ~/ 7;
+
+                      bool hasLeftInRange = false;
+                      if (index > 0 && (index - 1) ~/ 7 == row) {
+                        final prev = dayNum - 1;
+                        if (prev >= 1) {
+                          final prevDay = DateTime(
+                            _calendarMonth.year,
+                            _calendarMonth.month,
+                            prev,
+                          );
+                          final prevDisabled =
+                              prevDay.isBefore(today) || prevDay.isAfter(lastAllowed);
+                          hasLeftInRange = !prevDisabled && _isWithinSelectedRange(prevDay);
+                        }
+                      }
+
+                      bool hasRightInRange = false;
+                      if ((index + 1) ~/ 7 == row) {
+                        final next = dayNum + 1;
+                        if (next <= daysInMonth) {
+                          final nextDay = DateTime(
+                            _calendarMonth.year,
+                            _calendarMonth.month,
+                            next,
+                          );
+                          final nextDisabled =
+                              nextDay.isBefore(today) || nextDay.isAfter(lastAllowed);
+                          hasRightInRange = !nextDisabled && _isWithinSelectedRange(nextDay);
+                        }
+                      }
+
+                      Color textColor = const Color(0xFF0A143D);
+                      BoxDecoration? rangeDeco;
+                      BoxDecoration? dayDeco;
+                      Alignment dayAlignment = Alignment.center;
+                      if (disabled) {
+                        textColor = const Color(0xFFB8BED1);
+                      } else if (inRange && !isSingleDaySelection) {
+                        rangeDeco = BoxDecoration(
+                          color: const Color(0xFFDCE1EB),
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(hasLeftInRange ? 0 : 10),
+                            bottomLeft: Radius.circular(hasLeftInRange ? 0 : 10),
+                            topRight: Radius.circular(hasRightInRange ? 0 : 10),
+                            bottomRight: Radius.circular(hasRightInRange ? 0 : 10),
+                          ),
+                        );
+                      }
+                      if (!disabled && (isStart || isEnd)) {
+                        dayDeco = BoxDecoration(
+                          color: const Color(0xFF0A143D),
+                          borderRadius: BorderRadius.circular(10),
+                        );
+                        textColor = Colors.white;
+                        if (isStart && hasRightInRange) {
+                          dayAlignment = Alignment.centerLeft;
+                        } else if (isEnd && hasLeftInRange) {
+                          dayAlignment = Alignment.centerRight;
+                        }
+                      }
+
+                      const double dayExtent = 30;
+                      return GestureDetector(
+                        onTap: disabled ? null : () => _selectCalendarDay(day),
                         child: Container(
-                          padding: EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: AppColors.darkGreyColor),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.calendar_today,
-                                color: AppColors.primaryColor,
-                                size: 16,
+                          decoration: rangeDeco,
+                          alignment: dayAlignment,
+                          child: Container(
+                            width: dayExtent,
+                            height: dayExtent,
+                            decoration: dayDeco,
+                            alignment: Alignment.center,
+                            child: Text(
+                              '$dayNum',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight:
+                                    (isStart || isEnd) ? FontWeight.w700 : FontWeight.w500,
+                                color: textColor,
                               ),
-                              SizedBox(width: 8),
-                              Text(
-                                myFormat2.format(selectedDate1),
-                                style: TextStyle(fontSize: 14),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _isSelectingEnd
+                        ? 'Select an end date'
+                        : 'Select a start date to adjust your range',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: const Color(0xFF72747A),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'From: ${DateFormat('MM/dd/yyyy').format(selectedDate)}',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF72747A),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    'To: ${DateFormat('MM/dd/yyyy').format(selectedDate1)}',
+                    textAlign: TextAlign.end,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF72747A),
+                    ),
                   ),
                 ),
               ],
@@ -1438,51 +1764,25 @@ class _FilterScreeenState extends State<FilterScreeen> {
               height: 50,
               child:
                   isLoading
-                      ? Center(child: CircularProgressIndicator())
-                      : Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: AppColors.darkGreyColor, // Border color
-                            width: 1.0, // Border width
-                          ),
-                          borderRadius: BorderRadius.circular(
-                            15,
-                          ), // Optional rounded corners
-                        ),
-                        child: DropdownButton<String>(
-                          value: dropdownValue,
-                          isExpanded: true,
+                      ? Center(child: CircularProgressIndicator(color: AppColors.primaryColor))
+                      : _buildDropdownField(
+                        value: dropdownValue,
+                        hint: "Select Category",
+                        items: items,
+                        onChanged: (String? value) {
+                          setState(() {
+                            dropdownValue = value;
+                            sub_dropdownvalue = null;
+                            sub_items = [];
+                            sub_items_id = [];
+                            subCategoryVisibility = false;
 
-                          icon: Icon(Icons.keyboard_arrow_down),
-                          style: TextStyle(color: darkBlue),
-                          underline: SizedBox(),
-                          hint: Text("Select Category"),
-                          onChanged: (String? value) {
-                            setState(() {
-                              dropdownValue = value;
-                              // Clear sub-category when main category changes
-                              sub_dropdownvalue = null;
-                              sub_items = [];
-                              sub_items_id = [];
-                              subCategoryVisibility = false;
-
-                              if (value != null && items.contains(value)) {
-                                selected_id = items_id[items.indexOf(value)];
-                                getSubCategory(selected_id);
-                              }
-                            });
-                          },
-                          items:
-                              items.map<DropdownMenuItem<String>>((
-                                String value,
-                              ) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value),
-                                );
-                              }).toList(),
-                        ),
+                            if (value != null && items.contains(value)) {
+                              selected_id = items_id[items.indexOf(value)];
+                              getSubCategory(selected_id);
+                            }
+                          });
+                        },
                       ),
             ),
             SizedBox(height: 16),
@@ -1492,14 +1792,20 @@ class _FilterScreeenState extends State<FilterScreeen> {
                 height: 50,
                 child:
                     sub_categoryLoader
-                        ? Text("Please Select The Category")
-                        : DropdownButton<String>(
+                        ? Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            "Please select a category first",
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        )
+                        : _buildDropdownField(
                           value: sub_dropdownvalue,
-                          isExpanded: true,
-                          icon: Icon(Icons.arrow_downward),
-                          style: TextStyle(color: darkBlue),
-                          underline: Container(height: 2, color: darkBlue),
-                          hint: Text("Select Sub Category"),
+                          hint: "Select Sub Category",
+                          items: sub_items,
                           onChanged: (String? value) {
                             setState(() {
                               sub_dropdownvalue = value;
@@ -1509,15 +1815,6 @@ class _FilterScreeenState extends State<FilterScreeen> {
                               }
                             });
                           },
-                          items:
-                              sub_items.map<DropdownMenuItem<String>>((
-                                String value,
-                              ) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value),
-                                );
-                              }).toList(),
                         ),
               ),
             ),
@@ -1592,6 +1889,75 @@ class _FilterScreeenState extends State<FilterScreeen> {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _monthButton(IconData icon, VoidCallback onTap) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Icon(icon, size: 22, color: const Color(0xFF0A143D)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String? value,
+    required String hint,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F7F9),
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          isExpanded: true,
+          icon: const Icon(Icons.keyboard_arrow_down_rounded),
+          dropdownColor: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          style: GoogleFonts.inter(
+            color: const Color(0xFF1B1B1F),
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+          hint: Text(
+            hint,
+            style: GoogleFonts.inter(
+              color: const Color(0xFF8F9098),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          onChanged: onChanged,
+          items: items
+              .map<DropdownMenuItem<String>>(
+                (String item) => DropdownMenuItem<String>(
+                  value: item,
+                  child: Text(
+                    item,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      color: const Color(0xFF1B1B1F),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
         ),
       ),
     );

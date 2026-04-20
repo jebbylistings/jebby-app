@@ -1,6 +1,11 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:jebby/Views/helper/colors.dart';
 
+import '../../../model/getNegoByIdModel.dart';
+import '../../../model/getProductsByProductId.dart';
 import '../../../res/app_url.dart';
 import '../../../view_model/apiServices.dart';
 
@@ -21,70 +26,109 @@ class _NegotiationRequestState extends State<NegotiationRequest> {
   bool isError = false;
   bool isEmpty = false;
 
-  var originalPrice = "";
-  var negMargin = "";
-  var image = "";
-  var name = "";
+  String originalPrice = '';
+  String negMargin = '';
+  String image = '';
+  String name = '';
+
+  bool negoLoading = true;
+  bool negoError = false;
+  bool negoEmpty = false;
+  dynamic negoStatus;
+
+  static const Color _titleDark = Color(0xFF1B1B1F);
+  static const Color _labelGrey = Color(0xFF72747A);
+
+  @override
+  void initState() {
+    super.initState();
+    nego();
+    getProduct();
+  }
+
+  String _imagePathFromProduct(GetProductsByProductId list) {
+    try {
+      final data = list.data;
+      if (data == null || data.isEmpty) return '';
+      if (data.length > 1 &&
+          data[1].images != null &&
+          data[1].images!.isNotEmpty) {
+        return data[1].images![0].path?.toString() ?? '';
+      }
+      if (data[0].images != null && data[0].images!.isNotEmpty) {
+        return data[0].images![0].path?.toString() ?? '';
+      }
+    } catch (_) {}
+    return '';
+  }
 
   void getProduct() {
     ApiRepository.shared.getProductsById(
-      (list) => {
-        if (this.mounted)
-          {
-            if (list.data!.length == 0)
-              {
-                setState(() {
-                  isLoading = false;
-                  isError = false;
-                  isEmpty = true;
-                }),
-              }
-            else
-              {
-                setState(() {
-                  isLoading = false;
-                  isError = false;
-                  isEmpty = false;
-                  image =
-                      ApiRepository
-                          .shared
-                          .getProductsByIdList!
-                          .data![1]
-                          .images![0]
-                          .path
-                          .toString();
-                  name =
-                      ApiRepository.shared.getProductsByIdList!.data![0].name
-                          .toString();
-                  originalPrice =
-                      ApiRepository.shared.getProductsByIdList!.data![0].price2
-                          .toString();
-                  negMargin =
-                      ApiRepository
-                          .shared
-                          .getProductsByIdList!
-                          .data![0]
-                          .negotiation
-                          .toString();
-                }),
-              },
-          },
+      (GetProductsByProductId list) {
+        if (!mounted) return;
+        if (list.data == null || list.data!.isEmpty) {
+          setState(() {
+            isLoading = false;
+            isError = false;
+            isEmpty = true;
+          });
+          return;
+        }
+        final path = _imagePathFromProduct(list);
+        setState(() {
+          isLoading = false;
+          isError = false;
+          isEmpty = false;
+          image = path;
+          name = list.data![0].name?.toString() ?? '';
+          originalPrice = list.data![0].price2?.toString() ?? '';
+          negMargin = list.data![0].negotiation?.toString() ?? '';
+        });
       },
-      (error) => {
-        if (error != null)
-          {
-            setState(() {
-              isLoading = false;
-              isError = true;
-              isEmpty = false;
-            }),
-          },
+      (error) {
+        if (!mounted) return;
+        setState(() {
+          isLoading = false;
+          isError = true;
+          isEmpty = false;
+        });
       },
       widget.productId.toString(),
     );
   }
 
-  updateRequest(status) {
+  void nego() {
+    ApiRepository.shared.negoById(
+      (GetNegoByIdModel list) {
+        if (!mounted) return;
+        if (list.data == null || list.data!.isEmpty) {
+          setState(() {
+            negoLoading = false;
+            negoError = false;
+            negoEmpty = true;
+          });
+          return;
+        }
+        setState(() {
+          negoLoading = false;
+          negoError = false;
+          negoEmpty = false;
+          negoStatus = list.data![0].negoStatus;
+        });
+      },
+      (error) {
+        if (!mounted) return;
+        setState(() {
+          negoLoading = false;
+          negoError = true;
+          negoEmpty = false;
+        });
+      },
+      widget.negoId.toString(),
+    );
+  }
+
+  void updateRequest(status) {
     ApiRepository.shared.negotiationRequestUpdate(
       status,
       widget.negoId,
@@ -92,255 +136,463 @@ class _NegotiationRequestState extends State<NegotiationRequest> {
     );
   }
 
-  bool negoLoading = true;
-  bool negoError = false;
-  bool negoEmpty = false;
-
-  var negoStatus;
-
-  void nego() {
-    ApiRepository.shared.negoById(
-      (list) => {
-        if (this.mounted)
-          {
-            if (list.data!.length == 0)
-              {
-                setState(() {
-                  negoLoading = false;
-                  negoError = false;
-                  negoEmpty = true;
-                }),
-              }
-            else
-              {
-                setState(() {
-                  negoLoading = false;
-                  negoError = false;
-                  negoEmpty = false;
-                  negoStatus =
-                      ApiRepository
-                          .shared
-                          .getNegoByIdModelList!
-                          .data![0]
-                          .negoStatus;
-                }),
-              },
-          },
-      },
-      (error) => {
-        if (error != null)
-          {
-            setState(() {
-              negoLoading = false;
-              negoError = true;
-              negoEmpty = false;
-            }),
-          },
-      },
-      widget.negoId.toString(),
-    );
-  }
-
-  void initState() {
+  void _retry() {
+    setState(() {
+      isLoading = true;
+      isError = false;
+      isEmpty = false;
+      negoLoading = true;
+      negoError = false;
+      negoEmpty = false;
+    });
     nego();
     getProduct();
-    super.initState();
+  }
+
+  bool get _isPending =>
+      !negoLoading &&
+      !negoError &&
+      !negoEmpty &&
+      (negoStatus == 0 || negoStatus == '0');
+
+  bool get _isApproved =>
+      !negoLoading &&
+      !negoError &&
+      !negoEmpty &&
+      (negoStatus == 1 || negoStatus == '1');
+
+  bool get _isCancelled =>
+      !negoLoading &&
+      !negoError &&
+      !negoEmpty &&
+      (negoStatus == 2 || negoStatus == '2');
+
+  TextStyle _appBarTitleStyle() {
+    return GoogleFonts.inter(
+      color: Colors.black87,
+      fontWeight: FontWeight.w700,
+      fontSize: 18,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        automaticallyImplyLeading: false,
-        title: Text(
-          "Order Details",
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-          ),
-        ),
+        backgroundColor: Colors.grey.shade100,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         centerTitle: true,
+        title: Text('Negotiation request', style: _appBarTitleStyle()),
         leading: InkWell(
-          onTap: () {
-            Get.back();
-          },
+          onTap: () => Get.back(),
           borderRadius: BorderRadius.circular(50),
-          child: Container(child: Icon(Icons.arrow_back, color: Colors.black)),
+          child: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.black,
+            size: 20,
+          ),
         ),
       ),
-      body:
-          isLoading
-              ? Center(child: Text("Loading"))
-              : Center(
-                child: Container(
-                  width: double.infinity,
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      // padding: const EdgeInsets.symmetric(horizontal: 20),
-                      padding: EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          SizedBox(height: 20),
-                          SizedBox(height: 10),
-                          Container(
-                            padding: EdgeInsets.only(
-                              top: MediaQuery.of(context).size.height * 0.12,
-                            ),
-                            // width: 399,
-                            // height: 400,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.withOpacity(0.2),
-                                  spreadRadius: 5,
-                                  blurRadius: 7,
-                                  offset: Offset(
-                                    0,
-                                    3,
-                                  ), // changes position of shadow
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (isLoading) {
+      return Center(
+        child: CircularProgressIndicator(color: kprimaryColor, strokeWidth: 2),
+      );
+    }
+    if (isError) {
+      return _messageState(
+        icon: Icons.error_outline,
+        title: 'Something went wrong',
+        subtitle: 'We could not load this negotiation.',
+        actionLabel: 'Try again',
+        onAction: _retry,
+      );
+    }
+    if (isEmpty) {
+      return _messageState(
+        icon: Icons.inventory_2_outlined,
+        title: 'No product data',
+        subtitle: 'This listing may have been removed.',
+        actionLabel: 'Go back',
+        onAction: () => Get.back(),
+      );
+    }
+
+    final imageUrl = image.isNotEmpty ? AppUrl.baseUrlM + image : '';
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AspectRatio(
+                  aspectRatio: 16 / 10,
+                  child:
+                      imageUrl.isNotEmpty
+                          ? CachedNetworkImage(
+                            imageUrl: imageUrl,
+                            fit: BoxFit.cover,
+                            placeholder:
+                                (_, __) => ColoredBox(
+                                  color: Colors.grey.shade200,
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      color: kprimaryColor,
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
                                 ),
-                              ],
-                            ),
-                            child: Center(
-                              child: Column(
-                                children: [
-                                  Container(
-                                    width:
-                                        MediaQuery.of(context).size.height *
-                                        0.55,
-                                    height:
-                                        MediaQuery.of(context).size.width *
-                                        0.45,
-                                    child: Image.network(
-                                      AppUrl.baseUrlM + image,
-                                    ),
+                            errorWidget:
+                                (_, __, ___) => ColoredBox(
+                                  color: Colors.grey.shade200,
+                                  child: Icon(
+                                    Icons.image_not_supported_outlined,
+                                    size: 48,
+                                    color: Colors.grey.shade500,
                                   ),
-                                  SizedBox(height: 20),
-                                  Text(name, style: TextStyle(fontSize: 18)),
-                                  SizedBox(height: 18),
-                                  Text(
-                                    "Original Price: ${originalPrice} \$",
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 18,
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    height:
-                                        MediaQuery.of(context).size.height *
-                                        0.02,
-                                  ),
-                                  Text(
-                                    "Discount Margin: ${negMargin} %",
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 18,
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    height:
-                                        MediaQuery.of(context).size.height *
-                                        0.02,
-                                  ),
-                                  Text(
-                                    "Negotiated Requested: ${widget.price} \$",
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 18,
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    height:
-                                        MediaQuery.of(context).size.height *
-                                        0.04,
-                                  ),
-                                  negoLoading
-                                      ? Text("")
-                                      : negoStatus == 0
-                                      ? Padding(
-                                        padding: const EdgeInsets.only(
-                                          left: 100,
-                                        ),
-                                        child: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Container(child: Text("Approve")),
-                                            SizedBox(width: 10),
-                                            GestureDetector(
-                                              onTap: () {
-                                                // orderStatus(widget.orderId,
-                                                //     1, "Order Approved");
-                                                updateRequest(1);
-                                              },
-                                              child: Container(
-                                                width: 35,
-                                                height: 35,
-                                                decoration: BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  color: Color.fromARGB(
-                                                    255,
-                                                    122,
-                                                    236,
-                                                    126,
-                                                  ),
-                                                ),
-                                                child: Icon(
-                                                  Icons.check,
-                                                  size: 20,
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(width: 10),
-                                            Container(child: Text("Cancel")),
-                                            SizedBox(width: 10),
-                                            GestureDetector(
-                                              onTap: () {
-                                                // orderStatus(widget.orderId, 3, "Order Cancelled");
-                                                updateRequest(2);
-                                              },
-                                              child: Container(
-                                                width: 35,
-                                                height: 35,
-                                                decoration: BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  color: Colors.grey,
-                                                ),
-                                                child: Icon(
-                                                  Icons.close,
-                                                  size: 20,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                      : Text(
-                                        negoStatus == 1
-                                            ? "Request was approved"
-                                            : "Request was cancelled",
-                                        style: TextStyle(
-                                          color:
-                                              negoStatus == 1
-                                                  ? Colors.green
-                                                  : Colors.red,
-                                        ),
-                                      ),
-                                ],
-                              ),
+                                ),
+                          )
+                          : ColoredBox(
+                            color: Colors.grey.shade200,
+                            child: Icon(
+                              Icons.image_outlined,
+                              size: 48,
+                              color: Colors.grey.shade500,
                             ),
                           ),
-                        ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 8),
+                  child: Text(
+                    name.isEmpty ? 'Product' : name,
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: _titleDark,
+                      height: 1.25,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  child: Column(
+                    children: [
+                      _infoRow(
+                        'Original price',
+                        originalPrice.isEmpty ? '—' : '\$$originalPrice',
                       ),
+                      _divider(),
+                      _infoRow(
+                        'Discount margin',
+                        negMargin.isEmpty ? '—' : '$negMargin%',
+                      ),
+                      _divider(),
+                      _infoRow('Requested price', '\$${widget.price}'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
+                  child: _buildActionSection(),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: _labelGrey,
+              ),
+            ),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: _titleDark,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _divider() {
+    return Divider(height: 1, thickness: 1, color: Colors.grey.shade200);
+  }
+
+  Widget _buildActionSection() {
+    if (negoLoading) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Center(
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              color: kprimaryColor,
+              strokeWidth: 2,
+            ),
+          ),
+        ),
+      );
+    }
+    if (negoError) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Could not load negotiation status.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(fontSize: 14, color: _labelGrey),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            onPressed: _retry,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: _titleDark,
+              side: BorderSide(color: Colors.grey.shade400),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+            child: Text(
+              'Retry',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    if (negoEmpty) {
+      return Text(
+        'No negotiation record found.',
+        textAlign: TextAlign.center,
+        style: GoogleFonts.inter(fontSize: 14, color: _labelGrey),
+      );
+    }
+
+    if (_isPending) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Respond to this request',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: _labelGrey,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => updateRequest(2),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: _titleDark,
+                    side: BorderSide(color: Colors.grey.shade400),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: Text(
+                    'Decline',
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
                     ),
                   ),
                 ),
               ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => updateRequest(1),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kprimaryColor,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: Text(
+                    'Approve',
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
+    if (_isApproved) {
+      return _statusBanner(
+        icon: Icons.check_circle_outline,
+        text: 'This request was approved.',
+        background: const Color(0xFFE8F5E9),
+        foreground: const Color(0xFF2E7D32),
+      );
+    }
+
+    if (_isCancelled) {
+      return _statusBanner(
+        icon: Icons.cancel_outlined,
+        text: 'This request was declined.',
+        background: const Color(0xFFFFEBEE),
+        foreground: const Color(0xFFC62828),
+      );
+    }
+
+    return Text(
+      'Status unavailable.',
+      textAlign: TextAlign.center,
+      style: GoogleFonts.inter(fontSize: 14, color: _labelGrey),
+    );
+  }
+
+  Widget _statusBanner({
+    required IconData icon,
+    required String text,
+    required Color background,
+    required Color foreground,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: foreground, size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: foreground,
+                height: 1.3,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _messageState({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String actionLabel,
+    required VoidCallback onAction,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 56, color: Colors.grey.shade400),
+          const SizedBox(height: 20),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: _titleDark,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: _labelGrey,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onAction,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kprimaryColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                actionLabel,
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

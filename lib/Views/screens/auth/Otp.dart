@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jebby/Services/provider/sign_in_provider.dart';
 import 'package:jebby/Views/helper/colors.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:jebby/res/color.dart';
 import 'package:otp_text_field/otp_text_field.dart';
 import 'package:otp_text_field/style.dart';
@@ -16,6 +17,7 @@ class OTPSCREEN extends StatefulWidget {
   final dynamic password;
   final dynamic role;
   final bool isGuestUserFlow;
+  final bool isForgotPasswordFlow;
   final bool fromPhoneAuth;
   final dynamic verificationId;
   final dynamic phoneNumber;
@@ -27,6 +29,7 @@ class OTPSCREEN extends StatefulWidget {
     this.password,
     this.role,
     this.isGuestUserFlow = false,
+    this.isForgotPasswordFlow = false,
     this.fromPhoneAuth = false,
     this.verificationId = null,
     this.phoneNumber = null,
@@ -61,15 +64,23 @@ class _OTPSCREENState extends State<OTPSCREEN> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          onPressed: () => Get.back(),
-          icon: Icon(Icons.chevron_left, color: Colors.black, size: 28),
-          style: IconButton.styleFrom(
-            padding: EdgeInsets.zero,
-            minimumSize: Size(48, 48),
+        scrolledUnderElevation: 0,
+        centerTitle: true,
+        title: Text(
+          'OTP Verification',
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+            color: Colors.black87,
           ),
+        ),
+        leading: InkWell(
+          onTap: () => Get.back(),
+          borderRadius: BorderRadius.circular(50),
+          child: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
         ),
       ),
       body: SafeArea(
@@ -90,22 +101,20 @@ class _OTPSCREENState extends State<OTPSCREEN> {
               Text(
                 'Enter confirmation code',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w700,
                   fontSize: 24,
                   color: Colors.black87,
-                  fontFamily: "Inter, ExtraBold"
                 ),
               ),
               SizedBox(height: 12),
               Text(
                 'A 4-digit code was sent to $sentTo',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: GoogleFonts.inter(
                   fontSize: 15,
                   color: Colors.grey.shade600,
                   height: 1.4,
-                  fontFamily: "Inter, Regular"
                 ),
               ),
               SizedBox(height: res_height * 0.05),
@@ -131,7 +140,7 @@ class _OTPSCREENState extends State<OTPSCREEN> {
                       focusBorderColor: AppColors.primaryColor,
                     ),
                     outlineBorderRadius: 12,
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 24,
                       color: Colors.black,
                       fontWeight: FontWeight.w600,
@@ -149,7 +158,7 @@ class _OTPSCREENState extends State<OTPSCREEN> {
                     controller: _otpController,
                     keyboardType: TextInputType.number,
                     maxLength: 6,
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       color: Colors.black87,
                       fontWeight: FontWeight.w600,
                       fontSize: 24,
@@ -174,7 +183,7 @@ class _OTPSCREENState extends State<OTPSCREEN> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       hintText: 'Enter code',
-                      hintStyle: TextStyle(color: Colors.grey.shade600),
+                      hintStyle: GoogleFonts.inter(color: Colors.grey.shade600),
                     ),
                   ),
                 ),
@@ -184,6 +193,9 @@ class _OTPSCREENState extends State<OTPSCREEN> {
                   if (widget.fromPhoneAuth) {
                     final sp = context.read<SignInProvider>();
                     await sp.signInWithPhone(widget.phoneNumber, context);
+                  } else if (widget.isForgotPasswordFlow) {
+                    Map data = {"email": widget.email.toString()};
+                    authViewMode.forgetPasswordApi(data, context, "forgot");
                   } else {
                     Map data = {"email": widget.email.toString()};
                     authViewMode.forgetPasswordApi(
@@ -196,7 +208,7 @@ class _OTPSCREENState extends State<OTPSCREEN> {
                 },
                 child: Text(
                   'Resend code',
-                  style: TextStyle(
+                  style: GoogleFonts.inter(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
                     color: darkBlue,
@@ -232,6 +244,12 @@ class _OTPSCREENState extends State<OTPSCREEN> {
                             if (OtpValue == null || OtpValue!.isEmpty) {
                               Utils.flushBarErrorMessage(
                                   "Please Enter Otp", context);
+                            } else if (widget.isForgotPasswordFlow) {
+                              Map data = {
+                                "email": widget.email,
+                                "otp": OtpValue,
+                              };
+                              authViewMode.otpForgetPasswordApi(data, context);
                             } else {
                               Map data = {
                                 "email": widget.email,
@@ -256,8 +274,8 @@ class _OTPSCREENState extends State<OTPSCREEN> {
                         ),
                         child: Text(
                           'Continue',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w700,
                             fontSize: 16,
                           ),
                         ),

@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:jebby/Views/helper/colors.dart';
-import 'package:jebby/res/app_url.dart';
 import 'package:provider/provider.dart';
 
 import '../../../Services/provider/sign_in_provider.dart';
@@ -20,6 +20,9 @@ class MyTransactionsScreen extends StatefulWidget {
 }
 
 class _MyTransactionsScreenState extends State<MyTransactionsScreen> with WidgetsBindingObserver {
+  static const String _interRegular = 'Inter, Regular';
+  static const String _interBold = 'Inter, Bold';
+
   bool isLoading = true;
   bool isError = false;
   bool isEmpty = false;
@@ -38,7 +41,18 @@ class _MyTransactionsScreenState extends State<MyTransactionsScreen> with Widget
   String? fullname;
   String? email;
   String? role;
-  
+
+  static final NumberFormat _moneyFormat = NumberFormat.currency(
+    symbol: '\$',
+    decimalDigits: 2,
+  );
+
+  /// Matches summary row in design: space after dollar (e.g. `$ 300.24`).
+  static final NumberFormat _summaryMoneyFormat = NumberFormat.currency(
+    symbol: '\$ ',
+    decimalDigits: 2,
+  );
+
   void profileData(BuildContext context) async {
     getUserDate()
         .then((value) async {
@@ -110,179 +124,256 @@ class _MyTransactionsScreenState extends State<MyTransactionsScreen> with Widget
   }
 
   Widget transactionCard(String productName, String totalPrice, String status, String date, String paymentMethod) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: Offset(0, 2),
+    final amount = double.tryParse(totalPrice) ?? 0;
+    final incoming = amount >= 0;
+    final txDate = _tryParseDate(date) ?? DateTime.now();
+    return _buildTransactionRow(
+      title: productName,
+      date: txDate,
+      amount: amount,
+      isIncoming: incoming,
+      status: status,
+      method: paymentMethod,
+    );
+  }
+
+  DateTime? _tryParseDate(String value) {
+    try {
+      return DateFormat('MMM dd, yyyy').parse(value);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool _isIncoming(StripeTransactionData tx) => _transactionAmount(tx) >= 0;
+
+  double _transactionAmount(StripeTransactionData tx) {
+    if (tx.amount != null) return tx.amount!;
+    if (tx.totalPrice != null) return tx.totalPrice!.toDouble();
+    return 0;
+  }
+
+  String _formatMoney(double amount, {bool showSign = false}) {
+    final abs = _moneyFormat.format(amount.abs());
+    if (!showSign) return abs;
+    if (amount > 0) return '+$abs';
+    if (amount < 0) return '-$abs';
+    return abs;
+  }
+
+  String _displayStatus(bool incoming, String rawStatus) {
+    final normalized = rawStatus.toLowerCase();
+    if (normalized == 'succeeded' || normalized == 'completed') {
+      return incoming ? 'RECEIVED' : 'PAID';
+    }
+    if (normalized == 'processing') return 'PROCESSING';
+    if (normalized == 'canceled') return 'FAILED';
+    return incoming ? 'RECEIVED' : 'PAID';
+  }
+
+  String _monthLabel(DateTime date) => DateFormat('MMMM yyyy').format(date);
+
+  /// Date block in group header — matches typography used in `vendorhome.dart` section cards.
+  Widget _sectionDateHeader(DateTime dateKey) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final txDay = DateTime(dateKey.year, dateKey.month, dateKey.day);
+
+    final lineStyle = GoogleFonts.inter(
+      fontSize: 15,
+      fontWeight: FontWeight.w700,
+      color: Colors.black87,
+      height: 1.05,
+      letterSpacing: -0.15,
+    );
+
+    if (txDay == today) {
+      return Text('Today', style: lineStyle);
+    }
+    if (txDay == today.subtract(const Duration(days: 1))) {
+      return Text('Yesterday', style: lineStyle);
+    }
+    return Text(
+      DateFormat('MMM dd yyyy, EEEE').format(dateKey),
+      style: lineStyle,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+
+  /// Date section header + transaction rows (no elevated card — sits on scaffold grey).
+  Widget _transactionDateSection({
+    required DateTime dateKey,
+    required double sectionTotal,
+    required List<Widget> children,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20, top: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(child: _sectionDateHeader(dateKey)),
+              Text(
+                _formatMoney(sectionTotal, showSign: true),
+                textAlign: TextAlign.end,
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF9DA3B4),
+                ),
+              ),
+            ],
           ),
+          const SizedBox(height: 16),
+          ...children,
         ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    productName,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(status),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    _getStatusText(status),
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Amount',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      '\$${totalPrice}',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: kprimaryColor,
-                      ),
-                    ),
-                  ],
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Payment Method',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.credit_card,
-                          size: 16,
-                          color: Colors.grey[600],
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          paymentMethod,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Date: ${date}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                Icon(
-                  Icons.receipt_long,
-                  size: 20,
-                  color: Colors.grey[600],
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'requires_payment_method':
-        return Colors.orange;
-      case 'requires_confirmation':
-        return Colors.orange;
-      case 'requires_action':
-        return Colors.orange;
-      case 'processing':
-        return Colors.blue;
-      case 'requires_capture':
-        return Colors.blue;
-      case 'canceled':
-        return Colors.red;
-      case 'succeeded':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
+  Widget _summaryCard({
+    required bool incoming,
+    required double amount,
+  }) {
+    final arrowColor = incoming ? const Color(0xFF2DB86A) : const Color(0xFFE5537D);
+    final iconFill = incoming ? const Color(0xFFE8F5EC) : const Color(0xFFFDEDEE);
+    final iconBorder = incoming ? const Color(0xFFB8E0C8) : const Color(0xFFF0B4BC);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: iconFill,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: iconBorder, width: 1),
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                incoming ? Icons.south_west_rounded : Icons.north_east_rounded,
+                size: 18,
+                color: arrowColor,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              incoming ? 'Incoming' : 'Outgoing',
+              style: const TextStyle(
+                fontSize: 14,
+                fontFamily: _interRegular,
+                color: Color(0xFF6B7280),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          _summaryMoneyFormat.format(amount),
+          style: const TextStyle(
+            fontSize: 18,
+            fontFamily: _interBold,
+            color: Colors.black,
+            letterSpacing: -0.35,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
   }
 
-  String _getStatusText(String status) {
-    switch (status.toLowerCase()) {
-      case 'requires_payment_method':
-        return 'Payment Required';
-      case 'requires_confirmation':
-        return 'Pending Confirmation';
-      case 'requires_action':
-        return 'Action Required';
-      case 'processing':
-        return 'Processing';
-      case 'requires_capture':
-        return 'Pending Capture';
-      case 'canceled':
-        return 'Cancelled';
-      case 'succeeded':
-        return 'Completed';
-      default:
-        return 'Unknown';
-    }
+  /// Same row layout as `todayItem` in `vendorhome.dart` (CircleAvatar + Inter + amount + pill badge).
+  Widget _buildTransactionRow({
+    required String title,
+    required DateTime date,
+    required double amount,
+    required bool isIncoming,
+    required String status,
+    required String method,
+  }) {
+    final amountColor = isIncoming ? const Color(0xFF4CAF50) : Colors.red;
+    final avatarBg = isIncoming ? const Color(0xFFE8F5E9) : const Color(0xFFFFE4EC);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 22,
+            backgroundColor: avatarBg,
+            child: Icon(
+              isIncoming ? Icons.south_west : Icons.north_east,
+              color: amountColor,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  DateFormat('MMM d, yyyy').format(date),
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                _formatMoney(amount, showSign: true),
+                style: GoogleFonts.inter(
+                  color: amountColor,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  _displayStatus(isIncoming, status),
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -292,53 +383,58 @@ class _MyTransactionsScreenState extends State<MyTransactionsScreen> with Widget
 
     return Scaffold(
       key: _key,
+      backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.grey.shade100,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: true,
+        foregroundColor: Colors.black87,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+          onPressed: () => Get.back(),
+          style: IconButton.styleFrom(foregroundColor: Colors.black87),
+        ),
         title: Text(
           'My Transactions',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-            fontSize: 19,
+          style: GoogleFonts.inter(
+            color: Colors.black87,
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
           ),
-        ),
-        leading: InkWell(
-          onTap: () {
-            Get.back();
-          },
-          borderRadius: BorderRadius.circular(50),
-          child: Icon(Icons.arrow_back, color: Colors.black),
         ),
       ),
       body: Container(
         width: double.infinity,
         height: res_height,
         decoration: BoxDecoration(
-          color: Colors.grey[50],
+          color: Colors.grey.shade100,
         ),
         child: Column(
           children: [
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Payment History',
                     style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      fontSize: 22,
+                      fontFamily: _interBold,
+                      color: Color(0xFF111827),
+                      letterSpacing: -0.6,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   Text(
                     'View all your Stripe payment transactions',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 16,
+                      fontFamily: _interRegular,
                       color: Colors.grey[600],
                     ),
                   ),
@@ -348,7 +444,7 @@ class _MyTransactionsScreenState extends State<MyTransactionsScreen> with Widget
             Expanded(
               child: Container(
                 width: double.infinity,
-                padding: EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: isError
                     ? Center(
                         child: Column(
@@ -364,6 +460,7 @@ class _MyTransactionsScreenState extends State<MyTransactionsScreen> with Widget
                               "Error loading transactions",
                               style: TextStyle(
                                 fontSize: 16,
+                                fontFamily: _interRegular,
                                 color: Colors.grey[600],
                               ),
                             ),
@@ -377,7 +474,13 @@ class _MyTransactionsScreenState extends State<MyTransactionsScreen> with Widget
                                 });
                                 getUserTransactions();
                               },
-                              child: Text("Retry"),
+                              child: Text(
+                                "Retry",
+                                style: TextStyle(
+                                  fontFamily: _interBold,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: kprimaryColor,
                                 foregroundColor: Colors.white,
@@ -399,6 +502,7 @@ class _MyTransactionsScreenState extends State<MyTransactionsScreen> with Widget
                                   "Loading transactions...",
                                   style: TextStyle(
                                     fontSize: 16,
+                                    fontFamily: _interRegular,
                                     color: Colors.grey[600],
                                   ),
                                 ),
@@ -420,7 +524,8 @@ class _MyTransactionsScreenState extends State<MyTransactionsScreen> with Widget
                                       "No transactions yet",
                                       style: TextStyle(
                                         fontSize: 18,
-                                        fontWeight: FontWeight.w500,
+                                        fontFamily: _interBold,
+                                        fontWeight: FontWeight.w700,
                                         color: Colors.grey[600],
                                       ),
                                     ),
@@ -429,38 +534,116 @@ class _MyTransactionsScreenState extends State<MyTransactionsScreen> with Widget
                                       "Your payment history will appear here",
                                       style: TextStyle(
                                         fontSize: 14,
+                                        fontFamily: _interRegular,
                                         color: Colors.grey[500],
                                       ),
                                     ),
                                   ],
                                 ),
                               )
-                            : ListView.builder(
-                                shrinkWrap: true,
-                                physics: BouncingScrollPhysics(),
-                                itemCount: ApiRepository
-                                        .shared
-                                        .stripeTransactionsModelList!
-                                        .data!
-                                        .length,
-                                itemBuilder: (context, int index) {
-                                  var data = ApiRepository
-                                      .shared
-                                      .stripeTransactionsModelList!
-                                      .data![index];
-                                  var productName = data.productName ?? "Unknown Product";
-                                  var totalPrice = data.amount?.toString() ?? "0";
-                                  var status = data.status ?? "unknown";
-                                  var date = data.created != null 
-                                      ? DateFormat('MMM dd, yyyy').format(data.created!)
-                                      : "Unknown Date";
-                                  
-                                  return transactionCard(
-                                    productName,
-                                    totalPrice,
-                                    status,
-                                    date,
-                                    data.paymentMethodTypes?.first ?? "Stripe",
+                            : Builder(
+                                builder: (context) {
+                                  final items = List<StripeTransactionData>.from(
+                                    ApiRepository.shared.stripeTransactionsModelList!.data!,
+                                  )..sort((a, b) {
+                                      final aDate = a.created ?? DateTime.fromMillisecondsSinceEpoch(0);
+                                      final bDate = b.created ?? DateTime.fromMillisecondsSinceEpoch(0);
+                                      return bDate.compareTo(aDate);
+                                    });
+
+                                  double incomingTotal = 0;
+                                  double outgoingTotal = 0;
+                                  for (final tx in items) {
+                                    final amount = _transactionAmount(tx);
+                                    if (_isIncoming(tx)) {
+                                      incomingTotal += amount.abs();
+                                    } else {
+                                      outgoingTotal += amount.abs();
+                                    }
+                                  }
+
+                                  final Map<DateTime, List<StripeTransactionData>> grouped = {};
+                                  for (final tx in items) {
+                                    final created = tx.created ?? DateTime.now();
+                                    final key = DateTime(created.year, created.month, created.day);
+                                    grouped.putIfAbsent(key, () => []).add(tx);
+                                  }
+
+                                  final sortedKeys = grouped.keys.toList()
+                                    ..sort((a, b) => b.compareTo(a));
+                                  final latestDate = items.isNotEmpty
+                                      ? (items.first.created ?? DateTime.now())
+                                      : DateTime.now();
+
+                                  return ListView(
+                                    physics: const BouncingScrollPhysics(),
+                                    children: [
+                                      const SizedBox(height: 6),
+                                      Center(
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 7,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(999),
+                                            border: Border.all(
+                                              color: const Color(0xFFE5E7EB),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            _monthLabel(latestDate),
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              fontFamily: _interRegular,
+                                              color: Color(0xFF374151),
+                                              fontWeight: FontWeight.w600,
+                                              height: 1.2,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 18),
+                                      Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                          children: [
+                                            _summaryCard(incoming: true, amount: incomingTotal),
+                                            _summaryCard(incoming: false, amount: outgoingTotal),
+                                          ],
+                                        ),
+                                      const SizedBox(height: 20),
+                                      for (final dateKey in sortedKeys)
+                                        Builder(
+                                          builder: (context) {
+                                            final list = grouped[dateKey]!;
+                                            double sectionTotal = 0;
+                                            for (final tx in list) {
+                                              sectionTotal += _transactionAmount(tx);
+                                            }
+                                            return _transactionDateSection(
+                                              dateKey: dateKey,
+                                              sectionTotal: sectionTotal,
+                                              children: [
+                                                for (final tx in list)
+                                                  _buildTransactionRow(
+                                                    title: tx.productName?.trim().isNotEmpty == true
+                                                        ? tx.productName!
+                                                        : 'Unknown',
+                                                    date: tx.created ?? DateTime.now(),
+                                                    amount: _transactionAmount(tx),
+                                                    isIncoming: _isIncoming(tx),
+                                                    status: tx.status ?? 'unknown',
+                                                    method: tx.paymentMethodTypes?.first ?? 'Stripe',
+                                                  ),
+                                              ],
+                                            );
+                                          },
+                                        ),
+                                    ],
                                   );
                                 },
                               ),

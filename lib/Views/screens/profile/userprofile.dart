@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:jebby/res/color.dart';
 
 import '../../../model/user_model.dart';
 import '../../../view_model/apiServices.dart';
@@ -193,15 +194,17 @@ class _RenterProfileState extends State<RenterProfile> {
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
         backgroundColor: Colors.grey.shade100,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         centerTitle: true,
-        leadingWidth: 56,
-        leading: GestureDetector(
+        leading: InkWell(
           onTap: () => Get.back(),
-          behavior: HitTestBehavior.opaque,
-          child: const Padding(
-            padding: EdgeInsets.only(left: 16),
-            child: Icon(Icons.arrow_back_ios_new, color: Colors.black87, size: 20),
+          borderRadius: BorderRadius.circular(50),
+          child: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.black,
+            size: 20,
           ),
         ),
         title: Text(
@@ -370,7 +373,7 @@ class _RenterProfileState extends State<RenterProfile> {
                   ),
                   const SizedBox(height: 24),
                   isLoading
-                      ? const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator()))
+                      ? const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator(color: AppColors.primaryColor)))
                       : isEmpty
                           ? Padding(
                               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -438,7 +441,7 @@ class _RenterProfileState extends State<RenterProfile> {
   Widget reviewItem(String name, String desc, double stars, {String? dateStr}) {
     final timeAgo = dateStr ?? '';
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.only(bottom: 30),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -517,7 +520,7 @@ class _RenterProfileState extends State<RenterProfile> {
               children: [
                 _infoRow(Icons.person, "Name", fullname ?? ""),
                 _infoRow(Icons.email, "Email Address", email ?? ""),
-                _infoRow(Icons.phone, "Mobile Number", phoneapi.isNotEmpty && phoneapi != "null" ? phoneapi : "—"),
+                // _infoRow(Icons.phone, "Mobile Number", phoneapi.isNotEmpty && phoneapi != "null" ? phoneapi : "—"),
                 _infoRow(Icons.location_on, "My Address", addressapi.isNotEmpty && addressapi != "null" ? addressapi : "—"),
               ],
             ),
@@ -536,7 +539,7 @@ class _RenterProfileState extends State<RenterProfile> {
               _actionCard(
                 imagename: 'myorders.png',
                 iconColor: Colors.brown,
-                title: "My Order",
+                title: "My Orders",
                 subtitle: "Track your rentals.",
                 onTap: () => Get.to(() => MyOrdersScreen()),
               ),

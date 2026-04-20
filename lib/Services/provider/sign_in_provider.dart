@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:get/route_manager.dart';
 import 'package:jebby/Views/screens/auth/Otp.dart';
 import 'package:jebby/utils/show_snackbar.dart';
@@ -82,13 +83,15 @@ class SignInProvider extends ChangeNotifier {
   // sign in with google
   Future signInWithGoogle(value, BuildContext context) async {
     final authViewMode = Provider.of<AuthViewModel>(context, listen: false);
+    _hasError = false;
+    _errorCode = null;
 
-    final GoogleSignInAccount? googleSignInAccount =
-        await googleSignIn.signIn();
+    try {
+      final GoogleSignInAccount? googleSignInAccount =
+          await googleSignIn.signIn();
 
-    if (googleSignInAccount != null) {
-      // executing our authentication
-      try {
+      if (googleSignInAccount != null) {
+        // executing our authentication
         final GoogleSignInAuthentication googleSignInAuthentication =
             await googleSignInAccount.authentication;
         final AuthCredential credential = GoogleAuthProvider.credential(
@@ -119,27 +122,36 @@ class SignInProvider extends ChangeNotifier {
           "role": value.toString(),
         };
         authViewMode.signUpApiWithSocials(data, context);
-      } on FirebaseAuthException catch (e) {
-        switch (e.code) {
-          case "account-exists-with-different-credential":
-            _errorCode =
-                "You already have an account with us. Use correct provider";
-            _hasError = true;
-            notifyListeners();
-            break;
-
-          case "null":
-            _errorCode = "Some unexpected error while trying to sign in";
-            _hasError = true;
-            notifyListeners();
-            break;
-          default:
-            _errorCode = e.toString();
-            _hasError = true;
-            notifyListeners();
-        }
+      } else {
+        _errorCode = "Google sign-in was cancelled";
+        _hasError = true;
+        notifyListeners();
       }
-    } else {
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case "account-exists-with-different-credential":
+          _errorCode =
+              "You already have an account with us. Use correct provider";
+          _hasError = true;
+          notifyListeners();
+          break;
+
+        case "null":
+          _errorCode = "Some unexpected error while trying to sign in";
+          _hasError = true;
+          notifyListeners();
+          break;
+        default:
+          _errorCode = e.message ?? e.toString();
+          _hasError = true;
+          notifyListeners();
+      }
+    } on PlatformException catch (e) {
+      _errorCode = e.message ?? e.code;
+      _hasError = true;
+      notifyListeners();
+    } catch (e) {
+      _errorCode = e.toString();
       _hasError = true;
       notifyListeners();
     }
@@ -386,12 +398,18 @@ class SignInProvider extends ChangeNotifier {
 
   Future signInWithFacebook(value, BuildContext context) async {
     final authViewMode = Provider.of<AuthViewModel>(context, listen: false);
+    _hasError = false;
+    _errorCode = null;
 
     try {
-      final LoginResult loginResult = await FacebookAuth.instance.login();
+      final LoginResult loginResult = await FacebookAuth.instance.login(
+        permissions: ['email', 'public_profile'],
+      );
 
       if (loginResult.status == LoginStatus.success) {
-      final userData = await FacebookAuth.instance.getUserData();
+      final userData = await FacebookAuth.instance.getUserData(
+        fields: "name,email,picture.width(200)",
+      );
 
       // final OAuthCredential facebookAuthCredential =
       //       FacebookAuthProvider.credential(loginResult.accessToken!.token);
@@ -401,9 +419,17 @@ class SignInProvider extends ChangeNotifier {
 
       // save in registerApi
       if (userData.isNotEmpty) {
+        final String email = (userData['email'] ?? '').toString();
+        if (email.isEmpty) {
+          _errorCode = "Facebook account email is not available";
+          _hasError = true;
+          notifyListeners();
+          return;
+        }
+
         Map data = {
           "full_name": userData['name'],
-          "email": userData['email'],
+          "email": email,
           "password": "",
           "source": "FACEBOOK",
           "role": value.toString(),
@@ -421,7 +447,15 @@ class SignInProvider extends ChangeNotifier {
       } else {
         print('Login failed or cancelled');
       }
-      } else {}
+      } else if (loginResult.status == LoginStatus.cancelled) {
+        _errorCode = "Facebook sign-in was cancelled";
+        _hasError = true;
+        notifyListeners();
+      } else {
+        _errorCode = loginResult.message ?? "Facebook sign-in failed";
+        _hasError = true;
+        notifyListeners();
+      }
     } on FirebaseAuthException catch (e) {
       switch (e.code) {
         case "account-exists-with-different-credential":
@@ -441,6 +475,14 @@ class SignInProvider extends ChangeNotifier {
           _hasError = true;
           notifyListeners();
       }
+    } on PlatformException catch (e) {
+      _errorCode = e.message ?? e.code;
+      _hasError = true;
+      notifyListeners();
+    } catch (e) {
+      _errorCode = e.toString();
+      _hasError = true;
+      notifyListeners();
     }
   }
 

@@ -1,22 +1,23 @@
 import 'dart:convert';
-import 'dart:math';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:jebby/Services/provider/sign_in_provider.dart';
 import 'package:jebby/Views/helper/colors.dart';
 import 'package:jebby/Views/screens/auth/register.dart';
+import 'package:jebby/res/color.dart';
 import 'package:jebby/utils/utils.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+
 import '../../../model/user_model.dart';
 import '../../../res/app_url.dart';
 import '../../../view_model/apiServices.dart';
-import 'package:http/http.dart' as http;
-
 import '../../../view_model/user_view_model.dart';
-// import 'package:flutter_stripe/flutter_stripe.dart';
 
 // ignore: must_be_immutable
 class CheckoutScreen extends StatefulWidget {
@@ -34,14 +35,11 @@ class CheckoutScreen extends StatefulWidget {
   var price;
   var vendorAccountId;
   var vendorPayPalEmail;
-  // var accountId;
-  // var paypalMail;
   var userName;
   var email;
   var location;
   var lat;
   var long;
-  // var route;
   var negoPrice;
   var delivery_charges;
   var JebbyFee;
@@ -70,7 +68,6 @@ class CheckoutScreen extends StatefulWidget {
     this.lat,
     this.long,
     this.negoPrice,
-    // this.route,
     this.delivery_charges,
     this.JebbyFee,
     this.security_deposit,
@@ -84,11 +81,16 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final termscontroller = Get.put(TermsController());
-  bool onlinepay = false;
-  bool cod = false;
 
-  var fromdate;
-  var todate;
+  /// Same palette as [ProductDetailScreen] for a consistent renter flow.
+  static const Color _accent = Color(0xFFF6AE02);
+  static const Color _pageBg = Color(0xFFF3F3F5);
+  static const Color _titleDark = Color(0xFF1B1B1F);
+  static const Color _labelGrey = Color(0xFF72747A);
+  static const Color _sheetInnerBg = Color(0xFFF7F7F9);
+
+  final PageController _pageController = PageController();
+  int _imageIndex = 0;
 
   DateTime selectedDate = DateTime.now();
   DateTime selectedDate1 = DateTime.now();
@@ -98,6 +100,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   var _locationController = TextEditingController();
   double taxValue = 0;
+
+  int dc = 0;
+  int diff = 0;
+  int Jebby = 0;
+
+  /// Safe int from messy money strings (empty → 0, no FormatException).
+  int _digits(dynamic v) =>
+      int.tryParse('${v ?? ''}'.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+
   Future<void> getSalesTax() async {
     String apiKey = dotenv.env['apiKey'] ?? 'No secret key found';
     final apiUrl = 'https://api.taxjar.com/v2/rates?zip=${widget.zipCode}';
@@ -111,25 +122,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
 
     if (response.statusCode == 200) {
-      // Parse the JSON response
-      final jsonResponse = json.decode(response.body);
-      // Access the tax rates
-      final taxRates = jsonResponse['rate']['combined_rate'];
-      // Use taxRates for further processing
-      setState(() {
-        // taxRate = double.parse(taxRates);
-        taxValue = double.parse(taxRates);
-      });
-    } else {
-      // Handle errors here
+      try {
+        final m = json.decode(response.body) as Map;
+        final r = m['rate'] as Map?;
+        setState(() {
+          taxValue = double.tryParse('${r?['combined_rate'] ?? ''}') ?? 0;
+        });
+      } catch (_) {}
     }
   }
 
-  var dc;
-  var diff = 0;
-  var Jebby;
-
+  @override
   void initState() {
+    super.initState();
     getSalesTax();
     getData();
     profileData(context);
@@ -138,12 +143,37 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     selectedDate = DateTime.parse(widget.rentStart);
     selectedDate1 = DateTime.parse(widget.rentEnd);
     diff = selectedDate1.difference(selectedDate).inDays;
-    dc = int.parse(
-      widget.delivery_charges.replaceAll(new RegExp(r'[^0-9]'), ''),
-    );
-    Jebby = int.parse(widget.JebbyFee.replaceAll(new RegExp(r'[^0-9]'), ''));
+    dc = _digits(widget.delivery_charges);
+    Jebby = _digits(widget.JebbyFee);
+  }
 
-    super.initState();
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  List<String> _checkoutGalleryUrls() {
+    final urls = <String>[];
+    final list = ApiRepository.shared.getProductsByIdList;
+    final data = list?.data;
+    if (data != null && data.isNotEmpty) {
+      final imageEntries = <dynamic>[];
+      if (data.length >= 2 && data[1].images != null) {
+        imageEntries.addAll(data[1].images!);
+      } else if (data[0].images != null) {
+        imageEntries.addAll(data[0].images!);
+      }
+      for (final im in imageEntries) {
+        final p = im.path?.toString() ?? '';
+        if (p.isNotEmpty) urls.add(AppUrl.baseUrlM + p);
+      }
+    }
+    if (urls.isEmpty) {
+      final v = widget.vendorImage.toString();
+      if (v.isNotEmpty && v != 'null') urls.add(AppUrl.baseUrlM + v);
+    }
+    return urls;
   }
 
   Future getData() async {
@@ -161,6 +191,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   String? email;
   String? phoneNumber;
   String? role;
+
   void profileData(BuildContext context) async {
     getUserDate()
         .then((value) async {
@@ -176,395 +207,414 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         });
   }
 
-  int generateRandomNumber() {
-    Random random = Random();
-    return random.nextInt(1000000); // Adjust range as needed
+  int _rentalDayCount() {
+    final d = selectedDate1.difference(selectedDate).inDays;
+    return d + 1;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        leading: InkWell(
-          onTap: () {
-            Get.back();
-          },
-          borderRadius: BorderRadius.circular(50),
-          child: Padding(
-            padding: const EdgeInsets.all(17.0),
-            child: Container(
-              child: Icon(Icons.arrow_back, color: Colors.black, size: 20),
-            ),
-          ),
-        ),
+  num _rentalSubtotal() {
+    final days = _rentalDayCount();
+    return widget.price * days;
+  }
+
+  num _jebbyFeesAmount() => _rentalSubtotal() * Jebby / 100;
+
+  num _grandTotal() {
+    final daysDiff = selectedDate1.difference(selectedDate).inDays;
+    final sub = widget.price * (daysDiff + 1);
+    final jebbyFees = (sub * Jebby / 100);
+    return (sub + dc + jebbyFees + _digits(widget.security_deposit)) +
+        (sub * taxValue);
+  }
+
+  void _onCheckoutPressed() {
+    final dayCount = selectedDate1.difference(selectedDate).inDays;
+    final JebbyFees = ((widget.price * (dayCount + 1)) * Jebby / 100);
+    final Totaltax = (widget.price * (dayCount + 1)) * taxValue;
+    final ApplicationFees = JebbyFees + Totaltax;
+
+    if (!termscontroller.termsValue.value) {
+      Utils.flushBarErrorMessage(
+        'You must agree to Terms of Service and Privacy Policy',
+        context,
+      );
+    } else {
+      ApiRepository.shared.stripePayment(
+        num.tryParse(
+              (((widget.price * (dayCount + 1)) +
+                          dc +
+                          ((widget.price * (dayCount + 1)) * Jebby / 100) +
+                          _digits(widget.security_deposit)) +
+                      ((widget.price * (dayCount + 1)) * taxValue))
+                  .toStringAsFixed(2),
+            ) ??
+            0,
+        widget.vendorAccountId.toString(),
+        context,
+        widget.userId,
+        widget.productID,
+        widget.rentStart,
+        widget.rentEnd,
+        widget.userName,
+        widget.email,
+        widget.location,
+        widget.lat,
+        widget.long,
+        widget.negoPrice,
+        '',
+        widget.security_deposit.toString(),
+        ApplicationFees,
+      );
+    }
+  }
+
+  TextStyle _productTitleStyle() {
+    return GoogleFonts.inter(
+      fontSize: 18,
+      fontWeight: FontWeight.w700,
+      color: _titleDark,
+      height: 1.25,
+    );
+  }
+
+  TextStyle _labelStyle() {
+    return GoogleFonts.inter(
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
+      color: _labelGrey,
+    );
+  }
+
+  TextStyle _valueStyle() {
+    return GoogleFonts.inter(
+      fontSize: 15,
+      fontWeight: FontWeight.w700,
+      color: _titleDark,
+    );
+  }
+
+  TextStyle _grandLabelStyle() {
+    return GoogleFonts.inter(
+      fontSize: 15,
+      fontWeight: FontWeight.w700,
+      color: _titleDark,
+    );
+  }
+
+  TextStyle _grandValueStyle() {
+    return GoogleFonts.inter(
+      fontSize: 18,
+      fontWeight: FontWeight.w700,
+      color: _titleDark,
+    );
+  }
+
+  TextStyle _ctaTextStyle() {
+    return GoogleFonts.inter(
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+      color: Colors.white,
+    );
+  }
+
+  Widget _roundedPanel({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _sheetInnerBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE8E8EC)),
       ),
-      body: Container(
-        width: double.infinity,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                Align(
-                  alignment: Alignment.center,
-                  child:
-                      ApiRepository
-                                  .shared
-                                  .getProductsByIdList!
-                                  .data![1]
-                                  .images!
-                                  .length >
-                              0
-                          ? SizedBox(
-                            height: 150,
-                            child: ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              shrinkWrap: true,
-                              separatorBuilder:
-                                  (context, index) => SizedBox(width: 10),
-                              itemCount:
-                                  ApiRepository
-                                      .shared
-                                      .getProductsByIdList!
-                                      .data![1]
-                                      .images!
-                                      .length,
-                              itemBuilder: (context, int index) {
-                                var img =
-                                    ApiRepository
-                                        .shared
-                                        .getProductsByIdList
-                                        ?.data?[1]
-                                        .images?[index]
-                                        .path;
-                                return Container(
-                                  child: Image.network(
-                                    AppUrl.baseUrlM + img.toString(),
-                                    fit: BoxFit.fill,
-                                  ),
-                                );
-                              },
-                            ),
-                          )
-                          : Text("No Images"),
+      child: child,
+    );
+  }
+
+  Widget _summaryRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: Text(label, style: _labelStyle())),
+          Text(value, style: _valueStyle()),
+        ],
+      ),
+    );
+  }
+
+  Widget _divider() {
+    return Divider(height: 1, thickness: 1, color: Colors.grey.shade300);
+  }
+
+  Widget _buildImageHeader(Size size) {
+    final h = size.height * 0.34;
+    final urls = _checkoutGalleryUrls();
+    final hasGallery = urls.isNotEmpty;
+
+    return SizedBox(
+      height: h,
+      width: double.infinity,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (!hasGallery)
+            ColoredBox(
+              color: Colors.grey.shade300,
+              child: Center(
+                child: Icon(
+                  Icons.image_outlined,
+                  size: 48,
+                  color: Colors.grey.shade500,
                 ),
-                SizedBox(height: 30),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      ApiRepository.shared.getProductsByIdList!.data![0].name
-                          .toString(),
-                      style: TextStyle(
-                        fontSize: 28,
+              ),
+            )
+          else
+            PageView.builder(
+              controller: _pageController,
+              onPageChanged: (i) => setState(() => _imageIndex = i),
+              itemCount: urls.length,
+              itemBuilder:
+                  (_, i) => CachedNetworkImage(
+                    imageUrl: urls[i],
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: h,
+                    placeholder:
+                        (_, __) => ColoredBox(
+                          color: Colors.grey.shade300,
+                          child: const Center(
+                            child: SizedBox(
+                              width: 28,
+                              height: 28,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryColor),
+                            ),
+                          ),
+                        ),
+                    errorWidget:
+                        (_, __, ___) => ColoredBox(
+                          color: Colors.grey.shade300,
+                          child: Icon(
+                            Icons.broken_image_outlined,
+                            size: 48,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                  ),
+            ),
+          Positioned(
+            top: 0,
+            left: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 14, top: 10),
+                child: Material(
+                  color: Colors.transparent,
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    onTap: () => Get.back(),
+                    customBorder: const CircleBorder(),
+                    splashColor: Colors.black26,
+                    highlightColor: Colors.black12,
+                    child: Ink(
+                      padding: const EdgeInsets.all(10),
+                      decoration: const BoxDecoration(
+                        color: Color(0xE6FFFFFF),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new,
+                        size: 20,
                         color: Colors.black,
-                        fontFamily: "Inter, Regular",
                       ),
                     ),
-                  ],
-                ),
-                SizedBox(height: 30),
-                Container(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Rental Price",
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.black,
-                          fontFamily: "Inter, Regular",
-                        ),
-                      ),
-                      Text(
-                        " \$${widget.price} / day",
-                        style: TextStyle(
-                          fontSize: 25,
-                          color: Colors.black,
-                          fontFamily: "Inter, ExtraBold",
-                        ),
-                      ),
-                    ],
                   ),
                 ),
-                SizedBox(height: 10),
-                Divider(color: Colors.grey, thickness: 1),
-                SizedBox(height: 10),
-                Container(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Renting Total",
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.black,
-                          fontFamily: "Inter, Regular",
-                        ),
-                      ),
-                      Text(
-                        " \$${widget.price * (diff + 1)}",
-                        style: TextStyle(
-                          fontSize: 25,
-                          color: Colors.black,
-                          fontFamily: "Inter, ExtraBold",
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 10),
-                Divider(color: Colors.grey, thickness: 1),
-                SizedBox(height: 10),
-                Container(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Jebby Fees",
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.black,
-                          fontFamily: "Inter, Regular",
-                        ),
-                      ),
-                      Text(
-                        " \$${(widget.price * (diff + 1)) * Jebby / 100}",
-                        style: TextStyle(
-                          fontSize: 25,
-                          color: Colors.black,
-                          fontFamily: "Inter, ExtraBold",
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 10),
-                Divider(color: Colors.grey, thickness: 1),
-                SizedBox(height: 10),
-                Container(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Security Deposit",
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.black,
-                          fontFamily: "Inter, Regular",
-                        ),
-                      ),
-                      Text(
-                        " \$${widget.security_deposit}",
-                        style: TextStyle(
-                          fontSize: 25,
-                          color: Colors.black,
-                          fontFamily: "Inter, ExtraBold",
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 10),
-                Divider(color: Colors.grey, thickness: 1),
-                SizedBox(height: 10),
-                Container(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Delivery Charges",
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.black,
-                          fontFamily: "Inter, Regular",
-                        ),
-                      ),
-                      Text(
-                        "\$${widget.delivery_charges == '' ? 0 : widget.delivery_charges}",
-                        style: TextStyle(
-                          fontSize: 25,
-                          color: Colors.black,
-                          fontFamily: "Inter, ExtraBold",
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 10),
-                Divider(color: Colors.grey, thickness: 1),
-                SizedBox(height: 10),
+              ),
+            ),
+          ),
+          if (hasGallery && urls.length > 1)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 12,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(urls.length, (i) {
+                  final active = _imageIndex == i;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: active ? 8 : 6,
+                    height: active ? 8 : 6,
+                    decoration: BoxDecoration(
+                      color:
+                          active
+                              ? _accent
+                              : Colors.white.withValues(alpha: 0.75),
+                      shape: BoxShape.circle,
+                    ),
+                  );
+                }),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
-                Container(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Sales Tax",
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.black,
-                          fontFamily: "Inter, Regular",
-                        ),
-                      ),
-                      Text(
-                        "${(taxValue * 100).toStringAsFixed(2)}\%",
-                        style: TextStyle(
-                          fontSize: 25,
-                          color: Colors.black,
-                          fontFamily: "Inter, ExtraBold",
-                        ),
-                      ),
-                    ],
+  Widget _buildCheckoutSheet() {
+    final list = ApiRepository.shared.getProductsByIdList;
+    final productName =
+        (list?.data != null && list!.data!.isNotEmpty)
+            ? list.data![0].name.toString()
+            : 'Order summary';
+
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 28, 20, 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 20),
+            Text(productName, style: _productTitleStyle()),
+            const SizedBox(height: 20),
+            _roundedPanel(
+              child: Column(
+                children: [
+                  _summaryRow('Rental price', '\$${widget.price} / day'),
+                  _divider(),
+                  _summaryRow('Renting total', '\$${_rentalSubtotal()}'),
+                  _divider(),
+                  _summaryRow('Jebby fees', '\$${_jebbyFeesAmount()}'),
+                  _divider(),
+                  _summaryRow(
+                    'Security deposit',
+                    '\$${widget.security_deposit}',
                   ),
-                ),
-                SizedBox(height: 10),
-                Divider(color: Colors.grey, thickness: 1),
-                SizedBox(height: 30),
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
+                  _divider(),
+                  _summaryRow(
+                    'Delivery',
+                    '\$${widget.delivery_charges == '' ? 0 : widget.delivery_charges}',
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
+                  _divider(),
+                  _summaryRow(
+                    'Sales tax',
+                    '${(taxValue * 100).toStringAsFixed(2)}%',
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 14,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFE8E8EC)),
+                    ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          "Grand Total",
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: Colors.black,
-                            fontFamily: "Inter, Regular",
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Expanded(
+                          child: Text('Grand total', style: _grandLabelStyle()),
                         ),
                         Text(
-                          "\$${(((widget.price * (diff + 1)) + dc + ((widget.price * (diff + 1)) * Jebby / 100) + int.parse(widget.security_deposit)) + ((widget.price * (diff + 1)) * taxValue)).toStringAsFixed(2)}",
-                          style: TextStyle(
-                            fontSize: 25,
-                            color: Colors.black,
-                            fontFamily: "Inter, ExtraBold",
-                            fontWeight: FontWeight.bold,
-                          ),
+                          '\$${_grandTotal().toStringAsFixed(2)}',
+                          style: _grandValueStyle(),
                         ),
                       ],
                     ),
                   ),
-                ),
-
-                SizedBox(height: 10),
-
-                Obx(
-                  () => CheckboxListTile(
-                    title: Text(
-                      "I agree to the Terms of Service and Privacy Policy",
-                      style: TextStyle(fontSize: 17),
-                    ),
-                    value: termscontroller.termsValue.value,
-                    activeColor: kprimaryColor,
-                    onChanged: (newValue) {
-                      if (termscontroller.termsValue == true) {
-                        termscontroller.chanegValue(false);
-                      } else {
-                        termscontroller.chanegValue(true);
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Obx(
+              () => Theme(
+                data: Theme.of(context).copyWith(
+                  checkboxTheme: CheckboxThemeData(
+                    fillColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return kprimaryColor;
                       }
-                    },
-                    controlAffinity:
-                        ListTileControlAffinity
-                            .leading, //  <-- leading Checkbox
+                      return null;
+                    }),
                   ),
                 ),
-
-                SizedBox(height: 30),
-                GestureDetector(
-                  onTap: () {
-                    int diff = selectedDate1.difference(selectedDate).inDays;
-                    var JebbyFees = ((widget.price * (diff + 1)) * Jebby / 100);
-                    var Totaltax = (widget.price * (diff + 1)) * taxValue;
-                    var ApplicationFees = JebbyFees + Totaltax;
-                    // (int.parse(widget.price.toString()) * diff);
-
-                    if (!termscontroller.termsValue.value) {
-                      Utils.flushBarErrorMessage(
-                        'You must agree to Terms of Service and Privacy Policy',
-                        context,
-                      );
-                    } else {
-                      ApiRepository.shared.stripePayment(
-                        // amount,
-                        num.parse(
-                          (((widget.price * (diff + 1)) +
-                                      dc +
-                                      ((widget.price * (diff + 1)) *
-                                          Jebby /
-                                          100) +
-                                      int.parse(widget.security_deposit)) +
-                                  ((widget.price * (diff + 1)) * taxValue))
-                              .toStringAsFixed(2),
-                        ),
-                        widget.vendorAccountId.toString(),
-                        context,
-                        widget.userId,
-                        widget.productID,
-                        widget.rentStart,
-                        widget.rentEnd,
-                        widget.userName,
-                        widget.email,
-                        widget.location,
-                        widget.lat,
-                        widget.long,
-                        widget.negoPrice,
-                        '',
-                        widget.security_deposit.toString(),
-                        ApplicationFees,
-                      );
-                      //    Get.to(() => SelectPaymentMethodScreen(
-                      // amount,
-                      // widget.vendorAccountId,
-                      // widget.vendorPayPalEmail,
-                      // userID,
-                      // widget.productID,
-                      // DateFormat('yyyy-MM-dd').format(selectedDate).toString(),
-                      // DateFormat('yyyy-MM-dd').format(selectedDate1).toString(),
-                      // fullname,
-                      // emailController.text.toString(),
-                      // _locationController.text.toString(),
-                      // widget.lat,
-                      // widget.long,
-                      // widget.negoPrice,
-                      // int.parse(widget.security_deposit),
-                      // ApplicationFees));
-                    }
-                  },
-                  child: Container(
-                    width: 310,
-                    height: 58,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: Color(0xffFEB038),
+                child: Material(
+                  color: _sheetInnerBg,
+                  borderRadius: BorderRadius.circular(16),
+                  child: CheckboxListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
                     ),
-                    child: Center(
-                      child: Text(
-                        "Check Out",
-                        style: TextStyle(
-                          fontSize: 17,
-                          color: Colors.black,
-                          fontFamily: "Inter, Bold",
-                        ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    title: Text(
+                      'I agree to the Terms of Service and Privacy Policy',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        height: 1.35,
+                        color: _titleDark,
                       ),
                     ),
+                    value: termscontroller.termsValue.value,
+                    onChanged: (v) {
+                      termscontroller.chanegValue(v ?? false);
+                    },
+                    controlAffinity: ListTileControlAffinity.leading,
                   ),
                 ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 54,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kprimaryColor,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                onPressed: _onCheckoutPressed,
+                child: Text('Checkout', style: _ctaTextStyle()),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-                SizedBox(height: 20),
-              ],
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+
+    return Scaffold(
+      backgroundColor: _pageBg,
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(child: _buildImageHeader(size)),
+          SliverToBoxAdapter(
+            child: Transform.translate(
+              offset: const Offset(0, -22),
+              child: _buildCheckoutSheet(),
             ),
           ),
-        ),
+          SliverToBoxAdapter(child: SizedBox(height: 12 + bottomInset)),
+        ],
       ),
     );
   }

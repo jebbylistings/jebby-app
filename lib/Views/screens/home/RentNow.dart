@@ -6,12 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:get/get.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jebby/Services/provider/sign_in_provider.dart';
 import 'package:jebby/Views/helper/colors.dart';
-import 'package:jebby/Views/screens/home/CheckOut.dart';
+import 'package:jebby/Views/screens/home/Checkout.dart';
 import 'package:jebby/Views/screens/profile/userprofile.dart';
 import 'package:jebby/view_model/getTax_modal.dart';
 import 'package:provider/provider.dart';
@@ -64,6 +63,7 @@ class RentnowScreen extends StatefulWidget {
 
 class _RentnowScreenState extends State<RentnowScreen> {
   static const Color _accent = Color(0xFFF6AE02);
+  static const Color _starInactive = Color(0xFFC6C8CF);
   static const Color _pageBg = Color(0xFFF3F3F5);
   // static const Color _labelGrey = Color(0xFF72747A);
   static const Color _bodyGrey = Color(0xFF6D6D75);
@@ -250,6 +250,25 @@ class _RentnowScreenState extends State<RentnowScreen> {
   }
 
   var JebbyFee;
+
+  Widget _myProductsStyleStars(double rating, {double size = 18}) {
+    final normalized = rating.isNaN ? 0.0 : rating;
+    final filledStars = normalized.round().clamp(0, 5);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (index) {
+        final active = index < filledStars;
+        return Padding(
+          padding: const EdgeInsets.only(right: 2),
+          child: Icon(
+            active ? Icons.star : Icons.star_border,
+            color: active ? _accent : _starInactive,
+            size: size,
+          ),
+        );
+      }),
+    );
+  }
 
   List<String> _extractRentImageUrls() {
     final list = ApiRepository.shared.getProductsByIdList;
@@ -631,19 +650,25 @@ class _RentnowScreenState extends State<RentnowScreen> {
                         child: SafeArea(
                           child: Padding(
                             padding: const EdgeInsets.only(left: 14, top: 10),
-                            child: InkWell(
-                              onTap: () => Get.back(),
-                              borderRadius: BorderRadius.circular(18),
-                              child: Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: const BoxDecoration(
-                                  color: Color(0xE6FFFFFF),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.arrow_back_ios_new,
-                                  size: 22,
-                                  color: Colors.black,
+                            child: Material(
+                              color: Colors.transparent,
+                              shape: const CircleBorder(),
+                              child: InkWell(
+                                onTap: () => Get.back(),
+                                customBorder: const CircleBorder(),
+                                splashColor: Colors.black26,
+                                highlightColor: Colors.black12,
+                                child: Ink(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xE6FFFFFF),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.arrow_back_ios_new,
+                                    size: 20,
+                                    color: Colors.black,
+                                  ),
                                 ),
                               ),
                             ),
@@ -745,17 +770,16 @@ class _RentnowScreenState extends State<RentnowScreen> {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    RatingBarIndicator(
-                      rating: double.parse(
-                        ApiRepository.shared.getProductsByIdList!.data![0].stars
-                            .toString(),
-                      ),
-                      itemBuilder:
-                          (context, index) =>
-                              Icon(Icons.star, color: _accent),
-                      itemCount: 5,
-                      itemSize: 20,
-                      direction: Axis.horizontal,
+                    _myProductsStyleStars(
+                      double.tryParse(
+                            ApiRepository.shared
+                                .getProductsByIdList!
+                                .data![0]
+                                .stars
+                                .toString(),
+                          ) ??
+                          0,
+                      size: 20,
                     ),
                   ],
                 ),

@@ -3,16 +3,17 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:jebby/Services/provider/sign_in_provider.dart';
 import 'package:jebby/Views/helper/colors.dart';
-import 'package:jebby/Views/screens/auth/ProductDetail.dart';
+import 'package:jebby/Views/screens/home/ProductDetails.dart';
 import 'package:jebby/Views/controller/bottomcontroller.dart';
 import 'package:jebby/Views/screens/home/Category.dart';
 import 'package:http/http.dart' as http;
 import '../../../model/getFeaturedProductsModel.dart' as datamodel;
 
-import 'package:jebby/Views/screens/home/messages.dart';
+import 'package:jebby/Views/screens/shared/Notification.dart';
 import 'package:jebby/Views/screens/mainfolder/drawer.dart';
 import 'package:jebby/Views/screens/profile/userprofile.dart';
 import 'package:intl/intl.dart';
@@ -32,8 +33,6 @@ import '../../../res/app_url.dart';
 
 import '../../../view_model/apiServices.dart';
 import '../../../view_model/user_view_model.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key, num? activeIndex}) : super(key: key);
@@ -388,7 +387,7 @@ class _HomeScreenState extends State<HomeScreen> {
         //           child: GestureDetector(
         //             onTap: () {
         //               seenNotification();
-        //               Get.to(() => MessageScreen());
+        //               Get.to(() => NotificationsScreen());
         //             },
         //             child: Padding(
         //               padding: const EdgeInsets.only(
@@ -549,7 +548,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   child: _CircleAction(
                                     onTap: () {
                                       seenNotification();
-                                      Get.to(() => MessageScreen());
+                                      Get.to(() => NotificationsScreen());
                                     },
                                     image: const AssetImage(
                                       'assets/slicing/notificationnew.png',
@@ -589,7 +588,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF5F5F5),
         body: SingleChildScrollView(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 10),
@@ -810,7 +809,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (!snapshot.hasData) {
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 24),
-                        child: Center(child: CircularProgressIndicator()),
+                        child: Center(child: CircularProgressIndicator(color: AppColors.primaryColor)),
                       );
                     }
                     final list = snapshot.data!.data;
@@ -874,9 +873,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   contBox({txt, img, id, int? subcategoryCount}) {
     double res_width = MediaQuery.of(context).size.width;
-    double res_height = MediaQuery.of(context).size.height;
-    double responsiveFontSize = res_width * 0.035;
-    double height = 160;
     double borderRadius = 20;
     double scrimStrength = 0.05;
 
@@ -906,7 +902,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 fit: BoxFit.cover,
                 placeholder:
                     (context, url) => Center(
-                      child: CircularProgressIndicator(), // Loading spinner
+                      child: CircularProgressIndicator(color: AppColors.primaryColor), // Loading spinner
                     ),
                 errorWidget:
                     (context, url, error) => Icon(
@@ -1045,7 +1041,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         height: double.infinity,
                         placeholder:
                             (context, url) => const Center(
-                              child: CircularProgressIndicator(),
+                              child: CircularProgressIndicator(color: AppColors.primaryColor),
                             ),
                         errorWidget:
                             (context, url, error) => Container(
@@ -1260,7 +1256,6 @@ class CurvedHeaderAppBar extends StatelessWidget
                   _RoundIconButton(
                     onTap: () {},
                     bg: Colors.transparent,
-                    // border: Colors.white.withOpacity(.85),
                     image: const AssetImage(
                       'assets/slicing/mingcute_menu-fill.png',
                     ),
@@ -1372,18 +1367,12 @@ class _RoundIconButton extends StatelessWidget {
   const _RoundIconButton({
     required this.onTap,
     this.bg = Colors.white,
-    this.border,
-    this.icon,
-    this.image, // 👈 ADDED
-    this.size = 22, // 👈 control icon/image size
+    required this.image,
   });
 
   final VoidCallback onTap;
   final Color bg;
-  final Color? border;
-  final IconData? icon; // If using Flutter Icons
-  final ImageProvider? image; // 👈 Your custom image
-  final double size;
+  final ImageProvider image;
 
   @override
   Widget build(BuildContext context) {
@@ -1391,7 +1380,7 @@ class _RoundIconButton extends StatelessWidget {
       color: bg,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: border ?? Colors.transparent, width: 2),
+        side: const BorderSide(color: Colors.transparent, width: 2),
       ),
       child: InkWell(
         onTap: onTap,
@@ -1400,15 +1389,12 @@ class _RoundIconButton extends StatelessWidget {
           height: 36,
           width: 36,
           child: Center(
-            child:
-                image != null
-                    ? Image(
-                      image: image!,
-                      height: size,
-                      width: size,
-                      fit: BoxFit.contain,
-                    )
-                    : Icon(icon, color: Colors.white, size: size),
+            child: Image(
+              image: image,
+              height: 22,
+              width: 22,
+              fit: BoxFit.contain,
+            ),
           ),
         ),
       ),

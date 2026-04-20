@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/get_navigation.dart';
 import 'package:jebby/Views/screens/home/Category.dart';
-import 'package:jebby/Views/screens/home/messages.dart';
+import 'package:jebby/Views/screens/shared/Notification.dart';
 import 'package:jebby/Views/screens/profile/userprofile.dart';
 import 'package:jebby/res/color.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -105,7 +105,7 @@ class _FeaturedCategoriesScreenState extends State<FeaturedCategoriesScreen> {
                             visible: _role != null && _role != 'Guest',
                             child: _CircleAction(
                               onTap: () {
-                                Get.to(() => MessageScreen());
+                                Get.to(() => NotificationsScreen());
                               },
                               image: const AssetImage(
                                 'assets/slicing/notificationnew.png',
@@ -138,7 +138,7 @@ class _FeaturedCategoriesScreenState extends State<FeaturedCategoriesScreen> {
         future: _categoryFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator(color: AppColors.primaryColor));
           }
           if (!snapshot.hasData || snapshot.data?.data == null) {
             return const Center(child: Text("No categories found"));

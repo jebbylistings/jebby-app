@@ -1,7 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:jebby/res/app_url.dart';
+import 'package:jebby/res/color.dart';
 
 import '../../../view_model/apiServices.dart';
 
@@ -14,7 +17,8 @@ class TrackingDetailScreen extends StatefulWidget {
   final dynamic complete;
   final dynamic cancel;
 
-  TrackingDetailScreen({
+  const TrackingDetailScreen({
+    super.key,
     this.date,
     this.vendorId,
     this.status,
@@ -29,7 +33,9 @@ class TrackingDetailScreen extends StatefulWidget {
 }
 
 class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
-  bool userLoader = false;
+  static const Color _pageBg = Color(0xFFF3F3F5);
+  static const Color _subtitleGrey = Color(0xFF72747A);
+
   bool userError = false;
   bool userEmpty = true;
   var userImage = "";
@@ -39,545 +45,513 @@ class _TrackingDetailScreenState extends State<TrackingDetailScreen> {
 
   void getUserData() {
     ApiRepository.shared.userCredential(
-      (List) => {
-        if (this.mounted)
-          {
-            if (List.data!.length == 0)
-              {
-                setState(() {
-                  userLoader = false;
-                  userError = false;
-                  userEmpty = true;
-                  userImage = "";
-                }),
-              }
-            else
-              {
-                setState(() {
-                  userError = false;
-                  userLoader = false;
-                  userEmpty = false;
-                  userImage =
-                      ApiRepository
-                          .shared
-                          .getUserCredentialModelList!
-                          .data![0]
-                          .image
-                          .toString();
-                  userName =
-                      ApiRepository
-                          .shared
-                          .getUserCredentialModelList!
-                          .data![0]
-                          .name
-                          .toString();
-                  userNumber =
-                      ApiRepository
-                          .shared
-                          .getUserCredentialModelList!
-                          .data![0]
-                          .number
-                          .toString();
-                  userAddress =
-                      ApiRepository
-                          .shared
-                          .getUserCredentialModelList!
-                          .data![0]
-                          .address
-                          .toString();
-                }),
-              },
-          },
+      (List) {
+        if (!mounted) return;
+        if (List.data!.isEmpty) {
+          setState(() {
+            userError = false;
+            userEmpty = true;
+            userImage = "";
+          });
+        } else {
+          setState(() {
+            userError = false;
+            userEmpty = false;
+            userImage =
+                ApiRepository.shared.getUserCredentialModelList!.data![0].image.toString();
+            userName =
+                ApiRepository.shared.getUserCredentialModelList!.data![0].name.toString();
+            userNumber =
+                ApiRepository.shared.getUserCredentialModelList!.data![0].number.toString();
+            userAddress =
+                ApiRepository.shared.getUserCredentialModelList!.data![0].address.toString();
+          });
+        }
       },
-      (error) => {
-        if (error != null)
-          {
-            setState(() {
-              userError = true;
-              userLoader = false;
-              userEmpty = false;
-              userImage = "";
-            }),
-          },
+      (error) {
+        if (error != null && mounted) {
+          setState(() {
+            userError = true;
+            userEmpty = false;
+            userImage = "";
+          });
+        }
       },
       widget.vendorId.toString(),
     );
   }
 
+  String get _statusStr => widget.status?.toString() ?? '';
+
+  String? _formatDisplayDate(String? raw) {
+    if (raw == null) return null;
+    final t = raw.trim();
+    if (t.isEmpty || t == '0' || t == 'null') return null;
+    try {
+      return DateFormat('d MMM yyyy').format(DateTime.parse(t));
+    } catch (_) {
+      return t;
+    }
+  }
+
+  String? _formatShortDate(String? raw) {
+    if (raw == null) return null;
+    final t = raw.trim();
+    if (t.isEmpty || t == '0' || t == 'null') return null;
+    try {
+      return DateFormat('d MMM yyyy').format(DateTime.parse(t));
+    } catch (_) {
+      return t;
+    }
+  }
+
+  /// Renter [MyOrders] may pass a preformatted string (e.g. dd-MM-yy).
+  String? _placingDateLine(String? raw) {
+    if (raw == null) return null;
+    final t = raw.trim();
+    if (t.isEmpty || t == '0' || t == 'null') return null;
+    return t;
+  }
+
+  String _rentSummary() {
+    final d = widget.date?.toString() ?? '';
+    if (d.isEmpty || d == 'null') return 'Rent start date not available';
+    return 'Rent starts ${_formatDisplayDate(d) ?? d}';
+  }
+
+  String _vendorImageUrl() {
+    final p = userImage.trim();
+    if (p.isEmpty) return '';
+    if (p.toLowerCase().startsWith('http')) return p;
+    final base = AppUrl.baseUrlM;
+    if (base.endsWith('/')) return base + (p.startsWith('/') ? p.substring(1) : p);
+    return '$base/${p.startsWith('/') ? p.substring(1) : p}';
+  }
+
+  @override
   void initState() {
-    getUserData();
     super.initState();
+    getUserData();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: Text(
-          "Tracking Detail",
-          style: TextStyle(color: Colors.black, fontSize: 22),
-        ),
-        centerTitle: true,
-        leading: InkWell(
-          onTap: () {
-            Get.back();
-          },
-          borderRadius: BorderRadius.circular(50),
-          child: Container(child: Icon(Icons.arrow_back, color: Colors.black)),
-        ),
-        automaticallyImplyLeading: false,
-        elevation: 0,
+    final textTheme = GoogleFonts.interTextTheme(
+      Theme.of(context).textTheme.apply(
+        bodyColor: const Color(0xFF1A1A1A),
+        displayColor: const Color(0xFF1A1A1A),
       ),
-      body: Container(
-        width: double.infinity,
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              children: [
-                SizedBox(height: 35),
-                Row(
-                  children: [
-                    Text(
-                      "Rent starts on ${widget.date}",
-                      style: TextStyle(color: Colors.black, fontSize: 20),
-                    ),
-                  ],
+    );
+
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textTheme: textTheme,
+        appBarTheme: AppBarTheme(
+          titleTextStyle: GoogleFonts.inter(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: _pageBg,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          foregroundColor: Colors.black,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+            onPressed: () => Get.back(),
+            style: IconButton.styleFrom(foregroundColor: Colors.black),
+          ),
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Tracking Details',
+                style: GoogleFonts.inter(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black,
                 ),
-                SizedBox(height: 10),
-                Container(
-                  width: 391,
-                  height: 1,
-                  color: Colors.grey.withAlpha(102),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Status and details for this rental.',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: _subtitleGrey,
                 ),
-                SizedBox(height: 17),
-                RR(),
-                SizedBox(height: 50),
-                widget.status == "3"
-                    ? Icn(
-                      "assets/slicing/Group 353@3x.png",
-                      "Order is Cancelled",
-                      "cancel",
-                    )
-                    : widget.status == "0"
-                    ? Icn(
-                      "assets/slicing/Group 353@3x.png",
-                      "Order is Pending",
-                      "",
-                    )
-                    : widget.status == "1"
-                    ? Icn1("assets/slicing/Group 353@3x.png")
-                    : Icn2("assets/slicing/Group 353@3x.png"),
-                //     Padding(
-                //       padding: const EdgeInsets.only(right: 235),
-                //       child: Container(
-                //         height: 60,
-                //         width: 1,
-                //         color: Color(0xff707070),
-                //       ),
-                //     ),
-                //     SizedBox(
-                //       height: 8,
-                //     ),
-                //     Icn("assets/slicing/Group 353@3x.png", "Shipped",
-                //         "Address : Lorem ipsum dolor sit amet consectetur adipiscing elit cras, condimentum nec purus dictumst consequat taciti City,"),
-                //     Padding(
-                //       padding: const EdgeInsets.only(right: 235),
-                //       child: Container(
-                //         height: 60,
-                //         width: 1,
-                //         color: Color(0xff707070),
-                //       ),
-                //     ),
-                //     SizedBox(
-                //       height: 8,
-                //     ),
-                //     Icn(
-                //         "assets/slicing/Group 353@3x.png",
-                //         "Arrived at Our Warehouse",
-                //         "Address : Lorem ipsum dolor sit amet consectetur adipiscing elit cras, condimentum nec purus dictumst consequat taciti City,"),
-                //     Padding(
-                //       padding: const EdgeInsets.only(right: 235),
-                //       child: Container(
-                //         height: 60,
-                //         width: 1,
-                //         color: Color(0xff707070),
-                //       ),
-                //     ),
-                //     SizedBox(
-                //       height: 8,
-                //     ),
-                //     Icn(
-                //         "assets/slicing/Group 353@3x.png",
-                //         "Reached Logistic Facility",
-                //         "Address : Lorem ipsum dolor sit amet consectetur adipiscing elit cras, condimentum nec purus dictumst consequat taciti City,"),
-              ],
-            ),
+              ),
+              const SizedBox(height: 20),
+              _summaryCard(_rentSummary()),
+              const SizedBox(height: 16),
+              _vendorCard(),
+              const SizedBox(height: 16),
+              _progressCard(),
+            ],
           ),
         ),
       ),
     );
   }
 
-  RR() {
-    return Column(
-      children: [
-        // Row(
-        //   children: [
-        //     Container(
-        //       width: 44,
-        //       height: 44,
-        //       decoration: BoxDecoration(
-        //           shape: BoxShape.circle, color: Color(0xff321A08)),
-        //       child: Icon(
-        //         Icons.person_outline_outlined,
-        //         color: Colors.white,
-        //       ),
-        //     ),
-        //     SizedBox(
-        //       width: 22,
-        //     ),
-        //     // Column(
-        //     //   crossAxisAlignment: CrossAxisAlignment.start,
-        //     //   children: [
-        //     //     Text(
-        //     //       "Courier BDD Steve - 456789",
-        //     //       style: TextStyle(
-        //     //           color: Colors.black,
-        //     //           fontWeight: FontWeight.bold,
-        //     //           fontSize: 16),
-        //     //     ),
-        //     //     SizedBox(
-        //     //       height: 5,
-        //     //     ),
-        //     //     Text(
-        //     //       "Delivery Partners : FEDEX",
-        //     //       style: TextStyle(
-        //     //           color: Colors.grey,
-        //     //           fontWeight: FontWeight.normal,
-        //     //           fontSize: 11),
-        //     //     ),
-        //     //   ],
-        //     // )
-        //   ],
-        // ),
-        // SizedBox(
-        //   height: 66,
-        // ),
-        Row(
+  Widget _summaryCard(String line) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      elevation: 1,
+      shadowColor: Colors.black12,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.primaryColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.calendar_today_outlined, color: AppColors.primaryColor, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                line,
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF1A1A1A),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _vendorCard() {
+    if (userError) {
+      return Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            "Couldn't load provider details",
+            style: GoogleFonts.inter(color: _subtitleGrey, fontSize: 14),
+          ),
+        ),
+      );
+    }
+    if (userEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final url = _vendorImageUrl();
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      elevation: 1,
+      shadowColor: Colors.black12,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(),
-              child:
-                  userImage == ""
-                      ? Image.asset("assets/slicing/blankuser.jpeg")
-                      : Image.network(AppUrl.baseUrlM + userImage),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: SizedBox(
+                width: 64,
+                height: 64,
+                child:
+                    url.isEmpty
+                        ? ColoredBox(
+                          color: Colors.grey.shade200,
+                          child: Icon(Icons.storefront_outlined, color: Colors.grey.shade600, size: 32),
+                        )
+                        : CachedNetworkImage(
+                          imageUrl: url,
+                          fit: BoxFit.cover,
+                          errorWidget: (_, __, ___) => ColoredBox(
+                            color: Colors.grey.shade200,
+                            child: Icon(Icons.storefront_outlined, color: Colors.grey.shade600, size: 32),
+                          ),
+                        ),
+              ),
             ),
-            SizedBox(width: 22),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  userName == "" ? "vendor" : userName,
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                SizedBox(height: 5),
-                Text(
-                  userNumber == "" ? "" : userNumber,
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontWeight: FontWeight.normal,
-                    fontSize: 11,
-                  ),
-                ),
-                SizedBox(height: 7),
-                Container(
-                  width: 270,
-                  child: Text(
-                    userAddress == "" ? "" : userAddress,
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontWeight: FontWeight.normal,
-                      fontSize: 11,
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Provider',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: _subtitleGrey,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Text(
+                    userName.isEmpty ? 'Vendor' : userName,
+                    style: GoogleFonts.inter(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (userNumber.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      userNumber,
+                      style: GoogleFonts.inter(fontSize: 13, color: _subtitleGrey),
+                    ),
+                  ],
+                  if (userAddress.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      userAddress,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: const Color(0xFF6D6D75),
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 
-  Icn(img, txt, type) {
-    return Column(
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _progressCard() {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      elevation: 1,
+      shadowColor: Colors.black12,
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              child: Text(
-                type == "cancel"
-                    ? widget.cancel == "0"
-                        ? ""
-                        : DateFormat(
-                          'dd-MM-yy',
-                        ).format(DateTime.parse(widget.cancel))
-                    // : widget.cancel
-                    : widget.created,
-                style: TextStyle(fontSize: 11),
+            Text(
+              'Order progress',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
               ),
             ),
-            SizedBox(width: MediaQuery.of(context).size.width * 0.01),
-            Align(
-              alignment: Alignment.center,
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFF4285F4),
-                ),
-                child: Image.asset(img, scale: 3),
+            const SizedBox(height: 6),
+            Text(
+              'Updates appear as your order moves forward.',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: _subtitleGrey,
               ),
             ),
-            SizedBox(width: MediaQuery.of(context).size.width * 0.01),
-            Center(
-              child: Text(
-                txt,
-                style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ),
+            const SizedBox(height: 20),
+            _buildTimelineForStatus(),
           ],
         ),
-      ],
+      ),
     );
   }
 
-  Icn1(img) {
-    return Column(
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              child: Text(widget.created, style: TextStyle(fontSize: 11)),
-            ),
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0xFF4285F4),
-              ),
-              child: Image.asset(img, scale: 3),
-            ),
-            SizedBox(width: MediaQuery.of(context).size.width * 0.01),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Placed",
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
+  Widget _buildTimelineForStatus() {
+    final c = widget.created?.toString() ?? '';
+    final ap = widget.approve?.toString() ?? '';
+    final comp = widget.complete?.toString() ?? '';
+    final can = widget.cancel?.toString() ?? '';
+
+    switch (_statusStr) {
+      case '3':
+        return _timeline(
+          [
+            _TrackNode(
+              title: 'Order cancelled',
+              date: can != '0' ? _formatShortDate(can) : null,
             ),
           ],
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 235),
-          child: Container(height: 60, width: 1, color: Color(0xff707070)),
-        ),
-        SizedBox(height: 8),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              child: Text(
-                widget.approve != "0"
-                    ? DateFormat(
-                      'dd-MM-yy',
-                    ).format(DateTime.parse(widget.approve))
-                    : "",
-                style: TextStyle(fontSize: 11),
-              ),
-            ),
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0xFF4285F4),
-              ),
-              child: Image.asset(img, scale: 3),
-            ),
-            SizedBox(width: MediaQuery.of(context).size.width * 0.01),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Approved",
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
+        );
+      case '0':
+        return _timeline(
+          [
+            _TrackNode(
+              title: 'Order is pending',
+              date: c.isNotEmpty && c != '0' && c != 'null' ? _placingDateLine(c) : null,
             ),
           ],
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 235),
-          child: Container(height: 60, width: 1, color: Color(0xff707070)),
-        ),
-        SizedBox(height: 8),
-      ],
-    );
+        );
+      case '1':
+        return _timeline(
+          [
+            _TrackNode(
+              title: 'Placed',
+              date: _placingDateLine(c),
+            ),
+            _TrackNode(
+              title: 'Approved',
+              date: ap != '0' && ap.isNotEmpty && ap != 'null' ? _formatShortDate(ap) : null,
+            ),
+          ],
+        );
+      default:
+        return _timeline(
+          [
+            _TrackNode(
+              title: 'Placed',
+              date: _placingDateLine(c),
+            ),
+            _TrackNode(
+              title: 'Approved',
+              date: ap != '0' && ap.isNotEmpty && ap != 'null' ? _formatShortDate(ap) : null,
+            ),
+            _TrackNode(
+              title: 'Shipped',
+              date: comp != '0' && comp.isNotEmpty && comp != 'null' ? _formatShortDate(comp) : null,
+            ),
+          ],
+        );
+    }
   }
 
-  Icn2(img) {
+  Widget _timeline(List<_TrackNode> steps) {
+    if (steps.isEmpty) {
+      return Text('No status updates', style: GoogleFonts.inter(color: _subtitleGrey));
+    }
     return Column(
+      children: List.generate(steps.length, (i) {
+        final s = steps[i];
+        final last = i == steps.length - 1;
+        final nodeDone = s.date != null && s.date!.isNotEmpty;
+        final prev = i > 0 ? steps[i - 1] : null;
+        final lineFromAbove = prev != null && prev.date != null && prev.date!.isNotEmpty;
+        return _TimelineRow(
+          isFirst: i == 0,
+          isLast: last,
+          title: s.title,
+          date: s.date,
+          isNodeDone: nodeDone,
+          lineFromAboveActive: lineFromAbove,
+        );
+      }),
+    );
+  }
+}
+
+class _TrackNode {
+  final String title;
+  final String? date;
+  _TrackNode({required this.title, this.date});
+}
+
+class _TimelineRow extends StatelessWidget {
+  final bool isFirst;
+  final bool isLast;
+  final String title;
+  final String? date;
+  final bool isNodeDone;
+  final bool lineFromAboveActive;
+
+  const _TimelineRow({
+    required this.isFirst,
+    required this.isLast,
+    required this.title,
+    required this.date,
+    required this.isNodeDone,
+    required this.lineFromAboveActive,
+  });
+
+  static const _subtitleGrey = Color(0xFF72747A);
+  static const _lineMuted = Color(0xFFE0E0E0);
+  static const _segmentH = 44.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasDate = date != null && date!.isNotEmpty;
+    final showInProgress = !hasDate && title != 'Order cancelled' && title != 'Placed';
+    const lineW = 2.0;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Column(
           children: [
+            if (!isFirst)
+              Container(
+                width: lineW,
+                height: 10,
+                color: lineFromAboveActive ? AppColors.primaryColor : _lineMuted,
+              ),
             Container(
-              child: Text(widget.created, style: TextStyle(fontSize: 11)),
-            ),
-            Container(
-              width: 44,
-              height: 44,
+              width: 20,
+              height: 20,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Color(0xFF4285F4),
+                color: isNodeDone ? AppColors.primaryColor : _lineMuted,
+                border: Border.all(color: Colors.white, width: 2),
               ),
-              child: Image.asset(img, scale: 3),
+              child:
+                  isNodeDone
+                      ? const Icon(Icons.check, size: 11, color: Colors.white)
+                      : null,
             ),
-            SizedBox(width: MediaQuery.of(context).size.width * 0.01),
-            Column(
+            if (!isLast)
+              Container(
+                width: lineW,
+                height: _segmentH,
+                color: isNodeDone ? AppColors.primaryColor.withValues(alpha: 0.5) : _lineMuted,
+              ),
+          ],
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(bottom: isLast ? 0 : 12),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Placed",
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                  title,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-              ],
-            ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 235),
-          child: Container(height: 60, width: 1, color: Color(0xff707070)),
-        ),
-        SizedBox(height: 8),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              child: Text(
-                widget.approve != "0"
-                    ? DateFormat(
-                      'dd-MM-yy',
-                    ).format(DateTime.parse(widget.approve))
-                    : "",
-                style: TextStyle(fontSize: 11),
-              ),
-            ),
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0xFF4285F4),
-              ),
-              child: Image.asset(img, scale: 3),
-            ),
-            SizedBox(width: MediaQuery.of(context).size.width * 0.01),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Approved",
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                if (hasDate) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    date!,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: _subtitleGrey,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 235),
-          child: Container(height: 60, width: 1, color: Color(0xff707070)),
-        ),
-        SizedBox(height: 8),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              child: Text(
-                widget.complete != "0"
-                    ? DateFormat(
-                      'dd-MM-yy',
-                    ).format(DateTime.parse(widget.complete))
-                    : "",
-                style: TextStyle(fontSize: 11),
-              ),
-            ),
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0xFF4285F4),
-              ),
-              child: Image.asset(img, scale: 3),
-            ),
-            SizedBox(width: MediaQuery.of(context).size.width * 0.01),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Shipped",
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                ] else if (showInProgress) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'In progress',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: _subtitleGrey,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
-          ],
+          ),
         ),
       ],
     );

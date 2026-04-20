@@ -4,9 +4,7 @@ import 'package:get/get.dart';
 import 'package:jebby/Views/helper/global.dart';
 import 'package:jebby/Views/screens/auth/Otp.dart';
 import 'package:jebby/Views/screens/auth/createnewpassword.dart';
-import 'package:jebby/Views/screens/auth/forgetPasswordOtp.dart';
 import 'package:jebby/Views/screens/auth/login.dart';
-import 'package:jebby/Views/screens/auth/stripe_onboarding.dart';
 import 'package:jebby/Views/screens/profile/userprofile.dart';
 import 'package:jebby/Views/screens/vendors/vendorhome.dart';
 import 'package:jebby/model/user_model.dart';
@@ -74,11 +72,7 @@ class AuthViewModel with ChangeNotifier {
           address: value['address'].toString(),
         ));
         userName = value['name'].toString();
-        
-        if (kDebugMode) {}
-        
-        String userId = value['id'].toString();
-        
+
         // Save user data to SharedPreferences
         SharedPreferences.getInstance().then((prefs) {
           prefs.setString('stripe_verification_status', value['stripe_verification_status'] ?? "");
@@ -125,7 +119,7 @@ class AuthViewModel with ChangeNotifier {
         .then((value) async {
           setSignUpLoading(false);
           if (value["message"].toString() == "OTP send") {
-            Utils.flushBarErrorMessage('Otp sent', context);
+            Utils.flushBarSuccessMessage('Otp sent', context);
             Get.to(
               () => OTPSCREEN(
                 email: data["email"],
@@ -136,7 +130,7 @@ class AuthViewModel with ChangeNotifier {
               ),
             );
           } else if (value["message"].toString() == "Signin successfull") {
-            Utils.flushBarErrorMessage('Signin Successful', context);
+            Utils.flushBarSuccessMessage('Signin Successful', context);
 
         // Save Data To SharedPrefrences
         SharedPreferences updatePrefrences = await SharedPreferences.getInstance();
@@ -186,7 +180,7 @@ class AuthViewModel with ChangeNotifier {
     _myRepo.otpRegisterApi(data).then((value) {
       setSignUpLoading(false);
       if (value["message"].toString() == "Successfully signup") {
-        Utils.flushBarErrorMessage('SignUp Successfully', context);
+        Utils.flushBarSuccessMessage('SignUp Successfully', context);
         
         // Save user data to SharedPreferences
         SharedPreferences.getInstance().then((prefs) async {
@@ -231,7 +225,7 @@ class AuthViewModel with ChangeNotifier {
         .then((value) async {
           setSignUpLoading(false);
           if (value["message"].toString() == "Signin successfull") {
-            Utils.flushBarErrorMessage('Signin Successful', context);
+            Utils.flushBarSuccessMessage('Signin Successful', context);
 
         // Save Data To SharedPrefrences
         SharedPreferences updatePrefrences = await SharedPreferences.getInstance();
@@ -324,9 +318,17 @@ class AuthViewModel with ChangeNotifier {
         .then((value) {
           setSignUpLoading(false);
           if (value["message"].toString() == "Otp Send") {
-            Utils.flushBarErrorMessage('OTP resent successfully', context);
+            Utils.flushBarSuccessMessage('OTP resent successfully', context);
             route == "forgot"
-                ? Get.to(() => ForgetPasswordOtpScreen(email: data["email"]))
+                ? Get.to(
+                  () => OTPSCREEN(
+                    email: data["email"],
+                    name: "",
+                    password: "",
+                    role: "",
+                    isForgotPasswordFlow: true,
+                  ),
+                )
                 : Get.to(
                   () => OTPSCREEN(
                     email: data["email"],
@@ -357,7 +359,7 @@ class AuthViewModel with ChangeNotifier {
         .then((value) {
           setSignUpLoading(false);
           if (value["message"].toString() == "otp correct") {
-            Utils.flushBarErrorMessage('Otp Correct', context);
+            Utils.flushBarSuccessMessage('Otp Correct', context);
             Get.to(() => CreatePasswordScreen(email: data["email"]));
           } else if (value["message"].toString() == "otp incorrect") {
             Utils.flushBarErrorMessage('invalid OTP', context);
@@ -416,7 +418,7 @@ class AuthViewModel with ChangeNotifier {
         .then((value) {
           setSignUpLoading(false);
           if (value["result"].toString() == data["file"].toString()) {
-            Utils.flushBarErrorMessage('Otp sent', context);
+            Utils.flushBarSuccessMessage('Otp sent', context);
             Get.to(() => MyProfileScreen());
           } else if (value["message"].toString() == "Please upload a file!") {
             Utils.flushBarErrorMessage('Please upload a file!', context);

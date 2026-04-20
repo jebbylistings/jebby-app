@@ -18,6 +18,7 @@ import '../../../Services/provider/sign_in_provider.dart';
 import '../../../model/user_model.dart';
 import 'package:dio/dio.dart' as d;
 import 'package:provider/provider.dart';
+import 'package:jebby/res/color.dart';
 
 import '../../../view_model/user_view_model.dart';
 
@@ -85,6 +86,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
   String paed = DateFormat(
     'yyyy-MM-dd',
   ).format(DateTime.now().add(const Duration(days: 1)));
+  DateTime _calendarMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  bool _isSelectingEnd = false;
 
   // Location (for Location Based Delivery)
   final TextEditingController _locationController = TextEditingController();
@@ -120,32 +123,60 @@ class _AddProductScreenState extends State<AddProductScreen> {
         "Material: $materialValue, Condition: $conditionValue, Finish: $finishValue, Style: $styleValue, Year Made: $yearMadeValue";
   }
 
-  Future<void> pickAvailabilityFromDate() async {
-    final initial = DateTime.tryParse(pasd.toString()) ?? DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: DateTime.now().subtract(const Duration(days: 3650)),
-      lastDate: DateTime(2035),
-    );
-    if (picked == null) return;
+  final DateFormat _rangeTitleFormat = DateFormat('MMM d');
+
+  DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  DateTime _availabilityStart() =>
+      DateTime.tryParse(pasd.toString()) ?? DateTime.now();
+  DateTime _availabilityEnd() =>
+      DateTime.tryParse(paed.toString()) ?? DateTime.now();
+
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  bool _isWithinSelectedRange(DateTime day) {
+    final d = _dateOnly(day);
+    final start = _dateOnly(_availabilityStart());
+    final end = _dateOnly(_availabilityEnd());
+    return !d.isBefore(start) && !d.isAfter(end);
+  }
+
+  DateTime _lastAllowedDate() {
+    final now = DateTime.now();
+    return DateTime(now.year + 5, now.month, now.day);
+  }
+
+  void _selectAvailabilityDay(DateTime day) {
+    final today = _dateOnly(DateTime.now());
+    final last = _dateOnly(_lastAllowedDate());
+    if (day.isBefore(today) || day.isAfter(last)) return;
+
+    final start = _availabilityStart();
     setState(() {
-      pasd = DateFormat('yyyy-MM-dd').format(picked);
+      if (!_isSelectingEnd) {
+        pasd = DateFormat('yyyy-MM-dd').format(day);
+        paed = DateFormat('yyyy-MM-dd').format(day);
+        _isSelectingEnd = true;
+        return;
+      }
+      if (day.isBefore(_dateOnly(start))) {
+        pasd = DateFormat('yyyy-MM-dd').format(day);
+        paed = DateFormat('yyyy-MM-dd').format(day);
+      } else {
+        paed = DateFormat('yyyy-MM-dd').format(day);
+        _isSelectingEnd = false;
+      }
     });
   }
 
-  Future<void> pickAvailabilityToDate() async {
-    final initial = DateTime.tryParse(paed.toString()) ?? DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: DateTime.now().subtract(const Duration(days: 3650)),
-      lastDate: DateTime(2035),
-    );
-    if (picked == null) return;
-    setState(() {
-      paed = DateFormat('yyyy-MM-dd').format(picked);
-    });
+  void _shiftCalendarMonth(int delta) {
+    final now = DateTime.now();
+    final earliest = DateTime(now.year, now.month);
+    final latest = DateTime(_lastAllowedDate().year, _lastAllowedDate().month);
+    final next = DateTime(_calendarMonth.year, _calendarMonth.month + delta);
+    if (next.isBefore(earliest) || next.isAfter(latest)) return;
+    setState(() => _calendarMonth = next);
   }
 
   Future getData() async {
@@ -534,14 +565,16 @@ class _AddProductScreenState extends State<AddProductScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: true,
         title: Text(
-          'List Product',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-            fontSize: 19,
+          'Add Product',
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w700,
+            color: Colors.black87,
+            fontSize: 18,
           ),
         ),
         leading: InkWell(
@@ -549,7 +582,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
             Get.back();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Icon(Icons.arrow_back_ios, color: Colors.black),
+          child: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.black,
+            size: 20,
+          ),
         ),
       ),
       body: Container(
@@ -1331,6 +1368,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       width: res_width * 0.9,
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       decoration: BoxDecoration(
+                        color: const Color(0xFFF7F7F9),
                         border: Border.all(
                           color: Colors.grey.shade300,
                           width: 1,
@@ -1343,21 +1381,23 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                 child: SizedBox(
                                   height: 25,
                                   width: 25,
-                                  child: CircularProgressIndicator(),
+                                  child: CircularProgressIndicator(color: AppColors.primaryColor),
                                 ),
                               )
                               : DropdownButtonHideUnderline(
                                 child: DropdownButton<String>(
                                   value: dropdownValue,
                                   isExpanded: true,
+                                  dropdownColor: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
                                   icon: Icon(
-                                    Icons.arrow_drop_down,
-                                    color: Colors.grey.shade600,
+                                    Icons.keyboard_arrow_down_rounded,
+                                    color: const Color(0xFF8F9098),
                                   ),
                                   style: GoogleFonts.inter(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w400,
-                                    color: Colors.black,
+                                    color: const Color(0xFF1B1B1F),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                   onChanged: (String? value) {
                                     setState(() {
@@ -1380,9 +1420,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                           child: Text(
                                             value,
                                             style: GoogleFonts.inter(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w400,
-                                              color: Colors.black,
+                                              color: const Color(0xFF1B1B1F),
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
                                             ),
                                           ),
                                         );
@@ -1409,6 +1449,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       width: res_width * 0.9,
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       decoration: BoxDecoration(
+                        color: const Color(0xFFF7F7F9),
                         border: Border.all(
                           color: Colors.grey.shade300,
                           width: 1,
@@ -1433,14 +1474,16 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                   child: DropdownButton<String>(
                                     value: sub_dropdownvalue,
                                     isExpanded: true,
+                                    dropdownColor: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
                                     icon: Icon(
-                                      Icons.arrow_drop_down,
-                                      color: Colors.grey.shade600,
+                                      Icons.keyboard_arrow_down_rounded,
+                                      color: const Color(0xFF8F9098),
                                     ),
                                     style: GoogleFonts.inter(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w400,
-                                      color: Colors.black,
+                                      color: const Color(0xFF1B1B1F),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                     onChanged: (String? value) {
                                       setState(() {
@@ -1459,9 +1502,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                               child: Text(
                                                 value,
                                                 style: GoogleFonts.inter(
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.w400,
-                                                  color: Colors.black,
+                                                  color: const Color(0xFF1B1B1F),
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w500,
                                                 ),
                                               ),
                                             );
@@ -1669,157 +1712,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       SizedBox(height: res_height * 0.01),
                     ],
 
-                    // PRODUCT AVAILABILITY + FROM/TO dates
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Product Availability",
-                                style: GoogleFonts.inter(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 14,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                "We provide sturdy and comfortable wood",
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w400,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: res_height * 0.01),
-
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "From",
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              SizedBox(height: 6),
-                              GestureDetector(
-                                onTap: pickAvailabilityFromDate,
-                                child: Container(
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: Colors.grey.shade400,
-                                      width: 1,
-                                    ),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 0,
-                                  ),
-                                  alignment: Alignment.centerLeft,
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.calendar_month_outlined,
-                                        size: 20,
-                                        color: kprimaryColor,
-                                      ),
-                                      SizedBox(width: 10),
-                                      Expanded(
-                                        child: Text(
-                                          DateFormat('dd/MM/yyyy').format(
-                                            DateTime.parse(pasd.toString()),
-                                          ),
-                                          style: GoogleFonts.inter(
-                                            fontSize: 14,
-                                            color: Colors.black,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "To",
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              SizedBox(height: 6),
-                              GestureDetector(
-                                onTap: pickAvailabilityToDate,
-                                child: Container(
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: Colors.grey.shade400,
-                                      width: 1,
-                                    ),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 0,
-                                  ),
-                                  alignment: Alignment.centerLeft,
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.calendar_month_outlined,
-                                        size: 20,
-                                        color: kprimaryColor,
-                                      ),
-                                      SizedBox(width: 10),
-                                      Expanded(
-                                        child: Text(
-                                          DateFormat('dd/MM/yyyy').format(
-                                            DateTime.parse(paed.toString()),
-                                          ),
-                                          style: GoogleFonts.inter(
-                                            fontSize: 14,
-                                            color: Colors.black,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                    _buildAvailabilityCalendar(res_width),
                     SizedBox(height: res_height * 0.01),
 
                     // Product Specifications
@@ -2056,29 +1949,296 @@ class _AddProductScreenState extends State<AddProductScreen> {
           height: 44,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
+            color: const Color(0xFFF7F7F9),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.grey.shade300, width: 1),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: value,
               isExpanded: true,
-              underline: SizedBox(),
-              icon: Icon(Icons.arrow_drop_down, color: Colors.grey.shade600),
+              dropdownColor: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              underline: const SizedBox(),
+              icon: const Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: Color(0xFF8F9098),
+              ),
               items:
                   options
                       .map(
-                        (v) =>
-                            DropdownMenuItem<String>(value: v, child: Text(v)),
+                        (v) => DropdownMenuItem<String>(
+                          value: v,
+                          child: Text(
+                            v,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF1B1B1F),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
                       )
                       .toList(),
               onChanged: onChanged,
-              style: const TextStyle(color: Colors.black),
+              style: GoogleFonts.inter(
+                color: const Color(0xFF1B1B1F),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildAvailabilityCalendar(double resWidth) {
+    final today = _dateOnly(DateTime.now());
+    final lastAllowed = _lastAllowedDate();
+    final start = _dateOnly(_availabilityStart());
+    final end = _dateOnly(_availabilityEnd());
+    final isSingleDaySelection = _isSameDay(start, end);
+    final monthFirst = DateTime(_calendarMonth.year, _calendarMonth.month, 1);
+    final int leadingEmpty = monthFirst.weekday % 7;
+    final int daysInMonth =
+        DateTime(_calendarMonth.year, _calendarMonth.month + 1, 0).day;
+
+    return Card(
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+        side: BorderSide(color: Colors.grey.shade300, width: 1),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Rental Period',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+                color: const Color(0xFF1B1B1F),
+              ),
+            ),
+            const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF7F7F9),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.calendar_today_outlined, size: 20, color: Color(0xFF0A143D)),
+              const SizedBox(width: 10),
+              Text(
+                '${_rangeTitleFormat.format(start)} - ${_rangeTitleFormat.format(end)}',
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF0A143D),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF7F7F9),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  _monthButton(Icons.chevron_left, () => _shiftCalendarMonth(-1)),
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        DateFormat('MMMM yyyy').format(_calendarMonth),
+                        style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ),
+                  _monthButton(Icons.chevron_right, () => _shiftCalendarMonth(1)),
+                ],
+              ),
+              Row(
+                children: const ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+                    .map((d) => Expanded(child: Center(child: Text(d, style: TextStyle(fontSize: 12, color: Color(0xFF59689A))))))
+                    .toList(),
+              ),
+              const SizedBox(height: 4),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: leadingEmpty + daysInMonth,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 7,
+                  mainAxisSpacing: 2,
+                  crossAxisSpacing: 0,
+                  childAspectRatio: 1.3,
+                ),
+                itemBuilder: (context, index) {
+                  if (index < leadingEmpty) return const SizedBox.shrink();
+                  final dayNum = index - leadingEmpty + 1;
+                  final day = DateTime(_calendarMonth.year, _calendarMonth.month, dayNum);
+                  final disabled = day.isBefore(today) || day.isAfter(lastAllowed);
+                  final isStart = _isSameDay(day, start);
+                  final isEnd = _isSameDay(day, end);
+                  final inRange = _isWithinSelectedRange(day);
+                  final row = index ~/ 7;
+
+                  bool hasLeftInRange = false;
+                  if (index > 0 && (index - 1) ~/ 7 == row) {
+                    final prev = dayNum - 1;
+                    if (prev >= 1) {
+                      final prevDay = DateTime(
+                        _calendarMonth.year,
+                        _calendarMonth.month,
+                        prev,
+                      );
+                      final prevDisabled =
+                          prevDay.isBefore(today) || prevDay.isAfter(lastAllowed);
+                      hasLeftInRange = !prevDisabled && _isWithinSelectedRange(prevDay);
+                    }
+                  }
+
+                  bool hasRightInRange = false;
+                  if ((index + 1) ~/ 7 == row) {
+                    final next = dayNum + 1;
+                    if (next <= daysInMonth) {
+                      final nextDay = DateTime(
+                        _calendarMonth.year,
+                        _calendarMonth.month,
+                        next,
+                      );
+                      final nextDisabled =
+                          nextDay.isBefore(today) || nextDay.isAfter(lastAllowed);
+                      hasRightInRange = !nextDisabled && _isWithinSelectedRange(nextDay);
+                    }
+                  }
+
+                  Color textColor = const Color(0xFF0A143D);
+                  BoxDecoration? rangeDeco;
+                  BoxDecoration? dayDeco;
+                  Alignment dayAlignment = Alignment.center;
+                  if (disabled) {
+                    textColor = const Color(0xFFB8BED1);
+                  } else if (inRange && !isSingleDaySelection) {
+                    rangeDeco = BoxDecoration(
+                      color: const Color(0xFFDCE1EB),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(hasLeftInRange ? 0 : 10),
+                        bottomLeft: Radius.circular(hasLeftInRange ? 0 : 10),
+                        topRight: Radius.circular(hasRightInRange ? 0 : 10),
+                        bottomRight: Radius.circular(hasRightInRange ? 0 : 10),
+                      ),
+                    );
+                  }
+                  if (!disabled && (isStart || isEnd)) {
+                    dayDeco = BoxDecoration(
+                      color: const Color(0xFF0A143D),
+                      borderRadius: BorderRadius.circular(10),
+                    );
+                    textColor = Colors.white;
+                    if (isStart && hasRightInRange) {
+                      dayAlignment = Alignment.centerLeft;
+                    } else if (isEnd && hasLeftInRange) {
+                      dayAlignment = Alignment.centerRight;
+                    }
+                  }
+
+                  const double dayExtent = 30;
+                  return GestureDetector(
+                    onTap: disabled ? null : () => _selectAvailabilityDay(day),
+                    child: Container(
+                      decoration: rangeDeco,
+                      alignment: dayAlignment,
+                      child: Container(
+                        width: dayExtent,
+                        height: dayExtent,
+                        decoration: dayDeco,
+                        alignment: Alignment.center,
+                        child: Text(
+                          '$dayNum',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: (isStart || isEnd) ? FontWeight.w700 : FontWeight.w500,
+                            color: textColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 2),
+              Text(
+                _isSelectingEnd
+                    ? 'Select an end date'
+                    : 'Select a start date to adjust your range',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: const Color(0xFF72747A),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'From: ${DateFormat('MM/dd/yyyy').format(_availabilityStart())}',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF72747A),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                'To: ${DateFormat('MM/dd/yyyy').format(_availabilityEnd())}',
+                textAlign: TextAlign.end,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF72747A),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    )));
+  }
+
+  Widget _monthButton(IconData icon, VoidCallback onTap) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Icon(icon, size: 22, color: const Color(0xFF0A143D)),
+        ),
+      ),
     );
   }
 

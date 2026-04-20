@@ -13,8 +13,8 @@ import 'package:jebby/Views/screens/agreements/termsAndConditions.dart';
 import 'package:jebby/Views/screens/agreements/transportAndInstallationPolicy.dart';
 import 'package:jebby/Views/screens/home/RentNow.dart';
 import 'package:jebby/Views/screens/profile/userprofile.dart';
-import 'package:jebby/Views/screens/home/chat.dart';
-import 'package:jebby/Views/screens/vendors/reveiew.dart';
+import 'package:jebby/Views/screens/home/Messages.dart';
+import 'package:jebby/Views/screens/shared/Reviews.dart';
 
 import '../../../model/getProductsByProductId.dart';
 import '../../../model/getReviewsByProductId.dart' as review_model;
@@ -22,6 +22,7 @@ import '../../../model/user_model.dart';
 import '../../../res/app_url.dart';
 import '../../../view_model/apiServices.dart';
 import '../../../view_model/user_view_model.dart';
+import 'package:jebby/res/color.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final dynamic id;
@@ -77,6 +78,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   int _reviewTotal = 0;
   review_model.Data? _firstReview;
+  Map<int, double> _ratingDistribution = const {
+    5: 0.0,
+    4: 0.0,
+    3: 0.0,
+    2: 0.0,
+    1: 0.0,
+  };
 
   /// Product availability window (API: pastart / paend).
   DateTime? _availStart;
@@ -278,6 +286,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       review_model.GetAllReviewsByProductId list,
     ) {
       final total = list.totalreviews ?? list.data?.length ?? 0;
+      final data = list.data ?? const <review_model.Data>[];
+      final counts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
+      for (final r in data) {
+        final s = r.stars ?? 0;
+        if (s >= 1 && s <= 5) counts[s] = counts[s]! + 1;
+      }
+      final distribution = data.isEmpty
+          ? const {5: 0.0, 4: 0.0, 3: 0.0, 2: 0.0, 1: 0.0}
+          : {
+              5: counts[5]! / data.length,
+              4: counts[4]! / data.length,
+              3: counts[3]! / data.length,
+              2: counts[2]! / data.length,
+              1: counts[1]! / data.length,
+            };
       final first =
           (list.data != null && list.data!.isNotEmpty)
               ? list.data!.first
@@ -286,6 +309,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         setState(() {
           _reviewTotal = total;
           _firstReview = first;
+          _ratingDistribution = distribution;
         });
       }
     }, (_) {});
@@ -361,16 +385,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return out;
   }
 
-  /// Rough bar fill weights for 5 → 1 star rows (visual only).
-  List<double> _starBarWeights() {
-    final r = _avgRating;
-    return List.generate(5, (i) {
-      final star = 5 - i;
-      final d = (r - star).abs();
-      return (1.0 - d / 4.5).clamp(0.12, 1.0);
-    });
-  }
-
   String _relativeTime(String? iso) {
     if (iso == null || iso.isEmpty) return '';
     final d = DateTime.tryParse(iso);
@@ -425,7 +439,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           if (_galleryLoading)
             Container(
               color: Colors.grey.shade300,
-              child: const Center(child: CircularProgressIndicator()),
+              child: const Center(child: CircularProgressIndicator(color: AppColors.primaryColor)),
             )
           else
             PageView.builder(
@@ -446,19 +460,25 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             child: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.only(left: 14, top: 10),
-                child: InkWell(
-                  onTap: () => Get.back(),
-                  borderRadius: BorderRadius.circular(18),
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(
-                      color: Color(0xE6FFFFFF),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.arrow_back_ios_new,
-                      size: 22,
-                      color: Colors.black,
+                child: Material(
+                  color: Colors.transparent,
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    onTap: () => Get.back(),
+                    customBorder: const CircleBorder(),
+                    splashColor: Colors.black26,
+                    highlightColor: Colors.black12,
+                    child: Ink(
+                      padding: const EdgeInsets.all(10),
+                      decoration: const BoxDecoration(
+                        color: Color(0xE6FFFFFF),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new,
+                        size: 20,
+                        color: Colors.black,
+                      ),
                     ),
                   ),
                 ),
@@ -493,7 +513,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   Widget _buildContentSheet() {
     final specs = _parsedSpecs();
-    final weights = _starBarWeights();
 
     return Container(
       width: double.infinity,
@@ -753,7 +772,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               child: Column(
                                 children: List.generate(5, (i) {
                                   final star = 5 - i;
-                                  final w = weights[i];
+                                  final w =
+                                      (_ratingDistribution[star] ?? 0.0)
+                                          .clamp(0.0, 1.0);
                                   final pct = (w * 100).round();
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: 8),
@@ -843,7 +864,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             ),
                             onPressed: () {
                               Get.to(
-                                () => VendorReviewScreen(
+                                () => ReviewsScreen(
                                   stars: widget.stars,
                                   reviewsLenght: _reviewTotal.toString(),
                                   prodID: widget.id,

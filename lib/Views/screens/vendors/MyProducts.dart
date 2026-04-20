@@ -6,9 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:get/get.dart';
-import 'package:jebby/Views/screens/vendors/Productdetail2.dart';
-import 'package:jebby/Views/screens/vendors/addproduct.dart';
+import 'package:jebby/Views/screens/vendors/ProductDetails.dart';
+import 'package:jebby/Views/screens/vendors/AddProduct.dart';
 import 'package:jebby/res/app_url.dart';
+import 'package:jebby/res/color.dart';
 import 'package:provider/provider.dart';
 
 import '../../../Services/provider/sign_in_provider.dart';
@@ -179,12 +180,14 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        foregroundColor: Colors.black,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-          onPressed: (){
-            Get.back();
-          },
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+          onPressed: () => Get.back(),
+          style: IconButton.styleFrom(foregroundColor: Colors.black),
         ),
       ),
 
@@ -319,7 +322,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       ),
                     )
                   : isLoading
-                  ? Center(child: CircularProgressIndicator())
+                  ? Center(child: CircularProgressIndicator(color: AppColors.primaryColor))
                   : emptyData
                   ? Center(
                       child: Text(
@@ -523,7 +526,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       placeholder:
                           (context, url) => Center(
                             child:
-                                CircularProgressIndicator(), // Loading spinner
+                                CircularProgressIndicator(color: AppColors.primaryColor), // Loading spinner
                           ),
                       errorWidget:
                           (context, url, error) => Icon(

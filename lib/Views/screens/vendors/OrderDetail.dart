@@ -2,11 +2,13 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
-import 'package:jebby/Views/helper/colors.dart';
-import 'package:jebby/Views/screens/vendors/OrderReq.dart';
-import 'package:jebby/res/app_url.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+import 'package:jebby/res/app_url.dart';
+import 'package:jebby/res/color.dart';
+import 'package:jebby/Views/screens/vendors/MyOrders.dart';
+
 import '../../../model/postOrderStatusUpdateModel.dart';
 import '../../../view_model/apiServices.dart';
 
@@ -24,7 +26,8 @@ class OrderDetailScreen extends StatefulWidget {
   final dynamic location;
   final dynamic nego_price;
 
-  OrderDetailScreen({
+  const OrderDetailScreen({
+    super.key,
     this.prodId,
     this.name,
     this.price,
@@ -44,60 +47,86 @@ class OrderDetailScreen extends StatefulWidget {
 }
 
 class _OrderDetailStateScreen extends State<OrderDetailScreen> {
+  static const Color _pageBg = Color(0xFFF3F3F5);
+  static const Color _subtitleGrey = Color(0xFF72747A);
+  static const Color _metaGrey = Color(0xFF9A9AA1);
+
   bool isLoading = true;
   bool isError = false;
   bool isEmpty = false;
-  var image = "";
-  var name = "";
+
+  String _listingName = '';
+  String _imageRelativePath = '';
+
+  bool get _isNewRoute => widget.route?.toString().toLowerCase() == 'new';
+
+  /// Matches legacy UI: primary action only when `orderComplete == 0`.
+  bool get _isPending =>
+      widget.orderComplete == 0 || widget.orderComplete == '0';
+
+  bool get _showPendingState => !_isNewRoute && _isPending;
+
+  String get _stateLabel {
+    if (_isNewRoute) return 'NEW';
+    if (_showPendingState) return 'PENDING';
+    return 'COMPLETED';
+  }
+
+  Color get _stateBg {
+    if (_isNewRoute || _showPendingState) return const Color(0xFFFFF3E0);
+    return const Color(0xFFE8F5E9);
+  }
+
+  Color get _stateFg {
+    if (_isNewRoute || _showPendingState) return const Color(0xFFE65100);
+    return const Color(0xFF2E7D32);
+  }
+
   void getProduct() {
     ApiRepository.shared.getProductsById(
-      (list) => {
-        if (this.mounted)
-          {
-            if (list.data!.length == 0)
-              {
-                setState(() {
-                  isLoading = false;
-                  isError = false;
-                  isEmpty = true;
-                }),
-              }
-            else
-              {
-                setState(() {
-                  isLoading = false;
-                  isError = false;
-                  isEmpty = false;
-                  image =
-                      ApiRepository
-                          .shared
-                          .getProductsByIdList!
-                          .data![1]
-                          .images![0]
-                          .path
-                          .toString();
-                  name =
-                      ApiRepository.shared.getProductsByIdList!.data![0].name
-                          .toString();
-                }),
-              },
-          },
+      (list) {
+        if (!mounted) return;
+        if (list.data == null || list.data!.isEmpty) {
+          setState(() {
+            isLoading = false;
+            isError = false;
+            isEmpty = true;
+          });
+          return;
+        }
+        try {
+          final data = ApiRepository.shared.getProductsByIdList!.data!;
+          final path = data[1].images![0].path.toString();
+          final title = data[0].name.toString();
+          setState(() {
+            isLoading = false;
+            isError = false;
+            isEmpty = false;
+            _imageRelativePath = path;
+            _listingName = title;
+          });
+        } catch (_) {
+          setState(() {
+            isLoading = false;
+            isError = true;
+            isEmpty = false;
+          });
+        }
       },
-      (error) => {
-        if (error != null)
-          {
-            setState(() {
-              isLoading = false;
-              isError = true;
-              isEmpty = false;
-            }),
-          },
+      (error) {
+        if (error != null && mounted) {
+          setState(() {
+            isLoading = false;
+            isError = true;
+            isEmpty = false;
+          });
+        }
       },
       widget.prodId.toString(),
     );
   }
 
-  void orderStatus(id, status, desc) {
+  void orderStatus(dynamic id, int status, String desc) {
     orderStatusUpdate(
       id,
       status,
@@ -105,307 +134,585 @@ class _OrderDetailStateScreen extends State<OrderDetailScreen> {
       widget.vendorId,
       widget.route.toString(),
     );
-    final snackBar = new SnackBar(content: new Text("Updating Status"));
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Updating status…', style: GoogleFonts.inter()),
+      ),
+    );
   }
 
   Future<PostOrderStatusUpdateModel> orderStatusUpdate(
-    id,
-    status,
-    desc,
-    vendorID,
-    route,
+    dynamic id,
+    int status,
+    String desc,
+    dynamic vendorID,
+    String route,
   ) async {
     final request = json.encode(<String, dynamic>{
-      "id": id,
-      "status": status,
-      "description": desc,
+      'id': id,
+      'status': status,
+      'description': desc,
     });
 
     final response = await http.post(
       Uri.parse(AppUrl.orderStatusById),
       body: request,
-      headers: {'Content-type': "application/json"},
+      headers: {'Content-type': 'application/json'},
     );
     if (response.statusCode == 200) {
       try {
         ApiRepository.shared.getVenodorOrders(vendorID.toString(), (List) {
-          if (this.mounted) {
-            Get.off(() => OrderRequestScreen());
+          if (mounted) {
+            Get.off(() => const OrderRequestScreen());
           }
         }, (error) {});
-      } catch (error) {
-        // onError(error.toString());
-      }
-    } else if (response.statusCode == 400) {
-      // onError("You are not in Range");
-    } else if (response.statusCode == 500) {
-      // onError("Internal Server Error");
+      } catch (_) {}
     }
     return PostOrderStatusUpdateModel();
   }
 
+  @override
   void initState() {
     super.initState();
     getProduct();
   }
 
+  String _formatDateRange() {
+    try {
+      final s = DateFormat('d MMM yyyy').format(
+        DateTime.parse(widget.start.toString()),
+      );
+      final e = DateFormat('d MMM yyyy').format(
+        DateTime.parse(widget.end.toString()),
+      );
+      return '$s → $e';
+    } catch (_) {
+      return '${widget.start} → ${widget.end}';
+    }
+  }
+
+  String _priceLine() {
+    final nego =
+        int.tryParse(widget.nego_price?.toString() ?? '0') ?? 0;
+    if (nego != 0) return '\$$nego';
+    final p = widget.price?.toString() ?? '0';
+    return '\$$p';
+  }
+
+  bool get _hasNegotiatedPrice {
+    final n = int.tryParse(widget.nego_price?.toString() ?? '0') ?? 0;
+    return n != 0;
+  }
+
+  String _productHeading() {
+    if (_listingName.isNotEmpty) return _listingName;
+    return 'Listing';
+  }
+
   @override
   Widget build(BuildContext context) {
-    double res_width = MediaQuery.of(context).size.width;
-    double res_height = MediaQuery.of(context).size.height;
-    final textScaleFactor = MediaQuery.of(context).textScaler.scale(1.0);
     return Scaffold(
+      backgroundColor: _pageBg,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        automaticallyImplyLeading: false,
+        backgroundColor: _pageBg,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        foregroundColor: Colors.black,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+          onPressed: () => Get.back(),
+          style: IconButton.styleFrom(foregroundColor: Colors.black),
+        ),
+        centerTitle: true,
         title: Text(
-          "Order Details",
-          style: TextStyle(
+          'Order Detail',
+          style: GoogleFonts.inter(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
             color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: 22 * textScaleFactor,
           ),
         ),
-        elevation: 0,
-        centerTitle: true,
-        leading: InkWell(
-          onTap: () {
-            Get.back();
-          },
-          borderRadius: BorderRadius.circular(50),
-          child: Container(child: Icon(Icons.arrow_back, color: Colors.black)),
+      ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(color: AppColors.primaryColor),
+            const SizedBox(height: 16),
+            Text(
+              'Loading listing…',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: _subtitleGrey,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    if (isError) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.cloud_off_outlined, size: 48, color: _metaGrey),
+              const SizedBox(height: 16),
+              Text(
+                'Could not load listing details.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Check your connection and try again.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(fontSize: 14, color: _subtitleGrey),
+              ),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: () {
+                  setState(() {
+                    isLoading = true;
+                    isError = false;
+                  });
+                  getProduct();
+                },
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primaryColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  'Retry',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Text(
+            'No listing found for this order.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(fontSize: 15, color: _subtitleGrey),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _stateBg,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      _stateLabel,
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: _stateFg,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                _buildImageCard(),
+                const SizedBox(height: 12),
+                _buildListingSummaryCard(),
+                const SizedBox(height: 12),
+                _buildRenterCard(),
+                if (!_isNewRoute && !_showPendingState) ...[
+                  const SizedBox(height: 12),
+                  _buildCompletedNote(),
+                ],
+              ],
+            ),
+          ),
+        ),
+        if (_isNewRoute)
+          _buildRequestActions()
+        else if (_showPendingState)
+          _buildLogisticsAction(),
+      ],
+    );
+  }
+
+  Widget _buildImageCard() {
+    final showNetwork = _imageRelativePath.isNotEmpty;
+
+    return Material(
+      color: Colors.white,
+      elevation: 2,
+      shadowColor: Colors.black26,
+      borderRadius: BorderRadius.circular(14),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: AspectRatio(
+          aspectRatio: 16 / 10,
+          child:
+              showNetwork
+                  ? Image.network(
+                    AppUrl.baseUrlM + _imageRelativePath,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => _imagePlaceholder(),
+                  )
+                  : _imagePlaceholder(),
         ),
       ),
-      body:
-          isLoading
-              ? Center(child: Text("Loading"))
-              : Center(
-                child: Container(
-                  width: double.infinity,
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Row(
-                          //   children: [
-                          //     Container(
-                          //       child: Text(
-                          //         "Order Status",
-                          //         style: TextStyle(
-                          //           color: Colors.black,
-                          //           fontSize: 20,
-                          //         ),
-                          //       ),
-                          //     ),
-                          //   ],
-                          // ),
-                          SizedBox(height: res_height * 0.01),
-                          Container(
-                            width: res_width * 0.9,
-                            height: res_height * 0.25,
-                            decoration: BoxDecoration(
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.withAlpha(51),
-                                  spreadRadius: 5,
-                                  blurRadius: 7,
-                                  offset: Offset(
-                                    0,
-                                    3,
-                                  ), // changes position of shadow
-                                ),
-                              ],
-                              color: Colors.white,
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10),
-                              ),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10),
-                              ),
-                              child: Image.network(
-                                AppUrl.baseUrlM + image.toString(),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: res_height * 0.02),
-                          Row(
-                            // mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                child: Text(
-                                  name,
-                                  style: TextStyle(
-                                    fontSize: 18 * textScaleFactor,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: res_height * 0.02),
-                          Row(
-                            // mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                child: Text(
-                                  "${widget.price} \$",
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 18 * textScaleFactor,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: res_height * 0.02),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Customer Name:",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              SizedBox(height: res_height * 0.01),
-                              Text("${widget.name}"),
-                            ],
-                          ),
-                          //  Text("Customer Name: ${widget.name}"),
-                          SizedBox(height: res_height * 0.02),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Email:",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              SizedBox(height: res_height * 0.01),
-                              Text("${widget.email}"),
-                            ],
-                          ),
-                          // Center(child: Text("Email: ${widget.email}")),
-                          SizedBox(height: res_height * 0.02),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                child: Text(
-                                  "Location:",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              SizedBox(height: res_height * 0.01),
-                              Container(child: Text("${widget.location}")),
-                            ],
-                          ),
-                          // Center(child: Text("Delivery Location: ${widget.location}")),
-                          SizedBox(height: res_height * 0.02),
-                          // Column(
-                          //   crossAxisAlignment: CrossAxisAlignment.start,
-                          //   children: [
-                          //     Text(
-                          //       "Discount :",
-                          //       style: TextStyle(fontWeight: FontWeight.bold),
-                          //     ),
-                          //      SizedBox(
-                          //       height: 10,
-                          //     ),
-                          //     Text(" ${widget.nego_price} \$"),
-                          //   ],
-                          // ),
-                          // Center(child: Text("Negotiation Price: ${widget.nego_price}")),
-                          // SizedBox(
-                          //   height: 19,
-                          // ),
-                          Column(
-                            // crossAxisAlignment: CrossAxisAlignment.start,
-                            // mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          "Duration:",
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    SizedBox(height: res_height * 0.01),
+    );
+  }
 
-                                    Container(
-                                      child: Text(
-                                        "${DateFormat('dd/MM/yyyy').format(DateTime.parse(widget.start.toString())).toString()} to ${DateFormat('dd/MM/yyyy').format(DateTime.parse(widget.end.toString())).toString()}",
-                                      ),
-                                    ),
-                                    // Row(
-                                    //   children: [
-                                    //     Text("${widget.start} "),
-                                    //     Text(
-                                    //       "to",
-                                    //       style: TextStyle(fontWeight: FontWeight.bold),
-                                    //     ),
-                                    //     Text(" ${widget.end}"),
-                                    //   ],
-                                    // )
-                                  ],
-                                ),
-                                //  Text(
-                                //   "Start : ${widget.start} to End ${widget.end}",
-                                //   style: TextStyle(
-                                //     color: Colors.grey,
-                                //     fontSize: 18,
-                                //   ),
-                                // ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 19),
-                          GestureDetector(
-                            onTap: () {
-                              orderStatus(widget.orderId, 2, "Order Completed");
-                            },
-                            child:
-                                widget.orderComplete == 0
-                                    ? Center(
-                                      child: Container(
-                                        width: 297,
-                                        height: 58,
-                                        decoration: BoxDecoration(
-                                          color: kprimaryColor,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            'Reached Logistic Facility',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 15,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    )
-                                    : Text(""),
-                          ),
-                          SizedBox(height: 20),
-                        ],
+  Widget _imagePlaceholder() {
+    return ColoredBox(
+      color: const Color(0xFFF5F5F5),
+      child: Center(
+        child: Icon(
+          Icons.inventory_2_outlined,
+          size: 48,
+          color: Colors.grey.shade400,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildListingSummaryCard() {
+    return Material(
+      color: Colors.white,
+      elevation: 2,
+      shadowColor: Colors.black26,
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _productHeading(),
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.black,
+                height: 1.25,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text(
+                  _priceLine(),
+                  style: GoogleFonts.inter(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black,
+                  ),
+                ),
+                if (_hasNegotiatedPrice) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    'Negotiated',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFFE65100),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            if (_hasNegotiatedPrice) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Listed at \$${widget.price}',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: _metaGrey,
+                  decoration: TextDecoration.lineThrough,
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(Icons.date_range_outlined, size: 18, color: _subtitleGrey),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Rental period',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: _subtitleGrey,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _formatDateRange(),
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRenterCard() {
+    return Material(
+      color: Colors.white,
+      elevation: 2,
+      shadowColor: Colors.black26,
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Renter',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: _subtitleGrey,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _infoRow(
+              Icons.person_outline_rounded,
+              'Customer name',
+              widget.name?.toString() ?? '—',
+            ),
+            const SizedBox(height: 12),
+            _infoRow(
+              Icons.email_outlined,
+              'Email',
+              widget.email?.toString() ?? '—',
+            ),
+            const SizedBox(height: 12),
+            _infoRow(
+              Icons.place_outlined,
+              'Delivery',
+              widget.location?.toString() ?? '—',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _infoRow(IconData icon, String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: _metaGrey),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: _metaGrey,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCompletedNote() {
+    return Material(
+      color: Colors.white,
+      elevation: 2,
+      shadowColor: Colors.black26,
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(
+              Icons.check_circle_outline_rounded,
+              color: const Color(0xFF2E7D32),
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'This rental is marked complete. No further action is needed.',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: _subtitleGrey,
+                  height: 1.35,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogisticsAction() {
+    return Material(
+      color: _pageBg,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: FilledButton(
+              onPressed: () {
+                orderStatus(widget.orderId, 2, 'Order Completed');
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primaryColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'Reached logistic facility',
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRequestActions() {
+    return Material(
+      color: _pageBg,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 48,
+                  child: OutlinedButton(
+                    onPressed: () {
+                      orderStatus(widget.orderId, 3, 'Cancelled');
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.black87,
+                      side: BorderSide(color: Colors.grey.shade400),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'Decline',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
                       ),
                     ),
                   ),
                 ),
               ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SizedBox(
+                  height: 48,
+                  child: FilledButton(
+                    onPressed: () {
+                      orderStatus(widget.orderId, 1, 'Approved');
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primaryColor,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'Approve',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

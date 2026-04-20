@@ -3,11 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jebby/Views/helper/global.dart';
 import 'package:jebby/Views/screens/auth/login.dart';
-import 'package:jebby/Views/screens/auth/stripe_onboarding.dart';
 import 'package:jebby/Views/screens/mainfolder/homemain.dart';
 import 'package:jebby/model/user_model.dart';
 import 'package:jebby/view_model/user_view_model.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashServices {
   Future<UserModel> getUserDate() => UserViewModel().getUser();

@@ -6,6 +6,7 @@ import 'package:geocoding/geocoding.dart';
 // import 'package:get/get.dart';
 import 'package:jebby/Views/helper/colors.dart';
 import 'package:custom_info_window/custom_info_window.dart';
+import 'package:jebby/res/color.dart';
 
 class MapViewScreen extends StatefulWidget {
   final List<dynamic> products;
@@ -748,7 +749,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
                 ],
               )
               : _isLocationLoading
-              ? Center(child: CircularProgressIndicator())
+              ? Center(child: CircularProgressIndicator(color: AppColors.primaryColor))
               : Stack(
                 children: [
                   GoogleMap(
@@ -781,7 +782,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
                   if (_isMapLoading)
                     Container(
                       color: Colors.white,
-                      child: Center(child: CircularProgressIndicator()),
+                      child: Center(child: CircularProgressIndicator(color: AppColors.primaryColor)),
                     ),
                 ],
               ),

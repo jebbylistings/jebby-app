@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:jebby/Services/provider/sign_in_provider.dart';
 import 'package:jebby/Views/helper/colors.dart';
 import 'package:jebby/Views/helper/global.dart';
@@ -135,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             children: [
                               Text(
                                 'Welcome Back',
-                                style: TextStyle(
+                                style: GoogleFonts.inter(
                                   fontWeight: FontWeight.bold,
                                   fontSize: isCompact ? 24 : 30,
                                   color: Colors.black,
@@ -143,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               Text(
                                 'Login to your account',
-                                style: TextStyle(
+                                style: GoogleFonts.inter(
                                   fontSize: isCompact ? 14 : 16,
                                   color: Colors.black,
                                   fontWeight: FontWeight.w300,
@@ -174,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               }
                               return null;
                             },
-                            style: TextStyle(
+                            style: GoogleFonts.inter(
                               color: Colors.black,
                               fontWeight: FontWeight.bold,
                             ),
@@ -206,7 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                               filled: true,
-                              hintStyle: TextStyle(
+                              hintStyle: GoogleFonts.inter(
                                 color: AppColors.darkGreyColor,
                                 fontWeight: FontWeight.normal,
                               ),
@@ -228,7 +229,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             controller: _passwordController,
                             autocorrect: false,
                             obscureText: obscure,
-                            style: TextStyle(
+                            style: GoogleFonts.inter(
                               color: Colors.black,
                               fontWeight: FontWeight.bold,
                             ),
@@ -276,7 +277,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                               filled: true,
-                              hintStyle: TextStyle(
+                              hintStyle: GoogleFonts.inter(
                                 color: AppColors.darkGreyColor,
                                 fontWeight: FontWeight.normal,
                               ),
@@ -300,7 +301,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             },
                             child: Text(
                               'Forgot Password?',
-                              style: TextStyle(
+                              style: GoogleFonts.inter(
                                 color: darkBlue,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -354,7 +355,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Center(
                               child: Text(
                                 'Login',
-                                style: TextStyle(
+                                style: GoogleFonts.inter(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
                                   color: Colors.white,
@@ -375,7 +376,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         Text(
                           "Not a member? ",
-                          style: TextStyle(
+                          style: GoogleFonts.inter(
                             fontWeight: FontWeight.w500,
                             fontSize: 16,
                             color: Colors.grey.shade600,
@@ -387,7 +388,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                           child: Text(
                             'Register now',
-                            style: TextStyle(
+                            style: GoogleFonts.inter(
                               fontWeight: FontWeight.w800,
                               fontSize: 18,
                               decoration: TextDecoration.underline,
@@ -622,39 +623,35 @@ class _LoginScreenState extends State<LoginScreen> {
       showSnackBar(context, "Check your Internet connection");
       googleController.reset();
     } else {
-      await sp.signInWithGoogle(value, context).then((value) {
+      try {
+        await sp.signInWithGoogle(value, context);
         if (sp.hasError == true) {
           showSnackBar(context, sp.errorCode.toString());
           googleController.reset();
-        } else {
-          // checking whether user exists or not
-          sp.checkUserExists().then((value) async {
-            if (value == true) {
-              // user exists
-              await sp
-                  .getUserDataFromFirestore(sp.uid)
-                  .then(
-                    (value) => sp.saveDataToSharedPreferences().then(
-                      (value) => sp.setSignIn().then((value) {
-                        googleController.success();
-                        handleAfterSignIn();
-                      }),
-                    ),
-                  );
-            } else {
-              // user does not exist
-              sp.saveDataToFirestore().then(
-                (value) => sp.saveDataToSharedPreferences().then(
-                  (value) => sp.setSignIn().then((value) {
-                    googleController.success();
-                    handleAfterSignIn();
-                  }),
-                ),
-              );
-            }
-          });
+          return;
         }
-      });
+
+        // checking whether user exists or not
+        final exists = await sp.checkUserExists();
+        if (exists) {
+          // user exists
+          await sp.getUserDataFromFirestore(sp.uid);
+          await sp.saveDataToSharedPreferences();
+          await sp.setSignIn();
+          googleController.success();
+          handleAfterSignIn();
+        } else {
+          // user does not exist
+          await sp.saveDataToFirestore();
+          await sp.saveDataToSharedPreferences();
+          await sp.setSignIn();
+          googleController.success();
+          handleAfterSignIn();
+        }
+      } catch (e) {
+        showSnackBar(context, e.toString());
+        googleController.reset();
+      }
     }
   }
 
@@ -926,7 +923,7 @@ void showPhoneNumberDialog(
                   TextField(
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       color: darkBlue,
                       fontWeight: FontWeight.bold,
                     ),
@@ -944,7 +941,7 @@ void showPhoneNumberDialog(
                         borderRadius: BorderRadius.all(Radius.circular(15)),
                       ),
                       filled: true,
-                      hintStyle: TextStyle(
+                      hintStyle: GoogleFonts.inter(
                         color: darkBlue,
                         fontWeight: FontWeight.bold,
                       ),
@@ -960,7 +957,7 @@ void showPhoneNumberDialog(
                     margin: EdgeInsets.only(left: 10),
                     child: Text(
                       '* Phone number must be entered with country code +1 --- --- ----',
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         color: Colors.grey,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -980,7 +977,7 @@ void showPhoneNumberDialog(
                     },
                     child: Text(
                       'Cancel',
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         color: darkBlue,
                         fontWeight: FontWeight.bold,
                       ),
@@ -1018,7 +1015,7 @@ void showPhoneNumberDialog(
                     },
                     child: Text(
                       'Continue',
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         color: darkBlue,
                         fontWeight: FontWeight.bold,
                       ),

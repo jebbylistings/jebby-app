@@ -11,17 +11,18 @@ import 'package:jebby/res/app_url.dart';
 import 'package:jebby/res/color.dart';
 import 'package:jebby/view_model/getTax_modal.dart';
 
-class ReturnProductScreen extends StatefulWidget {
-  const ReturnProductScreen({super.key});
+class ProductReturnScreen extends StatefulWidget {
+  const ProductReturnScreen({super.key});
 
   @override
-  State<ReturnProductScreen> createState() => _ReturnProductScreenState();
+  State<ProductReturnScreen> createState() => _ProductReturnScreenState();
 }
 
-class _ReturnProductScreenState extends State<ReturnProductScreen> {
+class _ProductReturnScreenState extends State<ProductReturnScreen> {
   static const Color _pageBg = Color(0xFFF3F3F5);
   static const Color _subtitleGrey = Color(0xFF72747A);
 
+  String url = dotenv.env['baseUrlM'] ?? 'No url found';
   bool isLoading = true;
   bool isError = false;
   bool isEmpty = false;
@@ -30,17 +31,11 @@ class _ReturnProductScreenState extends State<ReturnProductScreen> {
 
   Future<void> _loadData() async {
     try {
-      final data = await GetreturnProduct.fetchData();
+      final data = await GetreturnProduct2.fetchData();
       if (!mounted) return;
       final raw = data['data'];
       final list = raw is List ? List<dynamic>.from(raw) : <dynamic>[];
-      final filtered =
-          list
-              .where((e) {
-                final c = e['complete_date'];
-                return c != null && c.toString() != '0' && c.toString().isNotEmpty;
-              })
-              .toList();
+      final filtered = list.where((e) => e['retrurn'] != 0).toList();
       setState(() {
         array = filtered;
         isLoading = false;
@@ -78,26 +73,37 @@ class _ReturnProductScreenState extends State<ReturnProductScreen> {
     }
   }
 
-  Future<void> _submitReturn(dynamic id) async {
-    String urlBase = dotenv.env['baseUrlM'] ?? '';
+  bool _canConfirmReceipt(dynamic item) {
+    final r = item['retrurn'];
+    if (r == null) return false;
+    if (r is int) return r == 1;
+    return r.toString() == '1';
+  }
+
+  Future<void> _submitReceived(dynamic id) async {
     setState(() {
       isLoading = true;
     });
-    final seenMessageUrl = '$urlBase/orderReturn';
-    var data = {'id': id};
+    final seenMessageUrl = '$url/orderReceived';
+    final body = {'id': id};
     try {
       final response = await http.post(
         Uri.parse(seenMessageUrl),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode(data),
+        body: json.encode(body),
       );
       final responseBody = jsonDecode(response.body);
 
       if (!mounted) return;
 
-      if (responseBody['message'].toString() == 'product has been returned') {
+      if (responseBody['message'].toString() == 'product has been received') {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Product has been returned', style: GoogleFonts.inter())),
+          SnackBar(
+            content: Text(
+              'Product has been received',
+              style: GoogleFonts.inter(),
+            ),
+          ),
         );
         await _loadData();
       } else {
@@ -128,13 +134,6 @@ class _ReturnProductScreenState extends State<ReturnProductScreen> {
         );
       }
     }
-  }
-
-  bool _canReturn(dynamic item) {
-    final r = item['retrurn'];
-    if (r == null) return true;
-    if (r is int) return r == 0;
-    return r.toString() == '0';
   }
 
   @override
@@ -192,7 +191,7 @@ class _ReturnProductScreenState extends State<ReturnProductScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Mark rentals as returned when you’ve sent the item back.',
+                'Confirm when you’ve received items renters have returned.',
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
@@ -210,7 +209,9 @@ class _ReturnProductScreenState extends State<ReturnProductScreen> {
 
   Widget _buildBody() {
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primaryColor));
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primaryColor),
+      );
     }
     if (isError) {
       return Center(
@@ -239,33 +240,33 @@ class _ReturnProductScreenState extends State<ReturnProductScreen> {
         final dateStr = _formatCompleteDate(item['complete_date']);
         final id = item['id'];
         final image = item['product_image'];
-        final canReturn = _canReturn(item);
+        final canConfirm = _canConfirmReceipt(item);
 
-        return _ReturnItemCard(
+        return _VendorReceiveItemCard(
           name: name,
           completedDate: dateStr,
           imageUrl: _imageUrl(image),
-          canReturn: canReturn,
-          onReturn: canReturn ? () => _submitReturn(id) : null,
+          canConfirm: canConfirm,
+          onConfirm: canConfirm ? () => _submitReceived(id) : null,
         );
       },
     );
   }
 }
 
-class _ReturnItemCard extends StatelessWidget {
+class _VendorReceiveItemCard extends StatelessWidget {
   final String name;
   final String completedDate;
   final String imageUrl;
-  final bool canReturn;
-  final VoidCallback? onReturn;
+  final bool canConfirm;
+  final VoidCallback? onConfirm;
 
-  const _ReturnItemCard({
+  const _VendorReceiveItemCard({
     required this.name,
     required this.completedDate,
     required this.imageUrl,
-    required this.canReturn,
-    required this.onReturn,
+    required this.canConfirm,
+    required this.onConfirm,
   });
 
   @override
@@ -292,7 +293,10 @@ class _ReturnItemCard extends StatelessWidget {
                         imageUrl.isEmpty
                             ? ColoredBox(
                               color: const Color(0xFFF5F5F5),
-                              child: Icon(Icons.inventory_2_outlined, color: Colors.grey.shade400),
+                              child: Icon(
+                                Icons.inventory_2_outlined,
+                                color: Colors.grey.shade400,
+                              ),
                             )
                             : CachedNetworkImage(
                               imageUrl: imageUrl,
@@ -314,7 +318,10 @@ class _ReturnItemCard extends StatelessWidget {
                               errorWidget:
                                   (_, __, ___) => ColoredBox(
                                     color: const Color(0xFFF5F5F5),
-                                    child: Icon(Icons.image_not_supported_outlined, color: Colors.grey.shade500),
+                                    child: Icon(
+                                      Icons.image_not_supported_outlined,
+                                      color: Colors.grey.shade500,
+                                    ),
                                   ),
                             ),
                   ),
@@ -343,7 +350,7 @@ class _ReturnItemCard extends StatelessWidget {
                           color: const Color(0xFF9A9AA1),
                         ),
                       ),
-                      if (!canReturn) ...[
+                      if (!canConfirm) ...[
                         const SizedBox(height: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -352,7 +359,7 @@ class _ReturnItemCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            'RETURN SUBMITTED',
+                            'RECEIPT CONFIRMED',
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -372,7 +379,7 @@ class _ReturnItemCard extends StatelessWidget {
               width: double.infinity,
               height: 44,
               child: FilledButton(
-                onPressed: onReturn,
+                onPressed: onConfirm,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primaryColor,
                   foregroundColor: Colors.white,
@@ -384,7 +391,7 @@ class _ReturnItemCard extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  canReturn ? 'Return' : 'Already returned',
+                  canConfirm ? 'Product received' : 'Already confirmed',
                   style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 15),
                 ),
               ),

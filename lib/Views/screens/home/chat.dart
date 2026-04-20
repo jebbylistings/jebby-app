@@ -2,25 +2,27 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:jebby/Views/screens/home/Messages.dart';
+import 'package:jebby/res/app_url.dart';
+import 'package:jebby/res/color.dart';
+import 'package:jebby/view_model/apiServices.dart';
 import 'package:provider/provider.dart';
+
 import '../../../Services/provider/sign_in_provider.dart';
 import '../../../model/user_model.dart';
-import '../../../view_model/apiServices.dart';
 import '../../../view_model/user_view_model.dart';
+import '../../../model/getChatHistoryModel.dart' as datamodel;
 
-class Chat extends StatefulWidget {
-  final dynamic targetID;
-
-  Chat(this.targetID);
+class MessagesScreen extends StatefulWidget {
+  const MessagesScreen({super.key});
 
   @override
-  State<Chat> createState() => _ChatState();
+  State<MessagesScreen> createState() => _MessagesScreenState();
 }
 
-class _ChatState extends State<Chat> {
-  Future getData() async {
+class _MessagesScreenState extends State<MessagesScreen> {
+  Future<void> getData() async {
     final sp = context.read<SignInProvider>();
     final usp = context.read<UserViewModel>();
     usp.getUser();
@@ -33,7 +35,6 @@ class _ChatState extends State<Chat> {
   String sourceId = "";
   String? fullname;
   String? email;
-  String? phoneNumber;
   String? role;
 
   void profileData(BuildContext context) async {
@@ -42,604 +43,405 @@ class _ChatState extends State<Chat> {
           token = value.token.toString();
           sourceId = value.id.toString();
           fullname = value.name.toString();
-          phoneNumber = value.phoneNumber.toString();
           email = value.email.toString();
           role = value.role.toString();
-          getUserData();
-          getMessageApi();
+          get_chat_history();
+          seenNotification();
         })
         .onError((error, stackTrace) {
           if (kDebugMode) {}
         });
   }
 
-  late var Ctimer;
-  var messages = [];
-  bool socketConnected = false;
-  bool msgData = false;
+  void seenNotification() {
+    ApiRepository.shared.seenNotification(sourceId);
+  }
 
-  // var url = "https://192.168.18.39:7000/InsertMessage";
   bool isLoading = true;
   bool isError = false;
   bool isEmpty = false;
-  TextEditingController _sendMessageController = TextEditingController();
 
-  void getMessageApi() {
-    ApiRepository.shared.getMessagesApi(
+  void get_chat_history() {
+    ApiRepository.shared.chatsHistory(
       sourceId.toString(),
-      widget.targetID.toString(),
-      (List) {
-        if (this.mounted) {
-          if (List.data!.length == 0) {
-            setState(() {
-              isLoading = false;
-              isEmpty = true;
-              isError = false;
-            });
-          } else {
-            setState(() {
-              isLoading = false;
-              isError = false;
-              isEmpty = false;
-            });
-          }
+      (payload) {
+        if (!mounted) return;
+        if (payload.data == null || payload.data!.isEmpty) {
+          setState(() {
+            isEmpty = true;
+            isLoading = false;
+            isError = false;
+          });
+        } else {
+          setState(() {
+            isEmpty = false;
+            isLoading = false;
+            isError = false;
+          });
         }
       },
       (error) {
-        if (error != null) {
+        if (error != null && mounted) {
           setState(() {
-            isLoading = true;
+            isEmpty = false;
+            isLoading = false;
             isError = true;
-            isError = false;
           });
         }
       },
     );
   }
 
-  void sendMessage(msg, sender_id, recipient_id) {
-    ApiRepository.shared.postMessage(
-      msg.toString(),
-      sourceId.toString(),
-      widget.targetID.toString(),
+  Timer? _pollTimer;
+
+  void _startPoll() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => get_chat_history(),
     );
   }
 
-  bool userLoader = false;
-  bool userError = false;
-  bool userEmpty = true;
-  var userImage = "";
+  final TextEditingController _searchController = TextEditingController();
+  String searchText = "";
 
-  void getUserData() {
-    ApiRepository.shared.userCredential(
-      (List) => {
-        if (this.mounted)
-          {
-            if (List.data!.length == 0)
-              {
-                setState(() {
-                  userLoader = false;
-                  userError = false;
-                  userEmpty = true;
-                  userImage = "";
-                }),
-              }
-            else
-              {
-                setState(() {
-                  userError = false;
-                  userLoader = false;
-                  userEmpty = false;
-                  userImage =
-                      ApiRepository
-                          .shared
-                          .getUserCredentialModelList!
-                          .data![0]
-                          .image
-                          .toString();
-                }),
-              },
-          },
-      },
-      (error) => {
-        if (error != null)
-          {
-            setState(() {
-              userError = true;
-              userLoader = false;
-              userEmpty = false;
-              userImage = "";
-            }),
-          },
-      },
-      sourceId.toString(),
-    );
+  List<datamodel.Data> _visibleChats() {
+    final raw = ApiRepository.shared.getChatsHistoryModelList?.data;
+    if (raw == null) return [];
+    final rev = raw.reversed.toList();
+    if (searchText.isEmpty) return rev;
+    final q = searchText.toLowerCase();
+    return rev
+        .where((e) => (e.name ?? '').toString().toLowerCase().contains(q))
+        .toList();
   }
 
-  bool targetLoader = false;
-  bool targetError = false;
-  bool targetEmpty = true;
-  var targetImage = "";
-
-  void getTargetData() {
-    ApiRepository.shared.userCredential(
-      (List) => {
-        if (this.mounted)
-          {
-            if (List.data!.length == 0)
-              {
-                setState(() {
-                  targetLoader = false;
-                  targetError = false;
-                  targetEmpty = true;
-                  targetImage = "";
-                }),
-              }
-            else
-              {
-                setState(() {
-                  targetError = false;
-                  targetLoader = false;
-                  targetEmpty = false;
-                  targetImage =
-                      ApiRepository
-                          .shared
-                          .getUserCredentialModelList!
-                          .data![0]
-                          .image
-                          .toString();
-                }),
-              },
-          },
-      },
-      (error) => {
-        if (error != null)
-          {
-            setState(() {
-              targetError = true;
-              targetLoader = false;
-              targetEmpty = false;
-              targetImage = "";
-            }),
-          },
-      },
-      widget.targetID.toString(),
-    );
-  }
-
+  @override
   void initState() {
+    super.initState();
+    _startPoll();
     getData();
     profileData(context);
-    getTargetData();
-    Ctimer = new Timer.periodic(Duration(seconds: 2), (_) => getMessageApi());
-    super.initState();
   }
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
+    _searchController.dispose();
     super.dispose();
-    Ctimer.cancel();
   }
 
+  @override
   Widget build(BuildContext context) {
-    double res_height = MediaQuery.of(context).size.height;
     return Scaffold(
-      backgroundColor: Color(0xffF2F2F2),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        title: Row(
-          children: [
-            Image.asset(
-              "assets/newpacks/chatpersonicon.png",
-              height: 30,
-              width: 30,
-            ),
-            SizedBox(
-              width: 20,
-            ),
-            Text(
-              'Abhi',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-                fontSize: 19,
-              ),
-            ),
-          ],
-        ),
-        leading: InkWell(
-          onTap: () {
-            Get.back();
-            Ctimer.cancel();
-            // Navigator.pop(context);
-            // Navigator.of(context)
-            // .push(MaterialPageRoute(builder: ((context) => MessagesScreen())));
-            // Navigator.pop(context);
-            // Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>MessagesScreen()), (route) => false);
-          },
-          borderRadius: BorderRadius.circular(50),
-          child: Padding(
-            padding: const EdgeInsets.all(17.0),
-            child: Container(
-              child: Icon(Icons.arrow_back_ios, color: Colors.black),
-            ),
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        reverse: true,
+      backgroundColor: Colors.grey.shade100,
+      body: SafeArea(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SizedBox(
-              height: 15,
-            ),
-            isLoading
-                ? Center(child: Text("Loading Chats"))
-                : isEmpty
-                ? Center(child: Text("start your chat"))
-                : ListView.builder(
-                  physics: NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount:
-                      ApiRepository
-                          .shared
-                          .getAllMessagesModelList!
-                          .data!
-                          .length,
-                  itemBuilder: (context, index) {
-                    var msg =
-                        ApiRepository
-                            .shared
-                            .getAllMessagesModelList!
-                            .data![index]
-                            .content
-                            .toString();
-                    String formattedDate = DateFormat(
-                      'MMM dd, yyyy hh:mm a',
-                    ).format(
-                      DateTime.parse(
-                        ApiRepository
-                            .shared
-                            .getAllMessagesModelList!
-                            .data![index]
-                            .timeSent
-                            .toString(),
-                      ),
-                    );
-                    String formattedTime = DateFormat('hh:mm a').format(
-                      DateTime.parse(
-                        ApiRepository
-                            .shared
-                            .getAllMessagesModelList!
-                            .data![index]
-                            .timeSent
-                            .toString(),
-                      ),
-                    );
-                    var time = formattedTime;
-                    var date = formattedDate;
-                    var sender =
-                        ApiRepository
-                            .shared
-                            .getAllMessagesModelList!
-                            .data![index]
-                            .senderId
-                            .toString();
-                    // return(Text(msg));
-                    return sender == sourceId
-                        ? usermsg(msg, time, date)
-                        : customersuppor(msg, time, date);
-                  },
-                ),
-            Container(height: res_height * 0.11),
-          ],
-        ),
-      ),
-      bottomSheet: getBottom(),
-    );
-  }
-
-  Widget getBottom() {
-    return Container(
-      height: 80,
-      width: double.infinity,
-      color: Color(0xffF2F2F2),
-      //  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2)),
-      child: Padding(
-        padding: const EdgeInsets.only(left: 20, bottom: 10),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Container(
-              width: MediaQuery.of(context).size.width * 0.9,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 10, 12, 0),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Container(
-                    width: MediaQuery.of(context).size.width * 0.75,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 12),
-                      child: TextField(
-                        cursorColor: Colors.black,
-                        style: TextStyle(
-                          color: Colors.black,
-                        ),
-                        controller: _sendMessageController,
-                        keyboardType: TextInputType.multiline,
-                        minLines: 1,
-                        maxLines: 5,
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          hintText: "Type a message",
-                          hintStyle: TextStyle(
-                            color: Colors.grey.shade500,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      if (_sendMessageController.text.isNotEmpty) {
-                        sendMessage(
-                          _sendMessageController.text,
-                          sourceId,
-                          widget.targetID,
-                        );
-                        _sendMessageController.clear();
-                        //  getMessageApi();
-                      }
-                    },
-                    child: Image.asset(
-                      'assets/newpacks/chatsendicon.png',
-                      height: 40,
-                      width: 40,
-                   //   color: kprimaryColor,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    'Chat',
+                    style: GoogleFonts.inter(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black,
+                      height: 1.1,
                     ),
                   ),
                 ],
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 8),
+              child: _SearchPill(
+                controller: _searchController,
+                onChanged: (v) {
+                  setState(() => searchText = v.toLowerCase());
+                },
+              ),
+            ),
+            SizedBox(height: 10),
+            Expanded(child: _buildBody()),
           ],
         ),
       ),
     );
   }
 
-  customersuppor(msg, time, date) {
-    double res_width = MediaQuery.of(context).size.width;
-    return Container(
-      width: res_width * 0.75,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: res_width * 0.75,
-            margin: EdgeInsets.only(left: 20),
-            decoration: BoxDecoration(
-              color: Color(0xffF8F9FE),
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(20),
-                bottomRight: Radius.circular(20),
-               // bottomLeft: Radius.circular(20),
-                topLeft: Radius.circular(20),
-              ),
-            ),
-            child: Row(
-              children: [
-
-                // Container(
-                //   width: res_width * 0.2,
-                //   child: Padding(
-                //     padding: const EdgeInsets.all(8.0),
-                //     child:
-                //         targetImage == ""
-                //             ? CircleAvatar(
-                //               backgroundColor: Colors.grey,
-                //               backgroundImage: AssetImage(
-                //                 "assets/slicing/blankuser.jpeg",
-                //               ),
-                //             )
-                //             : CachedNetworkImage(
-                //               imageUrl:
-                //                   AppUrl.baseUrlM + targetImage.toString(),
-                //               imageBuilder:
-                //                   (context, imageProvider) => CircleAvatar(
-                //                     backgroundImage: imageProvider,
-                //                   ),
-                //               placeholder:
-                //                   (context, url) => Center(
-                //                     child: SizedBox(
-                //                       width: 30,
-                //                       height: 30,
-                //                       child: CircularProgressIndicator(
-                //                         strokeWidth: 2.0,
-                //                       ),
-                //                     ),
-                //                   ),
-                //               errorWidget:
-                //                   (context, url, error) => Icon(Icons.error),
-                //             ),
-                //   ),
-                // ),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Container(
-                    child: Container(
-                      width: res_width * 0.6,
-                      child: Text(
-                        msg,
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+  Widget _buildBody() {
+    if (isError) {
+      return Center(
+        child: Text(
+          'Something went wrong while loading chats.',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.inter(fontSize: 15, color: Colors.black54),
+        ),
+      );
+    }
+    if (isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primaryColor),
+      );
+    }
+    final items = _visibleChats();
+    if (isEmpty || items.isEmpty) {
+      return Center(
+        child: Text(
+          'No messages',
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.black54,
           ),
-          Padding(
-            padding: const EdgeInsets.only(
-              left: 20,
-              right: 20,
-              top: 5,
-              bottom: 15,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  date,
-                  style: TextStyle(color: Colors.black, fontSize: 12),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(15, 1, 15, 24),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final element = items[index];
+        final name = element.name;
+        final image = element.image.toString();
+        final targetId = element.id.toString();
+        final count = element.count ?? 0;
+        final lastMessage = (element.lastMessage ?? '').toString();
+        final displayName =
+            (name == null || name.toString().trim().isEmpty)
+                ? 'Vendor'
+                : name.toString();
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: _ChatListTile(
+            name: displayName,
+            imageUrl: image.isEmpty ? null : AppUrl.baseUrlM + image,
+            lastMessage: lastMessage,
+            unreadCount: count,
+            onTap: () {
+              _pollTimer?.cancel();
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute<void>(builder: (_) => Chat(targetId))).then((
+                _,
+              ) {
+                if (!mounted) return;
+                // Periodic timer’s first tick is delayed; refresh immediately
+                // so last-message preview matches what was sent in the thread.
+                get_chat_history();
+                _startPoll();
+              });
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SearchPill extends StatelessWidget {
+  const _SearchPill({required this.controller, required this.onChanged});
+
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: Row(
+        children: [
+          Icon(Icons.search, color: Colors.grey.shade500, size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              onChanged: onChanged,
+              style: GoogleFonts.inter(fontSize: 15, color: Colors.black87),
+              decoration: InputDecoration(
+                isDense: true,
+                hintText: 'Search',
+                hintStyle: GoogleFonts.inter(
+                  fontSize: 15,
+                  color: Colors.grey.shade400,
+                  fontWeight: FontWeight.w400,
                 ),
-                // Text(time, style: TextStyle(color: Color(0xffbfbab8)))
-              ],
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+              ),
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  usermsg(msg, time, date) {
-    double res_width = MediaQuery.of(context).size.width;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Container(
-          width: res_width * 0.75,
-          child: Column(
+class _ChatListTile extends StatelessWidget {
+  const _ChatListTile({
+    required this.name,
+    required this.imageUrl,
+    required this.lastMessage,
+    required this.unreadCount,
+    required this.onTap,
+  });
+
+  final String name;
+  final String? imageUrl;
+  final String lastMessage;
+  final int unreadCount;
+  final VoidCallback onTap;
+
+  String get _preview {
+    if (lastMessage.length <= 80) return lastMessage;
+    return '${lastMessage.substring(0, 77)}…';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                width: res_width * 0.9,
-                decoration: BoxDecoration(
-                  color: Color(0xFF1F2024),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    bottomLeft: Radius.circular(20),
-                  //  bottomRight: Radius.circular(20),
-                    topRight:  Radius.circular(20),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Container(
-                          width: res_width * 0.6,
-                          child: Text(
-                            msg,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Container(
-                    //   width: res_width * 0.2,
-                    //   child: Padding(
-                    //     padding: const EdgeInsets.all(8.0),
-                    //     child:
-                    //         userImage == ""
-                    //             ? CircleAvatar(
-                    //               backgroundColor: Colors.grey,
-                    //               backgroundImage: AssetImage(
-                    //                 "assets/slicing/blankuser.jpeg",
-                    //               ),
-                    //             )
-                    //             : CircleAvatar(
-                    //               backgroundColor:
-                    //                   Colors
-                    //                       .transparent, // Optional: Background color
-                    //               child: CachedNetworkImage(
-                    //                 imageUrl:
-                    //                     AppUrl.baseUrlM + userImage.toString(),
-                    //                 imageBuilder:
-                    //                     (context, imageProvider) => CircleAvatar(
-                    //                       backgroundImage: imageProvider,
-                    //                     ),
-                    //                 placeholder:
-                    //                     (context, url) => Center(
-                    //                       child: SizedBox(
-                    //                         width: 30,
-                    //                         height: 30,
-                    //                         child: CircularProgressIndicator(
-                    //                           strokeWidth: 2.0,
-                    //                         ),
-                    //                       ),
-                    //                     ),
-                    //                 errorWidget:
-                    //                     (context, url, error) =>
-                    //                         Icon(Icons.error),
-                    //               ),
-                    //             ),
-                    //   ),
-                    // ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(
-                  left: 20,
-                  right: 20,
-                  top: 5,
-                  bottom: 15,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              _Avatar(imageUrl: imageUrl),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      date,
-                      style: TextStyle(color: Colors.black, fontSize: 12),
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black,
+                      ),
                     ),
-                    // Text(time, style: TextStyle(color: Colors.black, fontSize: 12))
+                    const SizedBox(height: 4),
+                    Text(
+                      _preview,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFF6B6B70),
+                        height: 1.35,
+                      ),
+                    ),
                   ],
                 ),
               ),
+              if (unreadCount > 0) ...[
+                const SizedBox(width: 10),
+                Container(
+                  width: 26,
+                  height: 26,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    unreadCount > 9 ? '9+' : '$unreadCount',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      height: 1,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
-        SizedBox(
-          width: 10,
-        )
-      ],
+      ),
     );
   }
 }
 
-class MessageModel {
-  String? Message;
-  String? type;
+class _Avatar extends StatelessWidget {
+  const _Avatar({this.imageUrl});
 
-  MessageModel({this.Message, this.type});
-}
+  final String? imageUrl;
 
-class StreamSocket {
-  final _socketResponse = StreamController<String>();
+  static const Color _fill = Color(0xFFFFF4E8);
 
-  void Function(String) get addResponse {
-    return _socketResponse.sink.add;
-  }
-
-  Stream<String> get getResponse {
-    return _socketResponse.stream;
-  }
-
-  void dispose() {
-    _socketResponse.close();
+  @override
+  Widget build(BuildContext context) {
+    const size = 54.0;
+    if (imageUrl == null || imageUrl!.isEmpty) {
+      return CircleAvatar(
+        radius: size / 2,
+        backgroundColor: _fill,
+        child: Icon(
+          Icons.person_rounded,
+          color: AppColors.primaryColor.withValues(alpha: 0.85),
+          size: 30,
+        ),
+      );
+    }
+    return ClipOval(
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Image.network(
+          imageUrl!,
+          fit: BoxFit.cover,
+          errorBuilder:
+              (_, __, ___) => ColoredBox(
+                color: _fill,
+                child: Icon(
+                  Icons.person_rounded,
+                  color: AppColors.primaryColor.withValues(alpha: 0.85),
+                  size: 30,
+                ),
+              ),
+          loadingBuilder: (context, child, progress) {
+            if (progress == null) return child;
+            return ColoredBox(
+              color: _fill,
+              child: Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.primaryColor.withValues(alpha: 0.5),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 }

@@ -324,13 +324,15 @@ class _EditProfileState extends State<EditProfile> {
       backgroundColor: const Color(0xFFF2F2F2),
       appBar: AppBar(
         backgroundColor: const Color(0xFFF2F2F2),
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         centerTitle: true,
         title: Text(
           'Edit Profile',
           style: GoogleFonts.inter(
             fontWeight: FontWeight.w700,
-            color: Colors.black,
+            color: Colors.black87,
             fontSize: 18,
           ),
         ),
@@ -339,7 +341,11 @@ class _EditProfileState extends State<EditProfile> {
             Get.back();
           },
           borderRadius: BorderRadius.circular(50),
-          child: Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+          child: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.black,
+            size: 20,
+          ),
         ),
       ),
       body: Container(

@@ -3,6 +3,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:jebby/Views/helper/colors.dart';
+import 'package:jebby/res/color.dart';
 
 class LocationPickerScreen extends StatefulWidget {
   const LocationPickerScreen({Key? key}) : super(key: key);
@@ -155,52 +156,55 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   void _showLocationDisabledDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Location Services Disabled'),
-        content: Text(
-          'Please enable location services to use this feature.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('OK'),
+      builder:
+          (context) => AlertDialog(
+            title: Text('Location Services Disabled'),
+            content: Text(
+              'Please enable location services to use this feature.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('OK'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
   void _showPermissionDeniedDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Location Permission Denied'),
-        content: Text(
-          'Please enable location permissions in your device settings to use this feature.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('OK'),
+      builder:
+          (context) => AlertDialog(
+            title: Text('Location Permission Denied'),
+            content: Text(
+              'Please enable location permissions in your device settings to use this feature.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('OK'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Error'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('OK'),
+      builder:
+          (context) => AlertDialog(
+            title: Text('Error'),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('OK'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -221,41 +225,39 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
         children: [
           // Map
           _isLoading
-              ? Center(child: CircularProgressIndicator())
+              ? Center(child: CircularProgressIndicator(color: AppColors.primaryColor))
               : GoogleMap(
-                  onMapCreated: (controller) {
-                    _mapController = controller;
-                    print("Map controller created at ${DateTime.now()}");
-                  },
-                  initialCameraPosition: _initialCameraPosition,
-                  myLocationEnabled: true,
-                  myLocationButtonEnabled: false,
-                  compassEnabled: true,
-                  mapType: MapType.normal,
-                  zoomControlsEnabled: true,
-                  onCameraMove: _onCameraMove,
-                  onCameraIdle: _onCameraIdle,
-                  markers: <Marker>{
-                    // Add a hidden marker to force map rendering
-                    if (_selectedLocation != null)
-                      Marker(
-                        markerId: MarkerId('selected_position'),
-                        position: _selectedLocation!,
-                        visible: false,
-                      ),
-                  },
-                ),
+                onMapCreated: (controller) {
+                  _mapController = controller;
+                  print("Map controller created at ${DateTime.now()}");
+                },
+                initialCameraPosition: _initialCameraPosition,
+                myLocationEnabled: true,
+                myLocationButtonEnabled: false,
+                compassEnabled: true,
+                mapType: MapType.normal,
+                zoomControlsEnabled: true,
+                onCameraMove: _onCameraMove,
+                onCameraIdle: _onCameraIdle,
+                markers: <Marker>{
+                  // Add a hidden marker to force map rendering
+                  if (_selectedLocation != null)
+                    Marker(
+                      markerId: MarkerId('selected_position'),
+                      position: _selectedLocation!,
+                      visible: false,
+                    ),
+                },
+              ),
 
           // Centered marker
           if (!_isLoading)
             Center(
               child: Container(
-                margin: EdgeInsets.only(bottom: 40), // Offset for better placement
-                child: Icon(
-                  Icons.location_pin,
-                  color: darkBlue,
-                  size: 50,
-                ),
+                margin: EdgeInsets.only(
+                  bottom: 40,
+                ), // Offset for better placement
+                child: Icon(Icons.location_pin, color: darkBlue, size: 50),
               ),
             ),
 
@@ -286,22 +288,23 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                       SizedBox(height: 8),
                       _isLoadingAddress
                           ? Row(
-                              children: [
-                                SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
+                            children: [
+                              SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.primaryColor,
                                 ),
-                                SizedBox(width: 8),
-                                Text('Getting address...'),
-                              ],
-                            )
+                              ),
+                              SizedBox(width: 8),
+                              Text('Getting address...'),
+                            ],
+                          )
                           : Text(
-                              _selectedAddress,
-                              style: TextStyle(fontSize: 14),
-                            ),
+                            _selectedAddress,
+                            style: TextStyle(fontSize: 14),
+                          ),
                       SizedBox(height: 16),
                       SizedBox(
                         width: double.infinity,
@@ -331,25 +334,26 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
             ),
         ],
       ),
-      floatingActionButton: !_isLoading
-          ? FloatingActionButton(
-              onPressed: () {
-                if (_currentPosition != null && _mapController != null) {
-                  _mapController!.animateCamera(
-                    CameraUpdate.newLatLngZoom(
-                      LatLng(
-                        _currentPosition!.latitude,
-                        _currentPosition!.longitude,
+      floatingActionButton:
+          !_isLoading
+              ? FloatingActionButton(
+                onPressed: () {
+                  if (_currentPosition != null && _mapController != null) {
+                    _mapController!.animateCamera(
+                      CameraUpdate.newLatLngZoom(
+                        LatLng(
+                          _currentPosition!.latitude,
+                          _currentPosition!.longitude,
+                        ),
+                        15.0,
                       ),
-                      15.0,
-                    ),
-                  );
-                }
-              },
-              backgroundColor: darkBlue,
-              child: Icon(Icons.my_location),
-            )
-          : null,
+                    );
+                  }
+                },
+                backgroundColor: darkBlue,
+                child: Icon(Icons.my_location),
+              )
+              : null,
     );
   }
-} 
+}

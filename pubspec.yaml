@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.5.2+26
+version: 1.6.0+27
 
 environment:
   sdk: ^3.7.0
@@ -89,7 +89,9 @@ dependencies:
   custom_sliding_segmented_control: ^1.8.1
   firebase_messaging: ^15.1.3
   flutter_local_notifications: ^18.0.1
-
+  http: ^1.2.2
+  rounded_loading_button_plus: ^3.0.1
+  connectivity_plus: ^6.1.3
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -97,9 +99,7 @@ dev_dependencies:
   progress_indicator: ^0.2.2
   rate: ^0.0.2
   step_progress_indicator: ^1.0.2
-  connectivity_plus: ^6.1.3
   font_awesome_flutter: ^10.1.0
-  rounded_loading_button_plus: ^3.0.1
   form_data: ^1.0.0-nullsafety.1
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

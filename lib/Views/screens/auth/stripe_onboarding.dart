@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jebby/Views/helper/colors.dart';
 import 'package:jebby/Views/screens/auth/login.dart';
-import 'package:jebby/Views/screens/mainfolder/homemain.dart';
 import 'package:jebby/Views/screens/vendors/vendorhome.dart';
 import 'package:jebby/model/stripe_verification_model.dart';
 import 'package:jebby/view_model/apiServices.dart';
@@ -10,6 +9,7 @@ import 'package:jebby/respository/auth_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:jebby/Views/screens/auth/location_picker.dart';
+import 'package:jebby/res/color.dart';
 
 class StripeOnboardingScreen extends StatefulWidget {
   final String userId;
@@ -449,13 +449,13 @@ class _StripeOnboardingScreenState extends State<StripeOnboardingScreen>
       // Call update role API before navigating
       final authRepo = AuthRepository();
       final userEmail = prefs.getString('email') ?? '';
-      
+
       try {
         final response = await authRepo.updateRoleApi({
           "role": "1",
           "email": userEmail,
         });
-        
+
         if (response["status"] == 200) {
           print("Role updated to provider successfully during onboarding");
           // Update local preferences
@@ -463,7 +463,9 @@ class _StripeOnboardingScreenState extends State<StripeOnboardingScreen>
           // Navigate to vendor home screen
           Get.offAll(() => VendrosHomeScreen());
         } else {
-          print("Failed to update role during onboarding: ${response["message"]}");
+          print(
+            "Failed to update role during onboarding: ${response["message"]}",
+          );
           // Still navigate but log the error
           prefs.setString('role', '1');
           Get.offAll(() => VendrosHomeScreen());
@@ -723,7 +725,7 @@ class _StripeOnboardingScreenState extends State<StripeOnboardingScreen>
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                          color: Colors.white,
+                          color: AppColors.primaryColor,
                           strokeWidth: 2,
                         ),
                       ),
@@ -828,7 +830,7 @@ class _StripeOnboardingScreenState extends State<StripeOnboardingScreen>
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
-                              color: Colors.white,
+                              color: AppColors.primaryColor,
                               strokeWidth: 2,
                             ),
                           ),
@@ -868,6 +870,7 @@ class _StripeOnboardingScreenState extends State<StripeOnboardingScreen>
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
+                                  color: AppColors.primaryColor,
                                 ),
                               ),
                               SizedBox(width: 10),
@@ -995,7 +998,7 @@ class _StripeOnboardingScreenState extends State<StripeOnboardingScreen>
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                          color: Colors.white,
+                          color: AppColors.primaryColor,
                           strokeWidth: 2,
                         ),
                       ),
@@ -1156,7 +1159,7 @@ class _StripeOnboardingScreenState extends State<StripeOnboardingScreen>
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
-                                color: Colors.white,
+                                color: AppColors.primaryColor,
                                 strokeWidth: 2,
                               ),
                             ),
@@ -1212,7 +1215,7 @@ class _StripeOnboardingScreenState extends State<StripeOnboardingScreen>
                           SizedBox(
                             width: 16,
                             height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryColor),
                           ),
                           SizedBox(width: 8),
                           Text('Checking...'),
@@ -1299,7 +1302,7 @@ class _StripeOnboardingScreenState extends State<StripeOnboardingScreen>
 
                 // Current step content
                 if (_isLoading && _currentStep != 1)
-                  Center(child: CircularProgressIndicator())
+                  Center(child: CircularProgressIndicator(color: AppColors.primaryColor))
                 else if (_currentStep == 0)
                   _buildStep1()
                 else if (_currentStep == 1)

@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jebby/Services/product_services.dart';
-import 'package:jebby/Views/screens/auth/ProductDetail.dart';
+import 'package:jebby/Views/screens/home/ProductDetails.dart';
 
 import '../../../model/products_model.dart' as pm;
 import '../../../res/app_url.dart';
+import 'package:jebby/res/color.dart';
 
 class Electronics2 extends StatefulWidget {
   final String parentCategoryName;
@@ -339,102 +340,93 @@ class _Electronics2State extends State<Electronics2> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _pageBg,
-      body: SafeArea(
-        child: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : _error != null
-            ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    'Could not load products',
-                    style: GoogleFonts.inter(color: Colors.black54),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        foregroundColor: Colors.black,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+          onPressed: () => Get.back(),
+          style: IconButton.styleFrom(foregroundColor: Colors.black),
+        ),
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primaryColor))
+          : _error != null
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'Could not load products',
+                  style: GoogleFonts.inter(color: Colors.black54),
+                ),
+              ),
+            )
+          : CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(child: _buildHeader(context)),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+                    child: _buildSearch(),
                   ),
                 ),
-              )
-            : CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(child: _buildHeader(context)),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
+                    child: _buildSortFilterRow(),
+                  ),
+                ),
+                if (_visible.isEmpty)
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-                      child: _buildSearch(),
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
-                      child: _buildSortFilterRow(),
-                    ),
-                  ),
-                  if (_visible.isEmpty)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(32),
-                        child: Center(
-                          child: Text(
-                            'No products match your search.',
-                            style: GoogleFonts.inter(
-                              color: Colors.black54,
-                              fontSize: 15,
-                            ),
+                      padding: const EdgeInsets.all(32),
+                      child: Center(
+                        child: Text(
+                          'No products match your search.',
+                          style: GoogleFonts.inter(
+                            color: Colors.black54,
+                            fontSize: 15,
                           ),
                         ),
                       ),
-                    )
-                  else
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
-                      sliver: SliverGrid(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 12,
-                          mainAxisExtent: 225,
-                        ),
-                        delegate: SliverChildBuilderDelegate((
-                          context,
-                          index,
-                        ) {
-                          final item = _visible[index];
-                          return _ProductTile(
-                            item: item,
-                            isNew: _isNew(item),
-                            onTap: () => _goToDetail(item),
-                          );
-                        }, childCount: _visible.length),
-                      ),
                     ),
-                ],
-              ),
-      ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
+                    sliver: SliverGrid(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 12,
+                        mainAxisExtent: 225,
+                      ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final item = _visible[index];
+                        return _ProductTile(
+                          item: item,
+                          isNew: _isNew(item),
+                          onTap: () => _goToDetail(item),
+                        );
+                      }, childCount: _visible.length),
+                    ),
+                  ),
+              ],
+            ),
     );
   }
 
   Widget _buildHeader(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 10, 18, 4),
+      padding: const EdgeInsets.fromLTRB(18, 2, 18, 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => Get.back(),
-              borderRadius: BorderRadius.circular(20),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(0, 2, 8, 8),
-                child: Icon(
-                  Icons.arrow_back_ios_new,
-                  size: 22,
-                  color: _textPrimary.withOpacity(0.85),
-                ),
-              ),
-            ),
-          ),
           Padding(
-            padding: const EdgeInsets.only(top: 22),
+            padding: const EdgeInsets.only(top: 4),
             child: Text(
               widget.subcategoryName,
               style: GoogleFonts.inter(

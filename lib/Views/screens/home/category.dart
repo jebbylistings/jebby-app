@@ -9,6 +9,7 @@ import 'package:jebby/model/sub_category_list_model.dart';
 
 import '../../../res/app_url.dart';
 import '../../../view_model/category_get_View_model.dart';
+import 'package:jebby/res/color.dart';
 
 class ElectronicsScreen extends StatefulWidget {
   final String? id;
@@ -65,7 +66,7 @@ class _ElectronicsScreenState extends State<ElectronicsScreen> {
     double res_width = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F5F5),
       // backgroundColor: Colors.transparent,
       // appBar: AppBar(
       //   backgroundColor: Colors.transparent,
@@ -102,7 +103,7 @@ class _ElectronicsScreenState extends State<ElectronicsScreen> {
                       placeholder:
                           (context, url) => Center(
                             child:
-                                CircularProgressIndicator(), // Loading spinner
+                                CircularProgressIndicator(color: AppColors.primaryColor), // Loading spinner
                           ),
                       errorWidget:
                           (context, url, error) => Icon(
@@ -132,19 +133,31 @@ class _ElectronicsScreenState extends State<ElectronicsScreen> {
 
                     // Content
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(26, 66, 16, 14),
+                      padding: const EdgeInsets.only(left: 14, top: 66),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          InkWell(
-                            onTap: () {
-                              Get.back();
-                            },
-                            borderRadius: BorderRadius.circular(50),
-                            child: Icon(
-                              Icons.arrow_back_ios,
-                              color: Colors.white,
+                          Material(
+                            color: Colors.transparent,
+                            shape: const CircleBorder(),
+                            child: InkWell(
+                              onTap: () => Get.back(),
+                              customBorder: const CircleBorder(),
+                              splashColor: Colors.black26,
+                              highlightColor: Colors.black12,
+                              child: Ink(
+                                padding: const EdgeInsets.all(10),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xE6FFFFFF),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_back_ios_new,
+                                  size: 20,
+                                  color: Colors.black,
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -188,7 +201,7 @@ class _ElectronicsScreenState extends State<ElectronicsScreen> {
       ),
 
       body: Container(
-        color: Colors.white,
+        color: const Color(0xFFF5F5F5),
         width: double.infinity,
         child: SingleChildScrollView(
           child: Padding(
@@ -225,7 +238,7 @@ class _ElectronicsScreenState extends State<ElectronicsScreen> {
                     ) {
                       final data = snapshot.data?.data;
                       if (!snapshot.hasData) {
-                        return Center(child: CircularProgressIndicator());
+                        return Center(child: CircularProgressIndicator(color: AppColors.primaryColor));
                       } else {
                         if (snapshot.data!.data!.length != 0) {
 
@@ -319,7 +332,7 @@ class _ElectronicsScreenState extends State<ElectronicsScreen> {
                 fit: BoxFit.cover,
                 placeholder:
                     (context, url) => Center(
-                  child: CircularProgressIndicator(), // Loading spinner
+                  child: CircularProgressIndicator(color: AppColors.primaryColor), // Loading spinner
                 ),
                 errorWidget:
                     (context, url, error) => Icon(

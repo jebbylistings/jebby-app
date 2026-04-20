@@ -2,23 +2,20 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:jebby/Views/screens/home/Filter.dart';
-import 'package:jebby/Views/screens/home/Messages(32).dart';
+import 'package:jebby/Views/screens/home/Chat.dart';
 import 'package:jebby/res/color.dart';
-import 'package:jebby/utils/utils.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:jebby/Views/controller/bottomcontroller.dart';
-import 'package:jebby/Views/helper/colors.dart';
-import 'package:jebby/Views/helper/global.dart';
 import 'package:jebby/Views/screens/home/FeaturedCategories.dart';
 import 'package:jebby/Views/screens/home/home.dart';
-import 'package:jebby/Views/screens/home/messages.dart';
 import 'package:http/http.dart' as http;
 
-import 'package:jebby/Views/screens/home/setting.dart';
-import 'package:jebby/Views/screens/vendors/ProductList.dart';
-import 'package:jebby/Views/screens/vendors/notification.dart';
+import 'package:jebby/Views/screens/shared/Setting.dart';
+import 'package:jebby/Views/screens/vendors/MyProducts.dart';
+import 'package:jebby/Views/screens/shared/Notification.dart';
 import 'package:jebby/Views/screens/vendors/vendorhome.dart';
 import 'package:jebby/res/app_url.dart';
 import 'package:jebby/view_model/apiServices.dart';
@@ -39,6 +36,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   final bottomctrl = Get.put(BottomController());
   num activeIndex = 0;
+  String? _persistedRole;
 
   // String userName = "";
 
@@ -47,7 +45,7 @@ class _MainScreenState extends State<MainScreen> {
     // FavouriteScreen(),
     FilterScreeen(),
     FeaturedCategoriesScreen(),
-    MessageScreen(),
+    NotificationsScreen(),
     Settings(),
     MessagesScreen(),
   ];
@@ -57,7 +55,7 @@ class _MainScreenState extends State<MainScreen> {
     ProductListScreen(side: true),
     // Settings(),
     ProductListScreen(side: true),
-    VendorNotifications(),
+    NotificationsScreen(isVendor: true),
     Settings(),
     MessagesScreen(),
     // OrderRequestScreen(),
@@ -112,9 +110,18 @@ class _MainScreenState extends State<MainScreen> {
     func();
     getData();
     profileData(context);
+    _loadPersistedRole();
     // getUserName();
     // check();
     super.initState();
+  }
+
+  Future<void> _loadPersistedRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _persistedRole = prefs.getString('role');
+    });
   }
 
   // void getUserName()  async {
@@ -200,6 +207,16 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final userName = context.watch<AuthViewModel>();
+    final userViewModel = context.watch<UserViewModel>();
+    final activeRole =
+        (userViewModel.role != null && userViewModel.role!.isNotEmpty)
+            ? userViewModel.role
+            : role;
+    final resolvedRole =
+        (activeRole != null && activeRole.isNotEmpty)
+            ? activeRole
+            : _persistedRole;
+    final isProviderMode = resolvedRole == "1";
 
     // State variable for delayed condition check
 
@@ -212,483 +229,274 @@ class _MainScreenState extends State<MainScreen> {
       body: GetBuilder<BottomController>(
         builder: (controller) {
           activeIndex = controller.navigationBarIndexValue;
-          return (loginType == "user")
-              ? screens[bottomctrl.navigationBarIndexValue]
-              : screensVendor[bottomctrl.navigationBarIndexValue];
+          return isProviderMode
+              ? screensVendor[bottomctrl.navigationBarIndexValue]
+              : screens[bottomctrl.navigationBarIndexValue];
         },
       ),
       bottomNavigationBar:
-          role != "Guest" ? bottomForUser(userName) : bottomForGuest(),
+          isProviderMode
+              ? null
+              : (resolvedRole != "Guest"
+                    ? bottomForUser(userName)
+                    : bottomForGuest()),
+    );
+  }
+
+  static const double _footerBarHeight = 64;
+  static const double _footerFabSize = 60;
+  static const double _footerNavIconSize = 28;
+  static const double _footerLabelFontSize = 12.5;
+  static const Color _footerInactive = Color(0xFFB5B5B5);
+  static const Color _footerLabelActive = Color(0xFF2C2C2C);
+
+  TextStyle _footerTextStyle(bool selected) => GoogleFonts.inter(
+        fontSize: _footerLabelFontSize,
+        fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+        height: 1.15,
+        color: selected ? _footerLabelActive : _footerInactive,
+      );
+
+  Color _footerIconColor(bool selected) =>
+      selected ? AppColors.primaryColor : _footerInactive;
+
+  Widget _footerNavTap({
+    required Widget icon,
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            icon,
+            const SizedBox(height: 4),
+            Text(label, style: _footerTextStyle(selected)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _footerSearchSlot() {
+    return _footerNavTap(
+      icon: Image.asset(
+        'assets/newpacks/searchnew.png',
+        width: _footerNavIconSize,
+        height: _footerNavIconSize,
+        color: _footerIconColor(activeIndex == 1),
+      ),
+      label: 'Search',
+      selected: activeIndex == 1,
+      onTap: () {
+        bottomctrl.navBarChange(1);
+        setState(() => activeIndex = 1);
+      },
+    );
+  }
+
+  Widget _footerDockedFab() {
+    return Material(
+      elevation: 4,
+      shadowColor: Colors.black26,
+      shape: const CircleBorder(),
+      color: AppColors.primaryColor,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: () {
+          bottomctrl.navBarChange(2);
+          setState(() => activeIndex = 2);
+        },
+        child: const SizedBox(
+          width: _footerFabSize,
+          height: _footerFabSize,
+          child: Icon(
+            Icons.grid_view_rounded,
+            color: Colors.white,
+            size: 30,
+          ),
+        ),
+      ),
     );
   }
 
   Widget bottomForUser(userName) {
-    final Size size = MediaQuery.of(context).size;
+    final size = MediaQuery.sizeOf(context);
+    final bottomPad = MediaQuery.paddingOf(context).bottom;
+    final paintHeight = _footerBarHeight + bottomPad;
 
-    return Container(
+    return SizedBox(
+      height: _footerBarHeight + 22 + bottomPad,
       width: size.width,
-      height: 70,
-      // color: Colors.white,
       child: Stack(
-        // clipBehavior: Clip.none,
+        clipBehavior: Clip.none,
+        alignment: Alignment.bottomCenter,
         children: [
-         // CustomPaint(size: Size(size.width, 80), painter: BNBCustomPainter()),
-          Container(
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(28),
-                //boxShadow: [...]
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: paintHeight,
+            child: CustomPaint(
+              painter: JebbyFooterBarPainter(),
+              size: Size(size.width, paintHeight),
             ),
           ),
-          Center(
-            heightFactor: 0.6,
-            child: FloatingActionButton(
-              backgroundColor: kprimaryColor,
-              child: Image.asset('assets/newpacks/menuicon.png', width: 27),
-              elevation: 0,
-              onPressed: () {
-                bottomctrl.navBarChange(2);
-              },
-            ),
-          ),
-          Container(
-            width: size.width,
-            height: 80,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: bottomPad,
+            height: _footerBarHeight,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    GestureDetector(
-                      child: Image.asset(
-                        'assets/newpacks/home.png',
-                        width: 25,
-                        height: 25,
-                        color:
-                            activeIndex == 0
-                                ? AppColors.primaryColor
-                                : Colors.grey.shade500,
-                      ),
-                      onTap: () {
-                        bottomctrl.navBarChange(0);
-                        setState(() {
-                          activeIndex = 0;
-                        });
-                      },
-
-                      // splashColor: Colors.grey.shade500,
-                    ),
-                    Text(
-                      'Home',
-                      style: TextStyle(
-                        color:
-                            activeIndex == 0
-                                ? Colors.black
-                                : Colors.grey.shade500,
-                      ),
-                    ),
-                  ],
-                ),
-                role == "0" || role == "Guest"
-                    ?
-                    // IconButton(
-                    //     icon: Icon(Icons.search, color: Colors.grey.shade500),
-                    //     // Image.asset(
-                    //     //   'assets/slicing/heart.png',
-                    //     //   width: 20,
-                    //     // ),
-                    //     onPressed: () {
-                    //       // bottomctrl.navBarChange(2);
-                    //       Get.to(() => FilterScreeen());
-                    //     },
-                    //   )
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-
-                      children: [
-                        InkWell(
-                          onTap: () {
-                            Get.to(() => FilterScreeen());
-                          },
-                          child: Image.asset(
-                            'assets/newpacks/searchnew.png',
-                            width: 25,
-                            height: 25,
-                            color: Colors.grey.shade500,
-                          ),
+                    Expanded(
+                      child: _footerNavTap(
+                        icon: Image.asset(
+                          'assets/newpacks/home_footer.png',
+                          width: _footerNavIconSize,
+                          height: _footerNavIconSize,
+                          color: _footerIconColor(activeIndex == 0),
                         ),
-                        Text(
-                          'Search',
-                          style: TextStyle(color: Colors.grey.shade500),
+                        label: 'Home',
+                        selected: activeIndex == 0,
+                        onTap: () {
+                          bottomctrl.navBarChange(0);
+                          setState(() => activeIndex = 0);
+                        },
+                      ),
+                    ),
+                    Expanded(child: _footerSearchSlot()),
+                    const SizedBox(width: _footerFabSize + 4),
+                    Expanded(
+                      child: _footerNavTap(
+                        icon: Image.asset(
+                          'assets/newpacks/chaticon.png',
+                          width: _footerNavIconSize,
+                          height: _footerNavIconSize,
+                          color: _footerIconColor(activeIndex == 5),
                         ),
-                      ],
-                    )
-                    : Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    GestureDetector(
-                      child: Image.asset(
-                        'assets/newpacks/searchnew.png',
-                        width: 25,
-                        height: 25,
-                        color:
-                        activeIndex == 1
-                            ? AppColors.primaryColor
-                            : Colors.grey.shade500,
-                      ),
-                      onTap: () {
-                        bottomctrl.navBarChange(1);
-                        setState(() {
-                          activeIndex = 1;
-                        });
-                      },
-
-                      // splashColor: Colors.grey.shade500,
-                    ),
-                    Text(
-                      'Search',
-                      style: TextStyle(
-                        color:
-                        activeIndex == 1
-                            ? Colors.black
-                            : Colors.grey.shade500,
+                        label: 'Chat',
+                        selected: activeIndex == 5,
+                        onTap: () {
+                          setState(() => activeIndex = 5);
+                          bottomctrl.navBarChange(5);
+                        },
                       ),
                     ),
-                  ],
-                ),
-                // IconButton(
-                //       icon: Icon(
-                //         activeIndex == 1
-                //             ? Icons.filter_alt
-                //             : Icons.filter_alt_outlined,
-                //         color:
-                //             activeIndex == 1
-                //                 ? AppColors.primaryColor
-                //                 : Colors.grey.shade500,
-                //         size: 30,
-                //       ),
-                //       onPressed: () {
-                //         setState(() {
-                //           activeIndex = 1;
-                //         });
-                //         bottomctrl.navBarChange(1);
-                //       },
-                //     ),
-                Container(width: size.width * 0.20),
-                Stack(
-                  children: [
-                    // Positioned(
-                    //     top: 2,
-                    //     right: 6,
-                    //     child:
-                    //         // Consumer<ApiRepository>(builder: (context, value, child){
-                    //         //   return Text(value.notificationLoader == false ? "" :
-                    //         //   value.getNotificationModelList!.unseen.toString() == "0" ? "":
-                    //         //   value.getNotificationModelList!.unseen.toString()
-                    //         //   );
-                    //         // },),
-                    //         Text(
-                    //       isLoading
-                    //           ? ""
-                    //           : ApiRepository.shared.getNotificationModelList!.unseen.toString() == "0"
-                    //               ? ""
-                    //               : ApiRepository.shared.getNotificationModelList!.unseen.toString(),
-                    //       style: TextStyle(color: Colors.white),
-                    //     )
-                    //     ),
-                    Visibility(
-                      visible: role != "Guest",
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          GestureDetector(
-                            child: Image.asset(
-                              'assets/newpacks/chaticon.png',
-                              width: 25,
-                              height: 25,
-                              color:
-                                  activeIndex == 5
-                                      ? AppColors.primaryColor
-                                      : Colors.grey.shade500,
-                            ),
-                            onTap: () {
-                              if (role != "Guest") {
-                                setState(() {
-                                  activeIndex = 5;
-                                });
-                                bottomctrl.navBarChange(5);
-                              } else {
-                                Utils.toastMessage(
-                                  "Not Available For Guest User",
-                                );
-                              }
-                            },
-
-                            // splashColor: Colors.grey.shade500,
-                          ),
-                          Text(
-                            'Chat',
-                            style: TextStyle(
-                              color:
-                                  activeIndex == 5
-                                      ? Colors.black
-                                      : Colors.grey.shade500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      // IconButton(
-                      //   icon: Icon(
-                      //     activeIndex == 5 ? Icons.chat : Icons.chat_outlined,
-                      //     // color:
-                      //     //     role != "Guest"
-                      //     //         ? const Color.fromARGB(218, 255, 255, 255)
-                      //     //         : Color(0xFF808080),
-                      //     color:
-                      //         activeIndex == 5
-                      //             ? AppColors.primaryColor
-                      //             : Colors.grey.shade500,
-                      //   ),
-                      //   // Image.asset(
-                      //   //   'assets/slicing/notifications.png',
-                      //   //   width: 20,
-                      //   // ),
-                      //   //todo
-                      //   onPressed: () {
-                      //     // role == "0" ?
-                      //     // Get.to(MessagesScreen())
-                      //     // Get.to(() => MessageScreen()) :
-                      //     // bottomctrl.navBarChange(3);
-                      //     // Get.to(() => MessagesScreen());
-                      //     if (role != "Guest") {
-                      //       setState(() {
-                      //         activeIndex = 5;
-                      //       });
-                      //       bottomctrl.navBarChange(5);
-                      //     } else {
-                      //       Utils.toastMessage("Not Available For Guest User");
-                      //     }
-                      //   },
-                      // ),
-                    ),
-                  ],
-                ),
-                role == "1"
-                    ?
-                // IconButton(
-                //       icon: Icon(
-                //         activeIndex == 4
-                //             ? Icons.settings
-                //             : Icons.settings_outlined,
-                //
-                //         // color:
-                //         //     role != "Guest"
-                //         //         ? const Color.fromARGB(218, 255, 255, 255)
-                //         //         : Color(0xFF808080),
-                //         color:
-                //             activeIndex == 4
-                //                 ? AppColors.primaryColor
-                //                 : Colors.grey.shade500,
-                //       ),
-                //       // icon: Icon(
-                //       //   Icons.person_sharp,
-                //       //   color: Colors.white,
-                //       //   size: 30,
-                //       // ),
-                //       onPressed: () {
-                //         if (role != "Guest") {
-                //           setState(() {
-                //             activeIndex = 4;
-                //           });
-                //           bottomctrl.navBarChange(4);
-                //         } else {
-                //           Utils.toastMessage("Not Available For Guest User");
-                //         }
-                //       },
-                //     )
-
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    GestureDetector(
-                      child: Image.asset(
-                        'assets/newpacks/settingicon.png',
-                        width: 25,
-                        height: 25,
-                        color:
-                        activeIndex == 4
-                            ? AppColors.primaryColor
-                            : Colors.grey.shade500,
-                      ),
-                      onTap: () {
-                        if (role != "Guest") {
-                          setState(() {
-                            activeIndex = 4;
-                          });
+                    Expanded(
+                      child: _footerNavTap(
+                        icon: Image.asset(
+                          'assets/newpacks/settingicon.png',
+                          width: _footerNavIconSize,
+                          height: _footerNavIconSize,
+                          color: _footerIconColor(activeIndex == 4),
+                        ),
+                        label: 'Settings',
+                        selected: activeIndex == 4,
+                        onTap: () {
+                          setState(() => activeIndex = 4);
                           bottomctrl.navBarChange(4);
-                        } else {
-                          Utils.toastMessage("Not Available For Guest User");
-                        }
-                      },
-
-                      // splashColor: Colors.grey.shade500,
-                    ),
-                    Text(
-                      'Settings',
-                      style: TextStyle(
-                        color:
-                        activeIndex == 4
-                            ? Colors.black
-                            : Colors.grey.shade500,
+                        },
                       ),
                     ),
                   ],
-                )
-                    : (role != "Guest")
-                    ? GestureDetector(
-                  onTap: (){
-
-
-                    setState(() {
-                      activeIndex = 4;
-                    });
-                    bottomctrl.navBarChange(4);
-                  },
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          GestureDetector(
-                            child: Image.asset(
-                              'assets/newpacks/settingicon.png',
-                              width: 25,
-                              height: 25,
-                              color:
-                                  activeIndex == 4
-                                      ? AppColors.primaryColor
-                                      : Colors.grey.shade500,
-                            ),
-                            onTap: () {
-                              setState(() {
-                                activeIndex = 4;
-                              });
-                              bottomctrl.navBarChange(4);
-                            },
-
-                            // splashColor: Colors.grey.shade500,
-                          ),
-                          Text(
-                            'Settings',
-                            style: TextStyle(
-                              color:
-                                  activeIndex == 4
-                                      ? Colors.black
-                                      : Colors.grey.shade500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                    // IconButton(
-                    //       icon: Icon(
-                    //         activeIndex == 4
-                    //             ? Icons.settings
-                    //             : Icons.settings_outlined,
-                    //         // color:
-                    //         //     role != "Guest"
-                    //         //         ? const Color.fromARGB(218, 255, 255, 255)
-                    //         //         : Color(0xFF808080),
-                    //         color:
-                    //             activeIndex == 4
-                    //                 ? AppColors.primaryColor
-                    //                 : Colors.grey.shade500,
-                    //       ),
-                    //       onPressed: () {
-                    //         if (role != "Guest") {
-                    //           setState(() {
-                    //             activeIndex = 4;
-                    //           });
-                    //           bottomctrl.navBarChange(4);
-                    //         } else {
-                    //           Utils.toastMessage("Not Available For Guest User");
-                    //         }
-                    //       },
-                    //     )
-                    : Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: SizedBox(
-                        width: 60,
-                        height: 20,
-                        child: SizedBox.shrink(),
-                      ),
-                    ),
-              ],
+                ),
             ),
-          ),
-        ],
-      ),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: bottomPad + _footerBarHeight - (_footerFabSize * 0.75),
+              child: Center(child: _footerDockedFab()),
+            ),
+          ],
+        ),
     );
   }
 
   Widget bottomForGuest() {
-    final Size size = MediaQuery.of(context).size;
+    final size = MediaQuery.sizeOf(context);
+    final bottomPad = MediaQuery.paddingOf(context).bottom;
+    final paintHeight = _footerBarHeight + bottomPad;
 
-    return Container(
+    return SizedBox(
+      height: _footerBarHeight + 22 + bottomPad,
       width: size.width,
-      height: 70,
       child: Stack(
-        // clipBehavior: Clip.none,
+        clipBehavior: Clip.none,
+        alignment: Alignment.bottomCenter,
         children: [
-          CustomPaint(size: Size(size.width, 80), painter: BNBCustomPainter()),
-          Center(
-            heightFactor: 0.6,
-            child: FloatingActionButton(
-              backgroundColor: kprimaryColor,
-              child: Image.asset('assets/slicing/layer.png', width: 27),
-              elevation: 0,
-              onPressed: () {
-                bottomctrl.navBarChange(2);
-              },
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: paintHeight,
+            child: CustomPaint(
+              painter: JebbyFooterBarPainter(),
+              size: Size(size.width, paintHeight),
             ),
           ),
-          Container(
-            width: size.width,
-            height: 80,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                IconButton(
-                  icon: Icon(
-                    Icons.home,
-                    color: const Color.fromARGB(218, 255, 255, 255),
-                    size: 30,
-                  ),
-                  onPressed: () {
-                    bottomctrl.navBarChange(0);
-                  },
-                  splashColor: Colors.white,
-                ),
-                Container(width: size.width * 0.20),
-                IconButton(
-                  icon: Icon(
-                    Icons.search,
-                    color: const Color.fromARGB(218, 255, 255, 255),
-                  ),
-                  // Image.asset(
-                  //   'assets/slicing/heart.png',
-                  //   width: 20,
-                  // ),
-                  onPressed: () {
-                    // bottomctrl.navBarChange(2);
-                    Get.to(() => FilterScreeen());
-                  },
-                ),
-              ],
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: bottomPad,
+            height: _footerBarHeight,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Row(
+                  children: [
+                    Expanded(
+                      child: _footerNavTap(
+                        icon: Icon(
+                          Icons.home_rounded,
+                          size: _footerNavIconSize,
+                          color: _footerIconColor(activeIndex == 0),
+                        ),
+                        label: 'Home',
+                        selected: activeIndex == 0,
+                        onTap: () {
+                          bottomctrl.navBarChange(0);
+                          setState(() => activeIndex = 0);
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: _footerFabSize + 4),
+                    Expanded(
+                      child: _footerNavTap(
+                        icon: Icon(
+                          Icons.search_rounded,
+                          size: _footerNavIconSize,
+                          color: _footerIconColor(activeIndex == 1),
+                        ),
+                        label: 'Search',
+                        selected: activeIndex == 1,
+                        onTap: () {
+                          bottomctrl.navBarChange(1);
+                          setState(() => activeIndex = 1);
+                        },
+                      ),
+                    ),
+                  ],
+              ),
             ),
-          ),
-        ],
-      ),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: bottomPad + _footerBarHeight - (_footerFabSize * 0.75),
+              child: Center(child: _footerDockedFab()),
+            ),
+          ],
+        ),
     );
   }
 
@@ -771,39 +579,41 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
-class BNBCustomPainter extends CustomPainter {
+/// White bar with a subtle top shadow and convex center bump for the docked FAB.
+class JebbyFooterBarPainter extends CustomPainter {
+  JebbyFooterBarPainter({
+    this.topFlatY = 5,
+    this.bumpPeakY = -30,
+  });
+
+  final double topFlatY;
+  final double bumpPeakY;
+
   @override
   void paint(Canvas canvas, Size size) {
-    Paint paint =
-        new Paint()
-          //..color = Color(0xFF4285F4)
-          ..color = Color(0xFFffffff)
-          ..style = PaintingStyle.fill;
+    final w = size.width;
+    final h = size.height;
+    final path = Path();
+    path.moveTo(0, topFlatY);
+    path.lineTo(w * 0.36, topFlatY);
+    path.quadraticBezierTo(w * 0.40, topFlatY, w * 0.44, topFlatY - 20);
+    path.quadraticBezierTo(w * 0.50, bumpPeakY, w * 0.56, topFlatY - 20);
+    path.quadraticBezierTo(w * 0.60, topFlatY, w * 0.64, topFlatY);
+    path.lineTo(w, topFlatY);
+    path.lineTo(w, h);
+    path.lineTo(0, h);
+    path.close();
 
-    Path path = Path();
-    // path.moveTo(0, 20);
-    path.moveTo(0, 0); // -> start at top left
-    // path.quadraticBezierTo(size.width * 0.20, 0, size.width * 0.35, 0);
-    path.lineTo(size.width * 0.35, 0); // -> move to middle left
-    path.quadraticBezierTo(size.width * 0.40, 0, size.width * 0.40, 20);
-    path.arcToPoint(
-      Offset(size.width * 0.60, 20),
-      radius: Radius.circular(20.0),
-      clockwise: false,
+    canvas.drawShadow(path, const Color(0x33000000), 6, false);
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.fill,
     );
-    path.quadraticBezierTo(size.width * 0.60, 0, size.width * 0.65, 0);
-    // path.quadraticBezierTo(size.width * 0.80, 0, size.width, 20);
-    path.lineTo(size.width, 0); // -> move from middle right to top right
-    path.lineTo(size.width, size.height);
-    path.lineTo(0, size.height);
-    // path.lineTo(0, 20);
-    path.close(); // -> close path, same as path.lineTo(0, 0)
-    canvas.drawShadow(path, Colors.black, 5, true);
-    canvas.drawPath(path, paint);
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) {
-    return false;
-  }
+  bool shouldRepaint(covariant JebbyFooterBarPainter oldDelegate) =>
+      oldDelegate.topFlatY != topFlatY || oldDelegate.bumpPeakY != bumpPeakY;
 }

@@ -6,10 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:jebby/Views/helper/colors.dart';
-import 'package:jebby/Views/screens/auth/stripe_onboarding.dart';
 import 'package:jebby/provider/prodetail_provider.dart';
-import 'package:jebby/res/color.dart';
 
 import 'package:jebby/view_model/auth_view_model.dart';
 import 'package:jebby/Views/screens/mainfolder/homemain.dart';
@@ -158,7 +155,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 width: res_width * 0.6,
                 child: Image.asset('assets/newpacks/appicon.png'),
               ),
-              SizedBox(height: res_height * 0.28),
+              SizedBox(height: res_height * 0.34),
               Container(
                 width: res_width * 0.8,
                 child: Row(
@@ -167,8 +164,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     Text(
                       'Explore Renting At\nYour Fingertips',
                       textAlign: TextAlign.start,
-
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         fontWeight: FontWeight.w900,
                         fontSize: 23,
                         color: Colors.white,
@@ -190,7 +186,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       child: Text(
                         'Enjoy these pre-made components and worry only about creating the best product ever.',
                         textAlign: TextAlign.start,
-                        style: TextStyle(
+                        style: GoogleFonts.inter(
                           fontWeight: FontWeight.w300,
                           fontSize: 16,
                           color: Colors.white,
@@ -201,50 +197,50 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               ),
 
-              SizedBox(height: res_height * 0.058),
+              // SizedBox(height: res_height * 0.058),
 
-              Container(
-                width: res_width * 0.8,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Skip',
-                      textAlign: TextAlign.start,
+              // Container(
+              //   width: res_width * 0.8,
+              //   child: Row(
+              //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //     children: [
+              //       Text(
+              //         'Skip',
+              //         textAlign: TextAlign.start,
 
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 16,
-                        color: Colors.white,
-                      ),
-                    ),
+              //         style: TextStyle(
+              //           fontWeight: FontWeight.w900,
+              //           fontSize: 16,
+              //           color: Colors.white,
+              //         ),
+              //       ),
 
-                    GestureDetector(
-                      onTap: () {
-                        // Get.to(() => LoginScreen());
-                        // Get.to(() => MainScreen());
-                      },
-                      child: Container(
-                        width: res_width * 0.15,
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryColor,
-                          borderRadius: BorderRadius.all(Radius.circular(13)),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(15.0),
-                          child: Center(
-                            child: Icon(
-                              Icons.arrow_forward,
-                              color: Colors.white,
-                              //size: 30,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              //       GestureDetector(
+              //         onTap: () {
+              //           // Get.to(() => LoginScreen());
+              //           // Get.to(() => MainScreen());
+              //         },
+              //         child: Container(
+              //           width: res_width * 0.15,
+              //           decoration: BoxDecoration(
+              //             color: AppColors.primaryColor,
+              //             borderRadius: BorderRadius.all(Radius.circular(13)),
+              //           ),
+              //           child: Padding(
+              //             padding: const EdgeInsets.all(15.0),
+              //             child: Center(
+              //               child: Icon(
+              //                 Icons.arrow_forward,
+              //                 color: Colors.white,
+              //                 //size: 30,
+              //               ),
+              //             ),
+              //           ),
+              //         ),
+              //       ),
+              //     ],
+              //   ),
+              // ),
             ],
           ),
         ),

@@ -1,15 +1,17 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:jebby/Views/helper/colors.dart';
 import 'package:jebby/Views/screens/home/OrderConfirmation.dart';
 import 'package:jebby/Views/screens/home/TrackingDetail.dart';
 import 'package:jebby/res/app_url.dart';
+import 'package:jebby/res/color.dart';
 import 'package:provider/provider.dart';
 
 import '../../../Services/provider/sign_in_provider.dart';
+import '../../../model/getAllOrdersByUserIdModel.dart' as user_orders;
 import '../../../model/user_model.dart';
 import '../../../view_model/apiServices.dart';
 import '../../../view_model/user_view_model.dart';
@@ -22,15 +24,21 @@ class MyOrdersScreen extends StatefulWidget {
 }
 
 class _MyOrdersScreenState extends State<MyOrdersScreen> {
-  bool alllbool = true;
-  bool creditbool = false;
-  bool debitbool = false;
+  /// 0 = All, 1 = To Ship (status 1), 2 = Received (status 2)
+  int selectedTab = 0;
+
+  static const Color _pageBg = Color(0xFFF3F3F5);
+  static const Color _subtitleGrey = Color(0xFF72747A);
+  static const Color _pillTrack = Color(0xFFE8E8EC);
 
   bool isLoading = true;
   bool isError = false;
   bool isEmpty = false;
 
-  Future getData() async {
+  String sourceId = "";
+  String? fullname;
+
+  Future<void> getData() async {
     final sp = context.read<SignInProvider>();
     final usp = context.read<UserViewModel>();
     usp.getUser();
@@ -39,19 +47,11 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
 
   Future<UserModel> getUserDate() => UserViewModel().getUser();
 
-  String? token;
-  String sourceId = "";
-  String? fullname;
-  String? email;
-  String? role;
-  void profileData(BuildContext context) async {
+  void profileData(BuildContext context) {
     getUserDate()
         .then((value) async {
-          token = value.token.toString();
           sourceId = value.id.toString();
           fullname = value.name.toString();
-          email = value.email.toString();
-          role = value.role.toString();
           getNewOrders();
         })
         .onError((error, stackTrace) {
@@ -59,1080 +59,518 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
         });
   }
 
-  getNewOrders() {
+  void getNewOrders() {
     ApiRepository.shared.getAllOrdersByUserId(
       sourceId,
       (List) {
-        if (this.mounted) {
-          if (List.data!.length == 0) {
-            setState(() {
-              isLoading = false;
-              isEmpty = true;
-              isError = false;
-            });
-          } else {
-            setState(() {
-              isLoading = false;
-              isError = false;
-              isEmpty = false;
-            });
-          }
+        if (!mounted) return;
+        if (List.data!.isEmpty) {
+          setState(() {
+            isLoading = false;
+            isEmpty = true;
+            isError = false;
+          });
+        } else {
+          setState(() {
+            isLoading = false;
+            isError = false;
+            isEmpty = false;
+          });
         }
       },
       (error) {
-        if (error != null) {
+        if (error != null && mounted) {
           setState(() {
-            isLoading = true;
+            isLoading = false;
             isError = true;
-            isError = false;
           });
         }
       },
     );
   }
 
-  bool ProdLoader = true;
-  bool ProdError = false;
+  List<user_orders.Data> _allOrders() {
+    final raw = ApiRepository.shared.getAllOrdersByUserIdModelList?.data;
+    if (raw == null) return [];
+    return List<user_orders.Data>.from(raw);
+  }
 
-  getProducts() {
-    ApiRepository.shared.allProducts(
-      (List) => {
-        if (this.mounted)
-          {
-            if (List.data!.length == 0)
-              {
-                setState(() {
-                  ProdLoader = false;
-                  ProdError = false;
-                }),
-              }
-            else
-              {
-                setState(() {
-                  ProdLoader = false;
-                  ProdError = false;
-                }),
-              },
-          },
-      },
-      (error) => {
-        if (this.mounted)
-          {
-            if (error != null)
-              {
-                setState(() {
-                  ProdError = true;
-                  ProdLoader = false;
-                }),
-              },
-          },
-      },
+  List<user_orders.Data> _filteredOrders() {
+    final all = _allOrders();
+    if (selectedTab == 0) return all;
+    if (selectedTab == 1) {
+      return all.where((e) => e.status == 1).toList();
+    }
+    return all.where((e) => e.status == 2).toList();
+  }
+
+  String _formatExpectedArrival(String? raw) {
+    if (raw == null || raw.isEmpty || raw == 'null') return '—';
+    try {
+      return DateFormat('d/M/yyyy').format(DateTime.parse(raw));
+    } catch (_) {
+      return raw;
+    }
+  }
+
+  String _createdShort(user_orders.Data data) {
+    try {
+      return DateFormat('dd-MM-yy').format(DateTime.parse(data.createdAt.toString()));
+    } catch (_) {
+      return data.createdAt?.toString() ?? '';
+    }
+  }
+
+  String _statusBadgeLabel(int? status) {
+    switch (status) {
+      case 0:
+      case 1:
+        return 'PENDING';
+      case 2:
+        return 'RECEIVED';
+      default:
+        return 'CANCELLED';
+    }
+  }
+
+  double _parseCoord(dynamic v) {
+    if (v == null) return 0;
+    return double.tryParse(v.toString()) ?? 0;
+  }
+
+  String _imageUrl(String? path) {
+    final p = path?.trim() ?? '';
+    if (p.isEmpty || p == 'null') return '';
+    if (p.toLowerCase().startsWith('http')) return p;
+    final base = AppUrl.baseUrlM.endsWith('/') ? AppUrl.baseUrlM : '${AppUrl.baseUrlM}/';
+    final rel = p.startsWith('/') ? p.substring(1) : p;
+    return '$base$rel';
+  }
+
+  void _openTrack(user_orders.Data data) {
+    Get.to(
+      () => TrackingDetailScreen(
+        date: data.rentStart.toString(),
+        vendorId: data.vendorId.toString(),
+        status: data.status.toString(),
+        created: _createdShort(data),
+        approve: data.approveDate.toString(),
+        complete: data.completeDate.toString(),
+        cancel: data.cancelDate.toString(),
+      ),
     );
   }
 
+  void _openReorder(user_orders.Data data) {
+    final nego = data.negoPrice ?? 0;
+    if (nego != 0) return;
+    Get.to(
+      () => OrderConfirmationScreen(
+        image: data.productImage.toString(),
+        name: data.productName.toString(),
+        price: data.totalPrice.toString(),
+        orderId: data.id.toString(),
+        prodId: data.productId.toString(),
+        location: data.location.toString(),
+        long: _parseCoord(data.longitude),
+        lat: _parseCoord(data.latitude),
+        username: fullname,
+        userid: sourceId,
+        vendorID: data.vendorId.toString(),
+      ),
+    );
+  }
+
+  @override
   void initState() {
-    getProducts();
+    super.initState();
     getData();
     profileData(context);
-    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          "My Orders",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: InkWell(
-          onTap: () {
-            Get.back();
-          },
-          borderRadius: BorderRadius.circular(50),
-          child: Icon(Icons.arrow_back, color: Colors.black),
+    final textTheme = GoogleFonts.interTextTheme(
+      Theme.of(context).textTheme.apply(
+        bodyColor: const Color(0xFF1A1A1A),
+        displayColor: const Color(0xFF1A1A1A),
+      ),
+    );
+
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textTheme: textTheme,
+        appBarTheme: AppBarTheme(
+          titleTextStyle: GoogleFonts.inter(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
-      body:
-          isError
-              ? Center(child: Text("Some Error Occured While Loading Data"))
-              : isLoading
-              ? Center(child: Text("Loading"))
-              : isEmpty
-              ? Center(child: Text("No Orders Found"))
-              : Container(
-                width: double.infinity,
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: 20),
-                        Container(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    creditbool = false;
-                                    alllbool = true;
-                                    debitbool = false;
-                                  });
-                                },
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      'All',
-                                      style: TextStyle(
-                                        fontSize: 17,
-                                        color:
-                                            alllbool
-                                                ? Colors.black
-                                                : Colors.grey,
-                                      ),
-                                    ),
-                                    SizedBox(height: 10),
-                                    Container(
-                                      width: 120,
-                                      color:
-                                          alllbool
-                                              ? Colors.grey
-                                              : Color(0xff707070),
-                                      height: alllbool ? 3 : 1,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              GestureDetector(
-                                behavior: HitTestBehavior.translucent,
-                                onTap: () {
-                                  setState(() {
-                                    alllbool = false;
-                                    creditbool = true;
-                                    debitbool = false;
-                                  });
-                                },
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      'To Ship',
-                                      style: TextStyle(
-                                        fontSize: 17,
-                                        color:
-                                            creditbool
-                                                ? Colors.black
-                                                : Colors.grey,
-                                      ),
-                                    ),
-                                    SizedBox(height: 10),
-                                    Container(
-                                      width: 120,
-                                      color:
-                                          creditbool
-                                              ? Colors.grey
-                                              : Color(0xff707070),
-                                      height: creditbool ? 3 : 1,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    creditbool = false;
-                                    alllbool = false;
-                                    debitbool = true;
-                                  });
-                                },
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      'Received',
-                                      style: TextStyle(
-                                        fontSize: 17,
-                                        color:
-                                            debitbool
-                                                ? Colors.black
-                                                : Colors.grey,
-                                      ),
-                                    ),
-                                    SizedBox(height: 10),
-                                    Container(
-                                      width: 120,
-                                      color:
-                                          debitbool
-                                              ? Colors.grey
-                                              : Color(0xff707070),
-                                      height: debitbool ? 3 : 1,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        alllbool
-                            ? Container(
-                              child: ListView.builder(
-                                shrinkWrap: true,
-                                physics: NeverScrollableScrollPhysics(),
-                                itemCount:
-                                    ApiRepository
-                                        .shared
-                                        .getAllOrdersByUserIdModelList!
-                                        .data!
-                                        .length,
-                                itemBuilder: (context, int index) {
-                                  var data =
-                                      ApiRepository
-                                          .shared
-                                          .getAllOrdersByUserIdModelList!
-                                          .data![index];
-                                  var name = data.productName;
-                                  var price = data.totalPrice.toString();
-                                  var date = data.rentStart.toString();
-                                  var status = data.status.toString();
-                                  var id = data.id.toString();
-                                  var image = data.productImage.toString();
-                                  var prodId = data.productId.toString();
-                                  var location = data.location.toString();
-                                  var long = double.parse(
-                                    data.longitude.toString(),
-                                  );
-                                  var lat = double.parse(
-                                    data.latitude.toString(),
-                                  );
-                                  var vendorID = data.vendorId.toString();
-                                  var created1 = DateFormat('dd-MM-yy').format(
-                                    DateTime.parse(data.createdAt.toString()),
-                                  );
-                                  var created = created1.toString();
-                                  var approve = data.approveDate.toString();
-                                  var complete = data.completeDate.toString();
-                                  var cancel = data.cancelDate.toString();
-                                  var nego = data.negoPrice;
-                                  return Gesture1(
-                                    name,
-                                    date,
-                                    price,
-                                    status,
-                                    id,
-                                    image,
-                                    prodId,
-                                    location,
-                                    long,
-                                    lat,
-                                    vendorID,
-                                    created,
-                                    approve,
-                                    complete,
-                                    cancel,
-                                    nego,
-                                  );
-                                },
-                              ),
-                            )
-                            : Container(),
-                        creditbool
-                            ? Container(
-                              child: ListView.builder(
-                                shrinkWrap: true,
-                                physics: NeverScrollableScrollPhysics(),
-                                itemCount:
-                                    ApiRepository
-                                        .shared
-                                        .getAllOrdersByUserIdModelList!
-                                        .data!
-                                        .length,
-                                itemBuilder: (context, int index) {
-                                  var data =
-                                      ApiRepository
-                                          .shared
-                                          .getAllOrdersByUserIdModelList!
-                                          .data![index];
-                                  var name = data.productName;
-                                  var price = data.totalPrice.toString();
-                                  var date = data.rentStart.toString();
-                                  var status = data.status.toString();
-                                  var id = data.id.toString();
-                                  var image = data.productImage.toString();
-                                  var prodId = data.productId.toString();
-                                  var location = data.location.toString();
-                                  var vendorID = data.vendorId.toString();
-                                  var nego = data.negoPrice;
-                                  return status == "1"
-                                      ? toship(
-                                        name,
-                                        date,
-                                        price,
-                                        image,
-                                        id,
-                                        prodId,
-                                        location,
-                                        vendorID,
-                                        nego,
-                                      )
-                                      : SizedBox(height: 0, width: 0);
-                                },
-                              ),
-                            )
-                            : Container(),
-                        debitbool
-                            ? Container(
-                              child: ListView.builder(
-                                shrinkWrap: true,
-                                physics: NeverScrollableScrollPhysics(),
-                                itemCount:
-                                    ApiRepository
-                                        .shared
-                                        .getAllOrdersByUserIdModelList!
-                                        .data!
-                                        .length,
-                                itemBuilder: (context, int index) {
-                                  var data =
-                                      ApiRepository
-                                          .shared
-                                          .getAllOrdersByUserIdModelList!
-                                          .data![index];
-                                  var name = data.productName;
-                                  var price = data.totalPrice.toString();
-                                  var date = data.rentStart.toString();
-                                  var status = data.status.toString();
-                                  var id = data.id.toString();
-                                  var image = data.productImage.toString();
-                                  var prodId = data.productId.toString();
-                                  var location = data.location.toString();
-                                  var long = double.parse(
-                                    data.longitude.toString(),
-                                  );
-                                  var lat = double.parse(
-                                    data.latitude.toString(),
-                                  );
-                                  var vendorID = data.vendorId.toString();
-                                  var nego = data.negoPrice;
-                                  return status == "2"
-                                      ? Revievedd(
-                                        name,
-                                        date,
-                                        price,
-                                        image,
-                                        id,
-                                        prodId,
-                                        location,
-                                        long,
-                                        lat,
-                                        vendorID,
-                                        nego,
-                                      )
-                                      : SizedBox(height: 0, width: 0);
-                                },
-                              ),
-                            )
-                            : Container(),
-                      ],
-                    ),
-                  ),
+      child: Scaffold(
+        backgroundColor: _pageBg,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          foregroundColor: Colors.black,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+            onPressed: () => Get.back(),
+            style: IconButton.styleFrom(foregroundColor: Colors.black),
+          ),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'My Orders',
+                style: GoogleFonts.inter(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black,
                 ),
               ),
+              const SizedBox(height: 6),
+              Text(
+                'Reorder and Track your Products',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: _subtitleGrey,
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buildPillTabs(),
+              const SizedBox(height: 16),
+              Expanded(child: _buildBody()),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  Revievedd(
-    name,
-    date,
-    price,
-    image,
-    id,
-    prodId,
-    location,
-    long,
-    lat,
-    vendorID,
-    nego,
-  ) {
-    return Column(
-      children: [
-        SizedBox(height: 10),
-        Container(
-          width: 391,
-          height: 195,
+  Widget _buildPillTabs() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: _pillTrack,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        children: [
+          _pillTab(0, 'All'),
+          _pillTab(1, 'To Ship'),
+          _pillTab(2, 'Received'),
+        ],
+      ),
+    );
+  }
+
+  Widget _pillTab(int index, String label) {
+    final selected = selectedTab == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => selectedTab = index),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withAlpha(51),
-                spreadRadius: 5,
-                blurRadius: 7,
-                offset: Offset(0, 3), // changes position of shadow
-              ),
-            ],
+            color: selected ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow:
+                selected
+                    ? [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.06),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                    : null,
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Column(
-              children: [
-                SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: 120,
-                      height: 119,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withAlpha(51),
-                            spreadRadius: 5,
-                            blurRadius: 7,
-                            offset: Offset(0, 3), // changes position of shadow
-                          ),
-                        ],
-                      ),
-                      child: Image.network(AppUrl.baseUrlM + image),
-                    ),
-                    SizedBox(width: 10),
-                    Container(
-                      height: 119,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 159,
-                            child: Text(name, style: TextStyle(fontSize: 14)),
-                          ),
-                          Text(date, style: TextStyle(fontSize: 14)),
-                          SizedBox(height: 10),
-                          Text("Received", style: TextStyle(fontSize: 14)),
-                          Row(
-                            children: [
-                              Text(
-                                "${nego == 0 ? price : nego} \$",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(width: 80),
-                              // Text(
-                              //   "Recieved",
-                              //   style: TextStyle(fontSize: 14),
-                              // ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16),
-                nego == 0
-                    ? GestureDetector(
-                      onTap: () {
-                        Get.to(
-                          () => OrderConfirmationScreen(
-                            image: image,
-                            name: name,
-                            price: price,
-                            orderId: id,
-                            prodId: prodId,
-                            location: location,
-                            long: long,
-                            lat: lat,
-                            username: fullname,
-                            userid: sourceId,
-                            vendorID: vendorID,
-                          ),
-                        );
-                      },
-                      child: Container(
-                        height: 44,
-                        width: 371,
-                        child: Center(
-                          child: Text(
-                            'Reorder',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 19,
-                            ),
-                          ),
-                        ),
-                        decoration: BoxDecoration(
-                          color: kprimaryColor,
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                      ),
-                    )
-                    : Text("Negotiated Product"),
-              ],
+          child: Center(
+            child: Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                color: selected ? Colors.black : _subtitleGrey,
+              ),
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 
-  toship(name, date, price, image, id, prodId, location, vendorID, nego) {
-    return Column(
-      children: [
-        SizedBox(height: 10),
-        Container(
-          width: 391,
-          // height: 175,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withAlpha(51),
-                spreadRadius: 5,
-                blurRadius: 7,
-                offset: Offset(0, 3), // changes position of shadow
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Column(
-              children: [
-                SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: 120,
-                      height: 119,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withAlpha(51),
-                            spreadRadius: 5,
-                            blurRadius: 7,
-                            offset: Offset(0, 3), // changes position of shadow
-                          ),
-                        ],
-                      ),
-                      child: Image.network(AppUrl.baseUrlM + image),
-                    ),
-                    Container(
-                      height: 119,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 159,
-                            child: Text(name, style: TextStyle(fontSize: 14)),
-                          ),
-                          Text(date, style: TextStyle(fontSize: 14)),
-                          const SizedBox(height: 10),
-                          Text("Shipped", style: TextStyle(fontSize: 14)),
-                          Row(
-                            children: [
-                              Text(
-                                "${nego == 0 ? price : nego} \$",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(width: 80),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16),
-                // Row(
-                //   mainAxisAlignment: MainAxisAlignment.spaceAround,
-                //   children: [
-                //     // Container(
-                //     //   height: 44,
-                //     //   width: 170,
-                //     //   child: Center(
-                //     //     child: Text(
-                //     //       'Type Review',
-                //     //       style: TextStyle(
-                //     //           fontWeight: FontWeight.bold, fontSize: 19),
-                //     //     ),
-                //     //   ),
-                //     //   decoration: BoxDecoration(
-                //     //       color: kprimaryColor,
-                //     //       borderRadius: BorderRadius.circular(5)),
-                //     // ),
-                //     nego == 0 ? GestureDetector(
-                //       onTap: () {
-                //         Get.to(() => OrderConfirmationScreen(
-                //               image: image,
-                //               name: name,
-                //               price: price,
-                //               orderId: id,
-                //               prodId: prodId,
-                //               location: location,
-                //               username: fullname,
-                //               userid: sourceId,
-                //               vendorID: vendorID,
-                //             ));
-                //       },
-                //       child: Container(
-                //         height: 44,
-                //         width: 170,
-                //         child: Center(
-                //           child: Text(
-                //             'Reorder',
-                //             style: TextStyle(
-                //                 fontWeight: FontWeight.bold, fontSize: 19),
-                //           ),
-                //         ),
-                //         decoration: BoxDecoration(
-                //             color: kprimaryColor,
-                //             borderRadius: BorderRadius.circular(5)),
-                //       ),
-                //     ): Text("Negotiated Product")
-                //   ],
-                // ),
-              ],
-            ),
-          ),
+  Widget _buildBody() {
+    if (isError) {
+      return Center(
+        child: Text(
+          'Something went wrong while loading orders.',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.inter(color: _subtitleGrey),
         ),
-      ],
-    );
-  }
-
-  Toship2() {
-    return Column(
-      children: [
-        SizedBox(height: 10),
-        Container(
-          width: 391,
-          height: 195,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withAlpha(51),
-                spreadRadius: 5,
-                blurRadius: 7,
-                offset: Offset(0, 3), // changes position of shadow
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Column(
-              children: [
-                SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: 120,
-                      height: 119,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withAlpha(51),
-                            spreadRadius: 5,
-                            blurRadius: 7,
-                            offset: Offset(0, 3), // changes position of shadow
-                          ),
-                        ],
-                      ),
-                      child: Image.asset("assets/slicing/Layer 4@3x.png"),
-                    ),
-                    Container(
-                      height: 119,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 159,
-                            child: Text(
-                              "Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB",
-                              style: TextStyle(fontSize: 14),
-                            ),
-                          ),
-                          Text(
-                            "Placed on Dec, 2022",
-                            style: TextStyle(fontSize: 14),
-                          ),
-                          SizedBox(height: 10),
-                          Text("Delivered", style: TextStyle(fontSize: 14)),
-                          Row(
-                            children: [
-                              Text(
-                                "\$ 15.59",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(width: 80),
-                              Text("Recieved", style: TextStyle(fontSize: 14)),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16),
-                Container(
-                  height: 44,
-                  width: 371,
-                  child: Center(
-                    child: Text(
-                      'Reorder',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 19,
-                      ),
-                    ),
-                  ),
-                  decoration: BoxDecoration(
-                    color: kprimaryColor,
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                ),
-              ],
-            ),
-          ),
+      );
+    }
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator(color: AppColors.primaryColor));
+    }
+    if (isEmpty) {
+      return Center(
+        child: Text(
+          'No orders found',
+          style: GoogleFonts.inter(color: _subtitleGrey, fontSize: 15),
         ),
-      ],
+      );
+    }
+
+    final items = _filteredOrders();
+    if (items.isEmpty) {
+      return Center(
+        child: Text(
+          'No orders in this tab',
+          style: GoogleFonts.inter(color: _subtitleGrey, fontSize: 15),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      itemCount: items.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final data = items[index];
+        final nego = data.negoPrice ?? 0;
+        final priceStr =
+            (nego == 0 ? data.totalPrice : data.negoPrice)?.toString() ?? '0';
+        return _RenterOrderCard(
+          name: data.productName?.toString() ?? '—',
+          price: priceStr,
+          status: data.status,
+          statusLabel: _statusBadgeLabel(data.status),
+          expectedArrival: _formatExpectedArrival(data.originalReturn),
+          imageUrl: _imageUrl(data.productImage?.toString()),
+          canReorder: nego == 0,
+          onTrack: () => _openTrack(data),
+          onReorder: () => _openReorder(data),
+        );
+      },
     );
   }
+}
 
-  Gesture1(
-    name,
-    date,
-    price,
-    status,
-    id,
-    image,
-    prodId,
-    location,
-    long,
-    lat,
-    vendorID,
-    created,
-    approve,
-    complete,
-    cancel,
-    nego,
-  ) {
-    return Column(
-      children: [
-        SizedBox(height: 10),
-        Container(
-          width: 391,
-          height: 265,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withAlpha(51),
-                spreadRadius: 5,
-                blurRadius: 7,
-                offset: Offset(0, 3), // changes position of shadow
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Column(
+class _RenterOrderCard extends StatelessWidget {
+  final String name;
+  final String price;
+  final int? status;
+  final String statusLabel;
+  final String expectedArrival;
+  final String imageUrl;
+  final bool canReorder;
+  final VoidCallback onTrack;
+  final VoidCallback onReorder;
+
+  const _RenterOrderCard({
+    required this.name,
+    required this.price,
+    required this.status,
+    required this.statusLabel,
+    required this.expectedArrival,
+    required this.imageUrl,
+    required this.canReorder,
+    required this.onTrack,
+    required this.onReorder,
+  });
+
+  static const Color _badgeBgOrange = Color(0xFFFFF3E0);
+  static const Color _badgeFgOrange = Color(0xFFE65100);
+  static const Color _badgeBgGreen = Color(0xFFE8F5E9);
+  static const Color _badgeFgGreen = Color(0xFF2E7D32);
+  static const Color _badgeBgGrey = Color(0xFFF5F5F5);
+  static const Color _badgeFgGrey = Color(0xFF616161);
+
+  @override
+  Widget build(BuildContext context) {
+    final received = status == 2;
+    final cancelled = status != null && status != 0 && status != 1 && status != 2;
+    final badgeBg =
+        cancelled
+            ? _badgeBgGrey
+            : received
+            ? _badgeBgGreen
+            : _badgeBgOrange;
+    final badgeFg =
+        cancelled
+            ? _badgeFgGrey
+            : received
+            ? _badgeFgGreen
+            : _badgeFgOrange;
+
+    return Material(
+      color: Colors.white,
+      elevation: 2,
+      shadowColor: Colors.black26,
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Container(
-                      width: 120,
-                      height: 119,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withAlpha(51),
-                            spreadRadius: 5,
-                            blurRadius: 7,
-                            offset: Offset(0, 3), // changes position of shadow
-                          ),
-                        ],
-                      ),
-                      child: Image.network(AppUrl.baseUrlM + image),
-                    ),
-                    Container(
-                      height: 119,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 159,
-                            child: Text(name, style: TextStyle(fontSize: 14)),
-                          ),
-                          Text(date, style: TextStyle(fontSize: 14)),
-                          SizedBox(height: 10),
-                          Text(
-                            status == "0"
-                                ? "Pending"
-                                : status == "1"
-                                ? "delivered"
-                                : status == "2"
-                                ? "received"
-                                : "cancelled",
-                            style: TextStyle(fontSize: 14),
-                          ),
-                          Row(
-                            children: [
-                              Text(
-                                "${nego == 0 ? price : nego} \$",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(width: 80),
-                              // Text(
-                              //   "Recieved",
-                              //   style: TextStyle(fontSize: 14),
-                              // ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          Get.to(
-                            () => TrackingDetailScreen(
-                              date: date,
-                              vendorId: vendorID,
-                              status: status,
-                              created: created,
-                              approve: approve,
-                              complete: complete,
-                              cancel: cancel,
-                            ),
-                          );
-                          // Get.to(() => OrderConfirmationScreen(
-                          //       image: image,
-                          //       name: name,
-                          //       price: price,
-                          //       orderId: id,
-                          //       prodId: prodId,
-                          //       location: location,
-                          //       username: fullname,
-                          //       userid: sourceId,
-                          //       vendorID: vendorID,
-                          //     ));
-                        },
-                        child: Container(
-                          height: 44,
-                          child: Center(
-                            child: Text(
-                              'Track',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 19,
-                              ),
-                            ),
-                          ),
-                          decoration: BoxDecoration(
-                            color: kprimaryColor,
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    // Expanded(
-                    //   child: GestureDetector(
-                    //     onTap: () {
-                    //       Get.to(() => TypeReviewsScreen());
-                    //     },
-                    //     child: Container(
-                    //       height: 44,
-                    //       child: Center(
-                    //         child: Text(
-                    //           'Type Review',
-                    //           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19),
-                    //         ),
-                    //       ),
-                    //       decoration: BoxDecoration(color: kprimaryColor, borderRadius: BorderRadius.circular(5)),
-                    //     ),
-                    //   ),
-                    // ),
-                    SizedBox(width: 8),
-                    nego == 0
-                        ? Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              Get.to(
-                                () => OrderConfirmationScreen(
-                                  image: image,
-                                  name: name,
-                                  price: price,
-                                  orderId: id,
-                                  prodId: prodId,
-                                  location: location,
-                                  long: long,
-                                  lat: lat,
-                                  username: fullname,
-                                  userid: sourceId,
-                                  vendorID: vendorID,
-                                ),
-                              );
-                            },
-                            child: Container(
-                              height: 44,
-                              child: Center(
-                                child: Text(
-                                  'Reorder',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 19,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: SizedBox(
+                    width: 72,
+                    height: 72,
+                    child:
+                        imageUrl.isEmpty
+                            ? ColoredBox(
+                              color: const Color(0xFFF5F5F5),
+                              child: Icon(Icons.image_outlined, color: Colors.grey.shade400),
+                            )
+                            : CachedNetworkImage(
+                              imageUrl: imageUrl,
+                              fit: BoxFit.cover,
+                              placeholder:
+                                  (_, __) => ColoredBox(
+                                    color: const Color(0xFFF5F5F5),
+                                    child: Center(
+                                      child: SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: AppColors.primaryColor.withValues(alpha: 0.6),
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
-                              decoration: BoxDecoration(
-                                color: kprimaryColor,
-                                borderRadius: BorderRadius.circular(5),
-                              ),
+                              errorWidget:
+                                  (_, __, ___) => ColoredBox(
+                                    color: const Color(0xFFF5F5F5),
+                                    child: Icon(Icons.chair_outlined, color: Colors.grey.shade500),
+                                  ),
                             ),
-                          ),
-                        )
-                        : Center(child: Text("Negotiated Product")),
-                  ],
+                  ),
                 ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Gesture2() {
-    return Column(
-      children: [
-        SizedBox(height: 10),
-        Container(
-          width: 391,
-          height: 195,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withAlpha(51),
-                spreadRadius: 5,
-                blurRadius: 7,
-                offset: Offset(0, 3), // changes position of shadow
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Column(
-              children: [
-                SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Container(
-                      width: 120,
-                      height: 119,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withAlpha(51),
-                            spreadRadius: 5,
-                            blurRadius: 7,
-                            offset: Offset(0, 3), // changes position of shadow
-                          ),
-                        ],
-                      ),
-                      child: Image.asset("assets/slicing/Layer 4@3x.png"),
-                    ),
-                    Container(
-                      height: 119,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Container(
-                            width: 159,
-                            child: Text(
-                              "Apple 10.9-inch iPad Air Wi-Fi Cellular 64GB",
-                              style: TextStyle(fontSize: 14),
+                          Text(
+                            '\$$price',
+                            style: GoogleFonts.inter(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black,
                             ),
                           ),
-                          Text(
-                            "Placed on Dec, 2022",
-                            style: TextStyle(fontSize: 14),
-                          ),
-                          SizedBox(height: 10),
-                          Text("Delivered", style: TextStyle(fontSize: 14)),
-                          Row(
-                            children: [
-                              Text(
-                                "\$ 15.59",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: badgeBg,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              statusLabel,
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: badgeFg,
+                                letterSpacing: 0.3,
                               ),
-                              SizedBox(width: 80),
-                              Text("Recieved", style: TextStyle(fontSize: 14)),
-                            ],
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16),
-                Container(
-                  height: 44,
-                  width: 371,
-                  child: Center(
-                    child: Text(
-                      'Reorder',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 19,
+                      const SizedBox(height: 6),
+                      Text(
+                        name,
+                        style: GoogleFonts.inter(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ),
-                  decoration: BoxDecoration(
-                    color: kprimaryColor,
-                    borderRadius: BorderRadius.circular(5),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Expected Arrival: $expectedArrival',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                          color: const Color(0xFF9A9AA1),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 44,
+                    child: FilledButton(
+                      onPressed: onTrack,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.primaryColor,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(
+                        'Track',
+                        style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: SizedBox(
+                    height: 44,
+                    child: FilledButton(
+                      onPressed: canReorder ? onReorder : null,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.primaryColor,
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: Colors.grey.shade300,
+                        disabledForegroundColor: Colors.grey.shade600,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(
+                        canReorder ? 'Reorder' : 'Negotiated',
+                        style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_html/flutter_html.dart';
-import 'package:get/get.dart';
 
 import '../../../view_model/apiServices.dart';
+import '../../widgets/cms_page_shell.dart';
 
 class TransportAndInstallationPolicy extends StatefulWidget {
   const TransportAndInstallationPolicy({Key? key}) : super(key: key);
@@ -54,91 +53,27 @@ class _TransportAndInstallationPolicyState
     );
   }
 
+  @override
   void initState() {
     getTransport();
     super.initState();
   }
 
+  String? _htmlBody() {
+    final list = ApiRepository.shared.getTransportModelList?.data;
+    if (list == null || list.isEmpty) return null;
+    return list[0].description?.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
-    double res_height = MediaQuery.of(context).size.height;
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        title: Text(
-          'Transportation & Installation \n Policy ',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-            fontSize: 19,
-          ),
-        ),
-        leading: InkWell(
-          onTap: () {
-            Get.back();
-          },
-          borderRadius: BorderRadius.circular(50),
-          child: Padding(
-            padding: const EdgeInsets.all(17.0),
-            child: Container(
-              child: Icon(Icons.arrow_back, color: Colors.black),
-            ),
-          ),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(18.0),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              isLoading
-                  ? Container(child: Text('Loading'))
-                  : Container(
-                    child: Html(
-                      data:
-                          ApiRepository
-                              .shared
-                              .getTransportModelList!
-                              .data![0]
-                              .description
-                              .toString(),
-                    ),
-                  ),
-              // Container(
-              //   child: Text(
-              //     isLoading ? "Loading" : ApiRepository.shared.getTransportModelList!.data![0].description.toString(),
-              //     style: TextStyle(
-              //       fontSize: 16,
-              //       color: Color(0xff524034),
-              //     ),
-              //     textAlign: TextAlign.justify,
-              //   ),
-              // ),
-              SizedBox(height: res_height * 0.04),
-              // GestureDetector(
-              //   onTap: (() {
-              //     Get.to(() => AboutAppScreen());
-              //   }),
-              //   child: Container(
-              //     height: res_height * 0.06,
-              //     width: res_width * 0.8,
-              //     child: Center(
-              //       child: Text(
-              //         'Agree',
-              //         style:
-              //             TextStyle(fontWeight: FontWeight.bold, fontSize: 19),
-              //       ),
-              //     ),
-              //     decoration: BoxDecoration(
-              //         color: kprimaryColor,
-              //         borderRadius: BorderRadius.circular(14)),
-              //   ),
-              // ),
-            ],
-          ),
-        ),
+    return CmsPageShell(
+      title: 'Transportation & Installation Policy',
+      body: CmsPageShell.htmlPolicyScroll(
+        isLoading: isLoading,
+        isError: isError,
+        emptyData: emptyData,
+        html: _htmlBody(),
       ),
     );
   }

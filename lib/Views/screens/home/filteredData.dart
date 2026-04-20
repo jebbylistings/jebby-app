@@ -1,210 +1,222 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:get/get.dart';
-// import 'package:get/get_core/src/get_main.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:jebby/view_model/apiServices.dart';
 
 import '../../../res/app_url.dart';
-import '../auth/ProductDetail.dart';
+import 'ProductDetails.dart';
+import 'package:jebby/res/color.dart';
 
 class FilteredData extends StatefulWidget {
   final dynamic subCatname;
 
-  FilteredData({this.subCatname});
+  const FilteredData({super.key, this.subCatname});
 
   @override
   State<FilteredData> createState() => _FilteredDataState();
 }
 
 class _FilteredDataState extends State<FilteredData> {
+  static const Color _starAccent = Color(0xFFF6AE02);
+  static const Color _starInactive = Color(0xFFC6C8CF);
+  static const Color _titleDark = Color(0xFF1B1B1F);
+  static const Color _labelGrey = Color(0xFF72747A);
+
+  Widget _myProductsStyleStars(double rating, {double size = 18}) {
+    final filledStars = (rating.isNaN ? 0.0 : rating).round().clamp(0, 5);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (index) {
+        final active = index < filledStars;
+        return Padding(
+          padding: const EdgeInsets.only(right: 2),
+          child: Icon(
+            active ? Icons.star : Icons.star_border,
+            color: active ? _starAccent : _starInactive,
+            size: size,
+          ),
+        );
+      }),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    double res_width = MediaQuery.of(context).size.width;
-    double res_height = MediaQuery.of(context).size.height;
+    final products = ApiRepository.shared.getFilteredProductDataList?.data ?? [];
+    final title = (widget.subCatname?.toString().trim().isNotEmpty ?? false)
+        ? widget.subCatname.toString()
+        : 'Filtered Results';
+
     return Scaffold(
+      backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.grey.shade100,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         centerTitle: true,
         title: Text(
-          '${widget.subCatname}',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-            fontSize: 19,
+          title,
+          style: GoogleFonts.inter(
+            color: Colors.black87,
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
           ),
         ),
-        automaticallyImplyLeading: false,
         leading: InkWell(
-          onTap: () {
-            Get.back();
-            // _key.currentState!.openDrawer();
-          },
+          onTap: () => Get.back(),
           borderRadius: BorderRadius.circular(50),
-          child: Icon(Icons.arrow_back, color: Colors.black),
+          child: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.black,
+            size: 20,
+          ),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            SizedBox(height: res_height * 0.03),
-            Column(
-              children: [
-                ApiRepository.shared.getFilteredProductDataList!.data!.length >
-                        0
-                    ? FutureBuilder(
-                      builder: (context, snapshot) {
-                        return GridView.builder(
-                          physics: NeverScrollableScrollPhysics(),
-                          shrinkWrap: true,
-                          scrollDirection: Axis.vertical,
-                          gridDelegate:
-                              const SliverGridDelegateWithMaxCrossAxisExtent(
-                                maxCrossAxisExtent: 300,
-                                childAspectRatio: 2 / 3,
-                                crossAxisSpacing: 10,
-                                mainAxisSpacing: 10,
-                              ),
-                          itemCount:
-                              ApiRepository
-                                  .shared
-                                  .getFilteredProductDataList!
-                                  .data!
-                                  .length,
-                          itemBuilder: (context, index) {
-                            var data =
-                                ApiRepository
-                                    .shared
-                                    .getFilteredProductDataList!
-                                    .data![index];
-                            var st = data.stars;
-                            var stars = double.parse(st.toString());
-                            return GestureDetector(
-                              onTap: () {
-                                Get.to(
-                                  routeName: "PD",
-                                  () => ProductDetailScreen(
-                                    data.id,
-                                    data.name,
-                                    data.price,
-                                    data.stars,
-                                    AppUrl.baseUrlM + data.image.toString(),
-                                    data.specifications,
-                                    data.userId,
-                                    data.serviceAgreements,
-                                    data.isMessage,
-                                    data.delivery_charges,
+      body: products.isEmpty
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.search_off_rounded,
+                      size: 52,
+                      color: Colors.grey.shade500,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No products found',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: _titleDark,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Try adjusting your filters and search again.',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: _labelGrey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : Padding(
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 20),
+              child: GridView.builder(
+                itemCount: products.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 12,
+                  mainAxisExtent: 225,
+                ),
+                itemBuilder: (context, index) {
+                  final data = products[index];
+                  final stars =
+                      (double.tryParse(data.stars.toString()) ?? 0).clamp(0, 5).toDouble();
+
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () {
+                      Get.to(
+                        routeName: "PD",
+                        () => ProductDetailScreen(
+                          data.id,
+                          data.name,
+                          data.price,
+                          data.stars,
+                          AppUrl.baseUrlM + data.image.toString(),
+                          data.specifications,
+                          data.userId,
+                          data.serviceAgreements,
+                          data.isMessage,
+                          data.delivery_charges,
+                        ),
+                      );
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.06),
+                            blurRadius: 12,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: CachedNetworkImage(
+                                  imageUrl: AppUrl.baseUrlM + data.image.toString(),
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                  placeholder: (_, __) => ColoredBox(
+                                    color: Colors.grey.shade200,
+                                    child: const Center(
+                                      child: SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryColor),
+                                      ),
+                                    ),
                                   ),
-                                );
-                              },
-                              child: Container(
-                                width: res_width * 0.65,
-
-                                decoration: BoxDecoration(
-                                  color: Color.fromARGB(255, 244, 244, 244),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-
-                                child: Padding(
-                                  padding: const EdgeInsets.all(13.0),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        height: res_height * 0.2,
-                                        child: Center(
-                                          child: CachedNetworkImage(
-                                            imageUrl:
-                                                AppUrl.baseUrlM +
-                                                data.image.toString(),
-                                            fit: BoxFit.cover,
-                                            placeholder:
-                                                (context, url) => Center(
-                                                  child:
-                                                      CircularProgressIndicator(), // Loading spinner
-                                                ),
-                                            errorWidget:
-                                                (context, url, error) => Icon(
-                                                  Icons.error,
-                                                  color: Colors.red,
-                                                ), // Display an error icon
-                                          ),
-                                        ),
-                                      ),
-                                      // Container(
-                                      //   height: res_height * 0.2,
-                                      //   width: res_width,
-                                      //   decoration: BoxDecoration(
-                                      //       image: DecorationImage(
-                                      //           image: NetworkImage(
-                                      //               AppUrl.baseUrlM +
-                                      //                   data
-                                      //                       .image
-                                      //                       .toString()))),
-                                      //   child: ClipRRect(
-                                      //     borderRadius: BorderRadius.all(
-                                      //       Radius.circular(10),
-                                      //     ),
-                                      //   ),
-                                      // ),
-                                      SizedBox(height: res_height * 0.01),
-                                      Container(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              data.name.toString(),
-                                              style: TextStyle(
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              height: res_height * 0.006,
-                                            ),
-                                            Text(
-                                              "${data.price.toString()} \$",
-                                              style: TextStyle(fontSize: 13),
-                                              textAlign: TextAlign.left,
-                                            ),
-                                            SizedBox(
-                                              height: res_height * 0.006,
-                                            ),
-                                            RatingBarIndicator(
-                                              rating: stars,
-                                              itemBuilder:
-                                                  (context, index) => Icon(
-                                                    Icons.star,
-                                                    color: Colors.amber,
-                                                  ),
-                                              itemCount: 5,
-                                              itemSize: 15,
-                                              direction: Axis.horizontal,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
+                                  errorWidget: (_, __, ___) => ColoredBox(
+                                    color: Colors.grey.shade200,
+                                    child: Icon(
+                                      Icons.broken_image_outlined,
+                                      color: Colors.grey.shade500,
+                                    ),
                                   ),
                                 ),
                               ),
-                            );
-                          },
-                        );
-                      },
-                      future: null,
-                    )
-                    : CircularProgressIndicator(),
-              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              data.name.toString(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: _titleDark,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '\$${data.price}',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: _labelGrey,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            _myProductsStyleStars(stars, size: 16),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
-          ],
-        ),
-      ),
     );
   }
 }

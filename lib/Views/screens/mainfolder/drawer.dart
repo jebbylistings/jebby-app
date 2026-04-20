@@ -10,28 +10,25 @@ import 'package:jebby/Views/screens/agreements/Aboutapp.dart';
 import 'package:jebby/Views/screens/agreements/insuranceAndIndemnifications.dart';
 import 'package:jebby/Views/screens/agreements/privacyPolicy.dart';
 import 'package:jebby/Views/screens/agreements/rentalAgreement.dart';
-import 'package:jebby/Views/screens/agreements/termLength.dart';
+import 'package:jebby/Views/screens/agreements/CopyrightPolicy.dart';
 import 'package:jebby/Views/screens/agreements/termination.dart';
 import 'package:jebby/Views/screens/agreements/termsAndConditions.dart';
 import 'package:jebby/Views/screens/agreements/transportAndInstallationPolicy.dart';
 import 'package:jebby/Views/screens/agreements/usagePolicyAndLimitations.dart';
 import 'package:jebby/Views/screens/auth/login.dart';
 import 'package:jebby/Views/screens/home/Favourites.dart';
-import 'package:jebby/Views/screens/home/Messages(32).dart';
 import 'package:jebby/Views/screens/home/MyOrders.dart';
 import 'package:jebby/Views/screens/home/MyTransactions.dart';
-import 'package:jebby/Views/screens/home/returnproduct.dart';
-import 'package:jebby/Views/screens/home/setting.dart';
+import 'package:jebby/Views/screens/home/ReturnProduct.dart';
 import 'package:jebby/Views/screens/mainfolder/homemain.dart';
 import 'package:jebby/Views/screens/profile/userprofile.dart';
-import 'package:jebby/Views/screens/vendors/orderrequest.dart';
-import 'package:jebby/Views/screens/vendors/productreturn.dart';
-import 'package:jebby/Views/screens/vendors/transactionlist.dart';
+import 'package:jebby/Views/screens/shared/Setting.dart';
+import 'package:jebby/Views/screens/vendors/MyOrders.dart';
+import 'package:jebby/Views/screens/vendors/ReturnProduct.dart';
+import 'package:jebby/Views/screens/vendors/MyTransactions.dart';
 import 'package:jebby/Views/screens/vendors/vendorhome.dart';
 import 'package:jebby/Views/screens/auth/stripe_onboarding.dart';
-import 'package:jebby/Views/support/FAQs.dart';
 import 'package:jebby/Views/support/contactsupport.dart';
-import 'package:jebby/Views/support/providerfeedback.dart';
 import 'package:jebby/res/color.dart';
 import 'package:jebby/respository/auth_repository.dart';
 import 'package:provider/provider.dart';
@@ -127,41 +124,6 @@ class _DrawerScreenState extends State<DrawerScreen> {
     });
   }
 
-  void _showSuccessAlert(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.green),
-              SizedBox(width: 8),
-              Text('Success'),
-            ],
-          ),
-          content: Text('You have successfully become a provider'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: Text(
-                'OK',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              style: ButtonStyle(
-                backgroundColor: WidgetStateProperty.all<Color>(darkBlue),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   final bottomctrl = Get.put(BottomController());
 
   @override
@@ -209,13 +171,21 @@ class _DrawerScreenState extends State<DrawerScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  GestureDetector(
-                    onTap: () => Get.back(),
-                    child: Image.asset(
-                      'assets/newpacks/close-circle.png',
-                      color: Colors.black,
-                      width: 30,
-                      height: 30,
+                  Material(
+                    color: Colors.transparent,
+                    shape: const CircleBorder(),
+                    child: InkWell(
+                      onTap: () => Get.back(),
+                      customBorder: const CircleBorder(),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: Image.asset(
+                          'assets/newpacks/close-circle.png',
+                          color: Colors.black,
+                          width: 30,
+                          height: 30,
+                        ),
+                      ),
                     ),
                   ),
                   SizedBox(width: 20),
@@ -225,87 +195,89 @@ class _DrawerScreenState extends State<DrawerScreen> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                SizedBox(height: 0),
-                Padding(
-                  padding: EdgeInsets.zero,
-                  child: Column(
-                    children: [
-                      isLoadingImage
-                          ? CircleAvatar(
-                            radius: 40,
-                            backgroundColor: Colors.grey[200],
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.0,
-                              ),
-                            ),
-                          )
-                          : imagesapi != "null" && imagesapi.isNotEmpty
-                          ? CachedNetworkImage(
-                            imageUrl: "${Url}${imagesapi}",
-                            imageBuilder:
-                                (context, imageProvider) => CircleAvatar(
-                                  radius: 40,
-                                  backgroundImage: imageProvider,
+                  SizedBox(height: 0),
+                  Padding(
+                    padding: EdgeInsets.zero,
+                    child: Column(
+                      children: [
+                        isLoadingImage
+                            ? CircleAvatar(
+                              radius: 40,
+                              backgroundColor: Colors.grey[200],
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.0,
+                                  color: AppColors.primaryColor,
                                 ),
-                            placeholder:
-                                (context, url) => CircleAvatar(
-                                  radius: 40,
-                                  backgroundColor: Colors.grey[200],
-                                  child: SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.0,
+                              ),
+                            )
+                            : imagesapi != "null" && imagesapi.isNotEmpty
+                            ? CachedNetworkImage(
+                              imageUrl: "${Url}${imagesapi}",
+                              imageBuilder:
+                                  (context, imageProvider) => CircleAvatar(
+                                    radius: 40,
+                                    backgroundImage: imageProvider,
+                                  ),
+                              placeholder:
+                                  (context, url) => CircleAvatar(
+                                    radius: 40,
+                                    backgroundColor: Colors.grey[200],
+                                    child: SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.0,
+                                        color: AppColors.primaryColor,
+                                      ),
                                     ),
                                   ),
-                                ),
-                            errorWidget:
-                                (context, url, error) => CircleAvatar(
-                                  radius: 40,
-                                  backgroundImage: AssetImage(
-                                    "assets/slicing/blankuser.jpeg",
+                              errorWidget:
+                                  (context, url, error) => CircleAvatar(
+                                    radius: 40,
+                                    backgroundImage: AssetImage(
+                                      "assets/slicing/blankuser.jpeg",
+                                    ),
                                   ),
-                                ),
-                          )
-                          : CircleAvatar(
-                            radius: 40,
-                            backgroundImage: AssetImage(
-                              "assets/slicing/blankuser.jpeg",
+                            )
+                            : CircleAvatar(
+                              radius: 40,
+                              backgroundImage: AssetImage(
+                                "assets/slicing/blankuser.jpeg",
+                              ),
                             ),
-                          ),
-                      SizedBox(width: 15),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            usp.name == "null"
-                                ? sp.name.toString() == "null"
-                                    ? "Guest"
-                                    : sp.name.toString()
-                                : usp.name.toString(),
-                            style: TextStyle(
-                              fontSize: 26 * textScaleFactor,
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
+                        SizedBox(width: 15),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              usp.name == "null"
+                                  ? sp.name.toString() == "null"
+                                      ? "Guest"
+                                      : sp.name.toString()
+                                  : usp.name.toString(),
+                              style: TextStyle(
+                                fontSize: 26 * textScaleFactor,
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          Text(
-                            usp.email.toString() == "null"
-                                ? sp.email.toString()
-                                : sp.email.toString(),
-                            style: TextStyle(
-                              fontSize: 15 * textScaleFactor,
-                              color: Colors.black,
+                            Text(
+                              usp.email.toString() == "null"
+                                  ? sp.email.toString()
+                                  : sp.email.toString(),
+                              style: TextStyle(
+                                fontSize: 15 * textScaleFactor,
+                                color: Colors.black,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
                 ],
               ),
               SizedBox(height: res_height * 0.04),
@@ -321,7 +293,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                 child: Container(
                   width: res_width * 0.75,
                   child: Padding(
-                    padding: const EdgeInsets.only(bottom: 5),
+                    padding: const EdgeInsets.only(bottom: 5, left: 10),
                     child: Row(
                       children: [
                         Image.asset(
@@ -347,8 +319,9 @@ class _DrawerScreenState extends State<DrawerScreen> {
               ),
               SizedBox(height: 10),
               Container(
-                  width: res_width * 0.7,
-                  child: Divider(color: Colors.grey.shade300)),
+                width: res_width * 0.7,
+                child: Divider(color: Colors.grey.shade300),
+              ),
               Container(
                 width: res_width * 0.7,
                 height: res_height * 0.059,
@@ -431,12 +404,12 @@ class _DrawerScreenState extends State<DrawerScreen> {
                   ),
                 ),
               ),
-                // SizedBox(
+              // SizedBox(
               SizedBox(height: 25),
               GestureDetector(
                 onTap: () {
                   setState(() => shaka = 12);
-                  Get.to(TermLength());
+                  Get.to(CopyrightPolicy());
                 },
                 child: Container(
                   width: res_width * 0.75,
@@ -665,8 +638,9 @@ class _DrawerScreenState extends State<DrawerScreen> {
               ),
               SizedBox(height: 15),
               Container(
-                  width: res_width * 0.7,
-                  child: Divider(color: Colors.grey.shade300)),
+                width: res_width * 0.7,
+                child: Divider(color: Colors.grey.shade300),
+              ),
               SizedBox(height: 15),
               GestureDetector(
                 onTap: () async {
@@ -682,11 +656,14 @@ class _DrawerScreenState extends State<DrawerScreen> {
                     listen: false,
                   );
                   userPrefernece.remove().then((value) {});
-                  sp.userSignOut().then((value) {
-                    Get.to(() => LoginScreen());
-                  }).catchError((e) {
-                    if (kDebugMode) {}
-                  });
+                  sp
+                      .userSignOut()
+                      .then((value) {
+                        Get.to(() => LoginScreen());
+                      })
+                      .catchError((e) {
+                        if (kDebugMode) {}
+                      });
                 },
                 child: Container(
                   width: res_width * 0.75,
@@ -750,16 +727,24 @@ class _DrawerScreenState extends State<DrawerScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          GestureDetector(
-                            onTap: () {
-                              Get.back();
-                              widget.onCloseDrawer?.call();
-                            },
-                            child: Image.asset(
-                              'assets/newpacks/close-circle.png',
-                              color: Colors.black,
-                              width: 30,
-                              height: 30,
+                          Material(
+                            color: Colors.transparent,
+                            shape: const CircleBorder(),
+                            child: InkWell(
+                              onTap: () {
+                                Get.back();
+                                widget.onCloseDrawer?.call();
+                              },
+                              customBorder: const CircleBorder(),
+                              child: Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: Image.asset(
+                                  'assets/newpacks/close-circle.png',
+                                  color: Colors.black,
+                                  width: 30,
+                                  height: 30,
+                                ),
+                              ),
                             ),
                           ),
                           SizedBox(width: 20),
@@ -778,6 +763,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                   height: 24,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2.0,
+                                    color: AppColors.primaryColor,
                                   ),
                                 ),
                               )
@@ -798,6 +784,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                         height: 24,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2.0,
+                                          color: AppColors.primaryColor,
                                         ),
                                       ),
                                     ),
@@ -855,157 +842,153 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           ),
                         ],
                       ),
-                    SizedBox(height: res_height * 0.01),
-                    (usp.role == "1" || onboardingCompleted)
-                        ? Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Renter',
+                      SizedBox(height: res_height * 0.01),
+                      (usp.role == "1" || onboardingCompleted)
+                          ? Center(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Renter',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Transform.scale(
+                                  scale: 0.7,
+                                  child: Switch(
+                                    value: usp.role == "1",
+                                    onChanged: (value) async {
+                                      final usp = context.read<UserViewModel>();
+                                      final sp = context.read<SignInProvider>();
+
+                                      if (value) {
+                                        // Switch to provider - call API first
+                                        _myRepo
+                                            .updateRoleApi({
+                                              "role": "1",
+                                              "email": usp.email ?? sp.email,
+                                            })
+                                            .then((response) async {
+                                              if (response["status"] == 200) {
+                                                print(
+                                                  "Role updated to provider successfully",
+                                                );
+                                                // Only update local state and navigate if API succeeds
+                                                SharedPreferences
+                                                sharedPreferences =
+                                                    await SharedPreferences.getInstance();
+                                                await sharedPreferences
+                                                    .setString('role', '1');
+                                                usp.setRole('1');
+                                                sp.saveDataToSharedPreferences();
+                                                Get.offAll(
+                                                  () => VendrosHomeScreen(),
+                                                );
+                                              } else {
+                                                print(
+                                                  "Failed to update role to provider",
+                                                );
+                                                // Optionally show error message to user
+                                              }
+                                            })
+                                            .catchError((error) {
+                                              print(
+                                                "Error updating role to provider: $error",
+                                              );
+                                              // Optionally show error message to user
+                                            });
+                                      } else {
+                                        // Switch to renter - call API first
+                                        _myRepo
+                                            .updateRoleApi({
+                                              "role": "0",
+                                              "email": usp.email ?? sp.email,
+                                            })
+                                            .then((response) async {
+                                              if (response["status"] == 200) {
+                                                print(
+                                                  "Role updated to renter successfully",
+                                                );
+                                                // Only update local state and navigate if API succeeds
+                                                SharedPreferences
+                                                sharedPreferences =
+                                                    await SharedPreferences.getInstance();
+                                                await sharedPreferences
+                                                    .setString('role', '0');
+                                                usp.setRole('0');
+                                                sp.saveDataToSharedPreferences();
+                                                Get.offAll(() => MainScreen());
+                                              } else {
+                                                print(
+                                                  "Failed to update role to renter",
+                                                );
+                                                // Optionally show error message to user
+                                              }
+                                            })
+                                            .catchError((error) {
+                                              print(
+                                                "Error updating role to renter: $error",
+                                              );
+                                              // Optionally show error message to user
+                                            });
+                                      }
+                                    },
+                                    activeTrackColor: lightBlue,
+                                    activeColor: darkBlue,
+                                  ),
+                                ),
+                                Text(
+                                  'Provider',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                          : Center(
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                // Get user data for Stripe onboarding
+                                SharedPreferences prefs =
+                                    await SharedPreferences.getInstance();
+                                String userId = prefs.getString('id') ?? "";
+                                String stripeStatus =
+                                    prefs.getString(
+                                      'stripe_verification_status',
+                                    ) ??
+                                    "";
+
+                                // Go to Stripe onboarding
+                                Get.to(
+                                  () => StripeOnboardingScreen(
+                                    userId: userId,
+                                    verificationStatus: stripeStatus,
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                'Become Provider',
                                 style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black,
+                                  color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              Transform.scale(
-                                scale: 0.7,
-                                child: Switch(
-                                  value: usp.role == "1",
-                                  onChanged: (value) async {
-                                    final usp = context.read<UserViewModel>();
-                                    final sp = context.read<SignInProvider>();
-
-                                    if (value) {
-                                      // Switch to provider - call API first
-                                      _myRepo
-                                          .updateRoleApi({
-                                            "role": "1",
-                                            "email": usp.email ?? sp.email,
-                                          })
-                                          .then((response) async {
-                                            if (response["status"] == 200) {
-                                              print(
-                                                "Role updated to provider successfully",
-                                              );
-                                              // Only update local state and navigate if API succeeds
-                                              SharedPreferences
-                                              sharedPreferences =
-                                                  await SharedPreferences.getInstance();
-                                              await sharedPreferences.setString(
-                                                'role',
-                                                '1',
-                                              );
-                                              usp.setRole('1');
-                                              sp.saveDataToSharedPreferences();
-                                              Get.offAll(
-                                                () => VendrosHomeScreen(),
-                                              );
-                                            } else {
-                                              print(
-                                                "Failed to update role to provider",
-                                              );
-                                              // Optionally show error message to user
-                                            }
-                                          })
-                                          .catchError((error) {
-                                            print(
-                                              "Error updating role to provider: $error",
-                                            );
-                                            // Optionally show error message to user
-                                          });
-                                    } else {
-                                      // Switch to renter - call API first
-                                      _myRepo
-                                          .updateRoleApi({
-                                            "role": "0",
-                                            "email": usp.email ?? sp.email,
-                                          })
-                                          .then((response) async {
-                                            if (response["status"] == 200) {
-                                              print(
-                                                "Role updated to renter successfully",
-                                              );
-                                              // Only update local state and navigate if API succeeds
-                                              SharedPreferences
-                                              sharedPreferences =
-                                                  await SharedPreferences.getInstance();
-                                              await sharedPreferences.setString(
-                                                'role',
-                                                '0',
-                                              );
-                                              usp.setRole('0');
-                                              sp.saveDataToSharedPreferences();
-                                              Get.offAll(() => MainScreen());
-                                            } else {
-                                              print(
-                                                "Failed to update role to renter",
-                                              );
-                                              // Optionally show error message to user
-                                            }
-                                          })
-                                          .catchError((error) {
-                                            print(
-                                              "Error updating role to renter: $error",
-                                            );
-                                            // Optionally show error message to user
-                                          });
-                                    }
-                                  },
-                                  activeTrackColor: lightBlue,
-                                  activeColor: darkBlue,
+                              style: ElevatedButton.styleFrom(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
                                 ),
-                              ),
-                              Text(
-                                'Provider',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                        : Center(
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              // Get user data for Stripe onboarding
-                              SharedPreferences prefs =
-                                  await SharedPreferences.getInstance();
-                              String userId = prefs.getString('id') ?? "";
-                              String stripeStatus =
-                                  prefs.getString(
-                                    'stripe_verification_status',
-                                  ) ??
-                                  "";
-
-                              // Go to Stripe onboarding
-                              Get.to(
-                                () => StripeOnboardingScreen(
-                                  userId: userId,
-                                  verificationStatus: stripeStatus,
-                                ),
-                              );
-                            },
-                            child: Text(
-                              'Become Provider',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                                textStyle: TextStyle(fontSize: 16),
+                                backgroundColor: darkBlue,
                               ),
                             ),
-                            style: ElevatedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 12,
-                              ),
-                              textStyle: TextStyle(fontSize: 16),
-                              backgroundColor: darkBlue,
-                            ),
                           ),
-                        ),
                       SizedBox(height: res_height * 0.04),
                       GestureDetector(
                         onTap: () {
@@ -1022,7 +1005,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         child: Container(
                           width: res_width * 0.75,
                           child: Padding(
-                            padding: const EdgeInsets.only(bottom: 5),
+                            padding: const EdgeInsets.only(bottom: 5, left: 10),
                             child: Row(
                               children: [
                                 Image.asset(
@@ -1048,9 +1031,10 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         ),
                       ),
                       SizedBox(height: 10),
-                      Container(width: res_width * 0.7, child: Divider(
-                          color: Colors.grey.shade300,
-                      )),
+                      Container(
+                        width: res_width * 0.7,
+                        child: Divider(color: Colors.grey.shade300),
+                      ),
                       Container(
                         width: res_width * 0.7,
                         height: res_height * 0.059,
@@ -1110,7 +1094,8 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           setState(() {
                             shaka = 3;
                           });
-                          Get.to(MessagesScreen());
+                          bottomctrl.navBarChange(5);
+                          Navigator.of(context).pop();
                         },
                         child: Container(
                           width: res_width * 0.75,
@@ -1146,7 +1131,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           setState(() {
                             shaka = 4;
                           });
-                          Get.to(OrderRequests());
+                          Get.to(const OrderRequestScreen());
                         },
                         child: Container(
                           width: res_width * 0.75,
@@ -1162,7 +1147,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                 ),
                                 SizedBox(width: 20),
                                 Text(
-                                  "My Orders List",
+                                  "My Orders",
                                   textAlign: TextAlign.left,
                                   style: TextStyle(
                                     fontSize: 15 * textScaleFactor,
@@ -1198,7 +1183,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                 ),
                                 SizedBox(width: 20),
                                 Text(
-                                  "Transaction List",
+                                  "My Transactions",
                                   textAlign: TextAlign.left,
                                   style: TextStyle(
                                     fontSize: 15 * textScaleFactor,
@@ -1249,9 +1234,10 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         ),
                       ),
                       SizedBox(height: 15),
-                      Container(width: res_width * 0.7, child: Divider(
-                          color: Colors.grey.shade300,
-                      )),
+                      Container(
+                        width: res_width * 0.7,
+                        child: Divider(color: Colors.grey.shade300),
+                      ),
                       Container(
                         width: res_width * 0.7,
                         height: res_height * 0.059,
@@ -1401,7 +1387,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           setState(() {
                             shaka = 12;
                           });
-                          Get.to(TermLength());
+                          Get.to(CopyrightPolicy());
                         },
                         child: Container(
                           width: res_width * 0.75,
@@ -1648,21 +1634,19 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         ),
                       ),
                       SizedBox(height: 15),
-                      Container(width: res_width * 0.7, child: Divider(
-                          color: Colors.grey.shade300,
-                      )),
+                      Container(
+                        width: res_width * 0.7,
+                        child: Divider(color: Colors.grey.shade300),
+                      ),
                       SizedBox(height: 15),
                       GestureDetector(
                         onTap: () {
                           setState(() {
                             shaka = 19;
                           });
-                          if (bottomctrl.navigationBarIndexValue != 4) {
-                            bottomctrl.navBarChange(4);
-                          } else {
-                            Get.back();
-                            widget.onCloseDrawer?.call();
-                          }
+                          Get.back();
+                          widget.onCloseDrawer?.call();
+                          Get.to(() => const Settings());
                         },
                         child: Container(
                           width: res_width * 0.75,
@@ -1768,18 +1752,26 @@ class _DrawerScreenState extends State<DrawerScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          GestureDetector(
-                            onTap: () {
-                              Get.back();
-                            },
-                            child: Image.asset(
-                              'assets/newpacks/close-circle.png',
-                              color: Colors.black,
-                              width: 30,
-                              height: 30,
+                          Material(
+                            color: Colors.transparent,
+                            shape: const CircleBorder(),
+                            child: InkWell(
+                              onTap: () {
+                                Get.back();
+                              },
+                              customBorder: const CircleBorder(),
+                              child: Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: Image.asset(
+                                  'assets/newpacks/close-circle.png',
+                                  color: Colors.black,
+                                  width: 30,
+                                  height: 30,
+                                ),
+                              ),
                             ),
                           ),
-                          SizedBox(width: 20,)
+                          SizedBox(width: 20),
                         ],
                       ),
                       Column(
@@ -1795,6 +1787,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                   height: 24,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2.0,
+                                    color: AppColors.primaryColor,
                                   ),
                                 ),
                               )
@@ -1815,6 +1808,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                                         height: 24,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2.0,
+                                          color: AppColors.primaryColor,
                                         ),
                                       ),
                                     ),
@@ -2004,7 +1998,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                             child: Text(
                               'Become Provider',
                               style: TextStyle(
-                                color: Colors.black,
+                                color: Colors.white,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -2033,10 +2027,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         child: Container(
                           width: res_width * 0.75,
                           child: Padding(
-                            padding: const EdgeInsets.only(
-                              //left: 20,
-                              bottom: 5,
-                            ),
+                            padding: const EdgeInsets.only(left: 10, bottom: 5),
                             child: Row(
                               children: [
                                 Image.asset(
@@ -2060,9 +2051,10 @@ class _DrawerScreenState extends State<DrawerScreen> {
                         ),
                       ),
                       SizedBox(height: 10),
-                      Container(width: res_width * 0.7, child: Divider(
-                          color: Colors.grey.shade300,
-                      )),
+                      Container(
+                        width: res_width * 0.7,
+                        child: Divider(color: Colors.grey.shade300),
+                      ),
                       // SizedBox(height: 10),
                       Container(
                         width: res_width * 0.7,
@@ -2192,7 +2184,8 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           setState(() {
                             shaka = 3;
                           });
-                          Get.to(() => MessagesScreen());
+                          bottomctrl.navBarChange(5);
+                          Navigator.of(context).pop();
                         },
                         child: Container(
                           width: res_width * 0.75,
@@ -2371,9 +2364,10 @@ class _DrawerScreenState extends State<DrawerScreen> {
 
                       SizedBox(height: 15),
 
-                      Container(width: res_width * 0.7, child: Divider(
-                        color: Colors.grey.shade300,
-                      )),
+                      Container(
+                        width: res_width * 0.7,
+                        child: Divider(color: Colors.grey.shade300),
+                      ),
                       // SizedBox(height: 10),
                       Container(
                         width: res_width * 0.7,
@@ -2541,7 +2535,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           setState(() {
                             shaka = 12;
                           });
-                          Get.to(() => TermLength());
+                          Get.to(() => CopyrightPolicy());
                         },
                         child: Container(
                           width: res_width * 0.75,
@@ -2578,7 +2572,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           setState(() {
                             shaka = 13;
                           });
-                          Get.to(() => TermLength());
+                          Get.to(() => RentalAgreement());
                         },
                         child: Container(
                           width: res_width * 0.75,
@@ -2615,7 +2609,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           setState(() {
                             shaka = 14;
                           });
-                          Get.to(() => TermLength());
+                          Get.to(() => usagePolicyAndLimitations());
                         },
                         child: Container(
                           width: res_width * 0.75,
@@ -2652,7 +2646,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           setState(() {
                             shaka = 15;
                           });
-                          Get.to(() => TermLength());
+                          Get.to(() => InsuranceAndIndemnification());
                         },
                         child: Container(
                           width: res_width * 0.75,
@@ -2689,7 +2683,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           setState(() {
                             shaka = 16;
                           });
-                          Get.to(() => TermLength());
+                          Get.to(() => TransportAndInstallationPolicy());
                         },
                         child: Container(
                           width: res_width * 0.75,
@@ -2726,7 +2720,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           setState(() {
                             shaka = 17;
                           });
-                          Get.to(() => TermLength());
+                          Get.to(() => AboutAppScreen());
                         },
                         child: Container(
                           width: res_width * 0.75,
@@ -2763,7 +2757,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           setState(() {
                             shaka = 18;
                           });
-                          Get.to(() => TermLength());
+                          Get.to(() => Termination());
                         },
                         child: Container(
                           width: res_width * 0.75,
@@ -2795,20 +2789,19 @@ class _DrawerScreenState extends State<DrawerScreen> {
                       ),
 
                       SizedBox(height: 15),
-                      Container(width: res_width * 0.7, child: Divider(
-                          color: Colors.grey.shade300,
-                      )),
+                      Container(
+                        width: res_width * 0.7,
+                        child: Divider(color: Colors.grey.shade300),
+                      ),
                       SizedBox(height: 15),
                       GestureDetector(
                         onTap: () {
                           setState(() {
                             shaka = 19;
                           });
-                          if (bottomctrl.navigationBarIndexValue != 4) {
-                            bottomctrl.navBarChange(4);
-                          } else {
-                            Get.back();
-                          }
+                          Get.back();
+                          widget.onCloseDrawer?.call();
+                          Get.to(() => const Settings());
                         },
                         child: Container(
                           width: res_width * 0.75,
@@ -3438,7 +3431,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                       //       setState(() {
                       //         shaka = 12;
                       //       });
-                      //       Get.to(TermLength());
+                      //       Get.to(CopyrightPolicy());
                       //     },
                       //     child: Container(
                       //       width: res_width * 0.7,

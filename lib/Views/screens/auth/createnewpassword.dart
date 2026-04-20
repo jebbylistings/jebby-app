@@ -35,15 +35,16 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
     return Scaffold(
       backgroundColor: AppColors.greyColor,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.greyColor,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          onPressed: () => Get.back(),
-          icon: Icon(Icons.chevron_left, color: Colors.black, size: 28),
-          style: IconButton.styleFrom(
-            padding: EdgeInsets.zero,
-            minimumSize: Size(48, 48),
-          ),
+        scrolledUnderElevation: 0,
+        leading: InkWell(
+          onTap: () {
+            Get.back();
+          },
+          borderRadius: BorderRadius.circular(50),
+          child: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
         ),
       ),
       body: SafeArea(

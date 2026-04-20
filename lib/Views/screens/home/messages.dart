@@ -1,277 +1,571 @@
-import 'dart:convert';
+import 'dart:async';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../Services/provider/sign_in_provider.dart';
-import '../../../model/deleteNotificationModel.dart';
-import '../../../model/getNotificationModel.dart';
-import '../../../model/user_model.dart' as usermodel;
+import '../../../model/getAllMessagesModel.dart' as msg_model;
+import '../../../model/user_model.dart';
 import '../../../res/app_url.dart';
+import '../../../res/color.dart';
 import '../../../view_model/apiServices.dart';
 import '../../../view_model/user_view_model.dart';
-import '../home/Messages(32).dart';
-import '../profile/userprofile.dart';
-import '../vendors/negotiationScreeen.dart';
 
-class MessageScreen extends StatefulWidget {
-  const MessageScreen({Key? key}) : super(key: key);
+class Chat extends StatefulWidget {
+  const Chat(this.targetID, {super.key});
+
+  final dynamic targetID;
 
   @override
-  State<MessageScreen> createState() => _MessageScreenState();
+  State<Chat> createState() => _ChatState();
 }
 
-class _MessageScreenState extends State<MessageScreen> {
+class _ChatState extends State<Chat> {
+  final TextEditingController _sendMessageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+
+  Timer? _pollTimer;
+
+  String? token;
   String sourceId = "";
+  String? fullname;
+  String? email;
+  String? phoneNumber;
+  String? role;
+
+  String _peerDisplayName = '';
+  String _targetImage = '';
+
   bool isLoading = true;
+  bool isError = false;
   bool isEmpty = false;
+
+  /// Detects new/changed thread so we only auto-scroll when messages update.
+  String? _lastMessagesFingerprint;
+
+  Future<void> getData() async {
+    final sp = context.read<SignInProvider>();
+    final usp = context.read<UserViewModel>();
+    usp.getUser();
+    sp.getDataFromSharedPreferences();
+  }
+
+  Future<UserModel> getUserDate() => UserViewModel().getUser();
+
+  void profileData(BuildContext context) {
+    getUserDate()
+        .then((value) async {
+          token = value.token.toString();
+          sourceId = value.id.toString();
+          fullname = value.name.toString();
+          phoneNumber = value.phoneNumber.toString();
+          email = value.email.toString();
+          role = value.role.toString();
+          if (mounted) setState(() {});
+          getUserData();
+          getMessageApi();
+        })
+        .onError((error, stackTrace) {
+          if (kDebugMode) {}
+        });
+  }
+
+  void getMessageApi() {
+    if (sourceId.isEmpty || widget.targetID.toString().isEmpty) return;
+    ApiRepository.shared.getMessagesApi(
+      sourceId.toString(),
+      widget.targetID.toString(),
+      (res) {
+        if (!mounted) return;
+        final newFp = _fingerprintMessages(res.data);
+        final changed = _lastMessagesFingerprint != newFp;
+
+        if (res.data == null || res.data!.isEmpty) {
+          setState(() {
+            isLoading = false;
+            isEmpty = true;
+            isError = false;
+          });
+          if (changed) {
+            _lastMessagesFingerprint = newFp;
+            _scheduleScrollToBottom();
+          }
+        } else {
+          setState(() {
+            isLoading = false;
+            isError = false;
+            isEmpty = false;
+          });
+          if (changed) {
+            _lastMessagesFingerprint = newFp;
+            _scheduleScrollToBottom();
+          }
+        }
+      },
+      (error) {
+        if (!mounted) return;
+        if (error != null) {
+          setState(() {
+            isLoading = false;
+            isError = true;
+            isEmpty = false;
+          });
+        }
+      },
+    );
+  }
+
+  void sendMessage(String msg) {
+    if (msg.trim().isEmpty) return;
+    ApiRepository.shared.postMessage(
+      msg.trim(),
+      sourceId.toString(),
+      widget.targetID.toString(),
+    );
+  }
+
+  void getUserData() {
+    ApiRepository.shared.userCredential(
+      (List) {
+        if (!mounted) return;
+        if (List.data == null || List.data!.isEmpty) {
+          setState(() {});
+        } else {
+          setState(() {});
+        }
+      },
+      (error) {
+        if (error != null && mounted) setState(() {});
+      },
+      sourceId.toString(),
+    );
+  }
+
+  void getTargetData() {
+    ApiRepository.shared.userCredential(
+      (List) {
+        if (!mounted) return;
+        if (List.data == null || List.data!.isEmpty) {
+          setState(() {
+            _peerDisplayName = 'Chat';
+            _targetImage = '';
+          });
+        } else {
+          final row = List.data![0];
+          setState(() {
+            _peerDisplayName =
+                (row.name ?? '').toString().trim().isEmpty
+                    ? 'Chat'
+                    : (row.name ?? '').toString().trim();
+            _targetImage = (row.image ?? '').toString();
+          });
+        }
+      },
+      (error) {
+        if (error != null && mounted) {
+          setState(() => _peerDisplayName = 'Chat');
+        }
+      },
+      widget.targetID.toString(),
+    );
+  }
+
+  void _startPoll() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (mounted && sourceId.isNotEmpty) getMessageApi();
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-    _init();
+    getData();
+    profileData(context);
+    getTargetData();
+    _startPoll();
   }
 
-  Future<void> _init() async {
-    final sp = context.read<SignInProvider>();
-    final usp = context.read<UserViewModel>();
-
-    await sp.getDataFromSharedPreferences();
-    usermodel.UserModel user = await usp.getUser();
-
-    sourceId = user.id.toString();
-    _getNotifications();
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    _sendMessageController.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
-  void _getNotifications() {
-    ApiRepository.shared.notifications(
-      sourceId,
-          (data) {
-        setState(() {
-          isLoading = false;
-          isEmpty = data.data!.isEmpty;
-        });
-      },
-          (error) {
-        setState(() {
-          isLoading = false;
-          isEmpty = true;
-        });
-      },
-    );
+  static const Color _pageBg = Color(0xFFF5F5F5);
+
+  String _firstName(String? full) {
+    if (full == null || full.trim().isEmpty) return 'You';
+    return full.trim().split(RegExp(r'\s+')).first;
   }
 
-  void _seenNotification(id) {
-    ApiRepository.shared.seenoneNotification(id);
+  String _peerFirstName() => _firstName(_peerDisplayName);
+
+  String _avatarUrl(String rel) {
+    final t = rel.trim();
+    if (t.isEmpty || t.toLowerCase() == 'null') return '';
+    if (t.startsWith('http')) return t;
+    return '${AppUrl.baseUrlM}$t';
   }
 
-  Future<void> _deleteNotification(id) async {
-    await http.post(
-      Uri.parse(AppUrl.deleteNotification),
-      headers: {'Content-type': 'application/json'},
-      body: jsonEncode({"id": id}),
-    );
-    _getNotifications();
+  List<msg_model.Data> _messagesChronological() {
+    final raw = ApiRepository.shared.getAllMessagesModelList?.data;
+    return _sortMessagesChronological(raw);
   }
 
-  /// ---------------- DATE GROUPING ----------------
-
-  String _groupTitle(DateTime date) {
-    final now = DateTime.now();
-
-    if (DateUtils.isSameDay(date, now)) return "Today";
-    if (DateUtils.isSameDay(date, now.subtract(const Duration(days: 1)))) {
-      return "Yesterday";
-    }
-    return DateFormat("MMM dd, yyyy").format(date);
+  List<msg_model.Data> _sortMessagesChronological(List<msg_model.Data>? raw) {
+    if (raw == null || raw.isEmpty) return [];
+    final list = List<msg_model.Data>.from(raw);
+    list.sort((a, b) {
+      final ta = DateTime.tryParse(a.timeSent ?? '') ?? DateTime(1970);
+      final tb = DateTime.tryParse(b.timeSent ?? '') ?? DateTime(1970);
+      return ta.compareTo(tb);
+    });
+    return list;
   }
 
-  Map<String, List<Data>> _groupNotifications(List<Data> list) {
-    Map<String, List<Data>> grouped = {};
+  String _fingerprintMessages(List<msg_model.Data>? data) {
+    final sorted = _sortMessagesChronological(data);
+    if (sorted.isEmpty) return 'empty';
+    final last = sorted.last;
+    return '${sorted.length}_${last.id}_${last.timeSent}_${last.content}';
+  }
 
-    for (var item in list) {
-      if (item.name == "order") continue;
+  /// With [reverse: true], offset 0 is the visual bottom (newest).
+  void _scrollToBottom() {
+    if (!mounted) return;
+    if (!_scrollController.hasClients) return;
+    _scrollController.jumpTo(0);
+  }
 
-      DateTime date = DateTime.parse(item.createdAt!);
-      String key = _groupTitle(date);
-
-      grouped.putIfAbsent(key, () => []);
-      grouped[key]!.add(item);
-    }
-
-    return grouped;
+  void _scheduleScrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _scrollToBottom();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final msgs = _messagesChronological();
+
     return Scaffold(
-      backgroundColor: const Color(0xffF6F6F6),
+      backgroundColor: _pageBg,
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        backgroundColor: Colors.transparent,
-        centerTitle: true,
-        title: const Text(
-          "Notifications",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        titleSpacing: 4,
+        foregroundColor: Colors.black,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+          onPressed: () => Get.back(),
+          style: IconButton.styleFrom(foregroundColor: Colors.black),
         ),
-        leading: InkWell(
-          onTap: () => Get.back(),
-          child: const Icon(Icons.arrow_back, color: Colors.black),
-        ),
-        actions: [
-          GestureDetector(
-            onTap: () => Get.to(() => MyProfileScreen()),
-            child: const Padding(
-              padding: EdgeInsets.all(16),
-              child: Icon(Icons.person_outline, color: Colors.black),
-            ),
-          ),
-        ],
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : isEmpty
-          ? const Center(child: Text("No Notifications"))
-          : _buildBody(),
-    );
-  }
-
-  Widget _buildBody() {
-    final notifications =
-    ApiRepository.shared.getNotificationModelList!.data!;
-    final grouped = _groupNotifications(notifications);
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: grouped.entries.map((entry) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-
-              ...entry.value.map((item){return _notificationCard(item,entry.key);}).toList(),
-              const SizedBox(height: 20),
-            ],
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _sectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-
-  Widget _notificationCard(Data item,String title) {
-    DateTime date = DateTime.parse(item.createdAt!);
-
-    return GestureDetector(
-      onTap: () {
-        _seenNotification(item.id);
-
-        if (item.name == "message") {
-          Get.to(() => MessagesScreen());
-        }
-        else if (item.name == "negotiation")
-        {
-          Get.to(
-                () => NegotiationScreen(
-              prodId: item.productId,
-              status: item.status,
-              price: item.price,
-              negoId: item.negoId.toString(),
-              userId: item.userId.toString(),
-            ),
-          );
-        }
-
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
+        title: Row(
           children: [
-            _sectionHeader(title),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                /// Dot
-                Container(
-                  margin: const EdgeInsets.only(top: 6),
-                  height: 10,
-                  width: 10,
-                  decoration: BoxDecoration(
-                    color: item.seen_one == "0"
-                        ? Colors.orange
-                        : Colors.grey.shade400,
-                    shape: BoxShape.circle,
-                  ),
+            if (!isLoading) ...[
+              _HeaderAvatar(imageUrl: _avatarUrl(_targetImage)),
+              const SizedBox(width: 10),
+            ],
+            Expanded(
+              child: Text(
+                _peerDisplayName.isEmpty ? 'Chat' : _peerDisplayName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.inter(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black,
                 ),
-
-                const SizedBox(width: 12),
-
-                /// Text
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.name ?? "",
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        item.description ?? "",
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey.shade700,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                /// Time + delete
-                Column(
-                  children: [
-                    Text(
-                      DateFormat("hh:mm a").format(date),
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 8),
-                    // GestureDetector(
-                    //   onTap: () => _deleteNotification(item.id),
-                    //   child: const Icon(Icons.close, size: 18, color: Colors.grey),
-                    // ),
-                  ],
-                )
-              ],
+              ),
             ),
           ],
         ),
       ),
+      body: Column(
+        children: [
+          Expanded(
+            child:
+                isLoading
+                    ? Center(
+                      child: Text(
+                        'Loading…',
+                        style: GoogleFonts.inter(color: Colors.black54),
+                      ),
+                    )
+                    : isError
+                    ? Center(
+                      child: Text(
+                        'Could not load messages',
+                        style: GoogleFonts.inter(color: Colors.black54),
+                      ),
+                    )
+                    : isEmpty || msgs.isEmpty
+                    ? Center(
+                      child: Text(
+                        'Start your chat',
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    )
+                    : ListView.builder(
+                      controller: _scrollController,
+                      reverse: true,
+                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+                      itemCount: msgs.length,
+                      itemBuilder: (context, index) {
+                        final msgIndex = msgs.length - 1 - index;
+                        final m = msgs[msgIndex];
+                        final isMe =
+                            m.senderId.toString() == sourceId.toString();
+                        final showSenderHeader =
+                            msgIndex == 0 ||
+                            msgs[msgIndex - 1].senderId != m.senderId;
+                        final sameSenderAsOlder =
+                            msgIndex > 0 &&
+                            msgs[msgIndex - 1].senderId == m.senderId;
+                        final topPad = sameSenderAsOlder ? 4.0 : 12.0;
+
+                        return Padding(
+                          padding: EdgeInsets.only(top: topPad),
+                          child: _MessageRow(
+                            content: (m.content ?? '').toString(),
+                            timeSent: m.timeSent,
+                            isMe: isMe,
+                            showSenderHeader: showSenderHeader,
+                            senderLabel:
+                                isMe ? _firstName(fullname) : _peerFirstName(),
+                          ),
+                        );
+                      },
+                    ),
+          ),
+          _Composer(
+            controller: _sendMessageController,
+            onSend: () {
+              final text = _sendMessageController.text;
+              if (text.trim().isEmpty) return;
+              sendMessage(text);
+              _sendMessageController.clear();
+              _scheduleScrollToBottom();
+            },
+          ),
+        ],
+      ),
     );
+  }
+}
+
+class _HeaderAvatar extends StatelessWidget {
+  const _HeaderAvatar({required this.imageUrl});
+
+  final String imageUrl;
+
+  static const Color _placeholderFill = Color(0xFFFFF4E8);
+
+  @override
+  Widget build(BuildContext context) {
+    final hasUrl = imageUrl.isNotEmpty;
+    final accent = AppColors.primaryColor.withValues(alpha: 0.85);
+    return CircleAvatar(
+      radius: 18,
+      backgroundColor: _placeholderFill,
+      backgroundImage: hasUrl ? CachedNetworkImageProvider(imageUrl) : null,
+      onBackgroundImageError: hasUrl ? (_, __) {} : null,
+      child: hasUrl ? null : Icon(Icons.person, color: accent, size: 22),
+    );
+  }
+}
+
+class _MessageRow extends StatelessWidget {
+  const _MessageRow({
+    required this.content,
+    required this.timeSent,
+    required this.isMe,
+    required this.showSenderHeader,
+    required this.senderLabel,
+  });
+
+  final String content;
+  final String? timeSent;
+  final bool isMe;
+  final bool showSenderHeader;
+  final String senderLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final maxW = MediaQuery.sizeOf(context).width * 0.78;
+    final time = DateTime.tryParse(timeSent ?? '');
+    final timeStr = time != null ? DateFormat('hh:mm a').format(time) : '';
+
+    final bubble = Container(
+      constraints: BoxConstraints(maxWidth: maxW),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: isMe ? const Color(0xFF2C2C2E) : Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (showSenderHeader) ...[
+            Text(
+              senderLabel,
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: isMe ? Colors.white70 : const Color(0xFF6B6B70),
+              ),
+            ),
+            const SizedBox(height: 6),
+          ],
+          Text(
+            content,
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
+              height: 1.35,
+              color: isMe ? Colors.white : Colors.black,
+            ),
+          ),
+          if (timeStr.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Align(
+              alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+              child: Text(
+                timeStr,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w400,
+                  color: isMe ? Colors.white54 : const Color(0xFF9E9E9E),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+
+    return Align(
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      child: bubble,
+    );
+  }
+}
+
+class _Composer extends StatelessWidget {
+  const _Composer({required this.controller, required this.onSend});
+
+  final TextEditingController controller;
+  final VoidCallback onSend;
+
+  @override
+  Widget build(BuildContext context) {
+    // Do not add viewInsets.bottom here: Scaffold already insets the body
+    // when resizeToAvoidBottomInset is true; duplicating it leaves a gap
+    // above the keyboard.
+    return Material(
+      color: Colors.white,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(color: const Color(0xFFE8E8E8)),
+            ),
+            padding: const EdgeInsets.only(left: 4, right: 4, top: 4, bottom: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    minLines: 1,
+                    maxLines: 5,
+                    textCapitalization: TextCapitalization.sentences,
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      color: Colors.black,
+                      height: 1.3,
+                    ),
+                    cursorColor: AppColors.primaryColor,
+                    decoration: InputDecoration(
+                      isDense: true,
+                      hintText: 'Message',
+                      hintStyle: GoogleFonts.inter(
+                        color: Colors.grey.shade400,
+                        fontSize: 15,
+                      ),
+                      border: InputBorder.none,
+                      filled: false,
+                      contentPadding: const EdgeInsets.fromLTRB(
+                        14,
+                        10,
+                        8,
+                        10,
+                      ),
+                    ),
+                    onSubmitted: (_) => onSend(),
+                  ),
+                ),
+                InkWell(
+                  onTap: onSend,
+                  borderRadius: BorderRadius.circular(24),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    child: Image.asset(
+                      'assets/newpacks/chatsendicon.png',
+                      height: 40,
+                      width: 40,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class MessageModel {
+  String? Message;
+  String? type;
+
+  MessageModel({this.Message, this.type});
+}
+
+class StreamSocket {
+  final _socketResponse = StreamController<String>();
+
+  void Function(String) get addResponse => _socketResponse.sink.add;
+
+  Stream<String> get getResponse => _socketResponse.stream;
+
+  void dispose() {
+    _socketResponse.close();
   }
 }
