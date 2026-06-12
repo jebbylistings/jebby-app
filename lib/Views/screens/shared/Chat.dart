@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jebby/Views/screens/home/Messages.dart';
 import 'package:jebby/res/app_url.dart';
@@ -12,16 +13,33 @@ import 'package:provider/provider.dart';
 import '../../../Services/provider/sign_in_provider.dart';
 import '../../../model/user_model.dart';
 import '../../../view_model/user_view_model.dart';
+import '../../../model/getAllMessagesModel.dart' as msg_model;
 import '../../../model/getChatHistoryModel.dart' as datamodel;
+import '../../../model/product_chat_context.dart';
+
+class _CachedThreadInquiry {
+  const _CachedThreadInquiry({
+    required this.content,
+    required this.recipientId,
+  });
+
+  final String content;
+  final String recipientId;
+}
 
 class MessagesScreen extends StatefulWidget {
-  const MessagesScreen({super.key});
+  const MessagesScreen({super.key, this.showBackButton = false});
+
+  /// When true (e.g. opened from provider drawer), shows a leading back affordance.
+  final bool showBackButton;
 
   @override
   State<MessagesScreen> createState() => _MessagesScreenState();
 }
 
-class _MessagesScreenState extends State<MessagesScreen> {
+class _MessagesScreenState extends State<MessagesScreen>
+    with SingleTickerProviderStateMixin {
+  TabController? _tabController;
   Future<void> getData() async {
     final sp = context.read<SignInProvider>();
     final usp = context.read<UserViewModel>();
@@ -45,6 +63,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
           fullname = value.name.toString();
           email = value.email.toString();
           role = value.role.toString();
+          _applyDefaultTab();
           get_chat_history();
           seenNotification();
         })
@@ -60,6 +79,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
   bool isLoading = true;
   bool isError = false;
   bool isEmpty = false;
+
+  final Map<String, _CachedThreadInquiry> _threadInquiryCache = {};
+  bool _resolvingInquiries = false;
 
   void get_chat_history() {
     ApiRepository.shared.chatsHistory(
@@ -78,6 +100,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
             isLoading = false;
             isError = false;
           });
+          _resolveThreadInquiries();
         }
       },
       (error) {
@@ -116,16 +139,148 @@ class _MessagesScreenState extends State<MessagesScreen> {
         .toList();
   }
 
+  String? _inquiryContentFor(datamodel.Data e) {
+    final peerId = e.id.toString();
+    final cached = _threadInquiryCache[peerId];
+    if (cached != null) return cached.content;
+
+    final inquiry = (e.lastInquiryMessage ?? '').trim();
+    if (inquiry.isNotEmpty) return inquiry;
+    return e.lastMessage;
+  }
+
+  bool _isProviderTabConversation(datamodel.Data e) {
+    if (sourceId.isEmpty) return false;
+    final inquiryContent = _inquiryContentFor(e);
+    return ProductChatContext.isProviderTabThread(
+      inquiryContent: inquiryContent,
+      currentUserId: sourceId,
+    );
+  }
+
+  Future<void> _resolveThreadInquiries() async {
+    if (sourceId.isEmpty || _resolvingInquiries) return;
+    final raw = ApiRepository.shared.getChatsHistoryModelList?.data;
+    if (raw == null || raw.isEmpty) return;
+
+    _resolvingInquiries = true;
+    for (final e in raw) {
+      final peerId = e.id.toString();
+      if (_threadInquiryCache.containsKey(peerId)) continue;
+      if ((e.lastInquiryMessage ?? '').trim().isNotEmpty) continue;
+      if (ProductChatContext.tryParsePayload(e.lastMessage) != null) continue;
+      await _fetchThreadInquiry(peerId);
+    }
+    _resolvingInquiries = false;
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _fetchThreadInquiry(String peerId) async {
+    final completer = Completer<void>();
+    ApiRepository.shared.getMessagesApi(
+      sourceId,
+      peerId,
+      (res) {
+        final meta = _extractLatestInquiry(res.data);
+        if (meta != null) {
+          _threadInquiryCache[peerId] = meta;
+        }
+        if (!completer.isCompleted) completer.complete();
+      },
+      (error) {
+        if (!completer.isCompleted) completer.complete();
+      },
+    );
+    return completer.future;
+  }
+
+  _CachedThreadInquiry? _extractLatestInquiry(List<msg_model.Data>? messages) {
+    if (messages == null || messages.isEmpty) return null;
+
+    final sorted = List<msg_model.Data>.from(messages);
+    sorted.sort((a, b) {
+      final ta = DateTime.tryParse(a.timeSent ?? '') ?? DateTime(1970);
+      final tb = DateTime.tryParse(b.timeSent ?? '') ?? DateTime(1970);
+      return ta.compareTo(tb);
+    });
+
+    for (var i = sorted.length - 1; i >= 0; i--) {
+      final m = sorted[i];
+      final content = (m.content ?? '').toString();
+      final ctx = ProductChatContext.tryParsePayload(content);
+      if (ctx != null) {
+        final recipientId = m.recipientId?.toString() ?? ctx.recipientId;
+        return _CachedThreadInquiry(
+          content: content,
+          recipientId: recipientId,
+        );
+      }
+
+      final productId = m.productId;
+      final messageRecipientId = m.recipientId;
+      if (productId != null && productId > 0 && messageRecipientId != null) {
+        final rid = messageRecipientId.toString();
+        // Product inquiries are sent to the vendor; listing owner is recipient (or self when vendor).
+        final vendorId = rid == sourceId ? sourceId : rid;
+        return _CachedThreadInquiry(
+          content: ProductChatContext.syntheticPayload(
+            productId: productId,
+            vendorUserId: vendorId,
+            recipientId: rid,
+          ),
+          recipientId: rid,
+        );
+      }
+    }
+    return null;
+  }
+
+  bool _isRenterTabConversation(datamodel.Data e) => !_isProviderTabConversation(e);
+
+  List<datamodel.Data> _chatsForProviderTab(List<datamodel.Data> items) {
+    return items.where(_isProviderTabConversation).toList();
+  }
+
+  List<datamodel.Data> _chatsForRenterTab(List<datamodel.Data> items) {
+    return items.where(_isRenterTabConversation).toList();
+  }
+
+  void _initTabController() {
+    _tabController?.dispose();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  void _applyDefaultTab() {
+    final tabs = _tabController;
+    if (!mounted || tabs == null || role == null) return;
+    final index = role == '1' ? 1 : 0;
+    if (tabs.index != index) {
+      tabs.index = index;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    _initTabController();
     _startPoll();
     getData();
     profileData(context);
   }
 
   @override
+  void activate() {
+    super.activate();
+    if (_tabController == null) {
+      _initTabController();
+      _applyDefaultTab();
+    }
+  }
+
+  @override
   void dispose() {
+    _tabController?.dispose();
+    _tabController = null;
     _pollTimer?.cancel();
     _searchController.dispose();
     super.dispose();
@@ -133,27 +288,59 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final tabs = _tabController;
+    if (tabs == null) {
+      return Scaffold(
+        backgroundColor: Colors.grey.shade100,
+        body: const SafeArea(
+          child: Center(
+            child: CircularProgressIndicator(color: AppColors.primaryColor),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor:
+          widget.showBackButton
+              ? const Color(0xFFF3F3F5)
+              : Colors.grey.shade100,
+      appBar:
+          widget.showBackButton
+              ? AppBar(
+                backgroundColor: Colors.transparent,
+                surfaceTintColor: Colors.transparent,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                foregroundColor: Colors.black,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                  onPressed: () => Get.back(),
+                  style: IconButton.styleFrom(foregroundColor: Colors.black),
+                ),
+              )
+              : null,
       body: SafeArea(
+        top: !widget.showBackButton,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(18, 10, 12, 0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    'Chat',
-                    style: GoogleFonts.inter(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black,
-                      height: 1.1,
-                    ),
-                  ),
-                ],
+              padding: EdgeInsets.fromLTRB(
+                widget.showBackButton ? 20 : 18,
+                widget.showBackButton ? 0 : 10,
+                12,
+                0,
+              ),
+              child: Text(
+                'Chat',
+                style: GoogleFonts.inter(
+                  fontSize: 28,
+                  fontWeight:
+                      widget.showBackButton ? FontWeight.w800 : FontWeight.w700,
+                  color: Colors.black,
+                  height: 1.1,
+                ),
               ),
             ),
             Padding(
@@ -165,15 +352,37 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 },
               ),
             ),
-            SizedBox(height: 10),
-            Expanded(child: _buildBody()),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 8, 18, 0),
+              child: TabBar(
+                controller: tabs,
+                indicatorColor: AppColors.primaryColor,
+                indicatorWeight: 2.5,
+                labelColor: Colors.black,
+                unselectedLabelColor: const Color(0xFF9E9E9E),
+                labelStyle: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+                unselectedLabelStyle: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+                tabs: const [
+                  Tab(text: 'Renter'),
+                  Tab(text: 'Provider'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 6),
+            Expanded(child: _buildBody(tabs)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(TabController tabs) {
     if (isError) {
       return Center(
         child: Text(
@@ -202,46 +411,67 @@ class _MessagesScreenState extends State<MessagesScreen> {
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(15, 1, 15, 24),
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final element = items[index];
-        final name = element.name;
-        final image = element.image.toString();
-        final targetId = element.id.toString();
-        final count = element.count ?? 0;
-        final lastMessage = (element.lastMessage ?? '').toString();
-        final displayName =
-            (name == null || name.toString().trim().isEmpty)
-                ? 'Vendor'
-                : name.toString();
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: _ChatListTile(
-            name: displayName,
-            imageUrl: image.isEmpty ? null : AppUrl.baseUrlM + image,
-            lastMessage: lastMessage,
-            unreadCount: count,
-            onTap: () {
-              _pollTimer?.cancel();
-              Navigator.of(
-                context,
-              ).push(MaterialPageRoute<void>(builder: (_) => Chat(targetId))).then((
-                _,
-              ) {
-                if (!mounted) return;
-                // Periodic timer’s first tick is delayed; refresh immediately
-                // so last-message preview matches what was sent in the thread.
-                get_chat_history();
-                _startPoll();
-              });
-            },
-          ),
-        );
-      },
+    return TabBarView(
+      controller: tabs,
+      children: [
+        _buildChatList(_chatsForRenterTab(items), emptyLabel: 'No renter chats'),
+        _buildChatList(_chatsForProviderTab(items), emptyLabel: 'No provider chats'),
+      ],
     );
+  }
+
+  Widget _buildChatList(List<datamodel.Data> items, {required String emptyLabel}) {
+    if (items.isEmpty) {
+      return Center(
+        child: Text(
+          emptyLabel,
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.black54,
+          ),
+        ),
+      );
+    }
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(15, 1, 15, 24),
+      children: _chatTiles(items),
+    );
+  }
+
+  List<Widget> _chatTiles(List<datamodel.Data> items) {
+    return items.map((element) {
+      final name = element.name;
+      final image = element.image.toString();
+      final targetId = element.id.toString();
+      final count = element.count ?? 0;
+      final lastMessage = (element.lastMessage ?? '').toString();
+      final displayName =
+          (name == null || name.toString().trim().isEmpty)
+              ? 'Vendor'
+              : name.toString();
+
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: _ChatListTile(
+          name: displayName,
+          imageUrl: image.isEmpty ? null : AppUrl.baseUrlM + image,
+          lastMessage: lastMessage,
+          unreadCount: count,
+          onTap: () {
+            _pollTimer?.cancel();
+            Navigator.of(context)
+                .push(MaterialPageRoute<void>(builder: (_) => Chat(targetId)))
+                .then((_) {
+                  if (!mounted) return;
+                  get_chat_history();
+                  _startPoll();
+                });
+          },
+        ),
+      );
+    }).toList();
   }
 }
 
@@ -311,8 +541,9 @@ class _ChatListTile extends StatelessWidget {
   final VoidCallback onTap;
 
   String get _preview {
-    if (lastMessage.length <= 80) return lastMessage;
-    return '${lastMessage.substring(0, 77)}…';
+    final text = ProductChatContext.formatLastMessagePreview(lastMessage);
+    if (text.length <= 80) return text;
+    return '${text.substring(0, 77)}…';
   }
 
   @override

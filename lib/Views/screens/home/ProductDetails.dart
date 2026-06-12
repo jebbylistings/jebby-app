@@ -18,6 +18,7 @@ import 'package:jebby/Views/screens/shared/Reviews.dart';
 
 import '../../../model/getProductsByProductId.dart';
 import '../../../model/getReviewsByProductId.dart' as review_model;
+import '../../../model/product_chat_context.dart';
 import '../../../model/user_model.dart';
 import '../../../res/app_url.dart';
 import '../../../view_model/apiServices.dart';
@@ -94,6 +95,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   DateTime? _blockedStart;
   DateTime? _blockedEnd;
   DateTime _calendarMonth = DateTime(DateTime.now().year, DateTime.now().month);
+
+  bool get _isProductOwner =>
+      sourceId.isNotEmpty && sourceId == widget.userID.toString();
 
   @override
   void initState() {
@@ -422,7 +426,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
             ],
           ),
-          Positioned(left: 0, right: 0, bottom: 0, child: _buildBottomBar()),
+          if (!_isProductOwner)
+            Positioned(left: 0, right: 0, bottom: 0, child: _buildBottomBar()),
         ],
       ),
     );
@@ -521,7 +526,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 28, 20, 110),
+        padding: EdgeInsets.fromLTRB(20, _isProductOwner ? 38 : 28, 20, _isProductOwner ? 28 : 110),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -539,7 +544,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ),
                 ),
-                if (role != "Guest")
+                if (role != "Guest" && !_isProductOwner)
                   IconButton(
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
@@ -1349,7 +1354,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   shape: const CircleBorder(),
                   child: InkWell(
                     customBorder: const CircleBorder(),
-                    onTap: () => Get.to(() => Chat(widget.userID)),
+                    onTap: () => Get.to(
+                      () => Chat(
+                        widget.userID,
+                        productContext: ProductChatContext(
+                          productId: widget.id.toString(),
+                          name: widget.name.toString(),
+                          price: widget.price.toString(),
+                          image: widget.image.toString(),
+                          vendorUserId: widget.userID.toString(),
+                          recipientId: widget.userID.toString(),
+                        ),
+                      ),
+                    ),
                     child: const Padding(
                       padding: EdgeInsets.all(12),
                       child: Icon(

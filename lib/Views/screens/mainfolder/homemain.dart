@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:jebby/Views/screens/home/Filter.dart';
-import 'package:jebby/Views/screens/home/Chat.dart';
+import 'package:jebby/Views/screens/shared/Chat.dart';
 import 'package:jebby/res/color.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';

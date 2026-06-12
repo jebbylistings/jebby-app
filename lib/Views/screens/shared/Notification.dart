@@ -8,7 +8,7 @@ import 'package:jebby/model/user_model.dart' as usermodel;
 import 'package:jebby/res/app_url.dart';
 import 'package:jebby/view_model/apiServices.dart';
 import 'package:jebby/view_model/user_view_model.dart';
-import 'package:jebby/Views/screens/home/Chat.dart';
+import 'package:jebby/Views/screens/shared/Chat.dart';
 import 'package:jebby/Views/screens/profile/userprofile.dart';
 import 'package:jebby/Views/screens/vendors/negotiationScreeen.dart';
 import 'package:jebby/Views/screens/vendors/MyOrders.dart';

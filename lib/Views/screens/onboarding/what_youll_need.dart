@@ -1,0 +1,160 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:jebby/Views/helper/colors.dart';
+import 'package:jebby/Views/screens/onboarding/before_you_continue.dart';
+import 'package:jebby/Views/screens/onboarding/stripe_identity_screen.dart';
+import 'package:jebby/Views/screens/onboarding/onboarding_scaffold.dart';
+import 'package:jebby/view_model/onboarding_controller.dart';
+
+class WhatYoullNeedScreen extends StatefulWidget {
+  const WhatYoullNeedScreen({super.key});
+
+  @override
+  State<WhatYoullNeedScreen> createState() => _WhatYoullNeedScreenState();
+}
+
+class _WhatYoullNeedScreenState extends State<WhatYoullNeedScreen> {
+  late final OnboardingController _controller =
+      ensureOnboardingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.advanceTo(2);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return OnboardingScaffold(
+      currentStep: 2,
+      title: 'Get Ready',
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Let's get you ready to earn",
+            style: GoogleFonts.inter(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 24),
+          const _ChecklistItem(
+            icon: Icons.badge_outlined,
+            title: 'Government-issued ID',
+            subtitle: "Driver's license, passport, or state ID.",
+          ),
+          const SizedBox(height: 16),
+          const _ChecklistItem(
+            icon: Icons.person_outline,
+            title: 'Personal Information',
+            subtitle: 'Basic details to verify your identity.',
+          ),
+          const SizedBox(height: 16),
+          const _ChecklistItem(
+            icon: Icons.account_balance_outlined,
+            title: 'Bank Account',
+            subtitle: 'To receive payouts securely through Stripe.',
+          ),
+          const SizedBox(height: 28),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: lightBlue,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.lock_outline, color: darkBlue, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Your information is secure and protected.',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+      bottomBar: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+        child: OnboardingPrimaryButton(
+          label: 'Continue',
+          onPressed: () async {
+            if (await _controller.isStripeIdentityVerified()) {
+              await _controller.advanceTo(4);
+              Get.to(() => const BeforeYouContinueScreen());
+            } else {
+              await _controller.advanceTo(3);
+              Get.to(() => const StripeIdentityScreen());
+            }
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _ChecklistItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  const _ChecklistItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: Icon(icon, color: darkBlue, size: 22),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: Colors.black54,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}

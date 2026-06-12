@@ -80,4 +80,7 @@ class AppUrl {
 
   static var updateUserRoleApiEndPoint = baseUrlM + '/UpdateUserRole';
   static var updateFCMToken = baseUrlM + '/updateFCMToken';
+
+  static var onboardingStateGet = baseUrlM + '/onboarding-state/';
+  static var onboardingStateUpdate = baseUrlM + '/onboarding-state';
 }

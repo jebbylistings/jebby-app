@@ -1174,20 +1174,26 @@ class ApiRepository extends ChangeNotifier {
   Future<PostlMessagesModel> postMessage(
     String content,
     String sender_id,
-    String recipient_id,
-  ) async {
-    final request = json.encode(<String, dynamic>{
+    String recipient_id, {
+    String? productId,
+  }) async {
+    final body = <String, dynamic>{
       "content": content.toString(),
       "sender_id": sender_id.toString(),
       "recipient_id": recipient_id.toString(),
-    });
+    };
+    final parsedProductId = int.tryParse(productId?.trim() ?? '');
+    if (parsedProductId != null && parsedProductId > 0) {
+      body["product_id"] = parsedProductId;
+    }
+    final request = json.encode(body);
 
     final response = await http.post(
       Uri.parse("${Url}/InsertMessage"),
       body: request,
       headers: {'Content-type': "application/json"},
     );
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       try {} catch (error) {}
     } else if (response.statusCode == 400) {
     } else if (response.statusCode == 500) {}
@@ -2268,10 +2274,19 @@ class ApiRepository extends ChangeNotifier {
   Future<dynamic> createStripeExpressAccountLink(
     String userId,
     onResponse(dynamic data),
-    onError(error),
-  ) async {
+    onError(error), {
+    String? name,
+    String? email,
+    String? phone,
+  }) async {
     final request = json.encode(<String, dynamic>{
       "user_id": userId,
+      if (name != null && name.isNotEmpty) "name": name,
+      if (email != null && email.isNotEmpty) "email": email,
+      if (phone != null && phone.isNotEmpty) ...{
+        "phone": phone,
+        "phoneNumber": phone,
+      },
     });
 
     final response = await http.post(
@@ -2358,6 +2373,63 @@ class ApiRepository extends ChangeNotifier {
     }
     
     return StripeTransactionsModel();
+  }
+
+  Future<dynamic> getOnboardingState(
+    String userId,
+    onResponse(dynamic data),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.onboardingStateGet + userId),
+      headers: {'Content-type': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      try {
+        final data = jsonDecode(response.body);
+        onResponse(data is Map<String, dynamic> ? data : {});
+        return data;
+      } catch (error) {
+        onError(error.toString());
+      }
+    } else if (response.statusCode == 404) {
+      onResponse({});
+    } else if (response.statusCode == 400) {
+      onError('Error fetching onboarding state');
+    } else if (response.statusCode == 500) {
+      onError('Internal Server Error');
+    }
+
+    return {};
+  }
+
+  Future<dynamic> updateOnboardingState(
+    Map<String, dynamic> body,
+    onResponse(dynamic data),
+    onError(error),
+  ) async {
+    final response = await http.post(
+      Uri.parse(AppUrl.onboardingStateUpdate),
+      body: json.encode(body),
+      headers: {'Content-type': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      try {
+        final data = jsonDecode(response.body);
+        onResponse(data);
+        return data;
+      } catch (error) {
+        onError(error.toString());
+      }
+    } else if (response.statusCode == 400) {
+      onError('Error updating onboarding state');
+    } else if (response.statusCode == 500) {
+      onError('Internal Server Error');
+    }
+
+    return {};
   }
 }
 

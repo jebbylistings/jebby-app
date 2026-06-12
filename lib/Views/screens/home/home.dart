@@ -860,9 +860,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                 ),
-                SizedBox(height: res_height * 0.02),
-
-                SizedBox(height: res_height * 0.05),
+                SizedBox(height: res_height * 0.13),
               ],
             ),
           ),

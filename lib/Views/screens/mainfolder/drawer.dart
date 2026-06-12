@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:jebby/Views/helper/colors.dart';
 import 'package:jebby/Views/screens/agreements/Aboutapp.dart';
 import 'package:jebby/Views/screens/agreements/insuranceAndIndemnifications.dart';
 import 'package:jebby/Views/screens/agreements/privacyPolicy.dart';
@@ -20,6 +19,7 @@ import 'package:jebby/Views/screens/home/Favourites.dart';
 import 'package:jebby/Views/screens/home/MyOrders.dart';
 import 'package:jebby/Views/screens/home/MyTransactions.dart';
 import 'package:jebby/Views/screens/home/ReturnProduct.dart';
+import 'package:jebby/Views/screens/shared/Chat.dart';
 import 'package:jebby/Views/screens/mainfolder/homemain.dart';
 import 'package:jebby/Views/screens/profile/userprofile.dart';
 import 'package:jebby/Views/screens/shared/Setting.dart';
@@ -27,7 +27,8 @@ import 'package:jebby/Views/screens/vendors/MyOrders.dart';
 import 'package:jebby/Views/screens/vendors/ReturnProduct.dart';
 import 'package:jebby/Views/screens/vendors/MyTransactions.dart';
 import 'package:jebby/Views/screens/vendors/vendorhome.dart';
-import 'package:jebby/Views/screens/auth/stripe_onboarding.dart';
+import 'package:jebby/Views/screens/onboarding/start_earning_button.dart';
+import 'package:jebby/Views/widgets/role_switcher_card.dart';
 import 'package:jebby/Views/support/contactsupport.dart';
 import 'package:jebby/res/color.dart';
 import 'package:jebby/respository/auth_repository.dart';
@@ -37,6 +38,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../Services/provider/sign_in_provider.dart';
 import '../../../model/user_model.dart';
 import '../../../view_model/apiServices.dart';
+import '../../../view_model/onboarding_controller.dart';
 import '../../../view_model/user_view_model.dart';
 import '../../controller/bottomcontroller.dart';
 
@@ -92,6 +94,8 @@ class _DrawerScreenState extends State<DrawerScreen> {
             usp.setRole(value.role.toString());
           }
 
+          _loadOnboardingController();
+
           if (mounted) {
             setState(() {});
           }
@@ -99,9 +103,33 @@ class _DrawerScreenState extends State<DrawerScreen> {
         .onError((error, stackTrace) {});
   }
 
+  Future<void> _loadOnboardingController() async {
+    final userId = id;
+    if (userId == null || userId.isEmpty) return;
+
+    final controller = ensureOnboardingController();
+    final prefs = await SharedPreferences.getInstance();
+    final phone = prefs.getString('phoneNumber');
+
+    await controller.loadAndReconcile(
+      userId: userId,
+      name: fullname,
+      email: email,
+      phone: phone,
+    );
+
+    if (mounted) {
+      setState(() {
+        onboardingCompleted =
+            prefs.getBool('identity_verified') ?? false;
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    ensureOnboardingController();
     getData();
     profileData(context);
     _loadOnboardingStatus();
@@ -124,7 +152,73 @@ class _DrawerScreenState extends State<DrawerScreen> {
     });
   }
 
+  bool _roleSwitchInProgress = false;
+
+  Future<void> _switchRole(BuildContext context, {required bool toEarn}) async {
+    final usp = context.read<UserViewModel>();
+    final sp = context.read<SignInProvider>();
+    final currentIsEarn = usp.role == "1";
+    if (currentIsEarn == toEarn || _roleSwitchInProgress) return;
+
+    setState(() => _roleSwitchInProgress = true);
+    final role = toEarn ? "1" : "0";
+
+    try {
+      final response = await _myRepo.updateRoleApi({
+        "role": role,
+        "email": usp.email ?? sp.email,
+      });
+      if (response["status"] == 200) {
+        final sharedPreferences = await SharedPreferences.getInstance();
+        await sharedPreferences.setString('role', role);
+        usp.setRole(role);
+        sp.saveDataToSharedPreferences();
+        Get.snackbar(
+          'Mode switched',
+          toEarn ? 'Switched to Earn Mode' : 'Switched to Rent Mode',
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 2),
+        );
+        if (toEarn) {
+          Get.offAll(() => VendrosHomeScreen());
+        } else {
+          Get.offAll(() => MainScreen());
+        }
+      }
+    } catch (error) {
+      print("Error updating role: $error");
+    } finally {
+      if (mounted) {
+        setState(() => _roleSwitchInProgress = false);
+      }
+    }
+  }
+
+  Widget _buildRoleModeSection(UserViewModel usp, double resWidth) {
+    if (usp.role != "1" && !onboardingCompleted) {
+      return const StartEarningButton();
+    }
+    return SizedBox(
+      width: resWidth * 0.75,
+      child: RoleSwitcherCard(
+        isEarnMode: usp.role == "1",
+        isLoading: _roleSwitchInProgress,
+        onModeChanged: (toEarn) => _switchRole(context, toEarn: toEarn),
+      ),
+    );
+  }
+
   final bottomctrl = Get.put(BottomController());
+
+  void _openProviderChat(BuildContext context) {
+    Navigator.of(context).pop();
+    Get.to(() => const MessagesScreen(showBackButton: true));
+  }
+
+  void _openRenterChat(BuildContext context) {
+    bottomctrl.navBarChange(5);
+    Navigator.of(context).pop();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -842,154 +936,9 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: res_height * 0.01),
-                      (usp.role == "1" || onboardingCompleted)
-                          ? Center(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Renter',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Transform.scale(
-                                  scale: 0.7,
-                                  child: Switch(
-                                    value: usp.role == "1",
-                                    onChanged: (value) async {
-                                      final usp = context.read<UserViewModel>();
-                                      final sp = context.read<SignInProvider>();
-
-                                      if (value) {
-                                        // Switch to provider - call API first
-                                        _myRepo
-                                            .updateRoleApi({
-                                              "role": "1",
-                                              "email": usp.email ?? sp.email,
-                                            })
-                                            .then((response) async {
-                                              if (response["status"] == 200) {
-                                                print(
-                                                  "Role updated to provider successfully",
-                                                );
-                                                // Only update local state and navigate if API succeeds
-                                                SharedPreferences
-                                                sharedPreferences =
-                                                    await SharedPreferences.getInstance();
-                                                await sharedPreferences
-                                                    .setString('role', '1');
-                                                usp.setRole('1');
-                                                sp.saveDataToSharedPreferences();
-                                                Get.offAll(
-                                                  () => VendrosHomeScreen(),
-                                                );
-                                              } else {
-                                                print(
-                                                  "Failed to update role to provider",
-                                                );
-                                                // Optionally show error message to user
-                                              }
-                                            })
-                                            .catchError((error) {
-                                              print(
-                                                "Error updating role to provider: $error",
-                                              );
-                                              // Optionally show error message to user
-                                            });
-                                      } else {
-                                        // Switch to renter - call API first
-                                        _myRepo
-                                            .updateRoleApi({
-                                              "role": "0",
-                                              "email": usp.email ?? sp.email,
-                                            })
-                                            .then((response) async {
-                                              if (response["status"] == 200) {
-                                                print(
-                                                  "Role updated to renter successfully",
-                                                );
-                                                // Only update local state and navigate if API succeeds
-                                                SharedPreferences
-                                                sharedPreferences =
-                                                    await SharedPreferences.getInstance();
-                                                await sharedPreferences
-                                                    .setString('role', '0');
-                                                usp.setRole('0');
-                                                sp.saveDataToSharedPreferences();
-                                                Get.offAll(() => MainScreen());
-                                              } else {
-                                                print(
-                                                  "Failed to update role to renter",
-                                                );
-                                                // Optionally show error message to user
-                                              }
-                                            })
-                                            .catchError((error) {
-                                              print(
-                                                "Error updating role to renter: $error",
-                                              );
-                                              // Optionally show error message to user
-                                            });
-                                      }
-                                    },
-                                    activeTrackColor: lightBlue,
-                                    activeColor: darkBlue,
-                                  ),
-                                ),
-                                Text(
-                                  'Provider',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                          : Center(
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                // Get user data for Stripe onboarding
-                                SharedPreferences prefs =
-                                    await SharedPreferences.getInstance();
-                                String userId = prefs.getString('id') ?? "";
-                                String stripeStatus =
-                                    prefs.getString(
-                                      'stripe_verification_status',
-                                    ) ??
-                                    "";
-
-                                // Go to Stripe onboarding
-                                Get.to(
-                                  () => StripeOnboardingScreen(
-                                    userId: userId,
-                                    verificationStatus: stripeStatus,
-                                  ),
-                                );
-                              },
-                              child: Text(
-                                'Become Provider',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 12,
-                                ),
-                                textStyle: TextStyle(fontSize: 16),
-                                backgroundColor: darkBlue,
-                              ),
-                            ),
-                          ),
-                      SizedBox(height: res_height * 0.04),
+                      const SizedBox(height: 24),
+                      _buildRoleModeSection(usp, res_width),
+                      const SizedBox(height: 24),
                       GestureDetector(
                         onTap: () {
                           setState(() {
@@ -1094,8 +1043,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           setState(() {
                             shaka = 3;
                           });
-                          bottomctrl.navBarChange(5);
-                          Navigator.of(context).pop();
+                          _openProviderChat(context);
                         },
                         child: Container(
                           width: res_width * 0.75,
@@ -1866,152 +1814,9 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: res_height * 0.01),
-                      (usp.role == "1" || onboardingCompleted)
-                          ? Center(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Renter',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Transform.scale(
-                                  scale: 0.7,
-                                  child: Switch(
-                                    value: usp.role == "1",
-                                    onChanged: (value) async {
-                                      final usp = context.read<UserViewModel>();
-                                      final sp = context.read<SignInProvider>();
-
-                                      if (value) {
-                                        // Switch to provider - call API first
-                                        _myRepo
-                                            .updateRoleApi({
-                                              "role": "1",
-                                              "email": usp.email ?? sp.email,
-                                            })
-                                            .then((response) async {
-                                              if (response["status"] == 200) {
-                                                print(
-                                                  "Role updated to provider successfully",
-                                                );
-                                                // Only update local state and navigate if API succeeds
-                                                SharedPreferences
-                                                sharedPreferences =
-                                                    await SharedPreferences.getInstance();
-                                                await sharedPreferences
-                                                    .setString('role', '1');
-                                                usp.setRole('1');
-                                                sp.saveDataToSharedPreferences();
-                                                Get.offAll(
-                                                  () => VendrosHomeScreen(),
-                                                );
-                                              } else {
-                                                print(
-                                                  "Failed to update role to provider",
-                                                );
-                                                // Optionally show error message to user
-                                              }
-                                            })
-                                            .catchError((error) {
-                                              print(
-                                                "Error updating role to provider: $error",
-                                              );
-                                              // Optionally show error message to user
-                                            });
-                                      } else {
-                                        // Switch to renter - call API first
-                                        _myRepo
-                                            .updateRoleApi({
-                                              "role": "0",
-                                              "email": usp.email ?? sp.email,
-                                            })
-                                            .then((response) async {
-                                              if (response["status"] == 200) {
-                                                print(
-                                                  "Role updated to renter successfully",
-                                                );
-                                                // Only update local state and navigate if API succeeds
-                                                SharedPreferences
-                                                sharedPreferences =
-                                                    await SharedPreferences.getInstance();
-                                                await sharedPreferences
-                                                    .setString('role', '0');
-                                                usp.setRole('0');
-                                                sp.saveDataToSharedPreferences();
-                                                Get.offAll(() => MainScreen());
-                                              } else {
-                                                print(
-                                                  "Failed to update role to renter",
-                                                );
-                                                // Optionally show error message to user
-                                              }
-                                            })
-                                            .catchError((error) {
-                                              print(
-                                                "Error updating role to renter: $error",
-                                              );
-                                              // Optionally show error message to user
-                                            });
-                                      }
-                                    },
-                                    activeTrackColor: lightBlue,
-                                    activeColor: darkBlue,
-                                  ),
-                                ),
-                                Text(
-                                  'Provider',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                          : ElevatedButton(
-                            onPressed: () async {
-                              // Get user data for Stripe onboarding
-                              SharedPreferences prefs =
-                                  await SharedPreferences.getInstance();
-                              String userId = prefs.getString('id') ?? "";
-                              String stripeStatus =
-                                  prefs.getString(
-                                    'stripe_verification_status',
-                                  ) ??
-                                  "";
-
-                              // Go to Stripe onboarding
-                              Get.to(
-                                () => StripeOnboardingScreen(
-                                  userId: userId,
-                                  verificationStatus: stripeStatus,
-                                ),
-                              );
-                            },
-                            child: Text(
-                              'Become Provider',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 12,
-                              ),
-                              textStyle: TextStyle(fontSize: 16),
-                              backgroundColor: AppColors.primaryColor,
-                            ),
-                          ),
-                      SizedBox(height: res_height * 0.04),
+                      const SizedBox(height: 24),
+                      _buildRoleModeSection(usp, res_width),
+                      const SizedBox(height: 24),
                       GestureDetector(
                         onTap: () {
                           setState(() {
@@ -2184,8 +1989,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                           setState(() {
                             shaka = 3;
                           });
-                          bottomctrl.navBarChange(5);
-                          Navigator.of(context).pop();
+                          _openRenterChat(context);
                         },
                         child: Container(
                           width: res_width * 0.75,

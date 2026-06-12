@@ -31,6 +31,7 @@ class Data {
   int? recipientId;
   String? timeSent;
   int? isShow;
+  int? productId;
 
   Data({
     this.id,
@@ -39,6 +40,7 @@ class Data {
     this.recipientId,
     this.timeSent,
     this.isShow,
+    this.productId,
   });
 
   Data.fromJson(Map<String, dynamic> json) {
@@ -48,6 +50,7 @@ class Data {
     recipientId = json['recipient_id'];
     timeSent = json['time_sent'];
     isShow = json['isShow'];
+    productId = json['product_id'];
   }
 
   Map<String, dynamic> toJson() {
@@ -58,6 +61,7 @@ class Data {
     data['recipient_id'] = this.recipientId;
     data['time_sent'] = this.timeSent;
     data['isShow'] = this.isShow;
+    data['product_id'] = this.productId;
     return data;
   }
 }

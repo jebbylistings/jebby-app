@@ -10,16 +10,19 @@ import 'package:provider/provider.dart';
 
 import '../../../Services/provider/sign_in_provider.dart';
 import '../../../model/getAllMessagesModel.dart' as msg_model;
+import '../../../model/product_chat_context.dart';
 import '../../../model/user_model.dart';
 import '../../../res/app_url.dart';
 import '../../../res/color.dart';
 import '../../../view_model/apiServices.dart';
 import '../../../view_model/user_view_model.dart';
+import 'ProductDetails.dart';
 
 class Chat extends StatefulWidget {
-  const Chat(this.targetID, {super.key});
+  const Chat(this.targetID, {super.key, this.productContext});
 
   final dynamic targetID;
+  final ProductChatContext? productContext;
 
   @override
   State<Chat> createState() => _ChatState();
@@ -47,6 +50,8 @@ class _ChatState extends State<Chat> {
 
   /// Detects new/changed thread so we only auto-scroll when messages update.
   String? _lastMessagesFingerprint;
+
+  bool _productContextSent = false;
 
   Future<void> getData() async {
     final sp = context.read<SignInProvider>();
@@ -95,6 +100,7 @@ class _ChatState extends State<Chat> {
             _lastMessagesFingerprint = newFp;
             _scheduleScrollToBottom();
           }
+          _maybeSendProductContext(const []);
         } else {
           setState(() {
             isLoading = false;
@@ -105,6 +111,7 @@ class _ChatState extends State<Chat> {
             _lastMessagesFingerprint = newFp;
             _scheduleScrollToBottom();
           }
+          _maybeSendProductContext(res.data!);
         }
       },
       (error) {
@@ -120,13 +127,33 @@ class _ChatState extends State<Chat> {
     );
   }
 
-  void sendMessage(String msg) {
+  void sendMessage(String msg, {String? productId}) {
     if (msg.trim().isEmpty) return;
+    final effectiveProductId = productId ?? widget.productContext?.productId;
     ApiRepository.shared.postMessage(
       msg.trim(),
       sourceId.toString(),
       widget.targetID.toString(),
+      productId: effectiveProductId,
     );
+  }
+
+  void _maybeSendProductContext(List<msg_model.Data> existing) {
+    final ctx = widget.productContext;
+    if (ctx == null || _productContextSent || sourceId.isEmpty) return;
+    if (ProductChatContext.threadHasProduct(
+      contents: existing.map((m) => m.content),
+      productIds: existing.map((m) => m.productId),
+      productId: ctx.productId,
+    )) {
+      _productContextSent = true;
+      return;
+    }
+    _productContextSent = true;
+    sendMessage(ctx.toPayload(), productId: ctx.productId);
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (mounted) getMessageApi();
+    });
   }
 
   void getUserData() {
@@ -311,15 +338,7 @@ class _ChatState extends State<Chat> {
                       ),
                     )
                     : isEmpty || msgs.isEmpty
-                    ? Center(
-                      child: Text(
-                        'Start your chat',
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          color: Colors.black54,
-                        ),
-                      ),
-                    )
+                    ? _EmptyThreadBody(productContext: widget.productContext)
                     : ListView.builder(
                       controller: _scrollController,
                       reverse: true,
@@ -337,17 +356,34 @@ class _ChatState extends State<Chat> {
                             msgIndex > 0 &&
                             msgs[msgIndex - 1].senderId == m.senderId;
                         final topPad = sameSenderAsOlder ? 4.0 : 12.0;
+                        final content = (m.content ?? '').toString();
+                        final productCtx =
+                            ProductChatContext.tryParsePayload(content);
 
                         return Padding(
                           padding: EdgeInsets.only(top: topPad),
-                          child: _MessageRow(
-                            content: (m.content ?? '').toString(),
-                            timeSent: m.timeSent,
-                            isMe: isMe,
-                            showSenderHeader: showSenderHeader,
-                            senderLabel:
-                                isMe ? _firstName(fullname) : _peerFirstName(),
-                          ),
+                          child:
+                              productCtx != null
+                                  ? _ProductInquiryCard(
+                                    product: productCtx,
+                                    timeSent: m.timeSent,
+                                    isMe: isMe,
+                                    showSenderHeader: showSenderHeader,
+                                    senderLabel:
+                                        isMe
+                                            ? _firstName(fullname)
+                                            : _peerFirstName(),
+                                  )
+                                  : _MessageRow(
+                                    content: content,
+                                    timeSent: m.timeSent,
+                                    isMe: isMe,
+                                    showSenderHeader: showSenderHeader,
+                                    senderLabel:
+                                        isMe
+                                            ? _firstName(fullname)
+                                            : _peerFirstName(),
+                                  ),
                         );
                       },
                     ),
@@ -362,6 +398,207 @@ class _ChatState extends State<Chat> {
               _scheduleScrollToBottom();
             },
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyThreadBody extends StatelessWidget {
+  const _EmptyThreadBody({this.productContext});
+
+  final ProductChatContext? productContext;
+
+  @override
+  Widget build(BuildContext context) {
+    if (productContext != null) {
+      return ListView(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+        children: [
+          _ProductInquiryCard(
+            product: productContext!,
+            isMe: true,
+            showSenderHeader: true,
+            senderLabel: 'You',
+          ),
+        ],
+      );
+    }
+    return Center(
+      child: Text(
+        'Start your chat',
+        style: GoogleFonts.inter(fontSize: 16, color: Colors.black54),
+      ),
+    );
+  }
+}
+
+class _ProductInquiryCard extends StatelessWidget {
+  const _ProductInquiryCard({
+    required this.product,
+    this.timeSent,
+    required this.isMe,
+    required this.showSenderHeader,
+    required this.senderLabel,
+  });
+
+  final ProductChatContext product;
+  final String? timeSent;
+  final bool isMe;
+  final bool showSenderHeader;
+  final String senderLabel;
+
+  static const Color _accent = Color(0xFFF6AE02);
+
+  String _resolveImageUrl() {
+    final rel = product.image.trim();
+    if (rel.isEmpty || rel.toLowerCase() == 'null') return '';
+    if (rel.startsWith('http')) return rel;
+    return '${AppUrl.baseUrlM}$rel';
+  }
+
+  void _openProduct() {
+    Get.to(
+      () => ProductDetailScreen(
+        product.productId,
+        product.name,
+        product.price,
+        '0',
+        product.image,
+        '',
+        product.vendorUserId,
+        '',
+        0,
+        0,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final maxW = MediaQuery.sizeOf(context).width * 0.88;
+    final time = DateTime.tryParse(timeSent ?? '');
+    final timeStr = time != null ? DateFormat('hh:mm a').format(time) : '';
+    final imageUrl = _resolveImageUrl();
+
+    final card = Material(
+      color: Colors.white,
+      elevation: 0,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: _openProduct,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          constraints: BoxConstraints(maxWidth: maxW),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE8E8E8)),
+            color: Colors.white,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: SizedBox(
+                  width: 72,
+                  height: 72,
+                  child:
+                      imageUrl.isNotEmpty
+                          ? CachedNetworkImage(
+                            imageUrl: imageUrl,
+                            fit: BoxFit.cover,
+                          )
+                          : ColoredBox(
+                            color: Colors.grey.shade200,
+                            child: Icon(
+                              Icons.image_outlined,
+                              color: Colors.grey.shade400,
+                            ),
+                          ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Product inquiry',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF6B6B70),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      product.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '\$ ${product.price}',
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: _accent,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Tap to view listing',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: Colors.black45,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    return Align(
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      child: Column(
+        crossAxisAlignment:
+            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          if (showSenderHeader)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Text(
+                senderLabel,
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF6B6B70),
+                ),
+              ),
+            ),
+          card,
+          if (timeStr.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                timeStr,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: const Color(0xFF9E9E9E),
+                ),
+              ),
+            ),
         ],
       ),
     );

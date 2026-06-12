@@ -145,8 +145,8 @@ class _FeaturedCategoriesScreenState extends State<FeaturedCategoriesScreen> {
           }
 
           final data = snapshot.data!.data!;
-          final bottomPad =
-              MediaQuery.of(context).padding.bottom + 88;
+          final bottomPad = MediaQuery.of(context).padding.bottom + 10;
+
           return SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
