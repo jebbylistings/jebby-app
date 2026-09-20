@@ -8,11 +8,13 @@ class CmsPolicyScreen extends StatefulWidget {
     super.key,
     required this.slug,
     required this.title,
+    this.subtitle,
     this.emptyMessage = 'Unable to load content. Please try again later.',
   });
 
   final String slug;
   final String title;
+  final String? subtitle;
   final String emptyMessage;
 
   @override
@@ -72,6 +74,7 @@ class _CmsPolicyScreenState extends State<CmsPolicyScreen> {
   Widget build(BuildContext context) {
     return CmsPageShell(
       title: widget.title,
+      subtitle: widget.subtitle,
       body: CmsPageShell.htmlPolicyScroll(
         isLoading: isLoading,
         isError: isError,

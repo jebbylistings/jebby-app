@@ -118,7 +118,7 @@ class _FeaturedCategoriesScreenState extends State<FeaturedCategoriesScreen> {
                             visible: _role != null && _role != 'Guest',
                             child: _CircleAction(
                               onTap: () {
-                                Get.to(() => UserProfileScreen());
+                                Get.to(() => const UserProfileScreen(showBackButton: true));
                               },
                               image: const AssetImage(
                                 'assets/images/personnew.png',

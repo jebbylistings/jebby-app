@@ -20,8 +20,8 @@ import 'package:jebby/views/screens/navigation/home_main.dart';
 import 'package:jebby/views/screens/profile/user_profile.dart';
 import 'package:jebby/views/screens/shared/settings.dart';
 import 'package:jebby/views/screens/vendors/my_orders.dart';
+import 'package:jebby/utils/earner_navigation.dart';
 import 'package:jebby/views/screens/vendors/my_transactions.dart';
-import 'package:jebby/views/screens/vendors/vendor_home.dart';
 import 'package:jebby/views/screens/onboarding/start_earning_button.dart';
 import 'package:jebby/views/widgets/role_switcher_card.dart';
 import 'package:jebby/utils/profile_image.dart';
@@ -158,7 +158,7 @@ class _AppDrawerScreenState extends State<AppDrawerScreen> {
           toEarn ? 'Switched to Earn Mode' : 'Switched to Rent Mode',
         );
         if (toEarn) {
-          Get.offAll(() => const VendorHomeScreen());
+          EarnerNavigation.goHome();
         } else {
           Get.offAll(() => const MainScreen());
         }
@@ -789,7 +789,7 @@ class _AppDrawerScreenState extends State<AppDrawerScreen> {
                       SizedBox(height: 10),
                       GestureDetector(
                         onTap: () {
-                          Get.to(() => UserProfileScreen());
+                          Get.to(() => const UserProfileScreen(showBackButton: true));
                         },
                         child: Container(
                           width: res_width * 0.75,
@@ -1097,7 +1097,7 @@ class _AppDrawerScreenState extends State<AppDrawerScreen> {
                       SizedBox(height: 10),
                       GestureDetector(
                         onTap: () {
-                          Get.to(() => UserProfileScreen());
+                          Get.to(() => const UserProfileScreen(showBackButton: true));
                         },
                         child: Container(
                           width: res_width * 0.75,

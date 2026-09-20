@@ -5,9 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:jebby/views/screens/auth/otp.dart';
 import 'package:jebby/views/screens/auth/create_new_password.dart';
-import 'package:jebby/views/screens/auth/login.dart';
+import 'package:jebby/views/screens/auth/password_updated.dart';
 import 'package:jebby/views/screens/profile/user_profile.dart';
-import 'package:jebby/views/screens/vendors/vendor_home.dart';
+import 'package:jebby/utils/earner_navigation.dart';
 import 'package:jebby/models/user_model.dart';
 import 'package:jebby/repositories/auth_repository.dart';
 import 'package:jebby/utils/show_snackbar.dart';
@@ -118,7 +118,7 @@ class AuthViewModel with ChangeNotifier {
 
         final userRole = value['role'].toString();
         if (userRole == "1") {
-          Get.offAll(() => VendorHomeScreen());
+          EarnerNavigation.goHome();
         } else {
           Get.offAll(() => MainScreen());
         }
@@ -480,8 +480,7 @@ class AuthViewModel with ChangeNotifier {
         .then((value) {
           setSignUpLoading(false);
           if (value["message"].toString() == "Password Updated") {
-            showAppSuccessSnackbar('Password Changed Successfully');
-            Get.offAll(() => LoginScreen());
+            Get.offAll(() => const PasswordUpdatedScreen());
           } else if (value["message"].toString() == "Email not Found") {
             showAppErrorSnackbar('email  not found');
           } else if (value["message"].toString() ==
@@ -514,7 +513,7 @@ class AuthViewModel with ChangeNotifier {
           setSignUpLoading(false);
           if (value["result"].toString() == data["file"].toString()) {
             showAppSuccessSnackbar('Otp sent');
-            Get.to(() => UserProfileScreen());
+            Get.to(() => const UserProfileScreen(showBackButton: true));
           } else if (value["message"].toString() == "Please upload a file!") {
             showAppErrorSnackbar('Please upload a file!');
           } else {

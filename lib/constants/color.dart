@@ -18,9 +18,16 @@ class AppColors {
   static const Color buttonColor = Colors.green;
 
   /// Renter redesign tokens (mission spec).
-  static const Color jebbyBlue = Color(0xFF499AE5);
-  static const Color jebbyAccentOrange = Color(0xFFFBA105);
+  static const Color jebbyBlue = Color(0xFF3F72FE);
+  static const Color jebbyNavy = Color(0xFF0C1033);
+  static const Color jebbyAccentOrange = Color(0xFFFFA936);
   static const Color jebbyBackground = Color(0xFFF4F7FA);
   static const Color jebbyTextPrimary = Color(0xFF111827);
-  static const Color jebbyTextMuted = Color(0xFF667085);
+  static const Color jebbyTextMuted = Color(0xFF545E70);
+  static const Color jebbySoftBlue = Color(0xFFEEF2FF);
+
+  /// Earner home tokens.
+  static const Color earnerBannerBlue = Color(0xFFE8F1FF);
+  static const Color earnerInfoBlue = Color(0xFFEEF4FF);
+  static const Color earnerOrangeSoft = Color(0xFFFFF4E5);
 }

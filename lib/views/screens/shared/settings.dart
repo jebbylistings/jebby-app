@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jebby/constants/app_url.dart';
+import 'package:jebby/constants/color.dart';
+import 'package:jebby/utils/earner_navigation.dart';
 import 'package:jebby/repositories/api_repository.dart';
 import 'package:jebby/views/screens/agreements/about_app.dart';
 import 'package:jebby/views/screens/agreements/privacy_policy.dart';
@@ -31,11 +33,31 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  static const Color _bgColor = Color(0xFFF2F4F7);
-  static const Color _primaryOrange = Color(0xFFFFB020);
-  static const Color _textPrimary = Color(0xFF0F172A);
-  static const Color _textSecondary = Color(0xFF64748B);
+  static const Color _cardBorder = Color(0xFFE3E6EC);
   static const Color _verifiedGreen = Color(0xFF16A34A);
+
+  TextStyle _nunito({
+    required double size,
+    FontWeight weight = FontWeight.w400,
+    Color? color,
+    double? height,
+  }) {
+    return TextStyle(
+      fontFamily: 'Nunito',
+      fontSize: size,
+      fontWeight: weight,
+      color: color ?? AppColors.jebbyTextPrimary,
+      height: height,
+    );
+  }
+
+  void _handleBack() {
+    if (Get.key.currentState?.canPop() ?? false) {
+      Get.back();
+    } else {
+      EarnerNavigation.goHome();
+    }
+  }
 
   bool _identityVerified = false;
 
@@ -55,13 +77,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) {
         setState(() {
           datalength = 1;
-          imagesapi = ProfileImage.sanitizePath(row['profile_image']?.toString());
+          imagesapi = ProfileImage.sanitizePath(
+            row['profile_image']?.toString(),
+          );
           nameapi = row['name']?.toString() ?? '';
           emailapi = row['email']?.toString() ?? '';
           isLoadingImage = false;
         });
       }
-      return {'data': [row]};
+      return {
+        'data': [row],
+      };
     } catch (error) {
       if (mounted) setState(() => isLoadingImage = false);
       return "No data";
@@ -237,18 +263,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           title: Text(
             'Request account deletion?',
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.w700,
-              fontSize: 18,
-              color: _textPrimary,
-            ),
+            style: _nunito(size: 18, weight: FontWeight.w700),
           ),
           content: Text(
             'This submits a request for our team to review. Your account is not deleted immediately.',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: _textSecondary,
+            style: _nunito(
+              size: 14,
+              weight: FontWeight.w400,
+              color: AppColors.jebbyTextMuted,
               height: 1.4,
             ),
           ),
@@ -257,9 +279,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onPressed: () => Navigator.of(dialogContext).pop(false),
               child: Text(
                 'Cancel',
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w600,
-                  color: _textSecondary,
+                style: _nunito(
+                  weight: FontWeight.w600,
+                  size: 14,
+                  color: AppColors.jebbyTextMuted,
                 ),
               ),
             ),
@@ -294,115 +317,173 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isProvider = usp.role == "1" || role == "1";
     final isSocialAccount = UserViewModel.isSocialAuthSource(usp.source);
     final bottomSafe = MediaQuery.paddingOf(context).bottom;
+    final showBack = widget.showBackButton ?? false;
     // Clear homemain footer (64px bar + 22px spacing) plus breathing room.
     const footerClearance = 86.0;
 
     return Scaffold(
-      backgroundColor: _bgColor,
-      appBar: AppBar(
-        backgroundColor: _bgColor,
-        surfaceTintColor: Colors.transparent,
-        scrolledUnderElevation: 0,
-        elevation: 0,
-        centerTitle: true,
-        automaticallyImplyLeading: false,
-        leading:
-            (widget.showBackButton ?? false)
-                ? InkWell(
-                  onTap: () => Get.back(),
-                  borderRadius: BorderRadius.circular(50),
-                  child: const Icon(
-                    Icons.arrow_back_ios_new,
-                    color: Colors.black,
-                    size: 20,
-                  ),
-                )
-                : null,
-        title: Text(
-          'Settings',
-          style: GoogleFonts.inter(
-            color: Colors.black87,
-            fontWeight: FontWeight.w700,
-            fontSize: 18,
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(20, 8, 20, footerClearance + bottomSafe),
+      backgroundColor: Colors.white,
+      body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildProfileHeader(usp, sp),
-            const SizedBox(height: 24),
-            if (!isProvider) _buildEarnMemberBanner(),
-            if (!isProvider) const SizedBox(height: 24),
-            _buildSectionHeader('ACCOUNT'),
-            const SizedBox(height: 8),
-            _buildSettingsCard([
-              _SettingsTileData(
-                icon: Icons.person_outline,
-                label: 'Edit Profile',
-                onTap: _openEditProfile,
-              ),
-              if (!isSocialAccount)
-                _SettingsTileData(
-                  icon: Icons.lock_outline,
-                  label: 'Change Password',
-                  isLoading: auth.signUpLoading,
-                  onTap: () => _openChangePassword(usp),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+              child: _pageHeader(showBack: showBack, isProvider: isProvider),
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  0,
+                  20,
+                  footerClearance + bottomSafe,
                 ),
-              _SettingsTileData(
-                icon: Icons.verified_user_outlined,
-                label: 'Verification',
-                trailingLabel:
-                    _identityVerified ? 'Verified' : null,
-                trailingLabelColor: _verifiedGreen,
-                onTap: _openVerification,
-              ),
-              if (usp.role != 'Guest' && role != 'Guest')
-                _SettingsTileData(
-                  icon: Icons.delete_outline,
-                  label: 'Request Account Deletion',
-                  isLoading: auth.accountDeletionLoading,
-                  onTap: () => _openAccountDeletionRequest(usp, sp),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildProfileHeader(usp, sp),
+                    const SizedBox(height: 24),
+                    if (!isProvider) _buildEarnMemberBanner(),
+                    if (!isProvider) const SizedBox(height: 24),
+                    _buildSectionHeader('ACCOUNT'),
+                    const SizedBox(height: 8),
+                    _buildSettingsCard([
+                      _SettingsTileData(
+                        icon: Icons.person_outline,
+                        label: 'Edit Profile',
+                        onTap: _openEditProfile,
+                      ),
+                      if (!isSocialAccount)
+                        _SettingsTileData(
+                          icon: Icons.lock_outline,
+                          label: 'Change Password',
+                          isLoading: auth.signUpLoading,
+                          onTap: () => _openChangePassword(usp),
+                        ),
+                      _SettingsTileData(
+                        icon: Icons.verified_user_outlined,
+                        label: 'Verification',
+                        trailingLabel: _identityVerified ? 'Verified' : null,
+                        trailingLabelColor: _verifiedGreen,
+                        onTap: _openVerification,
+                      ),
+                      if (usp.role != 'Guest' && role != 'Guest')
+                        _SettingsTileData(
+                          icon: Icons.delete_outline,
+                          label: 'Request Account Deletion',
+                          isLoading: auth.accountDeletionLoading,
+                          onTap: () => _openAccountDeletionRequest(usp, sp),
+                        ),
+                    ]),
+                    const SizedBox(height: 24),
+                    _buildSectionHeader('SUPPORT & INFO'),
+                    const SizedBox(height: 8),
+                    _buildSettingsCard([
+                      _SettingsTileData(
+                        icon: Icons.info_outline,
+                        label: 'About App',
+                        onTap: () => Get.to(() => const AboutAppScreen()),
+                      ),
+                      _SettingsTileData(
+                        icon: Icons.help_outline,
+                        label: 'FAQs',
+                        onTap: () => Get.to(() => const FaqsScreen()),
+                      ),
+                      _SettingsTileData(
+                        icon: Icons.headset_mic_outlined,
+                        label: 'Support',
+                        onTap: () => Get.to(() => ContactSupportScreen()),
+                      ),
+                      _SettingsTileData(
+                        icon: Icons.description_outlined,
+                        label: 'Terms & Conditions',
+                        onTap: () => Get.to(() => TermsAndConditionsScreen()),
+                      ),
+                    ]),
+                    const SizedBox(height: 24),
+                    _buildSectionHeader('LEGAL'),
+                    const SizedBox(height: 8),
+                    _buildSettingsCard([
+                      _SettingsTileData(
+                        icon: Icons.shield_outlined,
+                        label: 'Privacy Policy',
+                        onTap: () => Get.to(() => PrivacyPolicyScreen()),
+                      ),
+                    ]),
+                  ],
                 ),
-            ]),
-            const SizedBox(height: 24),
-            _buildSectionHeader('SUPPORT & INFO'),
-            const SizedBox(height: 8),
-            _buildSettingsCard([
-              _SettingsTileData(
-                icon: Icons.info_outline,
-                label: 'About App',
-                onTap: () => Get.to(() => const AboutAppScreen()),
               ),
-              _SettingsTileData(
-                icon: Icons.help_outline,
-                label: 'FAQs',
-                onTap: () => Get.to(() => const FaqsScreen()),
-              ),
-              _SettingsTileData(
-                icon: Icons.headset_mic_outlined,
-                label: 'Support',
-                onTap: () => Get.to(() => ContactSupportScreen()),
-              ),
-              _SettingsTileData(
-                icon: Icons.description_outlined,
-                label: 'Terms & Conditions',
-                onTap: () => Get.to(() => TermsAndConditionsScreen()),
-              ),
-            ]),
-            const SizedBox(height: 24),
-            _buildSectionHeader('LEGAL'),
-            const SizedBox(height: 8),
-            _buildSettingsCard([
-              _SettingsTileData(
-                icon: Icons.shield_outlined,
-                label: 'Privacy Policy',
-                onTap: () => Get.to(() => PrivacyPolicyScreen()),
-              ),
-            ]),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _pageHeader({required bool showBack, required bool isProvider}) {
+    final titleColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Settings',
+          style: _nunito(size: 28, weight: FontWeight.w800, height: 1.1),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          isProvider
+              ? 'Manage your account and business.'
+              : 'Manage your account and preferences.',
+          style: _nunito(
+            size: 15,
+            weight: FontWeight.w600,
+            color: AppColors.jebbyTextMuted,
+            height: 1.2,
+          ),
+        ),
+      ],
+    );
+
+    if (!showBack) return titleColumn;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _backButton(),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: titleColumn,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _backButton() {
+    return Material(
+      color: AppColors.jebbySoftBlue,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: _handleBack,
+        splashColor: AppColors.jebbyBlue.withValues(alpha: 0.12),
+        highlightColor: AppColors.jebbyBlue.withValues(alpha: 0.06),
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 2),
+              child: Icon(
+                Icons.arrow_back_ios_new,
+                size: 18,
+                color: AppColors.jebbyTextPrimary,
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -422,11 +503,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ProfileImage.circularAvatar(
                 radius: 44,
                 baseUrl: Url,
-                imagePath: ProfileImage.isValidPath(usp.profileImage)
-                    ? usp.profileImage!
-                    : imagesapi,
+                imagePath:
+                    ProfileImage.isValidPath(usp.profileImage)
+                        ? usp.profileImage!
+                        : imagesapi,
                 isLoading:
-                    isLoadingImage && !ProfileImage.isValidPath(usp.profileImage),
+                    isLoadingImage &&
+                    !ProfileImage.isValidPath(usp.profileImage),
               ),
               Positioned(
                 right: 0,
@@ -435,7 +518,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   width: 32,
                   height: 32,
                   decoration: const BoxDecoration(
-                    color: _primaryOrange,
+                    color: AppColors.jebbyBlue,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -451,11 +534,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 16),
         Text(
           displayName,
-          style: GoogleFonts.inter(
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-            color: _textPrimary,
-          ),
+          style: _nunito(size: 22, weight: FontWeight.w800),
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
           textAlign: TextAlign.center,
@@ -464,10 +543,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 4),
           Text(
             _getEmailText(usp),
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: _textSecondary,
+            style: _nunito(
+              size: 14,
+              weight: FontWeight.w600,
+              color: AppColors.jebbyTextMuted,
             ),
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
@@ -485,9 +564,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           return const SizedBox.shrink();
         }
 
-        return EarnMemberBanner(
-          onTap: () => controller.startOrResume(),
-        );
+        return EarnMemberBanner(onTap: () => controller.startOrResume());
       },
     );
   }
@@ -495,12 +572,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: GoogleFonts.inter(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.6,
-        color: _textSecondary,
-      ),
+      style: _nunito(
+        size: 13,
+        weight: FontWeight.w700,
+        color: AppColors.jebbyTextMuted,
+        height: 1.2,
+      ).copyWith(letterSpacing: 0.6),
     );
   }
 
@@ -509,6 +586,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _cardBorder),
       ),
       child: Column(
         children: List.generate(items.length, (index) {
@@ -564,10 +642,6 @@ class _SettingsTile extends StatelessWidget {
   final bool isLoading;
   final VoidCallback? onTap;
 
-  static const Color _primaryOrange = Color(0xFFFFB020);
-  static const Color _iconBg = Color(0xFFFFF3E0);
-  static const Color _textPrimary = Color(0xFF0F172A);
-
   const _SettingsTile({
     required this.icon,
     required this.label,
@@ -596,40 +670,42 @@ class _SettingsTile extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: _iconBg,
+                    color: AppColors.jebbySoftBlue,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(icon, color: _primaryOrange, size: 22),
+                  child: Icon(icon, color: AppColors.jebbyBlue, size: 22),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     label,
-                    style: GoogleFonts.inter(
+                    style: const TextStyle(
+                      fontFamily: 'Nunito',
                       fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                      color: _textPrimary,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.jebbyTextPrimary,
                     ),
                   ),
                 ),
                 if (trailingLabel != null) ...[
                   Text(
                     trailingLabel!,
-                    style: GoogleFonts.inter(
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
                       fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: trailingLabelColor ?? _textPrimary,
+                      fontWeight: FontWeight.w700,
+                      color: trailingLabelColor ?? AppColors.jebbyTextPrimary,
                     ),
                   ),
                   const SizedBox(width: 8),
                 ],
                 if (isLoading)
-                  SizedBox(
+                  const SizedBox(
                     width: 22,
                     height: 22,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: _primaryOrange,
+                      color: AppColors.jebbyBlue,
                     ),
                   )
                 else

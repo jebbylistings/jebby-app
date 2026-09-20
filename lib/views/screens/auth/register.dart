@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -138,35 +136,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final authViewModel = context.watch<AuthViewModel>();
     final textScale = MediaQuery.textScalerOf(context);
     final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
-    final keyboardOpen = keyboardInset > 0;
-    final logoSize = keyboardOpen ? 74.0 : 88.0;
-    final logoRadius = keyboardOpen ? 17.0 : 20.0;
-    final wordmarkSize = keyboardOpen ? 21.0 : 24.0;
-    const logoLift = 20.0;
-    const heroImageLift = 40.0;
+    final compact = MediaQuery.sizeOf(context).height < 720;
 
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final cardHeight = constraints.maxHeight * 0.72;
+          final cardHeight = constraints.maxHeight * (compact ? 0.84 : 0.77);
 
           return Stack(
             fit: StackFit.expand,
             children: [
               Positioned.fill(
-                child: Transform.translate(
-                  offset: const Offset(0, -heroImageLift),
-                  child: ImageFiltered(
-                    imageFilter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                    child: Image.asset(
-                      RegisterScreen.heroAsset,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.topCenter,
-                    ),
-                  ),
+                child: Image.asset(
+                  RegisterScreen.heroAsset,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
                 ),
               ),
               Positioned.fill(
@@ -176,11 +162,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.black.withValues(alpha: 0.08),
-                        Colors.black.withValues(alpha: 0.28),
-                        Colors.black.withValues(alpha: 0.55),
+                        Colors.black.withValues(alpha: 0.06),
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.18),
+                        Colors.black.withValues(alpha: 0.42),
                       ],
-                      stops: const [0.0, 0.55, 1.0],
+                      stops: const [0.0, 0.45, 0.72, 1.0],
                     ),
                   ),
                 ),
@@ -193,20 +180,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: Padding(
                     padding: const EdgeInsets.only(left: 16, top: 8),
                     child: Material(
-                      color: Colors.white,
+                      color: Colors.black.withValues(alpha: 0.7),
                       shape: const CircleBorder(),
                       clipBehavior: Clip.antiAlias,
                       child: InkWell(
                         onTap: Get.back,
                         customBorder: const CircleBorder(),
-                        splashColor: _rippleSplash,
-                        highlightColor: _rippleHighlight,
-                        child: const Padding(
-                          padding: EdgeInsets.all(10),
+                        splashColor: Colors.white.withValues(alpha: 0.14),
+                        highlightColor: Colors.white.withValues(alpha: 0.08),
+                        child: const SizedBox(
+                          width: 40,
+                          height: 40,
                           child: Icon(
                             Icons.arrow_back_ios_new,
-                            color: Colors.black,
-                            size: 18,
+                            color: Colors.white,
+                            size: 22,
                           ),
                         ),
                       ),
@@ -217,70 +205,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Positioned(
                 left: 0,
                 right: 0,
-                bottom: cardHeight + logoLift,
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOut,
-                        width: logoSize,
-                        height: logoSize,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(logoRadius),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.12),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(logoRadius),
-                          child: Image.asset(
-                            RegisterScreen.logoAsset,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: keyboardOpen ? 4 : 5),
-                      AnimatedDefaultTextStyle(
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOut,
-                        style: TextStyle(
-                          fontFamily: 'Nunito',
-                          fontWeight: FontWeight.w800,
-                          fontSize: textScale.scale(wordmarkSize),
-                          color: Colors.white,
-                          letterSpacing: 0.2,
-                        ),
-                        child: const Text('Jebby'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
                 bottom: 0,
                 height: cardHeight,
                 child: ClipRRect(
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
                   ),
                   child: Container(
                     color: Colors.white,
                     child: SingleChildScrollView(
-                      padding: EdgeInsets.fromLTRB(
-                        24,
-                        24,
-                        24,
-                        16 + bottomInset,
-                      ),
+                      padding: EdgeInsets.fromLTRB(24, 24, 24, 16 + bottomInset),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -289,23 +224,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             style: TextStyle(
                               fontFamily: 'Nunito',
                               fontWeight: FontWeight.w800,
-                              fontSize: textScale.scale(28),
+                              fontSize: textScale.scale(compact ? 26 : 28),
                               color: AppColors.jebbyTextPrimary,
                               height: 1.15,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: compact ? 6 : 8),
                           Text(
-                            'Start renting nearby, or earn from what you own.',
+                            'Rent nearby, or list what you own.',
                             style: TextStyle(
                               fontFamily: 'Nunito',
                               fontWeight: FontWeight.w400,
                               fontSize: textScale.scale(15),
                               color: AppColors.jebbyTextMuted,
-                              height: 1.4,
+                              height: 1.35,
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          SizedBox(height: compact ? 16 : 20),
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -315,6 +250,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   controller: _firstNameController,
                                   hintText: 'First name',
                                   textScale: textScale,
+                                  compact: compact,
                                   prefixIcon: Icons.person_outline,
                                   textCapitalization: TextCapitalization.words,
                                   textInputAction: TextInputAction.next,
@@ -327,6 +263,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   controller: _lastNameController,
                                   hintText: 'Last name',
                                   textScale: textScale,
+                                  compact: compact,
                                   prefixIcon: Icons.person_outline,
                                   textCapitalization: TextCapitalization.words,
                                   textInputAction: TextInputAction.next,
@@ -334,22 +271,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 16),
+                          SizedBox(height: compact ? 12 : 14),
                           _RegisterField(
                             label: 'Email address',
                             controller: _emailController,
                             hintText: 'you@example.com',
                             textScale: textScale,
+                            compact: compact,
                             prefixIcon: Icons.mail_outline,
                             keyboardType: TextInputType.emailAddress,
                             textInputAction: TextInputAction.next,
                           ),
-                          const SizedBox(height: 16),
+                          SizedBox(height: compact ? 12 : 14),
                           _RegisterField(
                             label: 'Password',
                             controller: _passwordController,
                             hintText: 'Create a password',
                             textScale: textScale,
+                            compact: compact,
                             prefixIcon: Icons.lock_outline,
                             obscureText: _obscurePassword,
                             textInputAction: TextInputAction.next,
@@ -417,12 +356,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               );
                             },
                           ),
-                          const SizedBox(height: 16),
+                          SizedBox(height: compact ? 12 : 14),
                           _RegisterField(
                             label: 'Confirm password',
                             controller: _confirmPasswordController,
                             hintText: 'Re-enter your password',
                             textScale: textScale,
+                            compact: compact,
                             prefixIcon: Icons.lock_outline,
                             obscureText: _obscureConfirmPassword,
                             textInputAction: TextInputAction.done,
@@ -440,7 +380,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: compact ? 10 : 12),
                           ValueListenableBuilder<bool>(
                             valueListenable: _termsAccepted,
                             builder: (context, termsAccepted, _) {
@@ -479,7 +419,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               );
                             },
                           ),
-                          const SizedBox(height: 20),
+                          SizedBox(height: compact ? 16 : 20),
                           ListenableBuilder(
                             listenable: _formFieldsListenable,
                             builder: (context, _) {
@@ -497,7 +437,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     disabledBackgroundColor: AppColors.jebbyBlue
                                         .withValues(alpha: 0.55),
                                     foregroundColor: Colors.white,
-                                    minimumSize: const Size.fromHeight(52),
+                                    disabledForegroundColor: Colors.white,
+                                    minimumSize: Size.fromHeight(compact ? 48 : 52),
                                     elevation: 0,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(14),
@@ -524,7 +465,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               );
                             },
                           ),
-                          const SizedBox(height: 16),
+                          SizedBox(height: compact ? 12 : 14),
                           Center(
                             child: Material(
                               color: Colors.transparent,
@@ -536,7 +477,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 8,
-                                    vertical: 12,
+                                    vertical: 8,
                                   ),
                                   child: Text.rich(
                                     TextSpan(
@@ -544,14 +485,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         fontFamily: 'Nunito',
                                         fontWeight: FontWeight.w400,
                                         fontSize: textScale.scale(14),
-                                        color: AppColors.jebbyTextMuted,
                                       ),
-                                      children: const [
-                                        TextSpan(text: 'Already have an account? '),
+                                      children: [
+                                        TextSpan(
+                                          text: 'Already have an account? ',
+                                          style: TextStyle(
+                                            color: AppColors.jebbyTextMuted,
+                                          ),
+                                        ),
                                         TextSpan(
                                           text: 'Log in',
                                           style: TextStyle(
-                                            color: AppColors.jebbyAccentOrange,
+                                            color: AppColors.jebbyBlue,
                                             fontWeight: FontWeight.w700,
                                           ),
                                         ),
@@ -583,6 +528,7 @@ class _RegisterField extends StatelessWidget {
     required this.controller,
     required this.hintText,
     required this.textScale,
+    required this.compact,
     this.prefixIcon,
     this.suffixIcon,
     this.obscureText = false,
@@ -596,6 +542,7 @@ class _RegisterField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
   final TextScaler textScale;
+  final bool compact;
   final IconData? prefixIcon;
   final Widget? suffixIcon;
   final bool obscureText;
@@ -618,7 +565,7 @@ class _RegisterField extends StatelessWidget {
             color: AppColors.jebbyTextPrimary,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: compact ? 6 : 8),
         TextFormField(
           controller: controller,
           focusNode: focusNode,
@@ -634,6 +581,7 @@ class _RegisterField extends StatelessWidget {
             color: AppColors.jebbyTextPrimary,
           ),
           decoration: InputDecoration(
+            isDense: compact,
             hintText: hintText,
             hintStyle: TextStyle(
               fontFamily: 'Nunito',
@@ -647,9 +595,9 @@ class _RegisterField extends StatelessWidget {
             suffixIcon: suffixIcon,
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(
+            contentPadding: EdgeInsets.symmetric(
               horizontal: 14,
-              vertical: 14,
+              vertical: compact ? 12 : 14,
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -700,7 +648,7 @@ class _TermsAgreementTextState extends State<_TermsAgreementText> {
 
   @override
   Widget build(BuildContext context) {
-    final baseStyle = TextStyle(
+    final mutedStyle = TextStyle(
       fontFamily: 'Nunito',
       fontWeight: FontWeight.w400,
       fontSize: widget.textScale.scale(13),
@@ -708,28 +656,28 @@ class _TermsAgreementTextState extends State<_TermsAgreementText> {
       height: 1.45,
     );
 
-    final linkStyle = baseStyle.copyWith(
+    final linkStyle = mutedStyle.copyWith(
       color: AppColors.jebbyBlue,
       fontWeight: FontWeight.w700,
     );
 
     return Text.rich(
       TextSpan(
-        style: baseStyle,
+        style: mutedStyle,
         children: [
-          const TextSpan(text: 'I agree to the '),
+          TextSpan(text: 'I agree to the ', style: mutedStyle),
           TextSpan(
-            text: 'Terms of Service',
+            text: 'Terms',
             style: linkStyle,
             recognizer: _termsRecognizer,
           ),
-          const TextSpan(text: ' and '),
+          TextSpan(text: ' and ', style: mutedStyle),
           TextSpan(
             text: 'Privacy Policy',
             style: linkStyle,
             recognizer: _privacyRecognizer,
           ),
-          const TextSpan(text: '.'),
+          TextSpan(text: '.', style: mutedStyle),
         ],
       ),
     );

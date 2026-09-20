@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'package:jebby/constants/app_url.dart';
 import 'package:jebby/utils/profile_image.dart';
 import 'package:jebby/utils/api_datetime.dart';
 import 'package:jebby/constants/color.dart';
 import 'package:jebby/repositories/api_repository.dart';
+import 'package:jebby/utils/earner_navigation.dart';
 
 /// Product reviews list (renter + vendor). Opened from product detail flows.
 class ReviewsScreen extends StatefulWidget {
@@ -26,7 +26,7 @@ class ReviewsScreen extends StatefulWidget {
 }
 
 class _ReviewsScreenState extends State<ReviewsScreen> {
-  static const Color _accent = Color(0xFFF6AE02);
+  static const Color _accent = AppColors.jebbyBlue;
   /// Inactive stars — same as `MyProducts.productCard`.
   static const Color _starInactive = Color(0xFFC6C8CF);
   static const Color _textDark = Color(0xFF1B1B1F);
@@ -87,6 +87,95 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
     getReviews();
   }
 
+  TextStyle _nunito({
+    required double size,
+    FontWeight weight = FontWeight.w400,
+    Color? color,
+    double? height,
+  }) {
+    return TextStyle(
+      fontFamily: 'Nunito',
+      fontSize: size,
+      fontWeight: weight,
+      color: color ?? AppColors.jebbyTextPrimary,
+      height: height,
+    );
+  }
+
+  void _handleBack() {
+    if (Get.key.currentState?.canPop() ?? false) {
+      Get.back();
+    } else {
+      EarnerNavigation.goHome();
+    }
+  }
+
+  Widget _pageHeader() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _backButton(),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Reviews',
+                  style: _nunito(
+                    size: 28,
+                    weight: FontWeight.w800,
+                    color: AppColors.jebbyTextPrimary,
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'See ratings and feedback for this item.',
+                  style: _nunito(
+                    size: 15,
+                    weight: FontWeight.w600,
+                    color: AppColors.jebbyTextMuted,
+                    height: 1.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _backButton() {
+    return Material(
+      color: AppColors.jebbySoftBlue,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: _handleBack,
+        splashColor: AppColors.jebbyBlue.withValues(alpha: 0.12),
+        highlightColor: AppColors.jebbyBlue.withValues(alpha: 0.06),
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 2),
+              child: Icon(
+                Icons.arrow_back_ios_new,
+                size: 18,
+                color: AppColors.jebbyTextPrimary,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final reviews = ApiRepository.shared.getReviewsByProductIdModelList?.data ?? [];
@@ -97,52 +186,33 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
     final Map<int, int> starCount = _buildStarCountMap(reviews);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: true,
-        foregroundColor: Colors.black,
-        title: Text(
-          'Reviews',
-          style: GoogleFonts.inter(
-            fontWeight: FontWeight.w700,
-            color: Colors.black,
-            fontSize: 22,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-          onPressed: () => Get.back(),
-          style: IconButton.styleFrom(foregroundColor: Colors.black),
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
-          child: Column(
-            children: [
-              const SizedBox(height: 12),
-              Text(
-                avgRating.toStringAsFixed(
-                  avgRating == avgRating.roundToDouble() ? 0 : 1,
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+            child: Column(
+              children: [
+                _pageHeader(),
+                const SizedBox(height: 20),
+                Text(
+                  avgRating.toStringAsFixed(
+                    avgRating == avgRating.roundToDouble() ? 0 : 1,
+                  ),
+                  style: _nunito(
+                    size: 58,
+                    weight: FontWeight.w800,
+                    color: _textDark,
+                  ),
                 ),
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 58,
-                  color: _textDark,
-                ),
-              ),
               Center(child: _myProductsStyleStars(avgRating, size: 22)),
               const SizedBox(height: 8),
               Text(
                 "$totalReviews ${totalReviews == 1 ? 'review' : 'reviews'}",
-                style: GoogleFonts.inter(
+                style: _nunito(
+                  size: 18,
+                  weight: FontWeight.w600,
                   color: _textGrey,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 18,
                 ),
               ),
               const SizedBox(height: 28),
@@ -205,14 +275,18 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                         padding: const EdgeInsets.all(12),
                         child: Text(
                           "Some error occurred while loading reviews.",
-                          style: GoogleFonts.inter(color: _textGrey),
+                          style: _nunito(
+                            size: 15,
+                            weight: FontWeight.w600,
+                            color: _textGrey,
+                          ),
                         ),
                       )
                     : isLoading
                         ? const Padding(
                             padding: EdgeInsets.all(12),
                             child: Center(
-                              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryColor),
+                              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.jebbyBlue),
                             ),
                           )
                         : isEmpty
@@ -220,7 +294,11 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                                 padding: const EdgeInsets.all(12),
                                 child: Text(
                                   "No reviews yet.",
-                                  style: GoogleFonts.inter(color: _textGrey),
+                                  style: _nunito(
+                                    size: 15,
+                                    weight: FontWeight.w600,
+                                    color: _textGrey,
+                                  ),
                                 ),
                               )
                             : ListView.separated(
@@ -259,6 +337,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 
@@ -276,10 +355,10 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
             label,
             maxLines: 2,
             softWrap: true,
-            style: GoogleFonts.inter(
+            style: _nunito(
+              size: 16,
+              weight: FontWeight.w600,
               color: _textDark,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
               height: 1.2,
             ),
           ),
@@ -346,18 +425,18 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                   children: [
                     Text(
                       name,
-                      style: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                      style: _nunito(
+                        size: 18,
+                        weight: FontWeight.w700,
                         color: _textDark,
                       ),
                     ),
                     Text(
                       date,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
+                      style: _nunito(
+                        size: 13,
+                        weight: FontWeight.w600,
                         color: _textGrey,
-                        fontWeight: FontWeight.w400,
                       ),
                     ),
                   ],
@@ -373,10 +452,10 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
           const SizedBox(height: 6),
           Text(
             desc,
-            style: GoogleFonts.inter(
-              fontSize: 14,
+            style: _nunito(
+              size: 14,
+              weight: FontWeight.w600,
               color: _textDark,
-              fontWeight: FontWeight.w400,
               height: 1.25,
             ),
           ),

@@ -10,9 +10,10 @@ import 'bottom_nav_controller.dart';
 import 'package:jebby/views/screens/home/featured_categories.dart';
 import 'package:jebby/views/screens/home/home.dart';
 import 'package:jebby/views/screens/shared/settings.dart';
-import 'package:jebby/views/screens/vendors/my_products.dart';
+import 'package:jebby/views/screens/profile/user_profile.dart';
 import 'package:jebby/views/screens/shared/notifications.dart';
 import 'package:jebby/views/screens/vendors/vendor_home.dart';
+import 'package:jebby/views/widgets/earner_bottom_nav.dart';
 import 'package:jebby/repositories/api_repository.dart';
 import 'package:jebby/utils/profile_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -44,13 +45,12 @@ class _MainScreenState extends State<MainScreen> {
   ];
 
   var screensVendor = [
-    VendorHomeScreen(),
-    MyProductsScreen(side: true),
-    MyProductsScreen(side: true),
-    NotificationsScreen(isVendor: true),
-    SettingsScreen(),
-    MessagesScreen(),
+    const VendorHomeScreen(),
+    const MessagesScreen(),
+    const UserProfileScreen(),
   ];
+
+  int _inboxUnread = 0;
 
   Future<UserModel> getUserDate() => UserViewModel().getUser();
   String? ids;
@@ -129,8 +129,27 @@ class _MainScreenState extends State<MainScreen> {
           fullname = value.name.toString();
           email = value.email.toString();
           role = value.role.toString();
+          getChatHistory();
         })
         .onError((error, stackTrace) {});
+  }
+
+  void getChatHistory() {
+    final userId = id;
+    if (userId == null || userId.isEmpty) return;
+    ApiRepository.shared.chatsHistory(
+      userId,
+      (payload) {
+        if (!mounted) return;
+        final chats = payload.data ?? [];
+        var total = 0;
+        for (final chat in chats) {
+          total += chat.count ?? 0;
+        }
+        setState(() => _inboxUnread = total);
+      },
+      (error) {},
+    );
   }
 
   bool isLoading = true;
@@ -184,14 +203,25 @@ class _MainScreenState extends State<MainScreen> {
         init: bottomctrl,
         builder: (_) {
           activeIndex = bottomctrl.navigationBarIndexValue;
-          return isProviderMode
-              ? screensVendor[bottomctrl.navigationBarIndexValue]
-              : screens[bottomctrl.navigationBarIndexValue];
+          if (isProviderMode) {
+            final vendorIndex =
+                activeIndex.toInt().clamp(0, screensVendor.length - 1);
+            return screensVendor[vendorIndex];
+          }
+          return screens[bottomctrl.navigationBarIndexValue];
         },
       ),
       bottomNavigationBar:
           isProviderMode
-              ? null
+              ? EarnerBottomNav(
+                  activeIndex: activeIndex.toInt().clamp(0, 2),
+                  inboxBadge: _inboxUnread,
+                  onTap: (index) {
+                    bottomctrl.navBarChange(index);
+                    setState(() => activeIndex = index);
+                    if (index == 1) getChatHistory();
+                  },
+                )
               : (userViewModel.isGuestUser
                     ? bottomForGuest()
                     : bottomForUser(userName)),

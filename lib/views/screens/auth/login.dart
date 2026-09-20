@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jebby/constants/color.dart';
@@ -28,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
   static const int _roleValue = 0;
 
-  static const double _socialButtonSize = 64;
+  static const double _socialButtonHeight = 56;
   static const double _socialButtonRadius = 14;
 
   static Color get _rippleSplash =>
@@ -134,30 +132,24 @@ class _LoginScreenState extends State<LoginScreen> {
     final authViewModel = context.watch<AuthViewModel>();
     final textScale = MediaQuery.textScalerOf(context);
     final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
-    final logoSize = keyboardOpen ? 74.0 : 88.0;
-    final logoRadius = keyboardOpen ? 17.0 : 20.0;
-    final wordmarkSize = keyboardOpen ? 21.0 : 24.0;
-    final logoTopPadding = keyboardOpen ? 20.0 : 32.0;
+    final compact = MediaQuery.sizeOf(context).height < 720;
+    final showBackButton = Navigator.of(context).canPop();
 
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final cardHeight = constraints.maxHeight * 0.67;
+          final cardHeight = constraints.maxHeight * (compact ? 0.76 : 0.68);
 
           return Stack(
             fit: StackFit.expand,
             children: [
               Positioned.fill(
-                child: ImageFiltered(
-                  imageFilter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                  child: Image.asset(
-                    LoginScreen.heroAsset,
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
-                  ),
+                child: Image.asset(
+                  LoginScreen.heroAsset,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
                 ),
               ),
               Positioned.fill(
@@ -167,61 +159,47 @@ class _LoginScreenState extends State<LoginScreen> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.black.withValues(alpha: 0.08),
-                        Colors.black.withValues(alpha: 0.28),
-                        Colors.black.withValues(alpha: 0.55),
+                        Colors.black.withValues(alpha: 0.06),
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.18),
+                        Colors.black.withValues(alpha: 0.42),
                       ],
-                      stops: const [0.0, 0.55, 1.0],
+                      stops: const [0.0, 0.45, 0.72, 1.0],
                     ),
                   ),
                 ),
               ),
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: SafeArea(
-                  bottom: false,
-                  child: AnimatedPadding(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeOut,
-                    padding: EdgeInsets.only(top: logoTopPadding),
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 220),
-                            curve: Curves.easeOut,
-                            width: logoSize,
-                            height: logoSize,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(logoRadius),
-                              child: Image.asset(
-                                LoginScreen.logoAsset,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: keyboardOpen ? 4 : 5),
-                          AnimatedDefaultTextStyle(
-                            duration: const Duration(milliseconds: 220),
-                            curve: Curves.easeOut,
-                            style: TextStyle(
-                              fontFamily: 'Nunito',
-                              fontWeight: FontWeight.w800,
-                              fontSize: textScale.scale(wordmarkSize),
+              if (showBackButton)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  child: SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 16, top: 8),
+                      child: Material(
+                        color: Colors.black.withValues(alpha: 0.7),
+                        shape: const CircleBorder(),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: Get.back,
+                          customBorder: const CircleBorder(),
+                          splashColor: Colors.white.withValues(alpha: 0.14),
+                          highlightColor: Colors.white.withValues(alpha: 0.08),
+                          child: const SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: Icon(
+                              Icons.arrow_back_ios_new,
                               color: Colors.white,
-                              letterSpacing: 0.2,
+                              size: 22,
                             ),
-                            child: const Text('Jebby'),
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
               Positioned(
                 left: 0,
                 right: 0,
@@ -229,221 +207,234 @@ class _LoginScreenState extends State<LoginScreen> {
                 height: cardHeight,
                 child: ClipRRect(
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
                   ),
                   child: Container(
                     color: Colors.white,
                     child: SingleChildScrollView(
-                      padding: EdgeInsets.fromLTRB(24, 28, 24, 16 + bottomInset),
+                      padding: EdgeInsets.fromLTRB(24, 24, 24, 16 + bottomInset),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                    Text(
-                      'Welcome back',
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontWeight: FontWeight.w800,
-                        fontSize: textScale.scale(28),
-                        color: AppColors.jebbyTextPrimary,
-                        height: 1.15,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Log in to continue to Jebby.',
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontWeight: FontWeight.w400,
-                        fontSize: textScale.scale(15),
-                        color: AppColors.jebbyTextMuted,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    _LoginField(
-                      label: 'Email address',
-                      controller: _emailController,
-                      hintText: 'you@example.com',
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      prefixIcon: Icons.mail_outline,
-                      textScale: textScale,
-                    ),
-                    const SizedBox(height: 16),
-                    _LoginField(
-                      label: 'Password',
-                      controller: _passwordController,
-                      hintText: 'Enter your password',
-                      obscureText: _obscurePassword,
-                      textInputAction: TextInputAction.done,
-                      prefixIcon: Icons.lock_outline,
-                      suffixIcon: IconButton(
-                        onPressed: () =>
-                            setState(() => _obscurePassword = !_obscurePassword),
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
-                          color: AppColors.jebbyTextMuted,
-                          size: 20,
-                        ),
-                      ),
-                      onSubmitted: (_) => _submitLogin(authViewModel),
-                      textScale: textScale,
-                    ),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () =>
-                            Get.to(() => const ForgotPasswordScreen()),
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.jebbyBlue,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 8,
-                          ),
-                          minimumSize: const Size(44, 44),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          'Forgot password?',
-                          style: TextStyle(
-                            fontFamily: 'Nunito',
-                            fontWeight: FontWeight.w700,
-                            fontSize: textScale.scale(14),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: authViewModel.loading
-                            ? null
-                            : () => _submitLogin(authViewModel),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.jebbyBlue,
-                          disabledBackgroundColor:
-                              AppColors.jebbyBlue.withValues(alpha: 0.55),
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size.fromHeight(52),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: authViewModel.loading
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Text(
-                                'Log In',
-                                style: TextStyle(
-                                  fontFamily: 'Nunito',
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: textScale.scale(16),
-                                ),
-                              ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Center(
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () => Get.to(() => const RegisterScreen()),
-                          borderRadius: BorderRadius.circular(8),
-                          splashColor: _LoginScreenState._rippleSplash,
-                          highlightColor: _LoginScreenState._rippleHighlight,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 12,
+                          Text(
+                            'Welcome back',
+                            style: TextStyle(
+                              fontFamily: 'Nunito',
+                              fontWeight: FontWeight.w800,
+                              fontSize: textScale.scale(compact ? 26 : 28),
+                              color: AppColors.jebbyTextPrimary,
+                              height: 1.15,
                             ),
-                            child: Text.rich(
-                              TextSpan(
-                                style: TextStyle(
-                                  fontFamily: 'Nunito',
-                                  fontWeight: FontWeight.w400,
-                                  fontSize: textScale.scale(14),
-                                  color: AppColors.jebbyTextMuted,
-                                ),
-                                children: const [
-                                  TextSpan(text: 'New to Jebby? '),
-                                  TextSpan(
-                                    text: 'Create an account',
+                          ),
+                          SizedBox(height: compact ? 6 : 8),
+                          Text(
+                            'Log in to continue to Jebby.',
+                            style: TextStyle(
+                              fontFamily: 'Nunito',
+                              fontWeight: FontWeight.w400,
+                              fontSize: textScale.scale(15),
+                              color: AppColors.jebbyTextMuted,
+                              height: 1.35,
+                            ),
+                          ),
+                          SizedBox(height: compact ? 12 : 16),
+                          _LoginField(
+                            label: 'Email address',
+                            controller: _emailController,
+                            hintText: 'you@example.com',
+                            keyboardType: TextInputType.emailAddress,
+                            textInputAction: TextInputAction.next,
+                            prefixIcon: Icons.mail_outline,
+                            textScale: textScale,
+                            compact: compact,
+                          ),
+                          SizedBox(height: compact ? 12 : 14),
+                          _LoginField(
+                            label: 'Password',
+                            controller: _passwordController,
+                            hintText: 'Enter your password',
+                            obscureText: _obscurePassword,
+                            textInputAction: TextInputAction.done,
+                            prefixIcon: Icons.lock_outline,
+                            suffixIcon: IconButton(
+                              onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              ),
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: AppColors.jebbyTextMuted,
+                                size: 20,
+                              ),
+                            ),
+                            onSubmitted: (_) => _submitLogin(authViewModel),
+                            textScale: textScale,
+                            compact: compact,
+                          ),
+                          const SizedBox(height: 4),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () =>
+                                    Get.to(() => const ForgotPasswordScreen()),
+                                borderRadius: BorderRadius.circular(8),
+                                splashColor: _rippleSplash,
+                                highlightColor: _rippleHighlight,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 8,
+                                  ),
+                                  child: Text(
+                                    'Forgot password?',
                                     style: TextStyle(
-                                      color: AppColors.jebbyAccentOrange,
+                                      fontFamily: 'Nunito',
                                       fontWeight: FontWeight.w700,
+                                      fontSize: textScale.scale(14),
+                                      color: AppColors.jebbyBlue,
                                     ),
                                   ),
-                                ],
+                                ),
                               ),
-                              textAlign: TextAlign.center,
                             ),
                           ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    _OrContinueDivider(textScale: textScale),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _SocialLoginButton(
-                            child: Image.asset(
-                              'assets/images/google.png',
-                              width: 28,
-                              height: 28,
-                              fit: BoxFit.contain,
-                            ),
-                            onPressed: _handleGoogleSignIn,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _SocialLoginButton(
-                            child: Image.asset(
-                              'assets/images/fb.png',
-                              width: 28,
-                              height: 28,
-                              fit: BoxFit.contain,
-                            ),
-                            onPressed: _handleFacebookAuth,
-                          ),
-                        ),
-                        if (GetPlatform.isIOS) ...[
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _SocialLoginButton(
-                              child: Image.asset(
-                                'assets/images/aple.png',
-                                width: 28,
-                                height: 28,
-                                fit: BoxFit.contain,
+                          SizedBox(height: compact ? 8 : 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton(
+                              onPressed: authViewModel.loading
+                                  ? null
+                                  : () => _submitLogin(authViewModel),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.jebbyBlue,
+                                disabledBackgroundColor:
+                                    AppColors.jebbyBlue.withValues(alpha: 0.55),
+                                foregroundColor: Colors.white,
+                                disabledForegroundColor: Colors.white,
+                                minimumSize: Size.fromHeight(compact ? 48 : 52),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
                               ),
-                              onPressed: _handleAppleAuth,
+                              child: authViewModel.loading
+                                  ? const SizedBox(
+                                      width: 22,
+                                      height: 22,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Text(
+                                      'Log In',
+                                      style: TextStyle(
+                                        fontFamily: 'Nunito',
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: textScale.scale(16),
+                                      ),
+                                    ),
                             ),
                           ),
-                        ],
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _GuestLoginButton(
-                            textScale: textScale,
-                            onTap: () => authViewModel.loginAsGuest(context),
+                          SizedBox(height: compact ? 10 : 14),
+                          Center(
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => Get.to(() => const RegisterScreen()),
+                                borderRadius: BorderRadius.circular(8),
+                                splashColor: _rippleSplash,
+                                highlightColor: _rippleHighlight,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 8,
+                                  ),
+                                  child: Text.rich(
+                                    TextSpan(
+                                      style: TextStyle(
+                                        fontFamily: 'Nunito',
+                                        fontWeight: FontWeight.w400,
+                                        fontSize: textScale.scale(14),
+                                      ),
+                                      children: [
+                                        TextSpan(
+                                          text: 'New to Jebby? ',
+                                          style: TextStyle(
+                                            color: AppColors.jebbyTextMuted,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text: 'Create an account',
+                                          style: TextStyle(
+                                            color: AppColors.jebbyBlue,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                          SizedBox(height: compact ? 14 : 18),
+                          _OrContinueDivider(textScale: textScale),
+                          SizedBox(height: compact ? 14 : 18),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _SocialLoginButton(
+                                  child: Image.asset(
+                                    'assets/images/google.png',
+                                    width: 26,
+                                    height: 26,
+                                    fit: BoxFit.contain,
+                                  ),
+                                  onPressed: _handleGoogleSignIn,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _SocialLoginButton(
+                                  child: Image.asset(
+                                    'assets/images/fb.png',
+                                    width: 26,
+                                    height: 26,
+                                    fit: BoxFit.contain,
+                                  ),
+                                  onPressed: _handleFacebookAuth,
+                                ),
+                              ),
+                              if (GetPlatform.isIOS) ...[
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _SocialLoginButton(
+                                    child: Image.asset(
+                                      'assets/images/aple.png',
+                                      width: 26,
+                                      height: 26,
+                                      fit: BoxFit.contain,
+                                    ),
+                                    onPressed: _handleAppleAuth,
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _GuestLoginButton(
+                                  textScale: textScale,
+                                  onTap: () =>
+                                      authViewModel.loginAsGuest(context),
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -464,6 +455,7 @@ class _LoginField extends StatelessWidget {
     required this.controller,
     required this.hintText,
     required this.textScale,
+    required this.compact,
     this.prefixIcon,
     this.suffixIcon,
     this.obscureText = false,
@@ -476,6 +468,7 @@ class _LoginField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
   final TextScaler textScale;
+  final bool compact;
   final IconData? prefixIcon;
   final Widget? suffixIcon;
   final bool obscureText;
@@ -497,7 +490,7 @@ class _LoginField extends StatelessWidget {
             color: AppColors.jebbyTextPrimary,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: compact ? 6 : 8),
         TextFormField(
           controller: controller,
           autocorrect: false,
@@ -512,6 +505,7 @@ class _LoginField extends StatelessWidget {
             color: AppColors.jebbyTextPrimary,
           ),
           decoration: InputDecoration(
+            isDense: compact,
             hintText: hintText,
             hintStyle: TextStyle(
               fontFamily: 'Nunito',
@@ -525,9 +519,9 @@ class _LoginField extends StatelessWidget {
             suffixIcon: suffixIcon,
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(
+            contentPadding: EdgeInsets.symmetric(
               horizontal: 14,
-              vertical: 14,
+              vertical: compact ? 12 : 14,
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -603,45 +597,34 @@ class _SocialLoginButtonState extends State<_SocialLoginButton> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final buttonWidth = constraints.maxWidth.isFinite && constraints.maxWidth > 0
-            ? constraints.maxWidth
-            : _LoginScreenState._socialButtonSize;
-
-        return Material(
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(_LoginScreenState._socialButtonRadius),
-            side: BorderSide(color: Colors.grey.shade300),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: _loading ? null : _handleTap,
-            borderRadius:
-                BorderRadius.circular(_LoginScreenState._socialButtonRadius),
-            splashColor: _LoginScreenState._rippleSplash,
-            highlightColor: _LoginScreenState._rippleHighlight,
-            child: SizedBox(
-              height: _LoginScreenState._socialButtonSize,
-              width: buttonWidth,
-              child: _loading
-                  ? Center(
-                      child: SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.2,
-                          color: AppColors.jebbyBlue,
-                        ),
-                      ),
-                    )
-                  : Center(child: widget.child),
-            ),
-          ),
-        );
-      },
+    return Material(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(_LoginScreenState._socialButtonRadius),
+        side: BorderSide(color: Colors.grey.shade300),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: _loading ? null : _handleTap,
+        borderRadius: BorderRadius.circular(_LoginScreenState._socialButtonRadius),
+        splashColor: _LoginScreenState._rippleSplash,
+        highlightColor: _LoginScreenState._rippleHighlight,
+        child: SizedBox(
+          height: _LoginScreenState._socialButtonHeight,
+          child: _loading
+              ? const Center(
+                  child: SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.2,
+                      color: AppColors.jebbyBlue,
+                    ),
+                  ),
+                )
+              : Center(child: widget.child),
+        ),
+      ),
     );
   }
 }
@@ -669,14 +652,14 @@ class _GuestLoginButton extends StatelessWidget {
         splashColor: _LoginScreenState._rippleSplash,
         highlightColor: _LoginScreenState._rippleHighlight,
         child: SizedBox(
-          height: _LoginScreenState._socialButtonSize,
+          height: _LoginScreenState._socialButtonHeight,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.person_outline,
-                color: AppColors.jebbyAccentOrange,
-                size: 24,
+              const Icon(
+                Icons.person,
+                color: AppColors.jebbyTextPrimary,
+                size: 22,
               ),
               const SizedBox(height: 2),
               Text(

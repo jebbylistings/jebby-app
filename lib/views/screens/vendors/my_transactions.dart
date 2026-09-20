@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jebby/constants/color.dart';
 import 'package:jebby/repositories/api_repository.dart';
+import 'package:jebby/utils/earner_navigation.dart';
 import 'package:jebby/view_models/onboarding_controller.dart';
 import 'package:jebby/views/screens/onboarding/review_submit.dart';
 import 'package:jebby/views/screens/vendors/stripe_requirements_modal.dart';
@@ -15,7 +16,7 @@ import '../../../models/user_model.dart';
 import '../../../view_models/user_view_model.dart';
 
 class VendorMyTransactionsScreen extends StatefulWidget {
-  VendorMyTransactionsScreen({Key? key}) : super(key: key);
+  const VendorMyTransactionsScreen({super.key});
 
   @override
   State<VendorMyTransactionsScreen> createState() => _VendorMyTransactionsScreenState();
@@ -23,8 +24,7 @@ class VendorMyTransactionsScreen extends StatefulWidget {
 
 class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
     with WidgetsBindingObserver {
-  static const Color _pageBg = Color(0xFFF3F3F5);
-  static const Color _subtitleGrey = Color(0xFF72747A);
+  static const Color _cardBorder = Color(0xFFE3E6EC);
 
   bool isLoading = true;
   bool isError = false;
@@ -34,6 +34,37 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
   String? accountMessage;
   Map<String, dynamic>? accountDetails;
   bool _requirementsModalShown = false;
+
+  TextStyle _nunito({
+    required double size,
+    FontWeight weight = FontWeight.w400,
+    Color? color,
+    double? height,
+  }) {
+    return TextStyle(
+      fontFamily: 'Nunito',
+      fontSize: size,
+      fontWeight: weight,
+      color: color ?? AppColors.jebbyTextPrimary,
+      height: height,
+    );
+  }
+
+  void _handleBack() {
+    if (Get.key.currentState?.canPop() ?? false) {
+      Get.back();
+    } else {
+      EarnerNavigation.goHome();
+    }
+  }
+
+  BoxDecoration _surfaceCardDecoration() {
+    return BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: _cardBorder),
+    );
+  }
 
   getNewOrders() {
     ApiRepository.shared.getVenodorOrders(
@@ -217,7 +248,7 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
       case 'error':
         return Colors.red.shade700;
       default:
-        return _subtitleGrey;
+        return AppColors.jebbyTextMuted;
     }
   }
 
@@ -243,7 +274,7 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
   String _accountStatusDescription(String status) {
     switch (status) {
       case 'active':
-        return 'Your Stripe payout account is active and ready to receive payments.';
+        return 'Ready to receive payouts.';
       case 'pending':
         return 'Your account is being reviewed. This usually takes 1–2 business days.';
       case 'requires_info':
@@ -359,7 +390,7 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: _subtitleGrey,
+              color: AppColors.jebbyTextMuted,
             ),
           ),
           const SizedBox(height: 8),
@@ -372,77 +403,76 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
   Widget _buildAccountActionButton({
     required String label,
     required VoidCallback onPressed,
-    required Color backgroundColor,
+    Color backgroundColor = AppColors.jebbyBlue,
   }) {
-    return FilledButton(
-      onPressed: onPressed,
-      style: FilledButton.styleFrom(
-        backgroundColor: backgroundColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-      child: Text(
-        label,
-        style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton(
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: backgroundColor,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+        child: Text(
+          label,
+          style: _nunito(size: 15, weight: FontWeight.w700, color: Colors.white),
+        ),
       ),
     );
   }
 
   Widget _buildResolvedAccountStatus(String status) {
     final color = _accountStatusColor(status);
+    final isActive = status == 'active';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(_accountStatusIcon(status), color: color, size: 20),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                _accountStatusHeadline(status),
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
-              ),
+            Icon(_accountStatusIcon(status), color: color, size: 18),
+            const SizedBox(width: 6),
+            Text(
+              _accountStatusHeadline(status),
+              style: _nunito(size: 14, weight: FontWeight.w700, color: color),
             ),
           ],
         ),
         const SizedBox(height: 8),
         Text(
           _accountStatusDescription(status),
-          style: GoogleFonts.inter(fontSize: 14, color: _subtitleGrey),
+          style: _nunito(
+            size: 14,
+            weight: FontWeight.w600,
+            color: AppColors.jebbyTextMuted,
+            height: 1.35,
+          ),
         ),
-        if (accountDetails != null) ...[
-          const SizedBox(height: 8),
+        if (!isActive && accountDetails != null) ...[
+          const SizedBox(height: 12),
           _buildAccountSummaryDetails(),
         ],
         const SizedBox(height: 16),
         if (_hasOutstandingRequirements())
           _buildAccountActionButton(
             label: 'Submit required info',
-            backgroundColor: AppColors.primaryColor,
             onPressed: _showRequirementsModal,
           )
         else if (status == 'active')
           _buildAccountActionButton(
             label: 'View account details',
-            backgroundColor: const Color(0xFF2E7D32),
             onPressed: _showAccountDetailsModal,
           )
         else if (status == 'not_started')
           _buildAccountActionButton(
             label: 'Set up account',
-            backgroundColor: AppColors.primaryColor,
             onPressed: () => _openProviderOnboarding(),
           )
         else if (status == 'pending')
           _buildAccountActionButton(
             label: 'View setup progress',
-            backgroundColor: const Color(0xFF1E88E5),
             onPressed: _showAccountDetailsModal,
           )
         else if (status == 'failed' ||
@@ -459,7 +489,6 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
         else
           _buildAccountActionButton(
             label: 'Manage account',
-            backgroundColor: AppColors.primaryColor,
             onPressed: _showAccountDetailsModal,
           ),
       ],
@@ -507,6 +536,7 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
     );
   }
 
+  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
@@ -530,75 +560,157 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = GoogleFonts.interTextTheme(
-      Theme.of(context).textTheme.apply(
-        bodyColor: const Color(0xFF1A1A1A),
-        displayColor: const Color(0xFF1A1A1A),
+  Widget _pageHeader() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _backButton(),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'My transactions',
+                  style: _nunito(
+                    size: 28,
+                    weight: FontWeight.w800,
+                    color: AppColors.jebbyTextPrimary,
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Track activity and manage payouts.',
+                  style: _nunito(
+                    size: 15,
+                    weight: FontWeight.w600,
+                    color: AppColors.jebbyTextMuted,
+                    height: 1.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _backButton() {
+    return Material(
+      color: AppColors.jebbySoftBlue,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: _handleBack,
+        splashColor: AppColors.jebbyBlue.withValues(alpha: 0.12),
+        highlightColor: AppColors.jebbyBlue.withValues(alpha: 0.06),
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 2),
+              child: Icon(
+                Icons.arrow_back_ios_new,
+                size: 18,
+                color: AppColors.jebbyTextPrimary,
+              ),
+            ),
+          ),
+        ),
       ),
     );
+  }
 
-    return Theme(
-      data: Theme.of(context).copyWith(
-        textTheme: textTheme,
-        appBarTheme: AppBarTheme(
-          titleTextStyle: GoogleFonts.inter(
-            color: Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
+  Widget _emptyTransactionsState() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                24,
+                constraints.maxHeight * 0.08,
+                24,
+                24,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 88,
+                    height: 88,
+                    decoration: const BoxDecoration(
+                      color: AppColors.jebbySoftBlue,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.receipt_long_outlined,
+                      size: 40,
+                      color: AppColors.jebbyBlue,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'No transactions yet',
+                    textAlign: TextAlign.center,
+                    style: _nunito(
+                      size: 22,
+                      weight: FontWeight.w800,
+                      color: AppColors.jebbyTextPrimary,
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Your transaction history will appear here.',
+                    textAlign: TextAlign.center,
+                    style: _nunito(
+                      size: 15,
+                      weight: FontWeight.w600,
+                      color: AppColors.jebbyTextMuted,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
-      child: Scaffold(
-        backgroundColor: _pageBg,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          foregroundColor: Colors.black,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-            onPressed: () => Get.back(),
-            style: IconButton.styleFrom(foregroundColor: Colors.black),
-          ),
-        ),
-        body: CustomScrollView(
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
               sliver: SliverToBoxAdapter(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'My Transactions',
-                      style: GoogleFonts.inter(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'View payout history and manage your Stripe payout account.',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: _subtitleGrey,
-                      ),
-                    ),
+                    _pageHeader(),
                     const SizedBox(height: 20),
                     accountSection(),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
                     Text(
                       'Recent activity',
-                      style: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black,
+                      style: _nunito(
+                        size: 18,
+                        weight: FontWeight.w800,
+                        color: AppColors.jebbyTextPrimary,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -630,7 +742,7 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
                 Text(
                   'Could not load transactions.',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(fontSize: 15, color: _subtitleGrey),
+                  style: GoogleFonts.inter(fontSize: 15, color: AppColors.jebbyTextMuted),
                 ),
                 const SizedBox(height: 16),
                 FilledButton(
@@ -643,16 +755,16 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
                     getNewOrders();
                   },
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primaryColor,
+                    backgroundColor: AppColors.jebbyBlue,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                   child: Text(
                     'Retry',
-                    style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                    style: _nunito(size: 15, weight: FontWeight.w700, color: Colors.white),
                   ),
                 ),
               ],
@@ -666,7 +778,10 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
         child: SizedBox(
           height: 180,
           child: Center(
-            child: CircularProgressIndicator(color: AppColors.primaryColor),
+            child: CircularProgressIndicator(
+              color: AppColors.jebbyBlue,
+              strokeWidth: 2.4,
+            ),
           ),
         ),
       );
@@ -674,34 +789,8 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
     if (isEmpty) {
       return SliverToBoxAdapter(
         child: SizedBox(
-          height: 220,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.receipt_long_outlined,
-                  size: 56,
-                  color: Colors.grey.shade400,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'No transactions yet',
-                  style: GoogleFonts.inter(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: _subtitleGrey,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Your transaction history will appear here.',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(fontSize: 14, color: _subtitleGrey),
-                ),
-              ],
-            ),
-          ),
+          height: 320,
+          child: _emptyTransactionsState(),
         ),
       );
     }
@@ -712,13 +801,8 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
     if (visible.isEmpty) {
       return SliverToBoxAdapter(
         child: SizedBox(
-          height: 120,
-          child: Center(
-            child: Text(
-              'No active transactions',
-              style: GoogleFonts.inter(fontSize: 15, color: _subtitleGrey),
-            ),
-          ),
+          height: 320,
+          child: _emptyTransactionsState(),
         ),
       );
     }
@@ -743,11 +827,8 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
     String email,
   ) {
     final amount = price;
-    return Material(
-      color: Colors.white,
-      elevation: 2,
-      shadowColor: Colors.black26,
-      borderRadius: BorderRadius.circular(14),
+    return Container(
+      decoration: _surfaceCardDecoration(),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Row(
@@ -756,12 +837,12 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: const Color(0xFFF5F5F5),
+                color: AppColors.jebbySoftBlue,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 Icons.payments_outlined,
-                color: AppColors.primaryColor.withValues(alpha: 0.85),
+                color: AppColors.jebbyBlue,
                 size: 24,
               ),
             ),
@@ -772,21 +853,17 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
                 children: [
                   Text(
                     name,
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black,
-                    ),
+                    style: _nunito(size: 16, weight: FontWeight.w800),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     email,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w400,
-                      color: const Color(0xFF9A9AA1),
+                    style: _nunito(
+                      size: 13,
+                      weight: FontWeight.w600,
+                      color: AppColors.jebbyTextMuted,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -796,11 +873,7 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
             ),
             Text(
               '\$$amount',
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: Colors.black,
-              ),
+              style: _nunito(size: 16, weight: FontWeight.w800),
             ),
           ],
         ),
@@ -809,11 +882,8 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
   }
 
   Widget accountSection() {
-    return Material(
-      color: Colors.white,
-      elevation: 2,
-      shadowColor: Colors.black26,
-      borderRadius: BorderRadius.circular(14),
+    return Container(
+      decoration: _surfaceCardDecoration(),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -821,20 +891,24 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.account_balance_outlined,
-                  color: AppColors.primaryColor,
-                  size: 24,
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppColors.jebbySoftBlue,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.account_balance_outlined,
+                    color: AppColors.jebbyBlue,
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'Stripe payout account',
-                    style: GoogleFonts.inter(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black,
-                    ),
+                    style: _nunito(size: 17, weight: FontWeight.w800),
                   ),
                 ),
               ],
@@ -844,16 +918,17 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
               Center(
                 child: Column(
                   children: [
-                    CircularProgressIndicator(
-                      color: AppColors.primaryColor,
-                      strokeWidth: 2,
+                    const CircularProgressIndicator(
+                      color: AppColors.jebbyBlue,
+                      strokeWidth: 2.4,
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
                       'Checking account status…',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        color: _subtitleGrey,
+                      style: _nunito(
+                        size: 14,
+                        weight: FontWeight.w600,
+                        color: AppColors.jebbyTextMuted,
                       ),
                     ),
                   ],
@@ -906,14 +981,12 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: AppColors.primaryColor.withValues(
-                              alpha: 0.12,
-                            ),
+                            color: AppColors.jebbySoftBlue,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
                             Icons.shield_outlined,
-                            color: AppColors.primaryColor,
+                            color: AppColors.jebbyBlue,
                             size: 22,
                           ),
                         ),
@@ -957,7 +1030,7 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
                               style: GoogleFonts.inter(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: _subtitleGrey,
+                                color: AppColors.jebbyTextMuted,
                                 letterSpacing: 0.2,
                               ),
                             ),
@@ -1012,7 +1085,7 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
                                 style: GoogleFonts.inter(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
-                                  color: _subtitleGrey,
+                                  color: AppColors.jebbyTextMuted,
                                   letterSpacing: 0.2,
                                 ),
                               ),
@@ -1089,7 +1162,7 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
                     label,
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: _subtitleGrey,
+                      color: AppColors.jebbyTextMuted,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -1165,7 +1238,7 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
     final isPastDue = title == 'Past Due';
     final borderColor =
         isPastDue ? const Color(0xFFFFCDD2) : Colors.grey.shade300;
-    final titleColor = isPastDue ? _modalValueBad : _subtitleGrey;
+    final titleColor = isPastDue ? _modalValueBad : AppColors.jebbyTextMuted;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -1202,7 +1275,7 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
                               '• ',
                               style: GoogleFonts.inter(
                                 fontSize: 13,
-                                color: _subtitleGrey,
+                                color: AppColors.jebbyTextMuted,
                               ),
                             ),
                             Expanded(
@@ -1271,7 +1344,7 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
           style: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: _subtitleGrey,
+            color: AppColors.jebbyTextMuted,
             letterSpacing: 0.2,
           ),
         ),
@@ -1344,7 +1417,7 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
             style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: _subtitleGrey,
+              color: AppColors.jebbyTextMuted,
             ),
           ),
           if (subtitle != null) ...[
@@ -1354,7 +1427,7 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
               style: GoogleFonts.inter(
                 fontSize: 10,
                 fontWeight: FontWeight.w400,
-                color: _subtitleGrey.withValues(alpha: 0.85),
+                color: AppColors.jebbyTextMuted.withValues(alpha: 0.85),
               ),
             ),
           ],

@@ -5,6 +5,7 @@ import 'package:jebby/constants/app_url.dart';
 import 'package:jebby/utils/api_datetime.dart';
 import 'package:jebby/constants/color.dart';
 import 'package:jebby/utils/profile_image.dart';
+import 'package:jebby/utils/public_location.dart';
 import 'package:provider/provider.dart';
 
 import '../../../models/user_model.dart';
@@ -12,6 +13,8 @@ import 'package:jebby/repositories/api_repository.dart';
 import '../../../view_models/user_view_model.dart';
 import '../home/favourites.dart';
 import '../home/my_orders.dart';
+import '../vendors/my_orders.dart';
+import '../vendors/my_products.dart';
 import 'edit_profile.dart';
 
 class UserProfileScreen extends StatefulWidget {
@@ -21,6 +24,10 @@ class UserProfileScreen extends StatefulWidget {
   final dynamic vendorBackImage;
   final dynamic vendorAddress;
 
+  /// When true (e.g. pushed from drawer), shows the header back affordance.
+  /// Bottom-nav profile tab should leave this false/null.
+  final bool? showBackButton;
+
   const UserProfileScreen({
     super.key,
     this.vendorID,
@@ -28,6 +35,7 @@ class UserProfileScreen extends StatefulWidget {
     this.vendorImage,
     this.vendorBackImage,
     this.vendorAddress,
+    this.showBackButton,
   });
 
   @override
@@ -35,6 +43,8 @@ class UserProfileScreen extends StatefulWidget {
 }
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
+  static const Color _cardBorder = Color(0xFFE3E6EC);
+
   String Url = AppUrl.baseUrlM;
 
   String? token;
@@ -51,6 +61,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   bool isLoading = true;
   bool isEmpty = false;
+  bool _ratingBreakdownExpanded = false;
+
+  static const double _earnerCoverHeight = 108;
+  static const double _earnerAvatarRadius = 48;
 
   int productsCount = 0;
   int ordersCount = 0;
@@ -78,6 +92,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             : widget.vendorName.toString();
         email = value.email.toString();
         role = value.role.toString();
+        if (widget.vendorImage != null) {
+          imagesapi = ProfileImage.sanitizePath(widget.vendorImage.toString());
+        }
+        if (widget.vendorBackImage != null) {
+          back_image_api =
+              ProfileImage.sanitizePath(widget.vendorBackImage.toString());
+        }
       });
 
       getReviewsFor(targetVendorId);
@@ -152,6 +173,59 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   static const Color _starAccent = Color(0xFFF6AE02);
   static const Color _starInactive = Color(0xFFC6C8CF);
 
+  TextStyle _nunito({
+    required double size,
+    FontWeight weight = FontWeight.w400,
+    Color? color,
+    double? height,
+  }) {
+    return TextStyle(
+      fontFamily: 'Nunito',
+      fontSize: size,
+      fontWeight: weight,
+      color: color ?? AppColors.jebbyTextPrimary,
+      height: height,
+    );
+  }
+
+  bool _isOwnEarnerProfile(BuildContext context) {
+    if (!_isCurrentUserProfile || widget.vendorID != null) return false;
+    final usp = context.watch<UserViewModel>();
+    return usp.isEarnMode || int.tryParse((role ?? '').trim()) == 1;
+  }
+
+  bool _isVendorProfileView(BuildContext context) {
+    if (widget.vendorID != null) return true;
+    if (_isCurrentUserProfile) {
+      return _isOwnEarnerProfile(context);
+    }
+    return int.tryParse((role ?? '').trim()) == 1;
+  }
+
+  bool _canShowBack() {
+    if (widget.vendorID != null) return true;
+    return widget.showBackButton ?? false;
+  }
+
+  String? _displayLocation() {
+    String? raw;
+    if (widget.vendorAddress != null &&
+        widget.vendorAddress.toString().trim().isNotEmpty) {
+      raw = widget.vendorAddress.toString().trim();
+    } else if (addressapi.trim().isNotEmpty && addressapi != 'null') {
+      raw = addressapi.trim();
+    }
+    if (raw == null) return null;
+    return PublicLocation.cityStateLine(raw) ?? raw;
+  }
+
+  Future<void> _openEditProfile() async {
+    final updated = await Get.to(() => const EditProfileScreen());
+    if (updated == true && mounted) {
+      await _reloadAfterEdit();
+    }
+  }
+
   Widget _profileSummaryStars(double rating, {double size = 20}) {
     final filledStars = (rating.isNaN ? 0.0 : rating).round().clamp(0, 5);
     return Row(
@@ -196,10 +270,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final roleRaw = (role ?? '').toString().trim();
-    final roleInt = int.tryParse(roleRaw);
-    final isProviderRole = roleInt == 1;
-    final showRenterUi = _isCurrentUserProfile && !isProviderRole;
+    final roleInt = int.tryParse((role ?? '').toString().trim());
+    final isOwnEarner = _isOwnEarnerProfile(context);
+    final showRenterUi =
+        _isCurrentUserProfile && !isOwnEarner && roleInt != 1;
+
+    if (_isVendorProfileView(context)) {
+      return _buildEarnerProfileScaffold(isOwnProfile: isOwnEarner);
+    }
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
@@ -235,12 +313,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 shape: const CircleBorder(),
                 child: InkWell(
                   customBorder: const CircleBorder(),
-                  onTap: () async {
-                    final updated = await Get.to(() => const EditProfileScreen());
-                    if (updated == true && mounted) {
-                      await _reloadAfterEdit();
-                    }
-                  },
+                  onTap: _openEditProfile,
                   child: const SizedBox(
                     width: 40,
                     height: 40,
@@ -253,11 +326,583 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             ),
         ],
       ),
-      body: showRenterUi ? _buildUserProfileBody() : _buildProviderBody(),
+      body: showRenterUi ? _buildUserProfileBody() : _buildLegacyProviderBody(),
     );
   }
 
-  Widget _buildProviderBody() {
+  Widget _buildEarnerProfileScaffold({required bool isOwnProfile}) {
+    const footerClearance = 24.0;
+    final bottomSafe = MediaQuery.paddingOf(context).bottom;
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+              child: _earnerProfileHeader(isOwnProfile: isOwnProfile),
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  0,
+                  20,
+                  footerClearance + bottomSafe,
+                ),
+                child: _buildEarnerProfileBody(isOwnProfile: isOwnProfile),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _earnerProfileHeader({required bool isOwnProfile}) {
+    final showBack = _canShowBack();
+
+    final title = Text(
+      isOwnProfile ? 'Earner profile' : 'Profile',
+      style: _nunito(size: 28, weight: FontWeight.w800, height: 1.1),
+    );
+
+    final editButton = isOwnProfile
+        ? TextButton(
+            onPressed: _openEditProfile,
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.jebbyBlue,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(
+              'Edit profile',
+              style: _nunito(
+                size: 15,
+                weight: FontWeight.w800,
+                color: AppColors.jebbyBlue,
+              ),
+            ),
+          )
+        : null;
+
+    if (!showBack) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: title),
+          if (editButton != null) editButton,
+        ],
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _earnerBackButton(),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: title),
+                if (editButton != null) editButton,
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _earnerBackButton() {
+    return Material(
+      color: AppColors.jebbySoftBlue,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: () => Get.back(),
+        splashColor: AppColors.jebbyBlue.withValues(alpha: 0.12),
+        highlightColor: AppColors.jebbyBlue.withValues(alpha: 0.06),
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 2),
+              child: Icon(
+                Icons.arrow_back_ios_new,
+                size: 18,
+                color: AppColors.jebbyTextPrimary,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  bool get _hasCoverBanner {
+    if (ProfileImage.isValidPath(back_image_api)) return true;
+    return ProfileImage.isValidPath(widget.vendorBackImage?.toString());
+  }
+
+  String? _coverBannerUrl() {
+    if (ProfileImage.isValidPath(back_image_api)) {
+      return ProfileImage.resolveUrl(Url, back_image_api);
+    }
+    if (ProfileImage.isValidPath(widget.vendorBackImage?.toString())) {
+      return ProfileImage.resolveUrl(Url, widget.vendorBackImage.toString());
+    }
+    return null;
+  }
+
+  String _profileImagePath() {
+    if (ProfileImage.isValidPath(imagesapi)) return imagesapi;
+    return ProfileImage.sanitizePath(widget.vendorImage?.toString());
+  }
+
+  Widget _earnerAvatarRing({double? radius}) {
+    final r = radius ?? _earnerAvatarRadius;
+    final imagePath = _profileImagePath();
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          colors: [
+            AppColors.jebbySoftBlue,
+            AppColors.jebbyBlue,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: CircleAvatar(
+        radius: r,
+        backgroundColor: Colors.white,
+        child: CircleAvatar(
+          radius: r - 3,
+          backgroundImage: ProfileImage.avatarProvider(Url, imagePath),
+        ),
+      ),
+    );
+  }
+
+  Widget _earnerNameAndLocation(String? location) {
+    return Column(
+      children: [
+        Text(
+          fullname ?? '',
+          textAlign: TextAlign.center,
+          style: _nunito(size: 26, weight: FontWeight.w800, height: 1.15),
+        ),
+        if (location != null) ...[
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.location_on_outlined,
+                size: 18,
+                color: AppColors.jebbyBlue,
+              ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  location,
+                  textAlign: TextAlign.center,
+                  style: _nunito(
+                    size: 15,
+                    weight: FontWeight.w600,
+                    color: AppColors.jebbyTextMuted,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildEarnerProfileHero(String? location) {
+    if (_hasCoverBanner) {
+      final coverUrl = _coverBannerUrl();
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.bottomCenter,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: SizedBox(
+                  height: _earnerCoverHeight,
+                  width: double.infinity,
+                  child: coverUrl == null
+                      ? ColoredBox(
+                          color: AppColors.earnerBannerBlue,
+                          child: Center(child: _earnerAvatarRing()),
+                        )
+                      : Image.network(
+                          coverUrl,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return ColoredBox(
+                              color: AppColors.earnerBannerBlue,
+                              child: const Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.jebbyBlue,
+                                  strokeWidth: 2.4,
+                                ),
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return ColoredBox(
+                              color: AppColors.earnerBannerBlue,
+                              child: Center(child: _earnerAvatarRing()),
+                            );
+                          },
+                        ),
+                ),
+              ),
+              Positioned(
+                bottom: -42,
+                child: _earnerAvatarRing(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 50),
+          _earnerNameAndLocation(location),
+        ],
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 20),
+      decoration: BoxDecoration(
+        color: AppColors.earnerBannerBlue,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          _earnerAvatarRing(),
+          const SizedBox(height: 14),
+          _earnerNameAndLocation(location),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEarnerProfileBody({required bool isOwnProfile}) {
+    final location = _displayLocation();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildEarnerProfileHero(location),
+        const SizedBox(height: 16),
+        _earnerStatsCard(isOwnProfile: isOwnProfile),
+        const SizedBox(height: 24),
+        Text(
+          'Ratings & reviews',
+          style: _nunito(size: 20, weight: FontWeight.w800),
+        ),
+        const SizedBox(height: 16),
+        _earnerReviewsSection(),
+      ],
+    );
+  }
+
+  Widget _earnerStatsCard({required bool isOwnProfile}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _cardBorder),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _earnerStatTile(
+              icon: Icons.description_outlined,
+              iconColor: AppColors.jebbyBlue,
+              count: '$productsCount',
+              label: 'Listings',
+              showChevron: isOwnProfile,
+              onTap: isOwnProfile
+                  ? () => Get.to(() => MyProductsScreen(side: false))
+                  : null,
+            ),
+          ),
+          Container(width: 1, height: 56, color: _cardBorder),
+          Expanded(
+            child: _earnerStatTile(
+              icon: Icons.inventory_2_outlined,
+              iconColor: AppColors.jebbyBlue,
+              count: '$ordersCount',
+              label: 'Orders',
+              showChevron: isOwnProfile,
+              onTap: isOwnProfile
+                  ? () => Get.to(() => const VendorMyOrdersScreen())
+                  : null,
+            ),
+          ),
+          Container(width: 1, height: 56, color: _cardBorder),
+          Expanded(
+            child: _earnerStatTile(
+              icon: Icons.star_outline_rounded,
+              iconColor: AppColors.jebbyBlue,
+              count: '$_reviewsCount',
+              label: 'Reviews',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _earnerStatTile({
+    required IconData icon,
+    required Color iconColor,
+    required String count,
+    required String label,
+    VoidCallback? onTap,
+    bool showChevron = false,
+  }) {
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 24, color: iconColor),
+        const SizedBox(height: 8),
+        Text(
+          count,
+          style: _nunito(size: 24, weight: FontWeight.w800),
+        ),
+        const SizedBox(height: 2),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: _nunito(
+                size: 13,
+                weight: FontWeight.w600,
+                color: AppColors.jebbyTextMuted,
+              ),
+            ),
+            if (showChevron) ...[
+              const SizedBox(width: 2),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 16,
+                color: AppColors.jebbyTextMuted,
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+
+    if (onTap == null) return content;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: content,
+      ),
+    );
+  }
+
+  Widget _earnerReviewsSection() {
+    if (isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 32),
+        child: Center(
+          child: CircularProgressIndicator(
+            color: AppColors.jebbyBlue,
+            strokeWidth: 2.4,
+          ),
+        ),
+      );
+    }
+
+    if (isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Column(
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: const BoxDecoration(
+                color: AppColors.jebbySoftBlue,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.reviews_outlined,
+                size: 32,
+                color: AppColors.jebbyBlue,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No reviews yet',
+              style: _nunito(size: 20, weight: FontWeight.w800),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Renter reviews will appear here.',
+              textAlign: TextAlign.center,
+              style: _nunito(
+                size: 15,
+                weight: FontWeight.w600,
+                color: AppColors.jebbyTextMuted,
+                height: 1.35,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final reviewLabel =
+        '$_reviewsCount review${_reviewsCount == 1 ? '' : 's'}';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: _cardBorder),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => setState(
+                    () => _ratingBreakdownExpanded = !_ratingBreakdownExpanded,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text.rich(
+                            TextSpan(
+                              style: _nunito(
+                                size: 18,
+                                weight: FontWeight.w800,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: _averageRating.toStringAsFixed(1),
+                                ),
+                                TextSpan(
+                                  text: ' ',
+                                ),
+                                TextSpan(
+                                  text: '★',
+                                  style: _nunito(
+                                    size: 18,
+                                    weight: FontWeight.w800,
+                                    color: AppColors.jebbyBlue,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: ' · $reviewLabel',
+                                  style: _nunito(
+                                    size: 18,
+                                    weight: FontWeight.w700,
+                                    color: AppColors.jebbyTextMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          _ratingBreakdownExpanded
+                              ? Icons.keyboard_arrow_down_rounded
+                              : Icons.keyboard_arrow_up_rounded,
+                          size: 22,
+                          color: AppColors.jebbyTextMuted,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (_ratingBreakdownExpanded) ...[
+                Divider(height: 1, color: _cardBorder),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  child: Column(
+                    children: [
+                      _ratingRow(5, _ratingDistribution()[5] ?? 0.0),
+                      _ratingRow(4, _ratingDistribution()[4] ?? 0.0),
+                      _ratingRow(3, _ratingDistribution()[3] ?? 0.0),
+                      _ratingRow(2, _ratingDistribution()[2] ?? 0.0),
+                      _ratingRow(1, _ratingDistribution()[1] ?? 0.0),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: _cardBorder),
+          ),
+          child: ListView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            itemCount: ApiRepository
+                .shared.getAllReviewsByVendorIdModelList!.data!.length,
+            itemBuilder: (context, index) {
+              final data = ApiRepository
+                  .shared.getAllReviewsByVendorIdModelList!.data![index];
+              return reviewItem(
+                data.userName.toString(),
+                data.description.toString(),
+                double.parse(data.stars.toString()),
+                dateStr: _timeAgo(data.createdAt),
+                blueTheme: true,
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLegacyProviderBody() {
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -445,7 +1090,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               value: value.clamp(0.0, 1.0),
               minHeight: 8,
               backgroundColor: Colors.grey.shade300,
-              valueColor: const AlwaysStoppedAnimation(Color(0xFFFBA104)),
+              valueColor: const AlwaysStoppedAnimation(AppColors.jebbyBlue),
             ),
           ),
           const SizedBox(width: 8),
@@ -455,8 +1100,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     );
   }
 
-  Widget reviewItem(String name, String desc, double stars, {String? dateStr}) {
+  Widget reviewItem(
+    String name,
+    String desc,
+    double stars, {
+    String? dateStr,
+    bool blueTheme = false,
+  }) {
     final timeAgo = dateStr ?? '';
+    final badgeBg =
+        blueTheme ? AppColors.jebbySoftBlue : Colors.amber.shade100;
+    final badgeStarColor = blueTheme ? AppColors.jebbyBlue : Colors.amber;
     return Padding(
       padding: const EdgeInsets.only(bottom: 30),
       child: Column(
@@ -481,15 +1135,24 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.amber.shade100,
+                            color: badgeBg,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.star, color: Colors.amber, size: 16),
+                              Icon(Icons.star, color: badgeStarColor, size: 16),
                               const SizedBox(width: 4),
-                              Text(stars.toStringAsFixed(1), style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13)),
+                              Text(
+                                stars.toStringAsFixed(1),
+                                style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                  color: blueTheme
+                                      ? AppColors.jebbyBlue
+                                      : null,
+                                ),
+                              ),
                             ],
                           ),
                         ),

@@ -1,48 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:jebby/constants/color.dart';
 
 /// Shared layout for CMS-style pages (About, Terms, Contact Support, API HTML policies).
-/// Light grey background, no cards; app bar matches renter My Profile pattern.
 class CmsPageShell extends StatelessWidget {
   const CmsPageShell({
     super.key,
     required this.title,
     required this.body,
+    this.subtitle,
   });
 
   final String title;
+  final String? subtitle;
   final Widget body;
 
-  static const Color pageBackground = Color(0xFFF5F5F5);
-  static const double horizontalPadding = 22;
+  static const double horizontalPadding = 20;
+  static const String _fontFamily = 'Nunito';
 
-  static TextStyle headingLarge() => GoogleFonts.inter(
-        fontSize: 22,
-        fontWeight: FontWeight.w700,
-        color: Colors.black87,
+  static TextStyle _nunito({
+    required double size,
+    FontWeight weight = FontWeight.w400,
+    Color? color,
+    double? height,
+  }) {
+    return TextStyle(
+      fontFamily: _fontFamily,
+      fontSize: size,
+      fontWeight: weight,
+      color: color ?? AppColors.jebbyTextPrimary,
+      height: height,
+    );
+  }
+
+  static TextStyle headingLarge() => _nunito(
+        size: 22,
+        weight: FontWeight.w800,
         height: 1.25,
       );
 
-  static TextStyle headingSection() => GoogleFonts.inter(
-        fontSize: 18,
-        fontWeight: FontWeight.w700,
-        color: Colors.black87,
+  static TextStyle headingSection() => _nunito(
+        size: 18,
+        weight: FontWeight.w800,
         height: 1.3,
       );
 
-  static TextStyle bodyParagraph() => GoogleFonts.inter(
-        fontSize: 16,
-        fontWeight: FontWeight.w400,
+  static TextStyle bodyParagraph() => _nunito(
+        size: 16,
+        weight: FontWeight.w600,
         color: const Color(0xFF374151),
         height: 1.55,
       );
 
   static Widget paddedScroll({required Widget child}) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(horizontalPadding, 12, horizontalPadding, 32),
+      padding: const EdgeInsets.fromLTRB(
+        horizontalPadding,
+        0,
+        horizontalPadding,
+        32,
+      ),
       child: child,
     );
   }
@@ -50,7 +68,7 @@ class CmsPageShell extends StatelessWidget {
   static Widget sectionDivider() {
     return const Padding(
       padding: EdgeInsets.symmetric(vertical: 20),
-      child: Divider(height: 1, thickness: 1, color: Color(0xFFE0E0E0)),
+      child: Divider(height: 1, thickness: 1, color: Color(0xFFE3E6EC)),
     );
   }
 
@@ -69,7 +87,12 @@ class CmsPageShell extends StatelessWidget {
           if (isLoading)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 48),
-              child: Center(child: CircularProgressIndicator(color: AppColors.primaryColor)),
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.jebbyBlue,
+                  strokeWidth: 2.4,
+                ),
+              ),
             )
           else if (isError || emptyData || html == null || html.isEmpty)
             Text(emptyMessage, style: bodyParagraph())
@@ -85,45 +108,57 @@ class CmsPageShell extends StatelessWidget {
 
   /// Styling for [Html] from `flutter_html` to match plain CMS text pages.
   static Map<String, Style> htmlStyles() {
-    final inter = GoogleFonts.inter().fontFamily;
     return {
       'body': Style(
         margin: Margins.zero,
         fontSize: FontSize(16),
         color: const Color(0xFF374151),
-        fontFamily: inter,
+        fontFamily: _fontFamily,
+        fontWeight: FontWeight.w600,
         lineHeight: const LineHeight(1.55),
       ),
       'p': Style(
         margin: Margins.only(bottom: 12),
         fontSize: FontSize(16),
+        fontFamily: _fontFamily,
+        fontWeight: FontWeight.w600,
         lineHeight: const LineHeight(1.55),
       ),
       'h1': Style(
         fontSize: FontSize(22),
-        fontWeight: FontWeight.w700,
-        color: Colors.black87,
+        fontWeight: FontWeight.w800,
+        color: AppColors.jebbyTextPrimary,
         margin: Margins.only(bottom: 12, top: 4),
-        fontFamily: inter,
+        fontFamily: _fontFamily,
       ),
       'h2': Style(
         fontSize: FontSize(18),
-        fontWeight: FontWeight.w700,
-        color: Colors.black87,
+        fontWeight: FontWeight.w800,
+        color: AppColors.jebbyTextPrimary,
         margin: Margins.only(bottom: 10, top: 20),
-        fontFamily: inter,
+        fontFamily: _fontFamily,
       ),
       'h3': Style(
         fontSize: FontSize(17),
-        fontWeight: FontWeight.w700,
-        color: Colors.black87,
+        fontWeight: FontWeight.w800,
+        color: AppColors.jebbyTextPrimary,
         margin: Margins.only(bottom: 8, top: 14),
-        fontFamily: inter,
+        fontFamily: _fontFamily,
       ),
       'li': Style(
         fontSize: FontSize(16),
+        fontFamily: _fontFamily,
+        fontWeight: FontWeight.w600,
         lineHeight: const LineHeight(1.5),
         margin: Margins.only(bottom: 6),
+      ),
+      'strong': Style(
+        fontFamily: _fontFamily,
+        fontWeight: FontWeight.w800,
+      ),
+      'b': Style(
+        fontFamily: _fontFamily,
+        fontWeight: FontWeight.w800,
       ),
       'ul': Style(
         margin: Margins.only(bottom: 12),
@@ -132,37 +167,97 @@ class CmsPageShell extends StatelessWidget {
         margin: Margins.only(bottom: 12),
       ),
       'a': Style(
-        color: const Color(0xFF2563EB),
+        color: AppColors.jebbyBlue,
+        fontFamily: _fontFamily,
+        fontWeight: FontWeight.w700,
       ),
     };
+  }
+
+  Widget _pageHeader() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _backButton(),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: _nunito(
+                    size: 28,
+                    weight: FontWeight.w800,
+                    height: 1.1,
+                  ),
+                ),
+                if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle!,
+                    style: _nunito(
+                      size: 15,
+                      weight: FontWeight.w600,
+                      color: AppColors.jebbyTextMuted,
+                      height: 1.2,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _backButton() {
+    return Material(
+      color: AppColors.jebbySoftBlue,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: () => Get.back(),
+        splashColor: AppColors.jebbyBlue.withValues(alpha: 0.12),
+        highlightColor: AppColors.jebbyBlue.withValues(alpha: 0.06),
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 2),
+              child: Icon(
+                Icons.arrow_back_ios_new,
+                size: 18,
+                color: AppColors.jebbyTextPrimary,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: pageBackground,
-      appBar: AppBar(
-        backgroundColor: pageBackground,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: true,
-        foregroundColor: Colors.black87,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-          onPressed: () => Get.back(),
-          style: IconButton.styleFrom(foregroundColor: Colors.black87),
-        ),
-        title: Text(
-          title,
-          style: GoogleFonts.inter(
-            color: Colors.black87,
-            fontWeight: FontWeight.w700,
-            fontSize: 18,
-          ),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+              child: _pageHeader(),
+            ),
+            const SizedBox(height: 20),
+            Expanded(child: body),
+          ],
         ),
       ),
-      body: body,
     );
   }
 }

@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jebby/views/screens/onboarding/onboarding_scaffold.dart';
 import 'package:jebby/views/screens/vendors/add_product.dart';
-import 'package:jebby/views/screens/vendors/vendor_home.dart';
+import 'package:jebby/utils/earner_navigation.dart';
 import 'package:jebby/view_models/onboarding_controller.dart';
 
 class AllSetScreen extends StatefulWidget {
@@ -35,7 +35,7 @@ class _AllSetScreenState extends State<AllSetScreen> {
   }
 
   void _maybeLater() {
-    Get.offAll(() => VendorHomeScreen());
+    EarnerNavigation.goHome();
   }
 
   @override

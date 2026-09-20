@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -7,8 +5,6 @@ import 'package:jebby/constants/color.dart';
 import 'package:jebby/utils/show_snackbar.dart';
 import 'package:jebby/view_models/auth_view_model.dart';
 import 'package:jebby/views/screens/auth/login.dart';
-import 'package:otp_text_field/otp_text_field.dart';
-import 'package:otp_text_field/style.dart';
 import 'package:provider/provider.dart';
 
 class OtpScreen extends StatefulWidget {
@@ -28,7 +24,6 @@ class OtpScreen extends StatefulWidget {
   final bool isForgotPasswordFlow;
 
   static const String heroAsset = LoginScreen.heroAsset;
-  static const String logoAsset = LoginScreen.logoAsset;
 
   @override
   State<OtpScreen> createState() => _OtpScreenState();
@@ -40,43 +35,35 @@ class _OtpScreenState extends State<OtpScreen> {
   static Color get _rippleHighlight =>
       AppColors.jebbyBlue.withValues(alpha: 0.06);
 
-  final OtpFieldController _otpController = OtpFieldController();
-  final TextEditingController _emailAutofillController =
-      TextEditingController();
+  final TextEditingController _codeController = TextEditingController();
   String? _otpValue;
 
   @override
   void dispose() {
-    _emailAutofillController.dispose();
+    _codeController.dispose();
     super.dispose();
   }
 
-  void _syncEmailOtpFromAutofill(String value) {
+  void _onCodeChanged(String value) {
     final digits = value.replaceAll(RegExp(r'\D'), '');
-    if (digits.isEmpty) {
-      _otpController.clear();
-      _otpValue = null;
+    if (digits != value) {
+      _codeController.value = TextEditingValue(
+        text: digits,
+        selection: TextSelection.collapsed(offset: digits.length),
+      );
       return;
     }
 
-    final code = digits.length > 4 ? digits.substring(0, 4) : digits;
-    final chars = code.split('');
-    while (chars.length < 4) {
-      chars.add('');
-    }
-
-    _otpController.set(chars);
-    _otpValue = code.length == 4 ? code : null;
-
-    if (_emailAutofillController.text != code) {
-      _emailAutofillController.value = TextEditingValue(
-        text: code,
-        selection: TextSelection.collapsed(offset: code.length),
-      );
-    }
+    setState(() {
+      _otpValue = digits.length == 4 ? digits : null;
+    });
   }
 
   void _handleResend(AuthViewModel authViewModel) {
+    if (authViewModel.resendOtpLoading || authViewModel.signUpLoading) {
+      return;
+    }
+
     if (widget.isForgotPasswordFlow) {
       authViewModel.resendForgotPasswordOtp(widget.email.toString());
       return;
@@ -94,7 +81,8 @@ class _OtpScreenState extends State<OtpScreen> {
   }
 
   void _handleVerify(AuthViewModel authViewModel) {
-    if (_otpValue == null || _otpValue!.isEmpty) {
+    final code = _otpValue ?? _codeController.text.trim();
+    if (code.isEmpty) {
       showAppErrorSnackbar(
         'Please enter the verification code',
         title: 'Required',
@@ -105,14 +93,14 @@ class _OtpScreenState extends State<OtpScreen> {
     if (widget.isForgotPasswordFlow) {
       authViewModel.otpForgetPasswordApi({
         'email': widget.email,
-        'otp': _otpValue,
+        'otp': code,
       }, context);
       return;
     }
 
     authViewModel.otpRegisterApi({
       'email': widget.email,
-      'otp': _otpValue,
+      'otp': code,
       'password': widget.password,
     }, context);
   }
@@ -122,35 +110,25 @@ class _OtpScreenState extends State<OtpScreen> {
     final authViewModel = context.watch<AuthViewModel>();
     final textScale = MediaQuery.textScalerOf(context);
     final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
-    final logoSize = keyboardOpen ? 74.0 : 88.0;
-    final logoRadius = keyboardOpen ? 17.0 : 20.0;
-    final wordmarkSize = keyboardOpen ? 21.0 : 24.0;
-    const logoLift = 32.0;
-    const heroImageLift = 40.0;
+    final compact = MediaQuery.sizeOf(context).height < 720;
+    final resendLoading = authViewModel.resendOtpLoading;
+    final verifyLoading = authViewModel.signUpLoading;
 
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final cardHeight = constraints.maxHeight * 0.68;
+          final cardHeight = constraints.maxHeight * (compact ? 0.72 : 0.65);
 
           return Stack(
             fit: StackFit.expand,
             children: [
               Positioned.fill(
-                child: Transform.translate(
-                  offset: const Offset(0, -heroImageLift),
-                  child: ImageFiltered(
-                    imageFilter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                    child: Image.asset(
-                      OtpScreen.heroAsset,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.topCenter,
-                    ),
-                  ),
+                child: Image.asset(
+                  OtpScreen.heroAsset,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
                 ),
               ),
               Positioned.fill(
@@ -160,11 +138,12 @@ class _OtpScreenState extends State<OtpScreen> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.black.withValues(alpha: 0.08),
-                        Colors.black.withValues(alpha: 0.28),
-                        Colors.black.withValues(alpha: 0.55),
+                        Colors.black.withValues(alpha: 0.06),
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.18),
+                        Colors.black.withValues(alpha: 0.42),
                       ],
-                      stops: const [0.0, 0.55, 1.0],
+                      stops: const [0.0, 0.45, 0.72, 1.0],
                     ),
                   ),
                 ),
@@ -177,20 +156,21 @@ class _OtpScreenState extends State<OtpScreen> {
                   child: Padding(
                     padding: const EdgeInsets.only(left: 16, top: 8),
                     child: Material(
-                      color: Colors.white,
+                      color: Colors.black.withValues(alpha: 0.7),
                       shape: const CircleBorder(),
                       clipBehavior: Clip.antiAlias,
                       child: InkWell(
                         onTap: Get.back,
                         customBorder: const CircleBorder(),
-                        splashColor: _rippleSplash,
-                        highlightColor: _rippleHighlight,
-                        child: const Padding(
-                          padding: EdgeInsets.all(10),
+                        splashColor: Colors.white.withValues(alpha: 0.14),
+                        highlightColor: Colors.white.withValues(alpha: 0.08),
+                        child: const SizedBox(
+                          width: 40,
+                          height: 40,
                           child: Icon(
                             Icons.arrow_back_ios_new,
-                            color: Colors.black,
-                            size: 18,
+                            color: Colors.white,
+                            size: 22,
                           ),
                         ),
                       ),
@@ -201,271 +181,182 @@ class _OtpScreenState extends State<OtpScreen> {
               Positioned(
                 left: 0,
                 right: 0,
-                bottom: cardHeight + logoLift,
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOut,
-                        width: logoSize,
-                        height: logoSize,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(logoRadius),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.12),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(logoRadius),
-                          child: Image.asset(
-                            OtpScreen.logoAsset,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: keyboardOpen ? 4 : 5),
-                      AnimatedDefaultTextStyle(
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOut,
-                        style: TextStyle(
-                          fontFamily: 'Nunito',
-                          fontWeight: FontWeight.w800,
-                          fontSize: textScale.scale(wordmarkSize),
-                          color: Colors.white,
-                          letterSpacing: 0.2,
-                        ),
-                        child: const Text('Jebby'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
                 bottom: 0,
                 height: cardHeight,
                 child: ClipRRect(
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
                   ),
                   child: Container(
                     color: Colors.white,
                     child: SingleChildScrollView(
-                      padding: EdgeInsets.fromLTRB(
-                        24,
-                        24,
-                        24,
-                        16 + bottomInset,
-                      ),
+                      padding: EdgeInsets.fromLTRB(24, 24, 24, 16 + bottomInset),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const _VerificationIcon(),
-                          const SizedBox(height: 16),
+                          SizedBox(height: compact ? 12 : 16),
                           Text(
-                            'Enter confirmation code',
+                            'Enter verification code',
                             style: TextStyle(
                               fontFamily: 'Nunito',
                               fontWeight: FontWeight.w800,
-                              fontSize: textScale.scale(28),
+                              fontSize: textScale.scale(compact ? 26 : 28),
                               color: AppColors.jebbyTextPrimary,
                               height: 1.15,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: compact ? 6 : 8),
                           Text(
-                            'A 4-digit code was sent to ${widget.email ?? 'your email'}.',
+                            'Enter the code sent to your email.',
                             style: TextStyle(
                               fontFamily: 'Nunito',
                               fontWeight: FontWeight.w400,
                               fontSize: textScale.scale(15),
                               color: AppColors.jebbyTextMuted,
-                              height: 1.45,
+                              height: 1.35,
                             ),
                           ),
-                          const SizedBox(height: 28),
+                          SizedBox(height: compact ? 20 : 24),
                           AutofillGroup(
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                IgnorePointer(
-                                  child: Theme(
-                                    data: Theme.of(context).copyWith(
-                                      textSelectionTheme:
-                                          TextSelectionThemeData(
-                                            cursorColor: AppColors.jebbyBlue,
-                                            selectionColor: AppColors.jebbyBlue
-                                                .withValues(alpha: 0.3),
-                                          ),
-                                    ),
-                                    child: OTPTextField(
-                                      controller: _otpController,
-                                      length: 4,
-                                      width: screenWidth - 48,
-                                      textFieldAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      fieldWidth: 56,
-                                      fieldStyle: FieldStyle.box,
-                                      otpFieldStyle: OtpFieldStyle(
-                                        backgroundColor: Colors.white,
-                                        borderColor: Colors.grey.shade300,
-                                        enabledBorderColor:
-                                            Colors.grey.shade300,
-                                        focusBorderColor: AppColors.jebbyBlue,
-                                      ),
-                                      outlineBorderRadius: 12,
-                                      style: TextStyle(
-                                        fontFamily: 'Nunito',
-                                        fontSize: textScale.scale(24),
-                                        color: AppColors.jebbyTextPrimary,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                      onChanged: (_) {},
-                                      onCompleted: (pin) {
-                                        _otpValue = pin;
-                                      },
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: screenWidth - 48,
-                                  height: 56,
-                                  child: TextField(
-                                    controller: _emailAutofillController,
-                                    autofillHints: const [
-                                      AutofillHints.oneTimeCode,
-                                    ],
-                                    keyboardType: TextInputType.number,
-                                    textInputAction: TextInputAction.done,
-                                    maxLength: 4,
-                                    showCursor: false,
-                                    enableSuggestions: true,
-                                    autocorrect: false,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                    ],
-                                    style: const TextStyle(
-                                      color: Colors.transparent,
-                                      fontSize: 1,
-                                      height: 1,
-                                    ),
-                                    decoration: const InputDecoration(
-                                      border: InputBorder.none,
-                                      counterText: '',
-                                      contentPadding: EdgeInsets.zero,
-                                    ),
-                                    onChanged: _syncEmailOtpFromAutofill,
-                                  ),
-                                ),
-                              ],
+                            child: _OtpCodeField(
+                              controller: _codeController,
+                              textScale: textScale,
+                              compact: compact,
+                              onChanged: _onCodeChanged,
+                              onSubmitted: (_) => _handleVerify(authViewModel),
                             ),
                           ),
-                          const SizedBox(height: 20),
-                          Center(
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap:
-                                    (authViewModel.resendOtpLoading ||
-                                            authViewModel.signUpLoading)
-                                        ? null
-                                        : () => _handleResend(authViewModel),
-                                borderRadius: BorderRadius.circular(8),
-                                splashColor: _rippleSplash,
-                                highlightColor: _rippleHighlight,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 10,
-                                  ),
-                                  child:
-                                      authViewModel.resendOtpLoading
-                                          ? Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              SizedBox(
-                                                width: 18,
-                                                height: 18,
-                                                child:
-                                                    CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                      color:
-                                                          AppColors.jebbyBlue,
-                                                    ),
-                                              ),
-                                              const SizedBox(width: 10),
-                                              Text(
-                                                'Sending code...',
-                                                style: TextStyle(
-                                                  fontFamily: 'Nunito',
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: textScale.scale(15),
-                                                  color:
-                                                      AppColors.jebbyTextMuted,
-                                                ),
-                                              ),
-                                            ],
-                                          )
-                                          : Text(
-                                            'Resend code',
-                                            style: TextStyle(
-                                              fontFamily: 'Nunito',
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: textScale.scale(15),
-                                              color: AppColors.jebbyBlue,
-                                            ),
-                                          ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 24),
+                          SizedBox(height: compact ? 20 : 24),
                           SizedBox(
                             width: double.infinity,
                             child: FilledButton(
-                              onPressed:
-                                  (authViewModel.signUpLoading ||
-                                          authViewModel.resendOtpLoading)
-                                      ? null
-                                      : () => _handleVerify(authViewModel),
+                              onPressed: (verifyLoading || resendLoading)
+                                  ? null
+                                  : () => _handleVerify(authViewModel),
                               style: FilledButton.styleFrom(
                                 backgroundColor: AppColors.jebbyBlue,
-                                disabledBackgroundColor: AppColors.jebbyBlue
-                                    .withValues(alpha: 0.55),
+                                disabledBackgroundColor:
+                                    AppColors.jebbyBlue.withValues(alpha: 0.55),
                                 foregroundColor: Colors.white,
                                 disabledForegroundColor: Colors.white,
-                                minimumSize: const Size.fromHeight(52),
+                                minimumSize: Size.fromHeight(compact ? 48 : 52),
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(14),
                                 ),
                               ),
-                              child:
-                                  authViewModel.signUpLoading
-                                      ? const SizedBox(
-                                        width: 22,
-                                        height: 22,
+                              child: verifyLoading
+                                  ? const SizedBox(
+                                      width: 22,
+                                      height: 22,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Text(
+                                      'Verify Code',
+                                      style: TextStyle(
+                                        fontFamily: 'Nunito',
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: textScale.scale(16),
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          SizedBox(height: compact ? 14 : 18),
+                          Center(
+                            child: resendLoading
+                                ? Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      SizedBox(
+                                        width: 18,
+                                        height: 18,
                                         child: CircularProgressIndicator(
-                                          strokeWidth: 2.2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                      : Text(
-                                        'Continue',
-                                        style: TextStyle(
-                                          fontFamily: 'Nunito',
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: textScale.scale(16),
+                                          strokeWidth: 2,
+                                          color: AppColors.jebbyBlue,
                                         ),
                                       ),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        'Sending code...',
+                                        style: TextStyle(
+                                          fontFamily: 'Nunito',
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: textScale.scale(14),
+                                          color: AppColors.jebbyTextMuted,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Wrap(
+                                    alignment: WrapAlignment.center,
+                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                    children: [
+                                      Text(
+                                        "Didn't receive it? ",
+                                        style: TextStyle(
+                                          fontFamily: 'Nunito',
+                                          fontWeight: FontWeight.w400,
+                                          fontSize: textScale.scale(14),
+                                          color: AppColors.jebbyTextMuted,
+                                        ),
+                                      ),
+                                      Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          onTap: () => _handleResend(authViewModel),
+                                          borderRadius: BorderRadius.circular(8),
+                                          splashColor: _rippleSplash,
+                                          highlightColor: _rippleHighlight,
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 4,
+                                              vertical: 4,
+                                            ),
+                                            child: Text(
+                                              'Resend code',
+                                              style: TextStyle(
+                                                fontFamily: 'Nunito',
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: textScale.scale(14),
+                                                color: AppColors.jebbyBlue,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                          ),
+                          SizedBox(height: compact ? 12 : 16),
+                          Center(
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => Get.off(() => const LoginScreen()),
+                                borderRadius: BorderRadius.circular(8),
+                                splashColor: _rippleSplash,
+                                highlightColor: _rippleHighlight,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 8,
+                                  ),
+                                  child: Text(
+                                    'Back to Log In',
+                                    style: TextStyle(
+                                      fontFamily: 'Nunito',
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: textScale.scale(14),
+                                      color: AppColors.jebbyBlue,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -487,20 +378,110 @@ class _VerificationIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 44,
-      height: 44,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Icon(
-            Icons.shield_outlined,
-            size: 44,
-            color: AppColors.jebbyBlue.withValues(alpha: 0.85),
-          ),
-          Icon(Icons.pin, size: 16, color: AppColors.jebbyAccentOrange),
-        ],
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: AppColors.lightBlue,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: AppColors.jebbyBlue,
+          width: 1.5,
+        ),
       ),
+      child: const Icon(
+        Icons.keyboard_alt,
+        size: 22,
+        color: AppColors.jebbyBlue,
+      ),
+    );
+  }
+}
+
+class _OtpCodeField extends StatelessWidget {
+  const _OtpCodeField({
+    required this.controller,
+    required this.textScale,
+    required this.compact,
+    required this.onChanged,
+    this.onSubmitted,
+  });
+
+  final TextEditingController controller;
+  final TextScaler textScale;
+  final bool compact;
+  final ValueChanged<String> onChanged;
+  final ValueChanged<String>? onSubmitted;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Verification code',
+          style: TextStyle(
+            fontFamily: 'Nunito',
+            fontWeight: FontWeight.w700,
+            fontSize: textScale.scale(14),
+            color: AppColors.jebbyTextPrimary,
+          ),
+        ),
+        SizedBox(height: compact ? 6 : 8),
+        TextFormField(
+          controller: controller,
+          autofillHints: const [AutofillHints.oneTimeCode],
+          autocorrect: false,
+          enableSuggestions: true,
+          keyboardType: TextInputType.number,
+          textInputAction: TextInputAction.done,
+          maxLength: 4,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          onChanged: onChanged,
+          onFieldSubmitted: onSubmitted,
+          style: TextStyle(
+            fontFamily: 'Nunito',
+            fontWeight: FontWeight.w600,
+            fontSize: textScale.scale(15),
+            color: AppColors.jebbyTextPrimary,
+            letterSpacing: 2,
+          ),
+          decoration: InputDecoration(
+            isDense: compact,
+            counterText: '',
+            hintText: 'Enter code',
+            hintStyle: TextStyle(
+              fontFamily: 'Nunito',
+              fontWeight: FontWeight.w400,
+              fontSize: textScale.scale(15),
+              color: AppColors.jebbyTextMuted,
+              letterSpacing: 0,
+            ),
+            prefixIcon: const Icon(
+              Icons.keyboard_alt_outlined,
+              color: AppColors.jebbyTextMuted,
+              size: 20,
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: compact ? 12 : 14,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: AppColors.jebbyBlue,
+                width: 1.5,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

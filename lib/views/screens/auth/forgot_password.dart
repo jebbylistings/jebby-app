@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jebby/constants/color.dart';
@@ -12,15 +10,13 @@ class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   static const String heroAsset = LoginScreen.heroAsset;
-  static const String logoAsset = LoginScreen.logoAsset;
 
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  static Color get _rippleSplash =>
-      AppColors.jebbyBlue.withValues(alpha: 0.12);
+  static Color get _rippleSplash => AppColors.jebbyBlue.withValues(alpha: 0.12);
 
   static Color get _rippleHighlight =>
       AppColors.jebbyBlue.withValues(alpha: 0.06);
@@ -42,19 +38,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     final email = _emailController.text.trim();
     if (email.isEmpty) {
-      showAppErrorSnackbar('Please enter your email address', title: 'Required');
+      showAppErrorSnackbar(
+        'Please enter your email address',
+        title: 'Required',
+      );
       return;
     }
     if (!_emailPattern.hasMatch(email)) {
-      showAppErrorSnackbar('Please enter a valid email address', title: 'Required');
+      showAppErrorSnackbar(
+        'Please enter a valid email address',
+        title: 'Required',
+      );
       return;
     }
 
-    authViewModel.forgetPasswordApi(
-      {'email': email},
-      context,
-      'forgot',
-    );
+    authViewModel.forgetPasswordApi({'email': email}, context, 'forgot');
   }
 
   @override
@@ -62,34 +60,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final authViewModel = context.watch<AuthViewModel>();
     final textScale = MediaQuery.textScalerOf(context);
     final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
-    final logoSize = keyboardOpen ? 74.0 : 88.0;
-    final logoRadius = keyboardOpen ? 17.0 : 20.0;
-    final wordmarkSize = keyboardOpen ? 21.0 : 24.0;
-    const logoLift = 50.0;
-    const heroImageLift = 40.0;
+    final compact = MediaQuery.sizeOf(context).height < 720;
 
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final cardHeight = constraints.maxHeight * 0.65;
+          final cardHeight = constraints.maxHeight * (compact ? 0.72 : 0.65);
 
           return Stack(
             fit: StackFit.expand,
             children: [
               Positioned.fill(
-                child: Transform.translate(
-                  offset: const Offset(0, -heroImageLift),
-                  child: ImageFiltered(
-                    imageFilter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                    child: Image.asset(
-                      ForgotPasswordScreen.heroAsset,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.topCenter,
-                    ),
-                  ),
+                child: Image.asset(
+                  ForgotPasswordScreen.heroAsset,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
                 ),
               ),
               Positioned.fill(
@@ -99,11 +86,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.black.withValues(alpha: 0.08),
-                        Colors.black.withValues(alpha: 0.28),
-                        Colors.black.withValues(alpha: 0.55),
+                        Colors.black.withValues(alpha: 0.06),
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.18),
+                        Colors.black.withValues(alpha: 0.42),
                       ],
-                      stops: const [0.0, 0.55, 1.0],
+                      stops: const [0.0, 0.45, 0.72, 1.0],
                     ),
                   ),
                 ),
@@ -116,20 +104,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   child: Padding(
                     padding: const EdgeInsets.only(left: 16, top: 8),
                     child: Material(
-                      color: Colors.white,
+                      color: Colors.black.withValues(alpha: 0.7),
                       shape: const CircleBorder(),
                       clipBehavior: Clip.antiAlias,
                       child: InkWell(
                         onTap: Get.back,
                         customBorder: const CircleBorder(),
-                        splashColor: _rippleSplash,
-                        highlightColor: _rippleHighlight,
-                        child: const Padding(
-                          padding: EdgeInsets.all(10),
+                        splashColor: Colors.white.withValues(alpha: 0.14),
+                        highlightColor: Colors.white.withValues(alpha: 0.08),
+                        child: const SizedBox(
+                          width: 40,
+                          height: 40,
                           child: Icon(
                             Icons.arrow_back_ios_new,
-                            color: Colors.black,
-                            size: 18,
+                            color: Colors.white,
+                            size: 22,
                           ),
                         ),
                       ),
@@ -140,60 +129,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               Positioned(
                 left: 0,
                 right: 0,
-                bottom: cardHeight + logoLift,
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOut,
-                        width: logoSize,
-                        height: logoSize,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(logoRadius),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.12),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(logoRadius),
-                          child: Image.asset(
-                            ForgotPasswordScreen.logoAsset,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: keyboardOpen ? 4 : 5),
-                      AnimatedDefaultTextStyle(
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOut,
-                        style: TextStyle(
-                          fontFamily: 'Nunito',
-                          fontWeight: FontWeight.w800,
-                          fontSize: textScale.scale(wordmarkSize),
-                          color: Colors.white,
-                          letterSpacing: 0.2,
-                        ),
-                        child: const Text('Jebby'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
                 bottom: 0,
                 height: cardHeight,
                 child: ClipRRect(
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
                   ),
                   child: Container(
                     color: Colors.white,
@@ -208,76 +149,81 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const _SecurityShieldIcon(),
-                          const SizedBox(height: 16),
+                          SizedBox(height: compact ? 12 : 16),
                           Text(
                             'Reset your password',
                             style: TextStyle(
                               fontFamily: 'Nunito',
                               fontWeight: FontWeight.w800,
-                              fontSize: textScale.scale(28),
+                              fontSize: textScale.scale(compact ? 26 : 28),
                               color: AppColors.jebbyTextPrimary,
                               height: 1.15,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: compact ? 6 : 8),
                           Text(
-                            'Enter the email connected to your Jebby account. We\'ll send you a 4-digit verification code.',
+                            'Enter the email connected to your Jebby account. '
+                            "We'll send you a verification code.",
                             style: TextStyle(
                               fontFamily: 'Nunito',
                               fontWeight: FontWeight.w400,
                               fontSize: textScale.scale(15),
                               color: AppColors.jebbyTextMuted,
-                              height: 1.45,
+                              height: 1.35,
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          SizedBox(height: compact ? 20 : 24),
                           _ForgotPasswordField(
                             label: 'Email address',
                             controller: _emailController,
                             hintText: 'you@example.com',
                             textScale: textScale,
+                            compact: compact,
                             keyboardType: TextInputType.emailAddress,
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) => _submit(authViewModel),
                           ),
-                          const SizedBox(height: 24),
+                          SizedBox(height: compact ? 20 : 24),
                           SizedBox(
                             width: double.infinity,
                             child: FilledButton(
-                              onPressed: authViewModel.signUpLoading
-                                  ? null
-                                  : () => _submit(authViewModel),
+                              onPressed:
+                                  authViewModel.signUpLoading
+                                      ? null
+                                      : () => _submit(authViewModel),
                               style: FilledButton.styleFrom(
                                 backgroundColor: AppColors.jebbyBlue,
-                                disabledBackgroundColor:
-                                    AppColors.jebbyBlue.withValues(alpha: 0.55),
+                                disabledBackgroundColor: AppColors.jebbyBlue
+                                    .withValues(alpha: 0.55),
                                 foregroundColor: Colors.white,
-                                minimumSize: const Size.fromHeight(52),
+                                disabledForegroundColor: Colors.white,
+                                minimumSize: Size.fromHeight(compact ? 48 : 52),
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(14),
                                 ),
                               ),
-                              child: authViewModel.signUpLoading
-                                  ? const SizedBox(
-                                      width: 22,
-                                      height: 22,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.2,
-                                        color: Colors.white,
+                              child:
+                                  authViewModel.signUpLoading
+                                      ? const SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                      : Text(
+                                        'Send Code',
+                                        style: TextStyle(
+                                          fontFamily: 'Nunito',
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: textScale.scale(16),
+                                        ),
                                       ),
-                                    )
-                                  : Text(
-                                      'Send Code',
-                                      style: TextStyle(
-                                        fontFamily: 'Nunito',
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: textScale.scale(16),
-                                      ),
-                                    ),
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          SizedBox(height: compact ? 12 : 16),
                           Center(
                             child: Material(
                               color: Colors.transparent,
@@ -289,7 +235,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 8,
-                                    vertical: 12,
+                                    vertical: 8,
                                   ),
                                   child: Text.rich(
                                     TextSpan(
@@ -297,14 +243,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                         fontFamily: 'Nunito',
                                         fontWeight: FontWeight.w400,
                                         fontSize: textScale.scale(14),
-                                        color: AppColors.jebbyTextMuted,
                                       ),
-                                      children: const [
-                                        TextSpan(text: 'Remember your password? '),
+                                      children: [
+                                        TextSpan(
+                                          text: 'Remember your password? ',
+                                          style: TextStyle(
+                                            color: AppColors.jebbyTextMuted,
+                                          ),
+                                        ),
                                         TextSpan(
                                           text: 'Log in',
                                           style: TextStyle(
-                                            color: AppColors.jebbyAccentOrange,
+                                            color: AppColors.jebbyBlue,
                                             fontWeight: FontWeight.w700,
                                           ),
                                         ),
@@ -336,21 +286,14 @@ class _SecurityShieldIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 44,
-      height: 44,
+      width: 50,
+      height: 50,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Icon(
-            Icons.shield_outlined,
-            size: 44,
-            color: AppColors.jebbyBlue.withValues(alpha: 0.85),
-          ),
-          Icon(
-            Icons.lock,
-            size: 16,
-            color: AppColors.jebbyAccentOrange,
-          ),
+          Icon(Icons.shield, size: 44, color: AppColors.lightBlue),
+          Icon(Icons.shield_outlined, size: 50, color: AppColors.jebbyBlue),
+          Icon(Icons.lock, size: 16, color: AppColors.jebbyBlue),
         ],
       ),
     );
@@ -363,6 +306,7 @@ class _ForgotPasswordField extends StatelessWidget {
     required this.controller,
     required this.hintText,
     required this.textScale,
+    required this.compact,
     this.keyboardType,
     this.textInputAction,
     this.onSubmitted,
@@ -372,6 +316,7 @@ class _ForgotPasswordField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
   final TextScaler textScale;
+  final bool compact;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onSubmitted;
@@ -390,7 +335,7 @@ class _ForgotPasswordField extends StatelessWidget {
             color: AppColors.jebbyTextPrimary,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: compact ? 6 : 8),
         TextFormField(
           controller: controller,
           autocorrect: false,
@@ -404,6 +349,7 @@ class _ForgotPasswordField extends StatelessWidget {
             color: AppColors.jebbyTextPrimary,
           ),
           decoration: InputDecoration(
+            isDense: compact,
             hintText: hintText,
             hintStyle: TextStyle(
               fontFamily: 'Nunito',
@@ -418,9 +364,9 @@ class _ForgotPasswordField extends StatelessWidget {
             ),
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(
+            contentPadding: EdgeInsets.symmetric(
               horizontal: 14,
-              vertical: 14,
+              vertical: compact ? 12 : 14,
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),

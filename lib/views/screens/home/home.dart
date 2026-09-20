@@ -460,7 +460,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   visible: role != null && role != "Guest",
                                   child: _CircleAction(
                                     onTap: () {
-                                      Get.to(() => UserProfileScreen());
+                                      Get.to(() => const UserProfileScreen(showBackButton: true));
                                     },
                                     image: const AssetImage(
                                       'assets/images/personnew.png',

@@ -14,6 +14,7 @@ import '../../../utils/api_datetime.dart';
 import '../../../utils/profile_image.dart';
 import '../../../utils/rental_date.dart';
 import '../../../view_models/reservation_view_model.dart';
+import '../../../utils/earner_navigation.dart';
 import 'inspection_flow.dart';
 import 'report_issue.dart';
 import 'reservation_flow_theme.dart';
@@ -37,7 +38,7 @@ TextStyle _valueStyle({double size = 14}) {
 
 ButtonStyle _primaryButton({double height = 48}) {
   return FilledButton.styleFrom(
-    backgroundColor: AppColors.primaryColor,
+    backgroundColor: AppColors.jebbyBlue,
     foregroundColor: Colors.white,
     disabledBackgroundColor: Colors.grey.shade300,
     disabledForegroundColor: Colors.grey.shade600,
@@ -187,14 +188,14 @@ Widget _statusBadge(String label, {String? orderStatus}) {
   final Color bg;
   final Color fg;
   if (OrderStatus.isCompleted(normalized)) {
-    bg = const Color(0xFFE8F5E9);
-    fg = const Color(0xFF2E7D32);
+    bg = AppColors.earnerInfoBlue;
+    fg = AppColors.jebbyBlue;
   } else if (OrderStatus.isTerminal(normalized)) {
-    bg = const Color(0xFFF5F5F5);
-    fg = const Color(0xFF616161);
+    bg = AppColors.jebbySoftBlue;
+    fg = AppColors.jebbyTextMuted;
   } else {
-    bg = AppColors.primaryColor.withValues(alpha: 0.12);
-    fg = AppColors.primaryColor;
+    bg = AppColors.jebbySoftBlue;
+    fg = AppColors.jebbyBlue;
   }
 
   return Container(
@@ -224,6 +225,95 @@ class ReservationDetailScreen extends StatefulWidget {
 }
 
 class _ReservationDetailScreenState extends State<ReservationDetailScreen> {
+  TextStyle _nunito({
+    required double size,
+    FontWeight weight = FontWeight.w400,
+    Color? color,
+    double? height,
+  }) {
+    return TextStyle(
+      fontFamily: 'Nunito',
+      fontSize: size,
+      fontWeight: weight,
+      color: color ?? AppColors.jebbyTextPrimary,
+      height: height,
+    );
+  }
+
+  void _handleBack() {
+    if (Get.key.currentState?.canPop() ?? false) {
+      Get.back();
+    } else {
+      EarnerNavigation.goHome();
+    }
+  }
+
+  Widget _pageHeader() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _backButton(),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Reservation',
+                  style: _nunito(
+                    size: 28,
+                    weight: FontWeight.w800,
+                    color: AppColors.jebbyTextPrimary,
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Review booking details.',
+                  style: _nunito(
+                    size: 15,
+                    weight: FontWeight.w600,
+                    color: AppColors.jebbyTextMuted,
+                    height: 1.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _backButton() {
+    return Material(
+      color: AppColors.jebbySoftBlue,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: _handleBack,
+        splashColor: AppColors.jebbyBlue.withValues(alpha: 0.12),
+        highlightColor: AppColors.jebbyBlue.withValues(alpha: 0.06),
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 2),
+              child: Icon(
+                Icons.arrow_back_ios_new,
+                size: 18,
+                color: AppColors.jebbyTextPrimary,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -273,105 +363,107 @@ class _ReservationDetailScreenState extends State<ReservationDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      appBar: AppBar(
-        backgroundColor: Colors.grey.shade100,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        centerTitle: true,
-        leading: InkWell(
-          onTap: () {
-            Get.back();
-          },
-          borderRadius: BorderRadius.circular(50),
-          child: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
-        ),
-        title: Text(
-          'Reservation',
-          style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 18, color: Colors.black87),
-        ),
-      ),
-      body: Consumer<ReservationViewModel>(
-        builder: (context, vm, _) {
-          if (vm.loading && vm.reservation == null) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.primaryColor));
-          }
-          final reservation = vm.reservation;
-          if (reservation == null) {
-            return Center(
-              child: Text(vm.error ?? 'Reservation unavailable', style: _bodyStyle()),
-            );
-          }
-          final terminal = OrderStatus.isTerminal(reservation.orderStatus);
-          return Column(
-            children: [
-              Expanded(
-                child: RefreshIndicator(
-                  color: AppColors.primaryColor,
-                  onRefresh: () async {
-                    await vm.loadReservation(widget.orderId);
-                    if (!OrderStatus.isTerminal(vm.reservation?.orderStatus)) {
-                      _prefetchTrustIfNeeded(vm);
-                    }
-                  },
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+              child: _pageHeader(),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: Consumer<ReservationViewModel>(
+                builder: (context, vm, _) {
+                  if (vm.loading && vm.reservation == null) {
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.jebbyBlue,
+                        strokeWidth: 2.4,
+                      ),
+                    );
+                  }
+                  final reservation = vm.reservation;
+                  if (reservation == null) {
+                    return Center(
+                      child: Text(vm.error ?? 'Reservation unavailable', style: _bodyStyle()),
+                    );
+                  }
+                  final terminal = OrderStatus.isTerminal(reservation.orderStatus);
+                  return Column(
                     children: [
-                      _ReservationHeroCard(reservation: reservation),
-                      if (reservation.role == 'renter' &&
-                          (reservation.securityDeposit ?? 0) > 0 &&
-                          _depositStatusMessage(reservation).isNotEmpty) ...[
-                        const SizedBox(height: 12),
-                        _DepositStatusCard(reservation: reservation),
-                      ],
-                      if (terminal) ...[
-                        const SizedBox(height: 12),
-                        _TerminalStatusCard(reservation: reservation),
-                      ] else ...[
-                        const SizedBox(height: 12),
-                        _HandoffInfoCard(reservation: reservation),
-                        if (OrderStatus.showHandoffActionsOnReservation(
-                          orderStatus: reservation.orderStatus,
-                          handoffStatus: reservation.handoffStatus,
-                          transportType: reservation.transportType,
-                          role: reservation.role,
-                          canUpdateHandoff: reservation.canUpdateHandoff,
-                        )) ...[
-                          const SizedBox(height: 12),
-                          _HandoffActionsCard(reservation: reservation),
-                        ] else if (OrderStatus.showHandoffWaitingOnReservation(
-                          orderStatus: reservation.orderStatus,
-                          handoffStatus: reservation.handoffStatus,
-                          transportType: reservation.transportType,
-                          role: reservation.role,
-                          canUpdateHandoff: reservation.canUpdateHandoff,
-                        )) ...[
-                          const SizedBox(height: 12),
-                          _HandoffWaitingCard(reservation: reservation),
-                        ],
-                        if (_showTrustModule(reservation)) ...[
-                          const SizedBox(height: 12),
-                          _TrustInfoCard(reservation: reservation),
-                        ],
-                        if (_needsInlineAction(reservation)) ...[
-                          const SizedBox(height: 12),
-                          _PrimaryAction(reservation: reservation, vm: vm),
-                        ],
-                      ],
+                      Expanded(
+                        child: RefreshIndicator(
+                          color: AppColors.jebbyBlue,
+                          backgroundColor: AppColors.jebbySoftBlue,
+                          onRefresh: () async {
+                            await vm.loadReservation(widget.orderId);
+                            if (!OrderStatus.isTerminal(vm.reservation?.orderStatus)) {
+                              _prefetchTrustIfNeeded(vm);
+                            }
+                          },
+                          child: ListView(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                            children: [
+                              _ReservationHeroCard(reservation: reservation),
+                              if (reservation.role == 'renter' &&
+                                  (reservation.securityDeposit ?? 0) > 0 &&
+                                  _depositStatusMessage(reservation).isNotEmpty) ...[
+                                const SizedBox(height: 12),
+                                _DepositStatusCard(reservation: reservation),
+                              ],
+                              if (terminal) ...[
+                                const SizedBox(height: 12),
+                                _TerminalStatusCard(reservation: reservation),
+                              ] else ...[
+                                const SizedBox(height: 12),
+                                _HandoffInfoCard(reservation: reservation),
+                                if (OrderStatus.showHandoffActionsOnReservation(
+                                  orderStatus: reservation.orderStatus,
+                                  handoffStatus: reservation.handoffStatus,
+                                  transportType: reservation.transportType,
+                                  role: reservation.role,
+                                  canUpdateHandoff: reservation.canUpdateHandoff,
+                                )) ...[
+                                  const SizedBox(height: 12),
+                                  _HandoffActionsCard(reservation: reservation),
+                                ] else if (OrderStatus.showHandoffWaitingOnReservation(
+                                  orderStatus: reservation.orderStatus,
+                                  handoffStatus: reservation.handoffStatus,
+                                  transportType: reservation.transportType,
+                                  role: reservation.role,
+                                  canUpdateHandoff: reservation.canUpdateHandoff,
+                                )) ...[
+                                  const SizedBox(height: 12),
+                                  _HandoffWaitingCard(reservation: reservation),
+                                ],
+                                if (_showTrustModule(reservation)) ...[
+                                  const SizedBox(height: 12),
+                                  _TrustInfoCard(reservation: reservation),
+                                ],
+                                if (_needsInlineAction(reservation)) ...[
+                                  const SizedBox(height: 12),
+                                  _PrimaryAction(reservation: reservation, vm: vm),
+                                ],
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (!terminal)
+                        _ReservationBottomBar(
+                          reservation: reservation,
+                          vm: vm,
+                          orderId: widget.orderId,
+                        ),
                     ],
-                  ),
-                ),
+                  );
+                },
               ),
-              if (!terminal)
-                _ReservationBottomBar(
-                  reservation: reservation,
-                  vm: vm,
-                  orderId: widget.orderId,
-                ),
-            ],
-          );
-        },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1133,7 +1225,7 @@ class _ReservationBottomBar extends StatelessWidget {
     } else if (OrderStatus.canReportIssueOrNoShow(reservation.orderStatus) &&
         reservation.openDispute == null) {
       child = OutlinedButton(
-        style: _secondaryButton(AppColors.primaryColor, height: 48),
+        style: _secondaryButton(AppColors.jebbyBlue, height: 48),
         onPressed: () => Get.to(() => ReportIssueScreen(orderId: orderId)),
         child: const Text('Report issue or no-show'),
       );
@@ -1146,7 +1238,7 @@ class _ReservationBottomBar extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
         decoration: BoxDecoration(
-          color: Colors.grey.shade100,
+          color: Colors.white,
           border: Border(top: BorderSide(color: _cardBorder.withValues(alpha: 0.8))),
         ),
         child: SizedBox(width: double.infinity, child: child),

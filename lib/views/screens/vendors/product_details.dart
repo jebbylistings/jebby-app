@@ -27,7 +27,7 @@ class VendorProductDetailScreen extends StatefulWidget {
 }
 
 class _VendorProductDetailScreenState extends State<VendorProductDetailScreen> {
-  static const Color _accent = Color(0xFFF6AE02);
+  static const Color _accent = AppColors.jebbyBlue;
   static const Color _pageBg = Color(0xFFF3F3F5);
   static const Color _labelGrey = Color(0xFF72747A);
   static const Color _bodyGrey = Color(0xFF6D6D75);
@@ -395,7 +395,7 @@ class _VendorProductDetailScreenState extends State<VendorProductDetailScreen> {
       backgroundColor: _pageBg,
       body:
           isLoading
-              ? const Center(child: CircularProgressIndicator(color: AppColors.primaryColor))
+              ? const Center(child: CircularProgressIndicator(color: AppColors.jebbyBlue))
               : isError
               ? Center(
                 child: Text(
@@ -864,7 +864,7 @@ class _VendorProductDetailScreenState extends State<VendorProductDetailScreen> {
                                 flex: 2,
                                 child: ElevatedButton(
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.primaryColor,
+                                    backgroundColor: AppColors.jebbyBlue,
                                     foregroundColor: Colors.white,
                                     elevation: 0,
                                     padding: const EdgeInsets.symmetric(
@@ -948,23 +948,26 @@ class _VendorProductDetailScreenState extends State<VendorProductDetailScreen> {
               child: Padding(
                 padding: const EdgeInsets.only(left: 14, top: 10),
                 child: Material(
-                  color: Colors.transparent,
+                  color: const Color(0xE6FFFFFF),
                   shape: const CircleBorder(),
+                  clipBehavior: Clip.antiAlias,
                   child: InkWell(
                     onTap: () => Get.back(),
                     customBorder: const CircleBorder(),
-                    splashColor: Colors.black26,
-                    highlightColor: Colors.black12,
-                    child: Ink(
-                      padding: const EdgeInsets.all(10),
-                      decoration: const BoxDecoration(
-                        color: Color(0xE6FFFFFF),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back_ios_new,
-                        size: 20,
-                        color: Colors.black,
+                    splashColor: AppColors.jebbyBlue.withValues(alpha: 0.12),
+                    highlightColor: AppColors.jebbyBlue.withValues(alpha: 0.06),
+                    child: const SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: Center(
+                        child: Padding(
+                          padding: EdgeInsets.only(left: 2),
+                          child: Icon(
+                            Icons.arrow_back_ios_new,
+                            size: 18,
+                            color: Colors.black,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -1083,7 +1086,7 @@ class _VendorProductDetailScreenState extends State<VendorProductDetailScreen> {
                     fit: BoxFit.fill,
                     placeholder:
                         (context, url) =>
-                            Center(child: CircularProgressIndicator(color: AppColors.primaryColor)),
+                            Center(child: CircularProgressIndicator(color: AppColors.jebbyBlue)),
                     errorWidget:
                         (context, url, error) =>
                             Center(child: Icon(Icons.error)),

@@ -1,13 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:jebby/constants/color.dart';
 
 class RoleSwitcherCard extends StatelessWidget {
-  static const Color primaryGold = Color(0xFFE8A93A);
-  static const Color cardBackground = Color(0xFFFFF7E6);
-  static const Color borderColor = Color(0xFFE5E5E5);
-  static const Color textPrimary = Color(0xFF111111);
-  static const Color textSecondary = Color(0xFF6B6B6B);
-
   final bool isEarnMode;
   final ValueChanged<bool> onModeChanged;
   final bool isLoading;
@@ -19,25 +13,43 @@ class RoleSwitcherCard extends StatelessWidget {
     this.isLoading = false,
   });
 
+  static TextStyle _nunito({
+    required double size,
+    FontWeight weight = FontWeight.w400,
+    Color? color,
+    double? height,
+    double? letterSpacing,
+  }) {
+    return TextStyle(
+      fontFamily: 'Nunito',
+      fontSize: size,
+      fontWeight: weight,
+      color: color ?? AppColors.jebbyTextPrimary,
+      height: height,
+      letterSpacing: letterSpacing,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: cardBackground,
+        color: AppColors.jebbySoftBlue,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE3E6EC)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'CURRENT MODE',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+            style: _nunito(
+              size: 12,
+              weight: FontWeight.w700,
               letterSpacing: 0.8,
-              color: textSecondary,
+              color: AppColors.jebbyTextMuted,
             ),
           ),
           const SizedBox(height: 12),
@@ -52,7 +64,7 @@ class RoleSwitcherCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: borderColor),
+                        border: Border.all(color: const Color(0xFFE3E6EC)),
                       ),
                     ),
                     AnimatedPositioned(
@@ -64,7 +76,7 @@ class RoleSwitcherCard extends StatelessWidget {
                       width: segmentWidth,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: primaryGold,
+                          color: AppColors.jebbyBlue,
                           borderRadius: BorderRadius.circular(24),
                         ),
                       ),
@@ -104,7 +116,7 @@ class RoleSwitcherCard extends StatelessWidget {
               Icon(
                 Icons.stars_rounded,
                 size: 18,
-                color: primaryGold,
+                color: AppColors.jebbyBlue,
               ),
               const SizedBox(width: 6),
               Expanded(
@@ -112,10 +124,10 @@ class RoleSwitcherCard extends StatelessWidget {
                   isEarnMode
                       ? 'Earn money by listing your items'
                       : 'Find and rent items nearby',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w400,
-                    color: textSecondary,
+                  style: _nunito(
+                    size: 13,
+                    weight: FontWeight.w600,
+                    color: AppColors.jebbyTextMuted,
                   ),
                 ),
               ),
@@ -142,7 +154,8 @@ class _SegmentButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isActive ? Colors.white : RoleSwitcherCard.textPrimary;
+    final color =
+        isActive ? Colors.white : AppColors.jebbyTextPrimary;
 
     return Material(
       color: Colors.transparent,
@@ -158,9 +171,10 @@ class _SegmentButton extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 label,
-                style: GoogleFonts.inter(
+                style: TextStyle(
+                  fontFamily: 'Nunito',
                   fontSize: 16,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w700,
                   color: color,
                 ),
               ),

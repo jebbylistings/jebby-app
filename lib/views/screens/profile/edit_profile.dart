@@ -10,8 +10,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:jebby/views/widgets/address_autocomplete_field.dart';
 import 'package:jebby/utils/google_places_address.dart';
 import 'package:jebby/utils/profile_image.dart';
+import 'package:jebby/utils/public_location.dart';
 import 'package:jebby/utils/show_snackbar.dart';
 
+import 'package:jebby/constants/color.dart';
 import 'package:jebby/constants/app_url.dart';
 import 'package:jebby/models/user_model.dart';
 import 'package:path/path.dart' as p;
@@ -32,8 +34,16 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
+  static const Color _cardBorder = Color(0xFFE3E6EC);
+  static const double _coverPreviewHeight = 96;
+  static const double _profileAvatarRadius = 46;
+
+  static const double _spaceLabelToField = 6;
+  static const double _spaceFieldToHelper = 6;
+
   File? _image;
   File? _image1;
+  bool _editingAddress = false;
 
   final picker = ImagePicker();
 
@@ -220,26 +230,456 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   InputDecoration get _profileAddressDecoration => InputDecoration(
         hintText: 'Search for your address',
-        hintStyle: GoogleFonts.inter(
-          fontSize: 15,
-          color: Colors.grey,
+        hintStyle: _nunito(size: 15, weight: FontWeight.w600, color: AppColors.jebbyTextMuted),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: _cardBorder),
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 16,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        enabledBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: Color(0xFFCECED3), width: 1),
-          borderRadius: BorderRadius.all(Radius.circular(16)),
-        ),
-        focusedBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: Color(0xFFCECED3), width: 1),
-          borderRadius: BorderRadius.all(Radius.circular(16)),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.jebbyBlue, width: 1.5),
         ),
       );
+
+  TextStyle _nunito({
+    required double size,
+    FontWeight weight = FontWeight.w400,
+    Color? color,
+    double? height,
+  }) {
+    return TextStyle(
+      fontFamily: 'Nunito',
+      fontSize: size,
+      fontWeight: weight,
+      color: color ?? AppColors.jebbyTextPrimary,
+      height: height,
+    );
+  }
+
+  String _publicLocationLine() {
+    final addr = _resolvedAddress;
+    if (addr != null) {
+      final city = addr.city.trim();
+      final state = addr.state.trim();
+      if (city.isNotEmpty && state.isNotEmpty) {
+        return '$city, ${state.toUpperCase()}';
+      }
+    }
+    final saved = _locationController.text.trim();
+    if (saved.isEmpty) return 'Not set';
+    return PublicLocation.cityStateLine(saved) ?? 'Not set';
+  }
+
+  String _savedAddressDisplay() {
+    final text = _locationController.text.trim();
+    if (text.isEmpty) return 'No address saved';
+    return text;
+  }
+
+  Widget _pageHeader() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Material(
+          color: AppColors.jebbySoftBlue,
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: () => Get.back(),
+            splashColor: AppColors.jebbyBlue.withValues(alpha: 0.12),
+            highlightColor: AppColors.jebbyBlue.withValues(alpha: 0.06),
+            child: SizedBox(
+              width: 40,
+              height: 40,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 2),
+                  child: Icon(
+                    Icons.arrow_back_ios_new,
+                    size: 18,
+                    color: AppColors.jebbyTextPrimary,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              'Edit profile',
+              style: _nunito(size: 24, weight: FontWeight.w800, height: 1.1),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _sectionTitle(String title) {
+    return Text(title, style: _nunito(size: 17, weight: FontWeight.w800));
+  }
+
+  Widget _fieldLabel(String text) {
+    return Text(
+      text,
+      style: _nunito(
+        size: 14,
+        weight: FontWeight.w700,
+        color: AppColors.jebbyTextMuted,
+      ),
+    );
+  }
+
+  TextStyle get _helperTextStyle => _nunito(
+        size: 13,
+        weight: FontWeight.w600,
+        color: AppColors.jebbyTextMuted,
+        height: 1.35,
+      );
+
+  Widget _photoCameraButton({
+    required VoidCallback onTap,
+    double size = 36,
+  }) {
+    return Material(
+      color: Colors.white,
+      shape: const CircleBorder(),
+      elevation: 1,
+      shadowColor: Colors.black26,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        splashColor: AppColors.jebbyBlue.withValues(alpha: 0.12),
+        child: SizedBox(
+          width: size,
+          height: size,
+          child: Icon(
+            Icons.photo_camera_outlined,
+            size: size * 0.48,
+            color: AppColors.jebbyBlue,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _profileAvatar({double radius = _profileAvatarRadius}) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          colors: [AppColors.jebbySoftBlue, AppColors.jebbyBlue],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: _image1 != null
+          ? CircleAvatar(
+              radius: radius,
+              backgroundColor: Colors.white,
+              backgroundImage: FileImage(_image1!),
+            )
+          : ProfileImage.circularAvatar(
+              radius: radius,
+              baseUrl: AppUrl.baseUrlM,
+              imagePath: imagesapi,
+            ),
+    );
+  }
+
+  Widget _publicPhotoSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.bottomCenter,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: SizedBox(
+                height: _coverPreviewHeight,
+                width: double.infinity,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    _coverPreview(),
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: _photoCameraButton(onTap: getGalleryImage),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -40,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  _profileAvatar(),
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: _photoCameraButton(
+                      onTap: getGalleryImage1,
+                      size: 34,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 48),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Cover photo',
+                    style: _nunito(size: 14, weight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Shown at the top of your earner profile.',
+                    style: _helperTextStyle,
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    'Profile photo',
+                    style: _nunito(size: 14, weight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Renters see this on your profile and listings.',
+                    textAlign: TextAlign.center,
+                    style: _helperTextStyle,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _coverPreview() {
+    if (_image != null) {
+      return Image.file(_image!, fit: BoxFit.cover);
+    }
+    if (ProfileImage.isValidPath(back_image_api)) {
+      return Image.network(
+        ProfileImage.resolveUrl(AppUrl.baseUrlM, back_image_api)!,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _coverPlaceholder(),
+      );
+    }
+    return _coverPlaceholder();
+  }
+
+  Widget _coverPlaceholder() {
+    return Container(
+      color: AppColors.earnerBannerBlue,
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.image_outlined,
+        size: 28,
+        color: AppColors.jebbyBlue.withValues(alpha: 0.55),
+      ),
+    );
+  }
+
+  Widget _nameField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _fieldLabel('Name'),
+        SizedBox(height: _spaceLabelToField),
+        TextField(
+          controller: _nameController,
+          style: _nunito(size: 16, weight: FontWeight.w600),
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: _cardBorder),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: AppColors.jebbyBlue, width: 1.5),
+            ),
+          ),
+        ),
+        SizedBox(height: _spaceFieldToHelper),
+        Text(
+          'Public location: ${_publicLocationLine()}',
+          style: _helperTextStyle,
+        ),
+      ],
+    );
+  }
+
+  Widget _privateDetailsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.lock_outline, size: 17, color: AppColors.jebbyTextMuted),
+            const SizedBox(width: 8),
+            Text('Private details', style: _nunito(size: 17, weight: FontWeight.w800)),
+          ],
+        ),
+        SizedBox(height: _spaceLabelToField),
+        Text(
+          'Your email and street address aren\'t shown on your profile.',
+          style: _helperTextStyle,
+        ),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.jebbySoftBlue,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppColors.jebbyBlue.withValues(alpha: 0.12),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: _privateDetailRow(
+                  label: 'Email',
+                  value: _emailController.text.trim().isEmpty
+                      ? 'No email saved'
+                      : _emailController.text.trim(),
+                ),
+              ),
+              Divider(
+                height: 1,
+                thickness: 1,
+                color: AppColors.jebbyBlue.withValues(alpha: 0.14),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _fieldLabel('Saved address'),
+                        SizedBox(height: _spaceLabelToField),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 36),
+                          child: Text(
+                            _savedAddressDisplay(),
+                            style: _nunito(
+                              size: 16,
+                              weight: FontWeight.w700,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: _editIconButton(
+                        onTap: () =>
+                            setState(() => _editingAddress = !_editingAddress),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (_editingAddress) ...[
+          SizedBox(height: _spaceLabelToField),
+          AddressAutocompleteField(
+            controller: _locationController,
+            resolvedAddress: _resolvedAddress,
+            onEditingStarted: _clearResolvedAddress,
+            onAddressSelected: _applySelectedAddress,
+            hint: 'Search for your address',
+            decoration: _profileAddressDecoration,
+          ),
+        ],
+        SizedBox(height: _spaceFieldToHelper),
+        Text(
+          'Default for new listings. Existing pickup locations stay the same.',
+          style: _helperTextStyle,
+        ),
+      ],
+    );
+  }
+
+  Widget _editIconButton({required VoidCallback onTap}) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Icon(
+            Icons.edit_outlined,
+            size: 20,
+            color: AppColors.jebbyBlue,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _privateDetailRow({
+    required String label,
+    required String value,
+    bool multiline = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _fieldLabel(label),
+        SizedBox(height: _spaceLabelToField),
+        Text(
+          value,
+          style: _nunito(
+            size: 16,
+            weight: FontWeight.w700,
+            height: multiline ? 1.35 : null,
+          ),
+        ),
+      ],
+    );
+  }
 
   void getUserData() {
     ApiRepository.shared.userCredential(
@@ -305,6 +745,254 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
+  bool _isSaving = false;
+
+  Future<void> _saveProfile() async {
+    if (_isSaving) return;
+
+    log('pressed tap');
+    Loader.show();
+    if (_nameController.text.isEmpty) {
+      Loader.hide();
+      showAppErrorSnackbar(
+        'Please Enter Name',
+        title: 'Required',
+      );
+      return;
+    }
+    final locationError = _locationValidationError();
+    if (locationError != null) {
+      Loader.hide();
+      showAppErrorSnackbar(
+        locationError,
+        title: 'Required',
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    try {
+      if (!ProfileImage.isValidPath(imagesapi)) {
+        if (_image == null) {
+          Loader.hide();
+          showAppErrorSnackbar(
+            'Please Upload Cover Picture',
+            title: 'Required',
+          );
+          return;
+        }
+        if (_image1 == null) {
+          Loader.hide();
+          showAppErrorSnackbar(
+            'Please Upload Profile Picture',
+            title: 'Required',
+          );
+          return;
+        }
+
+        final fileName = Uuid().v4();
+        final fileName1 = Uuid().v4();
+        final formData = d.FormData.fromMap({
+          'name': _nameController.text.toString(),
+          'email': _emailController.text.toString(),
+          'phone_number': '',
+          'address': _locationController.text.toString(),
+          'latitude': Latitiude,
+          'longitude': Longitude,
+          'user_id': id,
+          'file': [
+            await d.MultipartFile.fromFile(
+              _image1!.path,
+              filename: fileName1,
+            ),
+            await d.MultipartFile.fromFile(
+              _image!.path,
+              filename: fileName,
+            ),
+          ],
+        });
+        log(formData.fields.toString());
+
+        final response = await ApiRepository.shared.submitUserProfileMultipart(
+          formData,
+          isUpdate: false,
+        );
+        log(response.statusCode.toString());
+        Loader.hide();
+        await _finishProfileSave();
+        return;
+      }
+
+      late d.FormData formData;
+      if (role == '1') {
+        if (stripeEmailController.text.isEmpty) {
+          Loader.hide();
+          showAppErrorSnackbar(
+            'Payment fields cannot be empty',
+            title: 'Required',
+          );
+          return;
+        }
+
+        if (_image == null && _image1 != null) {
+          final fileName1 = p.basename(_image1!.path);
+          formData = d.FormData.fromMap({
+            'name': _nameController.text.toString(),
+            'email': _emailController.text.toString(),
+            'phone_number': '',
+            'address': _locationController.text.toString(),
+            'latitude': Latitiude,
+            'longitude': Longitude,
+            'user_id': id,
+            'pics': 1,
+            'file': await d.MultipartFile.fromFile(
+              _image1!.path,
+              filename: fileName1,
+            ),
+          });
+        } else if (_image1 == null && _image != null) {
+          final fileName = p.basename(_image!.path);
+          formData = d.FormData.fromMap({
+            'name': _nameController.text.toString(),
+            'email': _emailController.text.toString(),
+            'phone_number': '',
+            'address': _locationController.text.toString(),
+            'latitude': Latitiude,
+            'longitude': Longitude,
+            'user_id': id,
+            'pics': 2,
+            'file': await d.MultipartFile.fromFile(
+              _image!.path,
+              filename: fileName,
+            ),
+          });
+        } else if (_image1 == null && _image == null) {
+          log('both images are null');
+          formData = d.FormData.fromMap({
+            'name': _nameController.text.toString(),
+            'email': _emailController.text.toString(),
+            'phone_number': '',
+            'address': _locationController.text.toString(),
+            'latitude': Latitiude,
+            'longitude': Longitude,
+            'user_id': id,
+            'pics': 1,
+          });
+        } else {
+          log('hellooooo22');
+          final fileName = p.basename(_image!.path);
+          final fileName1 = p.basename(_image1!.path);
+          formData = d.FormData.fromMap({
+            'name': _nameController.text.toString(),
+            'email': _emailController.text.toString(),
+            'phone_number': '',
+            'address': _locationController.text.toString(),
+            'latitude': Latitiude,
+            'longitude': Longitude,
+            'user_id': id,
+            'pics': 3,
+            'file': [
+              await d.MultipartFile.fromFile(
+                _image1!.path,
+                filename: fileName1,
+              ),
+              await d.MultipartFile.fromFile(
+                _image!.path,
+                filename: fileName,
+              ),
+            ],
+          });
+        }
+        log(formData.fields.toString());
+      } else {
+        if (_image == null && _image1 != null) {
+          final fileName1 = p.basename(_image1!.path);
+          formData = d.FormData.fromMap({
+            'name': _nameController.text.toString(),
+            'email': _emailController.text.toString(),
+            'phone_number': '',
+            'address': _locationController.text.toString(),
+            'latitude': Latitiude,
+            'longitude': Longitude,
+            'user_id': id,
+            'pics': 1,
+            'file': await d.MultipartFile.fromFile(
+              _image1!.path,
+              filename: fileName1,
+            ),
+          });
+        } else if (_image1 == null && _image != null) {
+          final fileName = p.basename(_image!.path);
+          formData = d.FormData.fromMap({
+            'name': _nameController.text.toString(),
+            'email': _emailController.text.toString(),
+            'phone_number': '',
+            'address': _locationController.text.toString(),
+            'latitude': Latitiude,
+            'longitude': Longitude,
+            'user_id': id,
+            'pics': 2,
+            'file': await d.MultipartFile.fromFile(
+              _image!.path,
+              filename: fileName,
+            ),
+          });
+        } else if (_image1 == null && _image == null) {
+          log('both images are null');
+          formData = d.FormData.fromMap({
+            'name': _nameController.text.toString(),
+            'email': _emailController.text.toString(),
+            'phone_number': '',
+            'address': _locationController.text.toString(),
+            'latitude': Latitiude,
+            'longitude': Longitude,
+            'user_id': id,
+            'pics': 1,
+          });
+        } else {
+          log('hellooooo22');
+          final fileName = p.basename(_image!.path);
+          final fileName1 = p.basename(_image1!.path);
+          formData = d.FormData.fromMap({
+            'name': _nameController.text.toString(),
+            'email': _emailController.text.toString(),
+            'phone_number': '',
+            'address': _locationController.text.toString(),
+            'latitude': Latitiude,
+            'longitude': Longitude,
+            'user_id': id,
+            'pics': 3,
+            'file': [
+              await d.MultipartFile.fromFile(
+                _image1!.path,
+                filename: fileName1,
+              ),
+              await d.MultipartFile.fromFile(
+                _image!.path,
+                filename: fileName,
+              ),
+            ],
+          });
+        }
+        log(formData.fields.toString());
+      }
+
+      final response = await ApiRepository.shared.submitUserProfileMultipart(
+        formData,
+        isUpdate: true,
+      );
+      log(response.statusCode.toString());
+      Loader.hide();
+      await _finishProfileSave();
+    } catch (e) {
+      Loader.hide();
+      log('expectation Caught: $e');
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -318,664 +1006,70 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final sp = context.watch<SignInProvider>();
-    final usp = context.watch<UserViewModel>();
-
-    log(
-      "For Providersssssssssssssss " +
-          usp.name.toString() +
-          "For Providersssssssssssssss " +
-          sp.name.toString(),
-    );
-    _emailController.text = sp.email.toString();
-    double res_width = MediaQuery.of(context).size.width;
-    double res_height = MediaQuery.of(context).size.height;
-    return Theme(
-      data: Theme.of(
-        context,
-      ).copyWith(textTheme: GoogleFonts.interTextTheme(Theme.of(context).textTheme)),
-      child: Scaffold(
-      backgroundColor: const Color(0xFFF2F2F2),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFF2F2F2),
-        surfaceTintColor: Colors.transparent,
-        scrolledUnderElevation: 0,
-        elevation: 0,
-        centerTitle: true,
-        title: Text(
-          'Edit Profile',
-          style: GoogleFonts.inter(
-            fontWeight: FontWeight.w700,
-            color: Colors.black87,
-            fontSize: 18,
-          ),
-        ),
-        leading: InkWell(
-          onTap: () {
-            Get.back();
-          },
-          borderRadius: BorderRadius.circular(50),
-          child: const Icon(
-            Icons.arrow_back_ios_new,
-            color: Colors.black,
-            size: 20,
-          ),
-        ),
-      ),
-      body: Container(
-        width: double.infinity,
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Container(
-                width: res_width * 0.9,
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+              child: _pageHeader(),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: res_height * 0.01),
+                    _sectionTitle('Public profile'),
+                    const SizedBox(height: 8),
+                    _publicPhotoSection(),
+                    const SizedBox(height: 12),
+                    _nameField(),
+                    const SizedBox(height: 20),
+                    _privateDetailsSection(),
+                    const SizedBox(height: 28),
                     SizedBox(
-                      height: 222,
                       width: double.infinity,
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        alignment: Alignment.topCenter,
-                        children: [
-                          GestureDetector(
-                            onTap: getGalleryImage,
-                            child: Container(
-                              width: double.infinity,
-                              height: 170,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                              child:
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(24),
-                                    child: _image != null
-                                        ? Image.file(
-                                            _image!.absolute,
-                                            fit: BoxFit.cover,
-                                          )
-                                        : !ProfileImage.isValidPath(back_image_api)
-                                            ? Image.asset(
-                                                "assets/images/placeholder.png",
-                                                fit: BoxFit.cover,
-                                              )
-                                            : Image.network(
-                                                ProfileImage.resolveUrl(AppUrl.baseUrlM, back_image_api)!,
-                                                fit: BoxFit.cover,
-                                                loadingBuilder: (context, child, loadingProgress) {
-                                                  if (loadingProgress == null) return child;
-                                                  return Image.asset(
-                                                    "assets/images/placeholder.png",
-                                                    fit: BoxFit.cover,
-                                                  );
-                                                },
-                                                errorBuilder: (context, error, stackTrace) {
-                                                  return Image.asset(
-                                                    "assets/images/placeholder.png",
-                                                    fit: BoxFit.cover,
-                                                  );
-                                                },
-                                              ),
-                                  ),
-                            ),
+                      height: 52,
+                      child: FilledButton(
+                        onPressed: _isSaving ? null : _saveProfile,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.jebbyBlue,
+                          disabledBackgroundColor:
+                              AppColors.jebbyBlue.withValues(alpha: 0.6),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
                           ),
-                          Positioned(
-                            top: 118,
-                            right: 14,
-                            child: GestureDetector(
-                              onTap: getGalleryImage,
-                              child: Container(
-                                height: 34,
-                                width: 34,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFF6AE02),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.camera_alt_rounded,
+                        ),
+                        child: _isSaving
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
                                   color: Colors.white,
-                                  size: 18,
+                                ),
+                              )
+                            : Text(
+                                'Save changes',
+                                style: _nunito(
+                                  size: 17,
+                                  weight: FontWeight.w800,
+                                  color: Colors.white,
                                 ),
                               ),
-                            ),
-                          ),
-                          Positioned(
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            child: Center(
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  customBorder: const CircleBorder(),
-                                  onTap: getGalleryImage1,
-                                  child: Stack(
-                                    clipBehavior: Clip.none,
-                                    children: [
-                                      _image1 != null
-                                          ? ClipOval(
-                                              child: SizedBox(
-                                                width: 100,
-                                                height: 100,
-                                                child: Image.file(
-                                                  _image1!,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                            )
-                                          : ProfileImage.circularAvatar(
-                                              radius: 50,
-                                              baseUrl: AppUrl.baseUrlM,
-                                              imagePath: imagesapi,
-                                            ),
-                                      Positioned(
-                                        bottom: 0,
-                                        right: 0,
-                                        child: Container(
-                                          height: 32,
-                                          width: 32,
-                                          alignment: Alignment.center,
-                                          decoration: const BoxDecoration(
-                                            color: Color(0xFFF6AE02),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(
-                                            Icons.camera_alt_rounded,
-                                            color: Colors.white,
-                                            size: 16,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: res_height * 0.01),
-                    Text(
-                      () {
-                        final name = nameapi.toString().trim();
-                        if (name.isNotEmpty) return name;
-                        final spName = sp.name?.toString().trim() ?? '';
-                        if (spName.isNotEmpty) return spName;
-                        return fullname.toString();
-                      }(),
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 24,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "Verified User",
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.w400,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    Txtfld("Name", _nameController, ""),
-                    TxtfldforEmail(
-                      "Email",
-                      _emailController,
-                      _emailController.text.toString(),
-                    ),
-
-                    SizedBox(height: res_height * 0.001),
-                    Container(
-                      width: res_width * 0.9,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: res_height * 0.02),
-                          Text(
-                            'Location',
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF2E2E2E),
-                            ),
-                          ),
-                          SizedBox(height: res_height * 0.005),
-                          AddressAutocompleteField(
-                            controller: _locationController,
-                            resolvedAddress: _resolvedAddress,
-                            onEditingStarted: _clearResolvedAddress,
-                            onAddressSelected: _applySelectedAddress,
-                            hint: 'Search for your address',
-                            decoration: _profileAddressDecoration,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    SizedBox(height: res_height * 0.02),
-                    GestureDetector(
-                      onTap: () async {
-                        log("pressed tap");
-                        Loader.show();
-                        if (_nameController.text.isEmpty) {
-                          Loader.hide();
-                          showAppErrorSnackbar(
-                            'Please Enter Name',
-                            title: 'Required',
-                          );
-                          return;
-                        }
-                        final locationError = _locationValidationError();
-                        if (locationError != null) {
-                          Loader.hide();
-                          showAppErrorSnackbar(
-                            locationError,
-                            title: 'Required',
-                          );
-                          return;
-                        }
-                        if (!ProfileImage.isValidPath(imagesapi)) {
-                          try {
-                            if (_image == null) {
-                              Loader.hide();
-                              showAppErrorSnackbar(
-                                'Please Upload Cover Picture',
-                                title: 'Required',
-                              );
-                              return;
-                            }
-                            if (_image1 == null) {
-                              Loader.hide();
-                              showAppErrorSnackbar(
-                                'Please Upload Profile Picture',
-                                title: 'Required',
-                              );
-                              return;
-                            } else {
-                              String fileName = Uuid().v4();
-                              String fileName1 = Uuid().v4();
-                              if (role == "1") {
-                                // vendor profile insert
-                                d.FormData formData = new d.FormData.fromMap({
-                                  'name': _nameController.text.toString(),
-                                  'email': _emailController.text.toString(),
-                                  'phone_number': '',
-                                  'address':
-                                      _locationController.text.toString(),
-                                  'latitude': Latitiude,
-                                  'longitude': Longitude,
-                                  'user_id': id,
-                                  "file": [
-                                    await d.MultipartFile.fromFile(
-                                      _image1!.path,
-                                      filename: fileName1,
-                                    ),
-                                    await d.MultipartFile.fromFile(
-                                      _image!.path,
-                                      filename: fileName,
-                                    ),
-                                  ],
-                                });
-                                log(formData.fields.toString());
-
-                                d.Response response =
-                                    await ApiRepository.shared
-                                        .submitUserProfileMultipart(
-                                  formData,
-                                  isUpdate: false,
-                                );
-                                log(response.statusCode.toString());
-                                Loader.hide();
-                                await _finishProfileSave();
-                                //       content: new Text(
-                              }
-                              // client profile insert
-                              else {
-                                d.FormData formData = new d.FormData.fromMap({
-                                  'name': _nameController.text.toString(),
-                                  'email': _emailController.text.toString(),
-                                  'phone_number': '',
-                                  'address':
-                                      _locationController.text.toString(),
-                                  'latitude': Latitiude,
-                                  'longitude': Longitude,
-                                  'user_id': id,
-                                  "file": [
-                                    await d.MultipartFile.fromFile(
-                                      _image1!.path,
-                                      filename: fileName1,
-                                    ),
-                                    await d.MultipartFile.fromFile(
-                                      _image!.path,
-                                      filename: fileName,
-                                    ),
-                                  ],
-                                });
-                                log(formData.fields.toString());
-
-                                d.Response response =
-                                    await ApiRepository.shared
-                                        .submitUserProfileMultipart(
-                                  formData,
-                                  isUpdate: false,
-                                );
-                                log(response.statusCode.toString());
-                                Loader.hide();
-                                await _finishProfileSave();
-                              }
-                            }
-                          } catch (e) {
-                            Loader.hide();
-                            log("expectation Caugcht: 1 " + e.toString());
-                          }
-                        } else {
-                          try {
-                            late d.FormData formData;
-                            if (role == "1") {
-                              // for vendor profile update
-                              if (stripeEmailController.text.isNotEmpty) {
-                                if (_image == null && _image1 != null) {
-                                  String fileName1 = p.basename(_image1!.path);
-                                  formData = new d.FormData.fromMap({
-                                    'name': _nameController.text.toString(),
-                                    'email': _emailController.text.toString(),
-                                    'phone_number': '',
-                                    'address':
-                                        _locationController.text.toString(),
-                                    'latitude': Latitiude,
-                                    'longitude': Longitude,
-                                    'user_id': id,
-                                    "pics": 1,
-                                    "file": await d.MultipartFile.fromFile(
-                                      _image1!.path,
-                                      filename: fileName1,
-                                    ),
-                                  });
-                                } else if (_image1 == null && _image != null) {
-                                  String fileName = p.basename(_image!.path);
-                                  formData = new d.FormData.fromMap({
-                                    'name': _nameController.text.toString(),
-                                    'email': _emailController.text.toString(),
-                                    'phone_number': '',
-                                    'address':
-                                        _locationController.text.toString(),
-                                    'latitude': Latitiude,
-                                    'longitude': Longitude,
-                                    'user_id': id,
-                                    "pics": 2,
-                                    "file": await d.MultipartFile.fromFile(
-                                      _image!.path,
-                                      filename: fileName,
-                                    ),
-                                  });
-                                } else if (_image1 == null && _image == null) {
-                                  log("both images are null");
-                                  formData = new d.FormData.fromMap({
-                                    'name': _nameController.text.toString(),
-                                    'email': _emailController.text.toString(),
-                                    'phone_number': '',
-                                    'address':
-                                        _locationController.text.toString(),
-                                    'latitude': Latitiude,
-                                    'longitude': Longitude,
-                                    'user_id': id,
-
-                                    "pics": 1,
-                                  });
-                                } else {
-                                  log("hellooooo22");
-                                  String fileName = p.basename(_image!.path);
-                                  String fileName1 = p.basename(_image1!.path);
-                                  formData = new d.FormData.fromMap({
-                                    'name': _nameController.text.toString(),
-                                    'email': _emailController.text.toString(),
-                                    'phone_number': '',
-                                    'address':
-                                        _locationController.text.toString(),
-                                    'latitude': Latitiude,
-                                    'longitude': Longitude,
-                                    'user_id': id,
-                                    "pics": 3,
-                                    "file": [
-                                      await d.MultipartFile.fromFile(
-                                        _image1!.path,
-                                        filename: fileName1,
-                                      ),
-                                      await d.MultipartFile.fromFile(
-                                        _image!.path,
-                                        filename: fileName,
-                                      ),
-                                    ],
-                                  });
-                                }
-                                log(formData.fields.toString());
-                              } else {
-                                Loader.hide();
-                                showAppErrorSnackbar(
-                                  'Payment fields cannot be empty',
-                                  title: 'Required',
-                                );
-                              }
-                            } else {
-                              if (_image == null && _image1 != null) {
-                                String fileName1 = p.basename(_image1!.path);
-                                formData = new d.FormData.fromMap({
-                                  'name': _nameController.text.toString(),
-                                  'email': _emailController.text.toString(),
-                                  'phone_number': '',
-                                  'address':
-                                      _locationController.text.toString(),
-                                  'latitude': Latitiude,
-                                  'longitude': Longitude,
-                                  'user_id': id,
-                                  "pics": 1,
-                                  "file": await d.MultipartFile.fromFile(
-                                    _image1!.path,
-                                    filename: fileName1,
-                                  ),
-                                });
-                              } else if (_image1 == null && _image != null) {
-                                String fileName = p.basename(_image!.path);
-                                formData = new d.FormData.fromMap({
-                                  'name': _nameController.text.toString(),
-                                  'email': _emailController.text.toString(),
-                                  'phone_number': '',
-                                  'address':
-                                      _locationController.text.toString(),
-                                  'latitude': Latitiude,
-                                  'longitude': Longitude,
-                                  'user_id': id,
-                                  "pics": 2,
-                                  "file": await d.MultipartFile.fromFile(
-                                    _image!.path,
-                                    filename: fileName,
-                                  ),
-                                });
-                              } else if (_image1 == null && _image == null) {
-                                log("both images are null");
-                                formData = new d.FormData.fromMap({
-                                  'name': _nameController.text.toString(),
-                                  'email': _emailController.text.toString(),
-                                  'phone_number': '',
-                                  'address':
-                                      _locationController.text.toString(),
-                                  'latitude': Latitiude,
-                                  'longitude': Longitude,
-                                  'user_id': id,
-
-                                  "pics": 1,
-                                });
-                              } else {
-                                log("hellooooo22");
-                                String fileName = p.basename(_image!.path);
-                                String fileName1 = p.basename(_image1!.path);
-                                formData = new d.FormData.fromMap({
-                                  'name': _nameController.text.toString(),
-                                  'email': _emailController.text.toString(),
-                                  'phone_number': '',
-                                  'address':
-                                      _locationController.text.toString(),
-                                  'latitude': Latitiude,
-                                  'longitude': Longitude,
-                                  'user_id': id,
-                                  "pics": 3,
-                                  "file": [
-                                    await d.MultipartFile.fromFile(
-                                      _image1!.path,
-                                      filename: fileName1,
-                                    ),
-                                    await d.MultipartFile.fromFile(
-                                      _image!.path,
-                                      filename: fileName,
-                                    ),
-                                  ],
-                                });
-                              }
-                              log(formData.fields.toString());
-                            }
-                            d.Response response =
-                                await ApiRepository.shared
-                                    .submitUserProfileMultipart(
-                              formData,
-                              isUpdate: true,
-                            );
-                            log(response.statusCode.toString());
-                            Loader.hide();
-                            await _finishProfileSave();
-                          } catch (e) {
-                            Loader.hide();
-                            log("expectation Caugch: 2 " + e.toString());
-                          }
-                        }
-
-                      },
-                      child: Container(
-                        height: 58,
-                        width: res_width * 0.9,
-                        child: Center(
-                          child: Text(
-                            'Save',
-                            style: GoogleFonts.inter(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 18,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF6AE02),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: res_height * 0.02),
-            ],
-          ),
+            ),
+          ],
         ),
-      ),
-    ),
-    );
-  }
-
-  Txtfld(txt, _controller, hintText) {
-    double res_width = MediaQuery.of(context).size.width;
-    double res_height = MediaQuery.of(context).size.height;
-    return Container(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(height: res_height * 0.02),
-          Text(
-            txt,
-            style: GoogleFonts.inter(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF2E2E2E),
-            ),
-          ),
-          SizedBox(height: res_height * 0.005),
-          Container(
-            height: 48,
-            width: res_width * 0.9,
-            child: TextField(
-              maxLines: 1,
-              controller: _controller,
-              decoration: InputDecoration(
-                hintText: hintText,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 16,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16.0),
-                ),
-                enabledBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFCECED3), width: 1),
-                  borderRadius: BorderRadius.all(Radius.circular(16)),
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFCECED3), width: 1),
-                  borderRadius: BorderRadius.all(Radius.circular(16)),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  TxtfldforEmail(txt, _controller, placholder) {
-    double res_width = MediaQuery.of(context).size.width;
-    double res_height = MediaQuery.of(context).size.height;
-    return Container(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(height: res_height * 0.02),
-          Text(
-            txt,
-            style: GoogleFonts.inter(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF2E2E2E),
-            ),
-          ),
-          SizedBox(height: res_height * 0.005),
-          Container(
-            height: 48,
-            width: res_width * 0.9,
-            child: TextField(
-              readOnly: true,
-              controller: _controller,
-              decoration: InputDecoration(
-                hintText: placholder,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 16,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16.0),
-                ),
-                enabledBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFCECED3), width: 1),
-                  borderRadius: BorderRadius.all(Radius.circular(16)),
-                ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFFCECED3), width: 1),
-                  borderRadius: BorderRadius.all(Radius.circular(16)),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

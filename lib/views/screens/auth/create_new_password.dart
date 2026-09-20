@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jebby/constants/color.dart';
@@ -15,7 +13,6 @@ class CreateNewPasswordScreen extends StatefulWidget {
   final String? otp;
 
   static const String heroAsset = LoginScreen.heroAsset;
-  static const String logoAsset = LoginScreen.logoAsset;
 
   @override
   State<CreateNewPasswordScreen> createState() =>
@@ -120,34 +117,24 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
     final authViewModel = context.watch<AuthViewModel>();
     final textScale = MediaQuery.textScalerOf(context);
     final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
-    final logoSize = keyboardOpen ? 74.0 : 88.0;
-    final logoRadius = keyboardOpen ? 17.0 : 20.0;
-    final wordmarkSize = keyboardOpen ? 21.0 : 24.0;
-    const logoLift = 15.0;
-    const heroImageLift = 40.0;
+    final compact = MediaQuery.sizeOf(context).height < 720;
+    final showBackButton = Navigator.of(context).canPop();
 
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final cardHeight = constraints.maxHeight * 0.72;
+          final cardHeight = constraints.maxHeight * (compact ? 0.78 : 0.72);
 
           return Stack(
             fit: StackFit.expand,
             children: [
               Positioned.fill(
-                child: Transform.translate(
-                  offset: const Offset(0, -heroImageLift),
-                  child: ImageFiltered(
-                    imageFilter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                    child: Image.asset(
-                      CreateNewPasswordScreen.heroAsset,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.topCenter,
-                    ),
-                  ),
+                child: Image.asset(
+                  CreateNewPasswordScreen.heroAsset,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
                 ),
               ),
               Positioned.fill(
@@ -157,92 +144,47 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.black.withValues(alpha: 0.08),
-                        Colors.black.withValues(alpha: 0.28),
-                        Colors.black.withValues(alpha: 0.55),
+                        Colors.black.withValues(alpha: 0.06),
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.18),
+                        Colors.black.withValues(alpha: 0.42),
                       ],
-                      stops: const [0.0, 0.55, 1.0],
+                      stops: const [0.0, 0.45, 0.72, 1.0],
                     ),
                   ),
                 ),
               ),
-              Positioned(
-                top: 0,
-                left: 0,
-                child: SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 16, top: 8),
-                    child: Material(
-                      color: Colors.white,
-                      shape: const CircleBorder(),
-                      clipBehavior: Clip.antiAlias,
-                      child: InkWell(
-                        onTap: Get.back,
-                        customBorder: const CircleBorder(),
-                        splashColor: _rippleSplash,
-                        highlightColor: _rippleHighlight,
-                        child: const Padding(
-                          padding: EdgeInsets.all(10),
-                          child: Icon(
-                            Icons.arrow_back_ios_new,
-                            color: Colors.black,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: cardHeight + logoLift,
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOut,
-                        width: logoSize,
-                        height: logoSize,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(logoRadius),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.12),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
+              if (showBackButton)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  child: SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 16, top: 8),
+                      child: Material(
+                        color: Colors.black.withValues(alpha: 0.7),
+                        shape: const CircleBorder(),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: Get.back,
+                          customBorder: const CircleBorder(),
+                          splashColor: Colors.white.withValues(alpha: 0.14),
+                          highlightColor: Colors.white.withValues(alpha: 0.08),
+                          child: const SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: Icon(
+                              Icons.arrow_back_ios_new,
+                              color: Colors.white,
+                              size: 22,
                             ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(logoRadius),
-                          child: Image.asset(
-                            CreateNewPasswordScreen.logoAsset,
-                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
-                      SizedBox(height: keyboardOpen ? 4 : 5),
-                      AnimatedDefaultTextStyle(
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOut,
-                        style: TextStyle(
-                          fontFamily: 'Nunito',
-                          fontWeight: FontWeight.w800,
-                          fontSize: textScale.scale(wordmarkSize),
-                          color: Colors.white,
-                          letterSpacing: 0.2,
-                        ),
-                        child: const Text('Jebby'),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
               Positioned(
                 left: 0,
                 right: 0,
@@ -250,8 +192,8 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                 height: cardHeight,
                 child: ClipRRect(
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
                   ),
                   child: Container(
                     color: Colors.white,
@@ -266,34 +208,35 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const _SecurityShieldIcon(),
-                          const SizedBox(height: 16),
+                          SizedBox(height: compact ? 12 : 16),
                           Text(
-                            'Create new password',
+                            'Create a new password',
                             style: TextStyle(
                               fontFamily: 'Nunito',
                               fontWeight: FontWeight.w800,
-                              fontSize: textScale.scale(28),
+                              fontSize: textScale.scale(compact ? 26 : 28),
                               color: AppColors.jebbyTextPrimary,
                               height: 1.15,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: compact ? 6 : 8),
                           Text(
-                            'Create a new password for your account.',
+                            'Choose a new password for your Jebby account.',
                             style: TextStyle(
                               fontFamily: 'Nunito',
                               fontWeight: FontWeight.w400,
                               fontSize: textScale.scale(15),
                               color: AppColors.jebbyTextMuted,
-                              height: 1.45,
+                              height: 1.35,
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          SizedBox(height: compact ? 20 : 24),
                           _PasswordField(
-                            label: 'Password',
+                            label: 'New password',
                             controller: _passwordController,
-                            hintText: 'Create a password',
+                            hintText: 'Enter a new password',
                             textScale: textScale,
+                            compact: compact,
                             prefixIcon: Icons.lock_outline,
                             obscureText: _obscurePassword,
                             textInputAction: TextInputAction.next,
@@ -333,7 +276,7 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const SizedBox(height: 12),
+                                  SizedBox(height: compact ? 10 : 12),
                                   _passwordRequirementRow(
                                     label: 'Minimum 8 characters',
                                     met: requirements.minLength,
@@ -363,12 +306,13 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                               );
                             },
                           ),
-                          const SizedBox(height: 16),
+                          SizedBox(height: compact ? 12 : 14),
                           _PasswordField(
-                            label: 'Confirm password',
+                            label: 'Confirm new password',
                             controller: _confirmPasswordController,
                             hintText: 'Re-enter your password',
                             textScale: textScale,
+                            compact: compact,
                             prefixIcon: Icons.lock_outline,
                             obscureText: _obscureConfirmPassword,
                             textInputAction: TextInputAction.done,
@@ -391,7 +335,7 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          SizedBox(height: compact ? 20 : 24),
                           ListenableBuilder(
                             listenable: Listenable.merge([
                               _passwordController,
@@ -414,7 +358,9 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                                         .withValues(alpha: 0.55),
                                     foregroundColor: Colors.white,
                                     disabledForegroundColor: Colors.white,
-                                    minimumSize: const Size.fromHeight(52),
+                                    minimumSize: Size.fromHeight(
+                                      compact ? 48 : 52,
+                                    ),
                                     elevation: 0,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(14),
@@ -431,7 +377,7 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                                             ),
                                           )
                                           : Text(
-                                            'Save Password',
+                                            'Update Password',
                                             style: TextStyle(
                                               fontFamily: 'Nunito',
                                               fontWeight: FontWeight.w700,
@@ -441,6 +387,33 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                                 ),
                               );
                             },
+                          ),
+                          SizedBox(height: compact ? 12 : 16),
+                          Center(
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => Get.off(() => const LoginScreen()),
+                                borderRadius: BorderRadius.circular(8),
+                                splashColor: _rippleSplash,
+                                highlightColor: _rippleHighlight,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 8,
+                                  ),
+                                  child: Text(
+                                    'Back to Log In',
+                                    style: TextStyle(
+                                      fontFamily: 'Nunito',
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: textScale.scale(14),
+                                      color: AppColors.jebbyBlue,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -462,17 +435,14 @@ class _SecurityShieldIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 44,
-      height: 44,
+      width: 50,
+      height: 50,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Icon(
-            Icons.shield_outlined,
-            size: 44,
-            color: AppColors.jebbyBlue.withValues(alpha: 0.85),
-          ),
-          Icon(Icons.lock, size: 16, color: AppColors.jebbyAccentOrange),
+          Icon(Icons.shield, size: 44, color: AppColors.lightBlue),
+          Icon(Icons.shield_outlined, size: 50, color: AppColors.jebbyBlue),
+          Icon(Icons.check, size: 16, color: AppColors.jebbyBlue),
         ],
       ),
     );
@@ -485,6 +455,7 @@ class _PasswordField extends StatelessWidget {
     required this.controller,
     required this.hintText,
     required this.textScale,
+    required this.compact,
     this.prefixIcon,
     this.suffixIcon,
     this.obscureText = false,
@@ -497,6 +468,7 @@ class _PasswordField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
   final TextScaler textScale;
+  final bool compact;
   final IconData? prefixIcon;
   final Widget? suffixIcon;
   final bool obscureText;
@@ -518,7 +490,7 @@ class _PasswordField extends StatelessWidget {
             color: AppColors.jebbyTextPrimary,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: compact ? 6 : 8),
         TextFormField(
           controller: controller,
           focusNode: focusNode,
@@ -533,6 +505,7 @@ class _PasswordField extends StatelessWidget {
             color: AppColors.jebbyTextPrimary,
           ),
           decoration: InputDecoration(
+            isDense: compact,
             hintText: hintText,
             hintStyle: TextStyle(
               fontFamily: 'Nunito',
@@ -551,9 +524,9 @@ class _PasswordField extends StatelessWidget {
             suffixIcon: suffixIcon,
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(
+            contentPadding: EdgeInsets.symmetric(
               horizontal: 14,
-              vertical: 14,
+              vertical: compact ? 12 : 14,
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),

@@ -5,8 +5,8 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:jebby/constants/color.dart';
+import 'package:jebby/utils/earner_navigation.dart';
 import 'package:jebby/views/screens/reservations/reservation_detail.dart';
-import 'package:jebby/views/screens/vendors/vendor_home.dart';
 import 'package:provider/provider.dart';
 
 import '../../../services/provider/sign_in_provider.dart';
@@ -24,12 +24,41 @@ class VendorMyOrdersScreen extends StatefulWidget {
 }
 
 class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
-  static const Color _pageBg = Color(0xFFF3F3F5);
-  static const Color _subtitleGrey = Color(0xFF72747A);
-  static const Color _pillTrack = Color(0xFFE8E8EC);
+  static const String _emptyPlaceholderAsset =
+      'assets/images/myorders-placeholder.png';
+
+  static const Color _badgeActiveBg = AppColors.jebbySoftBlue;
+  static const Color _badgeActiveFg = AppColors.jebbyBlue;
+  static const Color _badgeCompletedBg = AppColors.earnerInfoBlue;
+  static const Color _badgeCompletedFg = AppColors.jebbyBlue;
+  static const Color _badgeNeutralBg = AppColors.jebbySoftBlue;
+  static const Color _badgeNeutralFg = AppColors.jebbyTextMuted;
 
   /// 0 = All, 1 = Requests (booking requested), 2 = Active (in progress), 3 = Completed
   int selectedTab = 0;
+
+  TextStyle _nunito({
+    required double size,
+    FontWeight weight = FontWeight.w400,
+    Color? color,
+    double? height,
+  }) {
+    return TextStyle(
+      fontFamily: 'Nunito',
+      fontSize: size,
+      fontWeight: weight,
+      color: color ?? AppColors.jebbyTextPrimary,
+      height: height,
+    );
+  }
+
+  void _handleBack() {
+    if (Get.key.currentState?.canPop() ?? false) {
+      Get.back();
+    } else {
+      EarnerNavigation.goHome();
+    }
+  }
 
   EdgeInsets _listBottomPadding(BuildContext context) {
     return EdgeInsets.only(
@@ -296,8 +325,8 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
     final busy = orderIdInt != null && _actionLoadingOrderId == orderIdInt;
     return _VendorOrderCardShell(
       badgeLabel: OrderStatus.renterBadgeLabel(OrderStatus.bookingRequested),
-      badgeBg: const Color(0xFFFFF3E0),
-      badgeFg: const Color(0xFFE65100),
+      badgeBg: _badgeActiveBg,
+      badgeFg: _badgeActiveFg,
       displayPrice: price,
       title: productName,
       metaLine: 'Requested by $renter · Return due: $due',
@@ -311,9 +340,9 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
               child: FilledButton(
                 onPressed: busy ? null : () => _approveBooking(orderId, productName),
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primaryColor,
+                  backgroundColor: AppColors.jebbyBlue,
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor: AppColors.primaryColor.withValues(alpha: 0.7),
+                  disabledBackgroundColor: AppColors.jebbyBlue.withValues(alpha: 0.7),
                   disabledForegroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -349,61 +378,169 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
     );
   }
 
-  Widget _buildPillTabs() {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: _pillTrack,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Row(
-        children: [
-          _pillTab(0, 'All'),
-          _pillTab(1, 'Requests'),
-          _pillTab(2, 'Active'),
-          _pillTab(3, 'Completed'),
-        ],
-      ),
+  Widget _pageHeader() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _backButton(),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'My orders',
+                  style: _nunito(
+                    size: 28,
+                    weight: FontWeight.w800,
+                    color: AppColors.jebbyTextPrimary,
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Manage bookings for your items.',
+                  style: _nunito(
+                    size: 15,
+                    weight: FontWeight.w600,
+                    color: AppColors.jebbyTextMuted,
+                    height: 1.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _pillTab(int index, String label) {
-    final selected = selectedTab == index;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => selectedTab = index),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: selected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow:
-                selected
-                    ? [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ]
-                    : null,
-          ),
+  Widget _backButton() {
+    return Material(
+      color: AppColors.jebbySoftBlue,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: _handleBack,
+        splashColor: AppColors.jebbyBlue.withValues(alpha: 0.12),
+        highlightColor: AppColors.jebbyBlue.withValues(alpha: 0.06),
+        child: SizedBox(
+          width: 40,
+          height: 40,
           child: Center(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                label,
-                maxLines: 1,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  color: selected ? Colors.black : _subtitleGrey,
-                ),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 2),
+              child: Icon(
+                Icons.arrow_back_ios_new,
+                size: 18,
+                color: AppColors.jebbyTextPrimary,
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _filterChips() {
+    return Row(
+      children: [
+        Expanded(child: _filterChip(label: 'All', index: 0)),
+        const SizedBox(width: 6),
+        Expanded(child: _filterChip(label: 'Requests', index: 1)),
+        const SizedBox(width: 6),
+        Expanded(child: _filterChip(label: 'Active', index: 2)),
+        const SizedBox(width: 6),
+        Expanded(child: _filterChip(label: 'Completed', index: 3)),
+      ],
+    );
+  }
+
+  Widget _filterChip({required String label, required int index}) {
+    final selected = selectedTab == index;
+    return Material(
+      color: selected ? AppColors.jebbyBlue : AppColors.jebbySoftBlue,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: () => setState(() => selectedTab = index),
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 40),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: _nunito(
+              size: 13,
+              weight: FontWeight.w700,
+              color: selected ? Colors.white : AppColors.jebbyTextPrimary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _emptyState({
+    required String title,
+    required String message,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Image.asset(
+                    _emptyPlaceholderAsset,
+                    width: 240,
+                    height: 240,
+                    fit: BoxFit.contain,
+                    gaplessPlayback: true,
+                    errorBuilder: (_, __, ___) => Icon(
+                      Icons.event_seat_outlined,
+                      size: 120,
+                      color: AppColors.jebbyBlue.withValues(alpha: 0.35),
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: _nunito(
+                      size: 22,
+                      weight: FontWeight.w800,
+                      color: AppColors.jebbyTextPrimary,
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: _nunito(
+                      size: 15,
+                      weight: FontWeight.w600,
+                      color: AppColors.jebbyTextMuted,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -448,35 +585,33 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
           child: Text(
             'Something went wrong while loading orders.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(fontSize: 15, color: _subtitleGrey),
+            style: _nunito(
+              size: 15,
+              weight: FontWeight.w600,
+              color: AppColors.jebbyTextMuted,
+            ),
           ),
         ),
       );
     }
     if (isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primaryColor),
-      );
-    }
-    if (isEmpty) {
       return Center(
-        child: Text(
-          'No orders found',
-          style: GoogleFonts.inter(fontSize: 15, color: _subtitleGrey),
+        child: CircularProgressIndicator(
+          color: AppColors.jebbyBlue,
+          strokeWidth: 2.4,
         ),
       );
     }
 
-    switch (selectedTab) {
-      case 0:
-        return _allOrdersList();
-      case 1:
-        return _newOrdersList();
-      case 2:
-        return _pendingOrdersList();
-      default:
-        return _completedOrdersList();
+    final tabOrders = _ordersForSelectedTab();
+    if (tabOrders.isEmpty) {
+      return _emptyState(
+        title: 'No orders yet',
+        message: 'Booking requests will appear here when renting opens.',
+      );
     }
+
+    return _ordersList(tabOrders);
   }
 
   List<dynamic> _ordersForSelectedTab() {
@@ -494,14 +629,6 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
   }
 
   Widget _ordersList(List<dynamic> list) {
-    if (list.isEmpty) {
-      return Center(
-        child: Text(
-          'No orders in this tab',
-          style: GoogleFonts.inter(fontSize: 15, color: _subtitleGrey),
-        ),
-      );
-    }
     return ListView.separated(
       padding: _listBottomPadding(context),
       physics: const BouncingScrollPhysics(),
@@ -511,7 +638,6 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
     );
   }
 
-  Widget _allOrdersList() => _ordersList(_ordersForSelectedTab());
 
   Widget _buildVendorOrderCard(dynamic data) {
     final status = data.orderStatus?.toString();
@@ -545,8 +671,8 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
     if (OrderStatus.isCompleted(status)) {
       return _VendorOrderCardShell(
         badgeLabel: 'COMPLETED',
-        badgeBg: const Color(0xFFE8F5E9),
-        badgeFg: const Color(0xFF2E7D32),
+        badgeBg: _badgeCompletedBg,
+        badgeFg: _badgeCompletedFg,
         displayPrice: _displayPrice(data.totalPrice),
         title: productName,
         metaLine: 'Completed · Return was ${_formatVendorDate(end)}',
@@ -559,8 +685,8 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
       final rejected = OrderStatus.isRejected(status);
       return _VendorOrderCardShell(
         badgeLabel: OrderStatus.renterBadgeLabel(status),
-        badgeBg: const Color(0xFFF5F5F5),
-        badgeFg: const Color(0xFF616161),
+        badgeBg: _badgeNeutralBg,
+        badgeFg: _badgeNeutralFg,
         displayPrice: _displayPrice(data.totalPrice),
         title: productName,
         metaLine: rejected
@@ -576,8 +702,8 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
 
       return _VendorOrderCardShell(
         badgeLabel: OrderStatus.renterBadgeLabel(status),
-        badgeBg: const Color(0xFFFFF3E0),
-        badgeFg: const Color(0xFFE65100),
+        badgeBg: _badgeActiveBg,
+        badgeFg: _badgeActiveFg,
         displayPrice: _displayPrice(data.totalPrice),
         title: productName,
         metaLine:
@@ -590,7 +716,7 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
           child: FilledButton(
             onPressed: openReservation,
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primaryColor,
+              backgroundColor: AppColors.jebbyBlue,
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -614,8 +740,8 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
     final terminal = cancelled || rejected;
     return _VendorOrderCardShell(
       badgeLabel: OrderStatus.renterBadgeLabel(status),
-      badgeBg: terminal ? const Color(0xFFF5F5F5) : const Color(0xFFFFF3E0),
-      badgeFg: terminal ? const Color(0xFF616161) : const Color(0xFFE65100),
+      badgeBg: terminal ? _badgeNeutralBg : _badgeActiveBg,
+      badgeFg: terminal ? _badgeNeutralFg : _badgeActiveFg,
       displayPrice: _displayPrice(data.totalPrice),
       title: productName,
       metaLine: 'Requested by $renter · Return due: ${_formatVendorDate(end)}',
@@ -623,12 +749,6 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
       onHeaderTap: () => _openReservation(orderId),
     );
   }
-
-  Widget _newOrdersList() => _ordersList(_ordersForSelectedTab());
-
-  Widget _pendingOrdersList() => _ordersList(_ordersForSelectedTab());
-
-  Widget _completedOrdersList() => _ordersList(_ordersForSelectedTab());
 
   @override
   void initState() {
@@ -647,68 +767,17 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = GoogleFonts.interTextTheme(
-      Theme.of(context).textTheme.apply(
-        bodyColor: const Color(0xFF1A1A1A),
-        displayColor: const Color(0xFF1A1A1A),
-      ),
-    );
-
-    return Theme(
-      data: Theme.of(context).copyWith(
-        textTheme: textTheme,
-        appBarTheme: AppBarTheme(
-          titleTextStyle: GoogleFonts.inter(
-            color: Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-      child: Scaffold(
-        backgroundColor: _pageBg,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          foregroundColor: Colors.black,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-            onPressed: () {
-              if (Navigator.of(context).canPop()) {
-                Get.back();
-              } else {
-                Get.offAll(() => const VendorHomeScreen());
-              }
-            },
-            style: IconButton.styleFrom(foregroundColor: Colors.black),
-          ),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'My Orders',
-                style: GoogleFonts.inter(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Review booking requests, then track active and completed rentals.',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: _subtitleGrey,
-                ),
-              ),
+              _pageHeader(),
               const SizedBox(height: 20),
-              _buildPillTabs(),
+              _filterChips(),
               const SizedBox(height: 16),
               Expanded(child: _buildTabContent()),
             ],
@@ -783,7 +852,7 @@ class _VendorOrderCardShell extends StatelessWidget {
                                     height: 22,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: AppColors.primaryColor.withValues(alpha: 0.6),
+                                      color: AppColors.jebbyBlue.withValues(alpha: 0.6),
                                     ),
                                   ),
                                 ),

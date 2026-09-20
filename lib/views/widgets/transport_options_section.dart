@@ -34,7 +34,7 @@ class TransportOptionsSection extends StatefulWidget {
 }
 
 class _TransportOptionsSectionState extends State<TransportOptionsSection> {
-  static const Color _primaryGold = AppColors.primaryColor;
+  static const Color _accentBlue = AppColors.jebbyBlue;
   static const Color _switchOffTrack = Color(0xFFE0E0E0);
 
   TimeOfDay? _start;
@@ -44,13 +44,13 @@ class _TransportOptionsSectionState extends State<TransportOptionsSection> {
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         thumbColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return _primaryGold;
+            return _accentBlue;
           }
           return Colors.white;
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return _primaryGold.withValues(alpha: 0.35);
+            return _accentBlue.withValues(alpha: 0.35);
           }
           return _switchOffTrack;
         }),
@@ -80,7 +80,7 @@ class _TransportOptionsSectionState extends State<TransportOptionsSection> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: _primaryGold),
+        borderSide: const BorderSide(color: _accentBlue),
       ),
     );
   }
@@ -170,15 +170,18 @@ class _TransportOptionsSectionState extends State<TransportOptionsSection> {
     final picked = await showTimePicker(
       context: context,
       initialTime: isStart ? (_start ?? TimeOfDay.now()) : (_end ?? TimeOfDay.now()),
+      initialEntryMode: TimePickerEntryMode.inputOnly,
       builder: (context, child) {
         final base = Theme.of(context);
         return Theme(
           data: base.copyWith(
             colorScheme: ColorScheme.light(
-              primary: _primaryGold,
+              primary: _accentBlue,
               onPrimary: Colors.white,
+              secondary: _accentBlue,
+              onSecondary: Colors.white,
               surface: Colors.white,
-              onSurface: Colors.black87,
+              onSurface: AppColors.jebbyTextPrimary,
               surfaceTint: Colors.transparent,
             ),
             dialogTheme: DialogThemeData(
@@ -192,36 +195,35 @@ class _TransportOptionsSectionState extends State<TransportOptionsSection> {
               backgroundColor: Colors.white,
               hourMinuteColor: WidgetStateColor.resolveWith((states) {
                 if (states.contains(WidgetState.selected)) {
-                  return _primaryGold.withValues(alpha: 0.15);
+                  return AppColors.jebbySoftBlue;
                 }
                 return Colors.grey.shade100;
               }),
               hourMinuteTextColor: WidgetStateColor.resolveWith((states) {
                 if (states.contains(WidgetState.selected)) {
-                  return Colors.black87;
+                  return _accentBlue;
                 }
-                return Colors.black54;
+                return AppColors.jebbyTextMuted;
               }),
               dayPeriodColor: WidgetStateColor.resolveWith((states) {
                 if (states.contains(WidgetState.selected)) {
-                  return _primaryGold.withValues(alpha: 0.15);
+                  return AppColors.jebbySoftBlue;
                 }
-                return Colors.transparent;
+                return Colors.grey.shade100;
               }),
               dayPeriodTextColor: WidgetStateColor.resolveWith((states) {
                 if (states.contains(WidgetState.selected)) {
-                  return Colors.black87;
+                  return _accentBlue;
                 }
-                return Colors.black54;
+                return AppColors.jebbyTextMuted;
               }),
-              dialHandColor: _primaryGold,
+              dialHandColor: _accentBlue,
               dialBackgroundColor: Colors.grey.shade100,
-              dialTextColor: Colors.black87,
-              entryModeIconColor: _primaryGold,
+              dialTextColor: AppColors.jebbyTextPrimary,
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: _primaryGold,
+                foregroundColor: _accentBlue,
                 textStyle: GoogleFonts.inter(
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
@@ -305,6 +307,8 @@ class _TransportOptionsSectionState extends State<TransportOptionsSection> {
               value: value,
               onChanged: onChanged,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              activeColor: AppColors.jebbyBlue,
+              activeTrackColor: AppColors.jebbyBlue.withValues(alpha: 0.35),
             ),
           ),
         ],
@@ -379,7 +383,7 @@ class _TransportOptionsSectionState extends State<TransportOptionsSection> {
               const SizedBox(width: 8),
               IconButton(
                 onPressed: _addWindow,
-                icon: const Icon(Icons.add_circle, color: _primaryGold),
+                icon: const Icon(Icons.add_circle, color: AppColors.jebbyBlue),
               ),
             ],
           ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:jebby/views/widgets/cms_page_shell.dart';
 import 'package:jebby/constants/color.dart';
 import 'package:jebby/repositories/auth_repository.dart';
@@ -24,6 +23,21 @@ class _ProvideFeedbackScreenState extends State<ProvideFeedbackScreen> {
 
   String _userId = '';
   bool _isSubmitting = false;
+
+  TextStyle _nunito({
+    required double size,
+    FontWeight weight = FontWeight.w400,
+    Color? color,
+    double? height,
+  }) {
+    return TextStyle(
+      fontFamily: 'Nunito',
+      fontSize: size,
+      fontWeight: weight,
+      color: color ?? AppColors.jebbyTextPrimary,
+      height: height,
+    );
+  }
 
   @override
   void initState() {
@@ -116,15 +130,20 @@ class _ProvideFeedbackScreenState extends State<ProvideFeedbackScreen> {
   Widget build(BuildContext context) {
     return CmsPageShell(
       title: 'Provide Feedback',
+      subtitle: 'Tell us what we can improve.',
       body: CmsPageShell.paddedScroll(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Provide Feedback', style: CmsPageShell.headingLarge()),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               'Describe your issue, question, or suggestion below. Our support team will review your message and respond as soon as possible.',
-              style: CmsPageShell.bodyParagraph(),
+              style: _nunito(
+                size: 16,
+                weight: FontWeight.w600,
+                color: const Color(0xFF374151),
+                height: 1.55,
+              ),
             ),
             const SizedBox(height: 24),
             _fieldLabel('Name'),
@@ -157,8 +176,9 @@ class _ProvideFeedbackScreenState extends State<ProvideFeedbackScreen> {
               child: FilledButton(
                 onPressed: _isSubmitting ? null : _submit,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primaryColor,
-                  disabledBackgroundColor: AppColors.primaryColor.withValues(alpha: 0.6),
+                  backgroundColor: AppColors.jebbyBlue,
+                  disabledBackgroundColor:
+                      AppColors.jebbyBlue.withValues(alpha: 0.6),
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -176,9 +196,9 @@ class _ProvideFeedbackScreenState extends State<ProvideFeedbackScreen> {
                       )
                     : Text(
                         'Submit Feedback',
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                        style: _nunito(
+                          size: 16,
+                          weight: FontWeight.w800,
                           color: Colors.white,
                         ),
                       ),
@@ -195,11 +215,7 @@ class _ProvideFeedbackScreenState extends State<ProvideFeedbackScreen> {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         text,
-        style: GoogleFonts.inter(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: Colors.black87,
-        ),
+        style: _nunito(size: 14, weight: FontWeight.w700),
       ),
     );
   }
@@ -219,11 +235,12 @@ class _ProvideFeedbackScreenState extends State<ProvideFeedbackScreen> {
       maxLines: maxLines,
       minLines: minLines,
       enabled: !_isSubmitting,
-      style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF1B1B1F)),
+      style: _nunito(size: 15, weight: FontWeight.w600),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.inter(
-          fontSize: 15,
+        hintStyle: _nunito(
+          size: 15,
+          weight: FontWeight.w600,
           color: const Color(0xFF8F9098),
         ),
         filled: true,
@@ -236,7 +253,7 @@ class _ProvideFeedbackScreenState extends State<ProvideFeedbackScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primaryColor, width: 1.5),
+          borderSide: const BorderSide(color: AppColors.jebbyBlue, width: 1.5),
         ),
       ),
     );

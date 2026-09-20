@@ -23,6 +23,7 @@ import '../../../models/user_model.dart';
 import '../../../constants/app_url.dart';
 import '../../../utils/profile_image.dart';
 import '../../../utils/api_datetime.dart';
+import '../../../utils/public_location.dart';
 import '../../../utils/rental_date.dart';
 import 'package:jebby/repositories/api_repository.dart';
 import '../../../view_models/user_view_model.dart';
@@ -271,7 +272,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       d == null ? '' : DateFormat('yyyy-MM-dd').format(d);
 
   String _listingLocationLabel() {
-    if (_listingAddress.isNotEmpty) return _listingAddress;
+    if (_listingAddress.isNotEmpty) {
+      return PublicLocation.cityStateLine(_listingAddress) ?? _listingAddress;
+    }
     final lat = double.tryParse(_listingLat);
     final lng = double.tryParse(_listingLng);
     if (lat != null && lng != null && (lat != 0 || lng != 0)) {

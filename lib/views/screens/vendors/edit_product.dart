@@ -23,6 +23,7 @@ import 'package:jebby/views/widgets/address_autocomplete_field.dart';
 import 'package:jebby/utils/google_places_address.dart';
 import 'package:jebby/utils/product_upload_filename.dart';
 import 'package:jebby/utils/show_snackbar.dart';
+import 'package:jebby/utils/earner_navigation.dart';
 import '../../../view_models/user_view_model.dart';
 import '../../widgets/transport_options_section.dart';
 import '../../../models/handoff_window.dart';
@@ -1058,42 +1059,112 @@ class _EditProductScreenState extends State<EditProductScreen> {
         });
   }
 
+  TextStyle _nunito({
+    required double size,
+    FontWeight weight = FontWeight.w400,
+    Color? color,
+    double? height,
+  }) {
+    return TextStyle(
+      fontFamily: 'Nunito',
+      fontSize: size,
+      fontWeight: weight,
+      color: color ?? AppColors.jebbyTextPrimary,
+      height: height,
+    );
+  }
+
+  void _handleBack() {
+    if (Get.key.currentState?.canPop() ?? false) {
+      Get.back();
+    } else {
+      EarnerNavigation.goHome();
+    }
+  }
+
+  Widget _pageHeader() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _backButton(),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Edit listing',
+                  style: _nunito(
+                    size: 28,
+                    weight: FontWeight.w800,
+                    color: AppColors.jebbyTextPrimary,
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Keep your listing fresh.',
+                  style: _nunito(
+                    size: 15,
+                    weight: FontWeight.w600,
+                    color: AppColors.jebbyTextMuted,
+                    height: 1.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _backButton() {
+    return Material(
+      color: AppColors.jebbySoftBlue,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: _handleBack,
+        splashColor: AppColors.jebbyBlue.withValues(alpha: 0.12),
+        highlightColor: AppColors.jebbyBlue.withValues(alpha: 0.06),
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 2),
+              child: Icon(
+                Icons.arrow_back_ios_new,
+                size: 18,
+                color: AppColors.jebbyTextPrimary,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: true,
-        leading: InkWell(
-          onTap: () {
-            Get.back();
-          },
-          borderRadius: BorderRadius.circular(50),
-          child: const Icon(
-            Icons.arrow_back_ios_new,
-            color: Colors.black,
-            size: 20,
-          ),
-        ),
-        title: Text(
-          "Edit Product",
-          style: GoogleFonts.inter(
-            color: Colors.black87,
-            fontWeight: FontWeight.w700,
-            fontSize: 18,
-          ),
-        ),
-      ),
-
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-
+      body: SafeArea(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+              child: _pageHeader(),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
 
           children: [
@@ -1134,7 +1205,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                           backgroundColor: const Color(
                             0xFF000000,
                           ).withOpacity(0.25),
-                          borderColor: AppColors.primaryColor.withOpacity(0.95),
+                          borderColor: AppColors.jebbyBlue.withOpacity(0.95),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -1204,7 +1275,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                           backgroundColor: const Color(
                             0xFF000000,
                           ).withOpacity(0.25),
-                          borderColor: AppColors.primaryColor.withOpacity(0.95),
+                          borderColor: AppColors.jebbyBlue.withOpacity(0.95),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -1281,7 +1352,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                         shape: BoxShape.circle,
                                         color:
                                             i < activeDots
-                                                ? AppColors.primaryColor
+                                                ? AppColors.jebbyBlue
                                                 : Colors.grey.shade400,
                                       ),
                                     );
@@ -1380,7 +1451,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.primaryColor, width: 1),
+                    borderSide: BorderSide(color: AppColors.jebbyBlue, width: 1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
@@ -1429,7 +1500,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.primaryColor, width: 1),
+                    borderSide: BorderSide(color: AppColors.jebbyBlue, width: 1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
@@ -1475,7 +1546,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                       height: 28,
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Color(0xFF1E88E5),
+                        color: AppColors.jebbyBlue,
                       ),
                       child: const Icon(
                         Icons.attach_money,
@@ -1496,7 +1567,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.primaryColor, width: 1),
+                    borderSide: BorderSide(color: AppColors.jebbyBlue, width: 1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
@@ -1549,7 +1620,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                 height: 28,
                                 decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Color(0xFF1E88E5),
+                                  color: AppColors.jebbyBlue,
                                 ),
                                 child: const Icon(
                                   Icons.lock_rounded,
@@ -1576,7 +1647,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderSide: BorderSide(
-                                color: AppColors.primaryColor,
+                                color: AppColors.jebbyBlue,
                                 width: 1,
                               ),
                               borderRadius: BorderRadius.circular(12),
@@ -1629,7 +1700,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                                 height: 28,
                                 decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Color(0xFF1E88E5),
+                                  color: AppColors.jebbyBlue,
                                 ),
                                 child: const Icon(
                                   Icons.local_shipping_rounded,
@@ -1656,7 +1727,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderSide: BorderSide(
-                                color: AppColors.primaryColor,
+                                color: AppColors.jebbyBlue,
                                 width: 1,
                               ),
                               borderRadius: BorderRadius.circular(12),
@@ -1914,6 +1985,10 @@ class _EditProductScreenState extends State<EditProductScreen> {
             }),
             SizedBox(height: 16),
           ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
 
@@ -1930,7 +2005,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
               child: ElevatedButton(
                 onPressed: product_update_button ? null : prodUpdate,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryColor,
+                  backgroundColor: AppColors.jebbyBlue,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(vertical: 16),

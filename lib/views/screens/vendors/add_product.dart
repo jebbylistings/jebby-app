@@ -8,7 +8,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:jebby/views/screens/vendors/my_products.dart';
 import 'package:jebby/views/screens/vendors/listing_success.dart';
-import 'package:jebby/views/screens/vendors/vendor_home.dart';
+import 'package:jebby/utils/earner_navigation.dart';
 import 'package:jebby/views/widgets/address_autocomplete_field.dart';
 import 'package:jebby/utils/google_places_address.dart';
 import 'package:jebby/utils/show_snackbar.dart';
@@ -29,7 +29,7 @@ class AddProductScreen extends StatefulWidget {
   /// When true, step-1 back replaces the stack with [MyProductsScreen].
   final bool popToProductsOnBack;
 
-  /// When true, step-1 back replaces the stack with [VendorHomeScreen].
+  /// When true, step-1 back replaces the stack with earner home ([MainScreen]).
   final bool popToHomeOnBack;
 
   const AddProductScreen({
@@ -44,8 +44,7 @@ class AddProductScreen extends StatefulWidget {
 
 class _AddProductScreenState extends State<AddProductScreen> {
   static const int _totalSteps = 5;
-  static const Color _primaryGold = Color(0xFFFBA104);
-  static const Color _formAccentBlue = AppColors.darkBlue;
+  static const Color _formAccentBlue = AppColors.jebbyBlue;
 
   String Url = dotenv.env['baseUrlM'] ?? 'No url found';
   bool addBtn = false;
@@ -682,7 +681,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     onPressed: () => Navigator.pop(ctx, true),
                     style: ElevatedButton.styleFrom(
                       elevation: 0,
-                      backgroundColor: _primaryGold,
+                      backgroundColor: AppColors.jebbyBlue,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -845,7 +844,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
     if (_currentStep > 1) {
       _goToStep(_currentStep - 1);
     } else if (widget.popToHomeOnBack) {
-      Get.offAll(() => VendorHomeScreen());
+      EarnerNavigation.goHome();
     } else if (widget.popToProductsOnBack) {
       Get.offAll(() => MyProductsScreen(side: false));
     } else if (Get.key.currentState?.canPop() ?? false) {
@@ -853,6 +852,87 @@ class _AddProductScreenState extends State<AddProductScreen> {
     } else {
       Get.offAll(() => MyProductsScreen(side: false));
     }
+  }
+
+  TextStyle _nunito({
+    required double size,
+    FontWeight weight = FontWeight.w400,
+    Color? color,
+    double? height,
+  }) {
+    return TextStyle(
+      fontFamily: 'Nunito',
+      fontSize: size,
+      fontWeight: weight,
+      color: color ?? AppColors.jebbyTextPrimary,
+      height: height,
+    );
+  }
+
+  Widget _pageHeader() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _backButton(),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Create listing',
+                  style: _nunito(
+                    size: 28,
+                    weight: FontWeight.w800,
+                    color: AppColors.jebbyTextPrimary,
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'List an item in a few easy steps.',
+                  style: _nunito(
+                    size: 15,
+                    weight: FontWeight.w600,
+                    color: AppColors.jebbyTextMuted,
+                    height: 1.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _backButton() {
+    return Material(
+      color: AppColors.jebbySoftBlue,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: _handleBack,
+        splashColor: AppColors.jebbyBlue.withValues(alpha: 0.12),
+        highlightColor: AppColors.jebbyBlue.withValues(alpha: 0.06),
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 2),
+              child: Icon(
+                Icons.arrow_back_ios_new,
+                size: 18,
+                color: AppColors.jebbyTextPrimary,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _handleContinue() async {
@@ -966,49 +1046,31 @@ class _AddProductScreenState extends State<AddProductScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      appBar: AppBar(
-        backgroundColor: Colors.grey.shade100,
-        surfaceTintColor: Colors.transparent,
-        scrolledUnderElevation: 0,
-        elevation: 0,
-        centerTitle: true,
-        leading: InkWell(
-          onTap: _handleBack,
-          borderRadius: BorderRadius.circular(50),
-          child: const Icon(
-            Icons.arrow_back_ios_new,
-            color: Colors.black,
-            size: 20,
-          ),
-        ),
-        title: Text(
-          'Create Your Listing',
-          style: GoogleFonts.inter(
-            fontWeight: FontWeight.w700,
-            color: Colors.black87,
-            fontSize: 18,
-          ),
-        ),
-      ),
-      body: Column(
-        children: [
-          _buildStepHeader(),
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                _buildStep1PhotosDetails(),
-                _buildStep2Pricing(),
-                _buildStep3CategoryAvailability(),
-                _buildStep4Specifications(),
-                _buildStep5Review(),
-              ],
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+              child: _pageHeader(),
             ),
-          ),
-          if (_currentStep < _totalSteps) _buildContinueBar(),
-        ],
+            _buildStepHeader(),
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  _buildStep1PhotosDetails(),
+                  _buildStep2Pricing(),
+                  _buildStep3CategoryAvailability(),
+                  _buildStep4Specifications(),
+                  _buildStep5Review(),
+                ],
+              ),
+            ),
+            if (_currentStep < _totalSteps) _buildContinueBar(),
+          ],
+        ),
       ),
     );
   }
@@ -1028,10 +1090,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
         children: [
           Text(
             'Step $_currentStep of $_totalSteps',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Colors.black54,
+            style: _nunito(
+              size: 13,
+              weight: FontWeight.w700,
+              color: AppColors.jebbyTextMuted,
             ),
           ),
           const SizedBox(height: 12),
@@ -1057,7 +1119,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         height: 2,
                         color:
                             index + 1 < _currentStep
-                                ? _primaryGold
+                                ? AppColors.jebbyBlue
                                 : Colors.grey.shade300,
                       ),
                     ),
@@ -1083,7 +1145,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
           height: 28,
           decoration: BoxDecoration(
             color:
-                isActive || isComplete ? _primaryGold : Colors.grey.shade300,
+                isActive || isComplete ? AppColors.jebbyBlue : Colors.grey.shade300,
             shape: BoxShape.circle,
           ),
           alignment: Alignment.center,
@@ -1126,19 +1188,20 @@ class _AddProductScreenState extends State<AddProductScreen> {
           child: FilledButton(
             onPressed: _handleContinue,
             style: FilledButton.styleFrom(
-              backgroundColor: _primaryGold,
+              backgroundColor: AppColors.jebbyBlue,
               foregroundColor: Colors.white,
               elevation: 0,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(14),
               ),
             ),
             child: Text(
               'Continue',
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+              style: _nunito(
+                size: 16,
+                weight: FontWeight.w800,
+                color: Colors.white,
               ),
             ),
           ),
@@ -1289,7 +1352,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         border: Border.all(
                           color:
                               _activeImageIndex == index
-                                  ? _primaryGold
+                                  ? AppColors.jebbyBlue
                                   : Colors.transparent,
                           width: 2,
                         ),
@@ -1583,7 +1646,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   child: Text(
                     'Edit',
                     style: GoogleFonts.inter(
-                      color: _primaryGold,
+                      color: AppColors.jebbyBlue,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -1640,12 +1703,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
             child: FilledButton(
               onPressed: addBtn ? null : addProduct,
               style: FilledButton.styleFrom(
-                backgroundColor: _primaryGold,
+                backgroundColor: AppColors.jebbyBlue,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
               child:
@@ -1745,7 +1808,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _primaryGold),
+          borderSide: const BorderSide(color: AppColors.jebbyBlue),
         ),
       ),
       style: GoogleFonts.inter(fontSize: 15),

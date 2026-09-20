@@ -8,6 +8,7 @@ import 'package:jebby/views/screens/home/messages.dart';
 import 'package:jebby/constants/app_url.dart';
 import 'package:jebby/constants/color.dart';
 import 'package:jebby/repositories/api_repository.dart';
+import 'package:jebby/utils/earner_navigation.dart';
 import 'package:provider/provider.dart';
 
 import '../../../services/provider/sign_in_provider.dart';
@@ -29,10 +30,17 @@ class _CachedThreadInquiry {
 }
 
 class MessagesScreen extends StatefulWidget {
-  const MessagesScreen({super.key, this.showBackButton = false});
+  const MessagesScreen({
+    super.key,
+    this.showBackButton = false,
+    this.messageSenderName,
+  });
 
   /// When true (e.g. opened from provider drawer), shows a leading back affordance.
   final bool showBackButton;
+
+  /// Sender name from a message notification (`You have a new message from …`).
+  final String? messageSenderName;
 
   @override
   State<MessagesScreen> createState() => _MessagesScreenState();
@@ -64,7 +72,9 @@ class _MessagesScreenState extends State<MessagesScreen>
           fullname = value.name.toString();
           email = value.email.toString();
           role = value.role.toString();
-          _applyDefaultTab();
+          if (!_openedFromMessageNotification) {
+            _applyDefaultTab();
+          }
           get_chat_history();
           seenNotification();
         })
@@ -95,13 +105,18 @@ class _MessagesScreenState extends State<MessagesScreen>
             isLoading = false;
             isError = false;
           });
+          if (_openedFromMessageNotification) {
+            _applyDefaultTab();
+          }
         } else {
           setState(() {
             isEmpty = false;
             isLoading = false;
             isError = false;
           });
-          _resolveThreadInquiries();
+          _resolveThreadInquiries().then((_) {
+            if (mounted) _applyTabForNotificationContext();
+          });
         }
       },
       (error) {
@@ -128,6 +143,101 @@ class _MessagesScreenState extends State<MessagesScreen>
 
   final TextEditingController _searchController = TextEditingController();
   String searchText = "";
+
+  TextStyle _nunito({
+    required double size,
+    FontWeight weight = FontWeight.w400,
+    Color? color,
+    double? height,
+  }) {
+    return TextStyle(
+      fontFamily: 'Nunito',
+      fontSize: size,
+      fontWeight: weight,
+      color: color ?? AppColors.jebbyTextPrimary,
+      height: height,
+    );
+  }
+
+  void _handleBack() {
+    if (Get.key.currentState?.canPop() ?? false) {
+      Get.back();
+    } else {
+      EarnerNavigation.goHome();
+    }
+  }
+
+  Widget _pageHeader({required bool showBack}) {
+    final titleColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Chat',
+          style: _nunito(
+            size: 28,
+            weight: FontWeight.w800,
+            color: AppColors.jebbyTextPrimary,
+            height: 1.1,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Stay connected with renters and providers.',
+          style: _nunito(
+            size: 15,
+            weight: FontWeight.w600,
+            color: AppColors.jebbyTextMuted,
+            height: 1.2,
+          ),
+        ),
+      ],
+    );
+
+    if (!showBack) {
+      return titleColumn;
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _backButton(),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: titleColumn,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _backButton() {
+    return Material(
+      color: AppColors.jebbySoftBlue,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: _handleBack,
+        splashColor: AppColors.jebbyBlue.withValues(alpha: 0.12),
+        highlightColor: AppColors.jebbyBlue.withValues(alpha: 0.06),
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 2),
+              child: Icon(
+                Icons.arrow_back_ios_new,
+                size: 18,
+                color: AppColors.jebbyTextPrimary,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   List<datamodel.Data> _visibleChats() {
     final raw = ApiRepository.shared.getChatsHistoryModelList?.data;
@@ -251,12 +361,62 @@ class _MessagesScreenState extends State<MessagesScreen>
     _tabController = TabController(length: 2, vsync: this);
   }
 
+  bool get _openedFromMessageNotification =>
+      (widget.messageSenderName ?? '').trim().isNotEmpty;
+
   void _applyDefaultTab() {
     final tabs = _tabController;
     if (!mounted || tabs == null || role == null) return;
     final index = role == '1' ? 1 : 0;
     if (tabs.index != index) {
       tabs.index = index;
+    }
+  }
+
+  datamodel.Data? _findNotificationThread(List<datamodel.Data> items) {
+    final senderName = (widget.messageSenderName ?? '').trim().toLowerCase();
+    if (senderName.isEmpty) return null;
+
+    final matches = items
+        .where(
+          (entry) =>
+              (entry.name ?? '').toString().trim().toLowerCase() == senderName,
+        )
+        .toList();
+    if (matches.isEmpty) return null;
+    if (matches.length == 1) return matches.first;
+
+    matches.sort((a, b) {
+      final unreadDiff = (b.count ?? 0).compareTo(a.count ?? 0);
+      if (unreadDiff != 0) return unreadDiff;
+      final tb = parseApiDateTime(b.lastMessageTime) ?? DateTime(1970);
+      final ta = parseApiDateTime(a.lastMessageTime) ?? DateTime(1970);
+      return tb.compareTo(ta);
+    });
+    return matches.first;
+  }
+
+  void _applyTabForNotificationContext() {
+    final tabs = _tabController;
+    if (!mounted || tabs == null || sourceId.isEmpty) return;
+    if (!_openedFromMessageNotification) return;
+
+    final raw = ApiRepository.shared.getChatsHistoryModelList?.data;
+    if (raw == null || raw.isEmpty) {
+      _applyDefaultTab();
+      return;
+    }
+
+    final thread = _findNotificationThread(raw);
+    if (thread == null) {
+      _applyDefaultTab();
+      return;
+    }
+
+    final index = _isProviderTabConversation(thread) ? 1 : 0;
+    if (tabs.index != index) {
+      tabs.index = index;
+      setState(() {});
     }
   }
 
@@ -292,60 +452,30 @@ class _MessagesScreenState extends State<MessagesScreen>
     final tabs = _tabController;
     if (tabs == null) {
       return Scaffold(
-        backgroundColor: Colors.grey.shade100,
+        backgroundColor: Colors.white,
         body: const SafeArea(
           child: Center(
-            child: CircularProgressIndicator(color: AppColors.primaryColor),
+            child: CircularProgressIndicator(
+              color: AppColors.jebbyBlue,
+              strokeWidth: 2.4,
+            ),
           ),
         ),
       );
     }
 
     return Scaffold(
-      backgroundColor:
-          widget.showBackButton
-              ? const Color(0xFFF3F3F5)
-              : Colors.grey.shade100,
-      appBar:
-          widget.showBackButton
-              ? AppBar(
-                backgroundColor: Colors.transparent,
-                surfaceTintColor: Colors.transparent,
-                elevation: 0,
-                scrolledUnderElevation: 0,
-                foregroundColor: Colors.black,
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                  onPressed: () => Get.back(),
-                  style: IconButton.styleFrom(foregroundColor: Colors.black),
-                ),
-              )
-              : null,
+      backgroundColor: Colors.white,
       body: SafeArea(
-        top: !widget.showBackButton,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: EdgeInsets.fromLTRB(
-                widget.showBackButton ? 20 : 18,
-                widget.showBackButton ? 0 : 10,
-                12,
-                0,
-              ),
-              child: Text(
-                'Chat',
-                style: GoogleFonts.inter(
-                  fontSize: 28,
-                  fontWeight:
-                      widget.showBackButton ? FontWeight.w800 : FontWeight.w700,
-                  color: Colors.black,
-                  height: 1.1,
-                ),
-              ),
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+              child: _pageHeader(showBack: widget.showBackButton),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(18, 16, 18, 8),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: _SearchPill(
                 controller: _searchController,
                 onChanged: (v) {
@@ -354,21 +484,15 @@ class _MessagesScreenState extends State<MessagesScreen>
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(18, 8, 18, 0),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
               child: TabBar(
                 controller: tabs,
-                indicatorColor: AppColors.primaryColor,
+                indicatorColor: AppColors.jebbyBlue,
                 indicatorWeight: 2.5,
-                labelColor: Colors.black,
-                unselectedLabelColor: const Color(0xFF9E9E9E),
-                labelStyle: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                ),
-                unselectedLabelStyle: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                ),
+                labelColor: AppColors.jebbyTextPrimary,
+                unselectedLabelColor: AppColors.jebbyTextMuted,
+                labelStyle: _nunito(size: 15, weight: FontWeight.w800),
+                unselectedLabelStyle: _nunito(size: 15, weight: FontWeight.w600),
                 tabs: const [
                   Tab(text: 'Renter'),
                   Tab(text: 'Provider'),
@@ -395,7 +519,10 @@ class _MessagesScreenState extends State<MessagesScreen>
     }
     if (isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: AppColors.primaryColor),
+        child: CircularProgressIndicator(
+          color: AppColors.jebbyBlue,
+          strokeWidth: 2.4,
+        ),
       );
     }
     final items = _visibleChats();
@@ -488,32 +615,32 @@ class _SearchPill extends StatelessWidget {
       height: 48,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(999),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE3E6EC)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
       child: Row(
         children: [
-          Icon(Icons.search, color: Colors.grey.shade500, size: 22),
+          Icon(Icons.search_rounded, color: Colors.grey.shade500, size: 22),
           const SizedBox(width: 10),
           Expanded(
             child: TextField(
               controller: controller,
               onChanged: onChanged,
-              style: GoogleFonts.inter(fontSize: 15, color: Colors.black87),
+              style: const TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: AppColors.jebbyTextPrimary,
+              ),
               decoration: InputDecoration(
                 isDense: true,
                 hintText: 'Search',
-                hintStyle: GoogleFonts.inter(
+                hintStyle: TextStyle(
+                  fontFamily: 'Nunito',
                   fontSize: 15,
-                  color: Colors.grey.shade400,
-                  fontWeight: FontWeight.w400,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.jebbyTextMuted.withValues(alpha: 0.75),
                 ),
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.zero,
@@ -597,12 +724,13 @@ class _ChatListTile extends StatelessWidget {
                   height: 26,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryColor,
+                    color: AppColors.jebbyBlue,
                     shape: BoxShape.circle,
                   ),
                   child: Text(
                     unreadCount > 9 ? '9+' : '$unreadCount',
-                    style: GoogleFonts.inter(
+                    style: const TextStyle(
+                      fontFamily: 'Nunito',
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
@@ -624,7 +752,7 @@ class _Avatar extends StatelessWidget {
 
   final String? imageUrl;
 
-  static const Color _fill = Color(0xFFFFF4E8);
+  static const Color _fill = AppColors.jebbySoftBlue;
 
   @override
   Widget build(BuildContext context) {
@@ -635,7 +763,7 @@ class _Avatar extends StatelessWidget {
         backgroundColor: _fill,
         child: Icon(
           Icons.person_rounded,
-          color: AppColors.primaryColor.withValues(alpha: 0.85),
+          color: AppColors.jebbyBlue,
           size: 30,
         ),
       );
@@ -652,7 +780,7 @@ class _Avatar extends StatelessWidget {
                 color: _fill,
                 child: Icon(
                   Icons.person_rounded,
-                  color: AppColors.primaryColor.withValues(alpha: 0.85),
+                  color: AppColors.jebbyBlue,
                   size: 30,
                 ),
               ),
@@ -666,7 +794,7 @@ class _Avatar extends StatelessWidget {
                   height: 22,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: AppColors.primaryColor.withValues(alpha: 0.5),
+                    color: AppColors.jebbyBlue.withValues(alpha: 0.5),
                   ),
                 ),
               ),
