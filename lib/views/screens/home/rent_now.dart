@@ -151,6 +151,11 @@ class _RentNowScreenState extends State<RentNowScreen> {
   HandoffWindow? _pickupWindow;
   HandoffWindow? _returnWindow;
   List<RentalWindow> _bookedDates = [];
+  Set<String> _blockedDateKeys = {};
+  int _advanceNoticeHours = 24;
+  int _turnaroundHours = 0;
+  int? _minRentalDays;
+  int? _maxRentalDays;
 
   List<HandoffWindow> get _listingWindows =>
       widget.handoffWindows.isNotEmpty ? widget.handoffWindows : HandoffWindow.defaultSlots;
@@ -514,10 +519,101 @@ class _RentNowScreenState extends State<RentNowScreen> {
     return false;
   }
 
-  void _syncBookedDates() {
+  void _syncProductRentalState() {
     final product = ApiRepository.shared.getProductsByIdList?.data?.firstOrNull;
     if (product == null || '${product.id}' != '${widget.productID}') return;
     _bookedDates = product.bookedDates;
+    _blockedDateKeys = product.blockedDateKeys;
+    _advanceNoticeHours = product.advanceNoticeHours;
+    _turnaroundHours = product.turnaroundHours;
+    _minRentalDays = product.minRentalDays;
+    _maxRentalDays = product.maxRentalDays;
+  }
+
+  DateTime get _earliestStartDay =>
+      earliestRentalStartDay(_advanceNoticeHours);
+
+  bool _isDayUnselectable(DateTime day) {
+    final d = dateOnly(day);
+    if (d.isBefore(_earliestStartDay)) return true;
+    return isDayUnavailableForRental(
+      d,
+      booked: _bookedDates,
+      blockedIsoDates: _blockedDateKeys,
+      turnaroundHours: _turnaroundHours,
+    );
+  }
+
+  bool _validateRentalRules({bool showError = true}) {
+    final start = dateOnly(selectedDate);
+    final end = dateOnly(selectedDate1);
+
+    final noticeError = validateRentalStartAdvanceNotice(
+      start: start,
+      advanceNoticeHours: _advanceNoticeHours,
+    );
+    if (noticeError != null) {
+      if (showError) {
+        showAppErrorSnackbar(noticeError, title: 'Advance notice');
+      }
+      return false;
+    }
+
+    if (rentalRangeIncludesBlockedDay(start, end, _blockedDateKeys)) {
+      if (showError) {
+        showAppErrorSnackbar(
+          'Selected dates include days the earner blocked for this listing.',
+          title: 'Dates unavailable',
+        );
+      }
+      return false;
+    }
+
+    final lengthError = validateRentalLengthDays(
+      dayCount: rentalDayCountForDates(start, end),
+      minRentalDays: _minRentalDays,
+      maxRentalDays: _maxRentalDays,
+    );
+    if (lengthError != null) {
+      if (showError) {
+        showAppErrorSnackbar(lengthError, title: 'Rental length');
+      }
+      return false;
+    }
+
+    return _validateNoDateConflict(showError: showError);
+  }
+
+  Widget _rentalRulesHint() {
+    final parts = <String>[];
+    if (_minRentalDays != null || _maxRentalDays != null) {
+      if (_minRentalDays != null && _maxRentalDays != null) {
+        parts.add('${_minRentalDays}–${_maxRentalDays} day rentals');
+      } else if (_minRentalDays != null) {
+        parts.add('Minimum ${_minRentalDays} day(s)');
+      } else {
+        parts.add('Maximum ${_maxRentalDays} day(s)');
+      }
+    }
+    if (_advanceNoticeHours > 0) {
+      parts.add('${_advanceNoticeHours}h advance notice');
+    }
+    if (_turnaroundHours > 0) {
+      parts.add('${_turnaroundHours}h turnaround between rentals');
+    }
+    if (parts.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      child: Text(
+        parts.join(' · '),
+        style: GoogleFonts.inter(
+          fontSize: 13,
+          color: _bodyGrey,
+          height: 1.35,
+        ),
+      ),
+    );
   }
 
   Widget _deliveryRadiusHint() {
@@ -568,12 +664,10 @@ class _RentNowScreenState extends State<RentNowScreen> {
     _loadData();
     getData();
     profileData(context);
-    _syncBookedDates();
-    selectedDate =
-        DateTime.now(); //DateTime.parse(widget.availableFrom).isBefore(DateTime.now()) ? DateTime.now() : DateTime.parse(widget.availableFrom);
-    selectedDate1 = DateTime.now().add(
-      Duration(days: 1),
-    );
+    _syncProductRentalState();
+    final earliest = _earliestStartDay;
+    selectedDate = earliest;
+    selectedDate1 = earliest.add(const Duration(days: 1));
     _ensureWindowDefaults();
     pre();
   }
@@ -714,7 +808,7 @@ class _RentNowScreenState extends State<RentNowScreen> {
     final today = _dateOnly(DateTime.now());
     final last = _lastAllowedDate();
     if (day.isBefore(today) || day.isAfter(last)) return;
-    if (isDayInBookedRange(day, _bookedDates)) return;
+    if (_isDayUnselectable(day)) return;
 
     setState(() {
       if (!_isSelectingEnd) {
@@ -841,9 +935,11 @@ class _RentNowScreenState extends State<RentNowScreen> {
                   final dayNum = index - leadingEmpty + 1;
                   final day =
                       DateTime(_calendarMonth.year, _calendarMonth.month, dayNum);
-                  final isBooked = isDayInBookedRange(day, _bookedDates);
-                  final disabled =
-                      day.isBefore(today) || day.isAfter(lastAllowed) || isBooked;
+                  final unavailable = _isDayUnselectable(day);
+                  final isActiveRental = isDayInBookedRange(day, _bookedDates);
+                  final disabled = day.isBefore(today) ||
+                      day.isAfter(lastAllowed) ||
+                      unavailable;
                   final isStart = _isSameDay(day, start);
                   final isEnd = _isSameDay(day, end);
                   final inRange = _isWithinSelectedRange(day);
@@ -879,7 +975,7 @@ class _RentNowScreenState extends State<RentNowScreen> {
                   BoxDecoration? rangeDeco;
                   BoxDecoration? dayDeco;
                   Alignment dayAlignment = Alignment.center;
-                  if (isBooked && !day.isBefore(today)) {
+                  if (isActiveRental && !day.isBefore(today)) {
                     dayDeco = BoxDecoration(
                       shape: BoxShape.circle,
                       color: const Color(0xFFFFEBEE),
@@ -899,7 +995,7 @@ class _RentNowScreenState extends State<RentNowScreen> {
                       ),
                     );
                   }
-                  if (!disabled && !isBooked && (isStart || isEnd)) {
+                  if (!disabled && !isActiveRental && (isStart || isEnd)) {
                     dayDeco = BoxDecoration(
                       color: const Color(0xFF0A143D),
                       borderRadius: BorderRadius.circular(10),
@@ -1176,8 +1272,6 @@ class _RentNowScreenState extends State<RentNowScreen> {
                 const SizedBox(height: 12),
                 Text(
                   (ApiRepository.shared.getProductsByIdList!.data![0].description ??
-                          ApiRepository.shared.getProductsByIdList!.data![0]
-                              .specifications ??
                           '')
                       .toString(),
                   maxLines: 3,
@@ -1190,6 +1284,7 @@ class _RentNowScreenState extends State<RentNowScreen> {
                   ),
                 ),
                 const SizedBox(height: 30),
+                _rentalRulesHint(),
                 _buildRangeCalendar(res_width),
                 SizedBox(height: 20),
                 Row(
@@ -1435,7 +1530,7 @@ class _RentNowScreenState extends State<RentNowScreen> {
                             showAppErrorSnackbar('Please Enter Valid End Date', title: 'Required');
                           } else if (_hasRequiredLocation()) {
                             if (!_validateDeliveryRadius()) return;
-                            if (!_validateNoDateConflict()) return;
+                            if (!_validateRentalRules()) return;
                             showAppSnackbar('Required', 'Please Wait');
                             ApiRepository.shared.postOrder(
                               context,
@@ -1475,7 +1570,7 @@ class _RentNowScreenState extends State<RentNowScreen> {
                             );
                           } else if (_hasRequiredLocation()) {
                             if (!_validateDeliveryRadius()) return;
-                            if (!_validateNoDateConflict()) return;
+                            if (!_validateRentalRules()) return;
                             final windows = _bookingWindowPayload();
                             Get.to(
                               () => CheckoutScreen(

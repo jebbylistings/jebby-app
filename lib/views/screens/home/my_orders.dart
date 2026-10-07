@@ -140,16 +140,6 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
           showAppErrorSnackbar('This listing is no longer available.');
           return;
         }
-        if (!productHasFutureBookableDates(
-          product.availableFrom,
-          product.availableTo,
-        )) {
-          showAppErrorSnackbar(
-            'This listing is not available for future rental dates.',
-          );
-          return;
-        }
-
         final imagePath = product.images?.isNotEmpty == true
             ? product.images!.first.path
             : data.productImage?.toString() ?? '';
@@ -161,7 +151,6 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
             product.price ?? 0,
             product.stars ?? '0',
             imagePath,
-            product.specifications ?? '',
             product.userId ?? data.vendorId,
             product.description ?? '',
             product.delivery_charges ?? 0,

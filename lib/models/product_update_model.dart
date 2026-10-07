@@ -4,7 +4,6 @@ class ProductUpdateModel {
   int? subcategoryId;
   String? name;
   int? price;
-  String? specifications;
   String? description;
   int? id;
 
@@ -14,7 +13,6 @@ class ProductUpdateModel {
     this.subcategoryId,
     this.name,
     this.price,
-    this.specifications,
     this.description,
     this.id,
   });
@@ -25,7 +23,6 @@ class ProductUpdateModel {
     subcategoryId = json['subcategory_id'];
     name = json['name'];
     price = json['price'];
-    specifications = json['specifications'];
     description = json['description'];
     id = json['id'];
   }
@@ -37,7 +34,6 @@ class ProductUpdateModel {
     data['subcategory_id'] = this.subcategoryId;
     data['name'] = this.name;
     data['price'] = this.price;
-    data['specifications'] = this.specifications;
     data['description'] = this.description;
     data['id'] = this.id;
     return data;

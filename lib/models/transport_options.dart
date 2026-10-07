@@ -30,9 +30,11 @@ class TransportOptions {
         }
       }
     }
+    final pickupFlag = json['pickup'] ?? json['offers_pickup'];
+    final deliveryFlag = json['delivery'] ?? json['offers_delivery'];
     return TransportOptions(
-      pickup: json['pickup'] == true || json['pickup'] == 1,
-      delivery: json['delivery'] == true || json['delivery'] == 1,
+      pickup: pickupFlag == true || pickupFlag == 1,
+      delivery: deliveryFlag == true || deliveryFlag == 1,
       deliveryRadiusMiles: json['delivery_radius_miles'] is int
           ? json['delivery_radius_miles']
           : int.tryParse('${json['delivery_radius_miles']}'),

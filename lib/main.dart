@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +8,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jebby/constants/app_preferences.dart';
+import 'package:jebby/constants/color.dart';
 import 'package:jebby/views/screens/auth/login.dart';
 import 'package:jebby/views/screens/navigation/home_main.dart';
 import 'package:jebby/views/screens/auth/get_started.dart';
@@ -32,7 +35,8 @@ void main() async {
   await dotenv.load(fileName: envFile);
   Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY'].toString();
 
-  await FCMService().initialize();
+  // Do not block first frame on notification permission / APNS polling (iOS sim).
+  unawaited(FCMService().initialize());
 
   runApp(
     OverlaySupport.global(
@@ -50,6 +54,10 @@ class MyApp extends StatelessWidget {
       colorScheme: ColorScheme.fromSeed(seedColor: Colors.black),
       useMaterial3: true,
       scaffoldBackgroundColor: Colors.grey.shade100,
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: AppColors.jebbyBlue,
+        circularTrackColor: Color(0xFFEEF2FF),
+      ),
     );
     return MultiProvider(
       providers: [

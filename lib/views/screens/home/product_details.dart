@@ -12,7 +12,7 @@ import 'package:jebby/views/screens/agreements/transport_and_installation_policy
 import 'package:jebby/views/screens/auth/login.dart';
 import 'package:jebby/views/screens/home/rent_now.dart';
 import 'package:jebby/views/screens/profile/user_profile.dart';
-import 'package:jebby/views/screens/home/messages.dart';
+import 'package:jebby/views/screens/home/messages.dart' show Chat;
 import 'package:jebby/views/screens/shared/reviews.dart';
 
 import '../../../models/get_products_by_product_id_model.dart';
@@ -38,7 +38,6 @@ class ProductDetailScreen extends StatefulWidget {
   final dynamic price;
   final dynamic stars;
   final dynamic image;
-  final dynamic specs;
   final dynamic userID;
   final dynamic desc;
   final dynamic delivery_charges;
@@ -50,7 +49,6 @@ class ProductDetailScreen extends StatefulWidget {
     this.price,
     this.stars,
     this.image,
-    this.specs,
     this.userID,
     this.desc,
     this.delivery_charges, {
@@ -94,10 +92,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     1: 0.0,
   };
 
-  /// Product availability window (API: available_from / available_to).
+  /// Calendar bounds for renter date picking (open listing window).
   DateTime? _availStart;
   DateTime? _availEnd;
   List<RentalWindow> _bookedDates = [];
+  Set<String> _blockedDateKeys = {};
+  int _turnaroundHours = 0;
+  int? _minRentalDays;
+  int? _maxRentalDays;
+  int _advanceNoticeHours = 24;
   DateTime _calendarMonth = DateTime(DateTime.now().year, DateTime.now().month);
 
   String _listingAddress = '';
@@ -105,7 +108,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   String _listingLng = '';
   bool _offersPickup = true;
   bool _offersDelivery = false;
-  String _specificationsFromApi = '';
+  String _conditionRatingFromApi = '';
+  String _descriptionFromApi = '';
 
   bool get _isProductOwner =>
       sourceId.isNotEmpty && sourceId == widget.userID.toString();
@@ -179,19 +183,30 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         DateTime? a0;
         DateTime? a1;
         var booked = <RentalWindow>[];
+        var blocked = <String>{};
+        var turnaroundHours = 0;
+        int? minRentalDays;
+        int? maxRentalDays;
+        var advanceNoticeHours = 24;
         if (list.data != null && list.data!.isNotEmpty) {
           final p = list.data!.first;
-          a0 = _parseDateOnly(p.availableFrom);
-          a1 = _parseDateOnly(p.availableTo);
           booked = p.bookedDates;
+          blocked = p.blockedDateKeys;
+          turnaroundHours = p.turnaroundHours;
+          minRentalDays = p.minRentalDays;
+          maxRentalDays = p.maxRentalDays;
+          advanceNoticeHours = p.advanceNoticeHours;
           _listingAddress = p.address?.toString().trim() ?? '';
           _listingLat = p.latitude?.toString() ?? '';
           _listingLng = p.longitude?.toString() ?? '';
           _offersPickup = p.hasPickup;
           _offersDelivery = p.hasDelivery;
-          final specStr = p.specifications?.toString().trim() ?? '';
-          _specificationsFromApi =
-              specStr.isEmpty ? '' : specStr;
+          _conditionRatingFromApi = p.conditionRating?.trim() ?? '';
+          _descriptionFromApi = p.description?.toString().trim() ?? '';
+          final now = DateTime.now();
+          final today = DateTime(now.year, now.month, now.day);
+          a0 = today;
+          a1 = today.add(const Duration(days: 730));
         }
         if (mounted) {
           setState(() {
@@ -200,6 +215,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             _availStart = a0;
             _availEnd = a1;
             _bookedDates = booked;
+            _blockedDateKeys = blocked;
+            _turnaroundHours = turnaroundHours;
+            _minRentalDays = minRentalDays;
+            _maxRentalDays = maxRentalDays;
+            _advanceNoticeHours = advanceNoticeHours;
             // Always open on the current month — never jump to a past availability start month.
             _calendarMonth = DateTime(
               DateTime.now().year,
@@ -218,15 +238,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       },
       widget.id.toString(),
     );
-  }
-
-  DateTime? _parseDateOnly(dynamic raw) {
-    if (raw == null) return null;
-    final s = raw.toString().trim();
-    if (s.isEmpty) return null;
-    final d = DateTime.tryParse(s);
-    if (d == null) return null;
-    return DateTime(d.year, d.month, d.day);
   }
 
   bool _isInsideRange(DateTime day, DateTime start, DateTime end) {
@@ -459,48 +470,25 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  String _normalizedSpecificationsRaw() {
-    for (final candidate in [_specificationsFromApi, widget.specs?.toString()]) {
-      final raw = candidate?.trim() ?? '';
-      if (raw.isNotEmpty) return raw;
-    }
-    return '';
+  String _listingDescriptionText() {
+    if (_descriptionFromApi.trim().isNotEmpty) return _descriptionFromApi.trim();
+    return widget.desc?.toString().trim() ?? '';
   }
 
-  List<MapEntry<String, String>> _parseSpecificationsString(String raw) {
-    final text = raw.trim();
-    if (text.isEmpty) return const [];
-
-    final commaSeparated = RegExp(r'(?:^|, )([^:]+):\s*(.*?)(?=, [^:]+:|$)');
-    final commaMatches = commaSeparated.allMatches(text).toList();
-    if (commaMatches.isNotEmpty) {
-      return commaMatches
-          .map((match) {
-            final key = match.group(1)?.trim() ?? '';
-            final value = match.group(2)?.trim() ?? '';
-            if (key.isEmpty) return null;
-            return MapEntry(key, value);
-          })
-          .whereType<MapEntry<String, String>>()
-          .toList();
+  String _conditionDisplayLabel(String raw) {
+    final key = raw.trim().toLowerCase();
+    switch (key) {
+      case 'excellent':
+        return 'Excellent condition';
+      case 'good':
+        return 'Good condition';
+      case 'fair':
+        return 'Fair condition';
+      default:
+        if (key.isEmpty) return '';
+        return '${key[0].toUpperCase()}${key.substring(1)} condition';
     }
-
-    final out = <MapEntry<String, String>>[];
-    for (final line in text.split(RegExp(r'\r?\n'))) {
-      final t = line.trim();
-      if (t.isEmpty) continue;
-      final idx = t.indexOf(':');
-      if (idx > 0) {
-        out.add(
-          MapEntry(t.substring(0, idx).trim(), t.substring(idx + 1).trim()),
-        );
-      }
-    }
-    return out;
   }
-
-  List<MapEntry<String, String>> _parsedSpecs() =>
-      _parseSpecificationsString(_normalizedSpecificationsRaw());
 
   String _relativeTime(String? iso) {
     if (iso == null || iso.isEmpty) return '';
@@ -630,7 +618,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Widget _buildContentSheet() {
-    final specs = _parsedSpecs();
+    final condition = _conditionRatingFromApi.trim();
+    final conditionLabel = _conditionDisplayLabel(condition);
+    final description = _listingDescriptionText();
 
     return Container(
       width: double.infinity,
@@ -700,16 +690,29 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            Text(
-              widget.desc.toString(),
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                fontWeight: FontWeight.w400,
-                color: _bodyGrey,
-                height: 1.45,
+            if (description.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                description,
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  color: _bodyGrey,
+                  height: 1.45,
+                ),
               ),
-            ),
+            ],
+            if (conditionLabel.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Text(
+                conditionLabel,
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: _bodyGrey,
+                ),
+              ),
+            ],
             if (_listingLocationLabel().isNotEmpty) ...[
               const SizedBox(height: 16),
               Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
@@ -787,30 +790,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
-            const SizedBox(height: 16),
-            Text(
-              'Product Specifications',
-              style: GoogleFonts.inter(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: _titleDark,
-              ),
-            ),
-            const SizedBox(height: 8),
-            if (specs.isEmpty)
-              Text(
-                'No specifications listed.',
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w400,
-                  color: _bodyGrey,
-                ),
-              )
-            else
-              ...specs.map((e) => _specDividerRow(e.key, e.value)),
             if (!_galleryLoading) ...[
+              const SizedBox(height: 16),
+              Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
               const SizedBox(height: 16),
               _buildAvailabilitySection(),
             ],
@@ -1067,6 +1049,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
           const SizedBox(height: 10),
           _availabilityLegendRow(),
+          if (_rentalRulesSummary().isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              _rentalRulesSummary(),
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: _labelGrey,
+                height: 1.35,
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           if (_availStart == null || _availEnd == null)
             Padding(
@@ -1125,6 +1119,31 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ],
       ),
     );
+  }
+
+  String _rentalRulesSummary() {
+    final parts = <String>[];
+    if (_minRentalDays != null || _maxRentalDays != null) {
+      if (_minRentalDays != null && _maxRentalDays != null) {
+        parts.add('Rent ${_minRentalDays}–${_maxRentalDays} days');
+      } else if (_minRentalDays != null) {
+        parts.add('Min ${_minRentalDays} day(s)');
+      } else {
+        parts.add('Max ${_maxRentalDays} day(s)');
+      }
+    }
+    if (_advanceNoticeHours > 0) {
+      parts.add('${_advanceNoticeHours}h notice');
+    }
+    if (_turnaroundHours > 0) {
+      parts.add('${_turnaroundHours}h turnaround');
+    }
+    final radius = ApiRepository.shared.getProductsByIdList?.data?.firstOrNull
+        ?.transport?.deliveryRadiusMiles;
+    if (_offersDelivery && radius != null && radius > 0) {
+      parts.add('Delivery within $radius mi');
+    }
+    return parts.join(' · ');
   }
 
   Widget _availabilityLegendRow() {
@@ -1268,14 +1287,24 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     const double h = 30;
     final isPast = !outsideMonth && _isPastCalendarDay(day);
     final inWindow = !outsideMonth && _isInAvailability(day);
-    final isBooked = !outsideMonth && isDayInBookedRange(day, _bookedDates);
-    final showAvailableGrey = inWindow && !isPast && !isBooked;
+    final isBooked = !outsideMonth &&
+        isDayInBookedRangeWithTurnaround(
+          day,
+          _bookedDates,
+          turnaroundHours: _turnaroundHours,
+        );
+    final isBlocked =
+        !outsideMonth && isDayBlocked(day, _blockedDateKeys);
+    final showAvailableGrey =
+        inWindow && !isPast && !isBooked && !isBlocked;
 
     Color textColor;
     if (outsideMonth) {
       textColor = const Color(0xFFD8D8DC);
     } else if (isBooked) {
       textColor = const Color(0xFFC62828);
+    } else if (isBlocked) {
+      textColor = const Color(0xFF8E8E93);
     } else if (isPast) {
       textColor = const Color(0xFFB8B8BE);
     } else if (!inWindow) {
@@ -1312,6 +1341,25 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         ),
       );
+    } else if (isBlocked) {
+      inner = Container(
+        width: 26,
+        height: 26,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.transparent,
+          border: Border.all(color: const Color(0xFFD0D0D6), width: 1.5),
+        ),
+        child: Text(
+          '${day.day}',
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF8E8E93),
+          ),
+        ),
+      );
     } else if (showAvailableGrey) {
       inner = Container(
         width: 26,
@@ -1333,45 +1381,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
 
     return SizedBox(height: h, child: Center(child: inner));
-  }
-
-  Widget _specDividerRow(String title, String value) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w400,
-                    color: _labelGrey,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  value,
-                  textAlign: TextAlign.right,
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: _titleDark,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
-      ],
-    );
   }
 
   Widget _agreementRow(String title, VoidCallback onTap) {

@@ -22,6 +22,7 @@ import 'package:jebby/views/screens/shared/settings.dart';
 import 'package:jebby/views/screens/vendors/my_orders.dart';
 import 'package:jebby/utils/earner_navigation.dart';
 import 'package:jebby/views/screens/vendors/my_transactions.dart';
+import 'package:jebby/view_models/onboarding_controller.dart';
 import 'package:jebby/views/screens/onboarding/start_earning_button.dart';
 import 'package:jebby/views/widgets/role_switcher_card.dart';
 import 'package:jebby/utils/profile_image.dart';
@@ -35,7 +36,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../services/provider/sign_in_provider.dart';
 import '../../../view_models/auth_view_model.dart';
 import 'package:jebby/repositories/api_repository.dart';
-import '../../../view_models/onboarding_controller.dart';
 import '../../../view_models/user_view_model.dart';
 import 'package:jebby/views/screens/navigation/bottom_nav_controller.dart';
 
@@ -388,6 +388,7 @@ class _AppDrawerScreenState extends State<AppDrawerScreen> {
     }
 
     try {
+      clearOnboardingControllerForLogout();
       final sharedPreferences = await SharedPreferences.getInstance();
       await sharedPreferences.setBool('time', false);
       await userPreference.remove();

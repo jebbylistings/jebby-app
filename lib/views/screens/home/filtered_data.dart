@@ -135,7 +135,6 @@ class _FilteredDataScreenState extends State<FilteredDataScreen> {
                           data.price,
                           data.stars,
                           AppUrl.baseUrlM + data.image.toString(),
-                          data.specifications,
                           data.userId,
                           data.description,
                           data.delivery_charges,

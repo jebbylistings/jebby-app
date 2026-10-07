@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 
@@ -31,11 +34,7 @@ class FCMService {
 
     await _initializeLocalNotifications();
 
-    String? token = await _firebaseMessaging.getToken();
-    if (token != null) {
-      print('FCM Token: $token');
-      await _updateFCMToken(token);
-    }
+    await _fetchAndSyncFcmToken();
 
     _firebaseMessaging.onTokenRefresh.listen((newToken) {
       print('FCM Token refreshed: $newToken');
@@ -58,6 +57,46 @@ class FCMService {
       print('A new onMessageOpenedApp event was published!');
       _handleNotificationTap(message);
     });
+  }
+
+  Future<bool> _waitForApnsToken({
+    Duration maxWait = const Duration(seconds: 2),
+  }) async {
+    if (defaultTargetPlatform != TargetPlatform.iOS &&
+        defaultTargetPlatform != TargetPlatform.macOS) {
+      return true;
+    }
+    final deadline = DateTime.now().add(maxWait);
+    while (DateTime.now().isBefore(deadline)) {
+      final apns = await _firebaseMessaging.getAPNSToken();
+      if (apns != null) return true;
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+    }
+    return false;
+  }
+
+  Future<void> _fetchAndSyncFcmToken() async {
+    if (!await _waitForApnsToken()) {
+      print(
+        'FCM: APNS token not available yet (simulator or still registering); '
+        'skipping initial getToken',
+      );
+      return;
+    }
+
+    try {
+      final token = await _firebaseMessaging.getToken();
+      if (token != null) {
+        print('FCM Token: $token');
+        unawaited(_updateFCMToken(token));
+      }
+    } on FirebaseException catch (e) {
+      if (e.code == 'apns-token-not-set') {
+        print('FCM: APNS not ready; token will sync on onTokenRefresh when available');
+        return;
+      }
+      rethrow;
+    }
   }
 
   Future<void> _initializeLocalNotifications() async {

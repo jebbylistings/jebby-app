@@ -201,7 +201,6 @@ class _SearchDataScreenState extends State<SearchDataScreen> {
               item.price,
               item.stars,
               imageUrl,
-              item.specifications,
               item.userId,
               item.description,
               item.delivery_charges,

@@ -58,6 +58,8 @@ class AppUrl {
   static String get stripeProviderSubmit => '$baseUrlM/stripe/provider/submit';
   static String get stripeProviderSubmitRequirements =>
       '$baseUrlM/stripe/provider/submit-requirements';
+  static String get stripeProviderBankAccount =>
+      '$baseUrlM/stripe/provider/bank-account';
   static String get eventsUrl => '$baseUrlM/events';
   static String get reservationsActionRequired =>
       '$baseUrlM/reservations/action-required';

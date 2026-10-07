@@ -7,6 +7,7 @@ import 'package:jebby/models/provider_onboarding_data.dart';
 
 class ParsedUsAddress {
   final String line1;
+  final String line2;
   final String city;
   final String state;
   final String postalCode;
@@ -16,6 +17,7 @@ class ParsedUsAddress {
 
   const ParsedUsAddress({
     this.line1 = '',
+    this.line2 = '',
     this.city = '',
     this.state = '',
     this.postalCode = '',
@@ -72,6 +74,7 @@ class ParsedUsAddress {
 
   ParsedUsAddress copyWith({
     String? line1,
+    String? line2,
     String? city,
     String? state,
     String? postalCode,
@@ -81,6 +84,7 @@ class ParsedUsAddress {
   }) {
     return ParsedUsAddress(
       line1: line1 ?? this.line1,
+      line2: line2 ?? this.line2,
       city: city ?? this.city,
       state: state ?? this.state,
       postalCode: postalCode ?? this.postalCode,
@@ -92,6 +96,7 @@ class ParsedUsAddress {
 
   static ParsedUsAddress fromStored({
     required String line1,
+    String line2 = '',
     required String city,
     required String state,
     required String postalCode,
@@ -101,9 +106,121 @@ class ParsedUsAddress {
   }) {
     return ParsedUsAddress(
       line1: line1,
+      line2: line2,
       city: city,
       state: state.toUpperCase(),
       postalCode: postalCode.replaceAll(RegExp(r'\D'), ''),
+      formattedAddress: formattedAddress,
+      latitude: latitude,
+      longitude: longitude,
+    );
+  }
+
+  /// Best-effort parse for profile addresses saved as a single line.
+  static ParsedUsAddress parseFreeform(String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return const ParsedUsAddress();
+
+    final postalCode = GooglePlacesAddressService.extractUsZipFromText(trimmed) ?? '';
+    var withoutZip = trimmed;
+    if (postalCode.isNotEmpty) {
+      withoutZip = withoutZip
+          .replaceAll(
+            RegExp(r'\b\d{5}(?:-\d{4})?\b'),
+            '',
+          )
+          .replaceAll(RegExp(r',\s*$'), '')
+          .trim();
+    }
+
+    final parts = withoutZip
+        .split(',')
+        .map((part) => part.trim())
+        .where((part) => part.isNotEmpty)
+        .toList();
+
+    String line1 = '';
+    String city = '';
+    String state = '';
+
+    if (parts.length >= 3) {
+      line1 = parts.first;
+      city = parts[parts.length - 2];
+      state = _stateCodeFromSegment(parts.last);
+    } else if (parts.length == 2) {
+      line1 = parts.first;
+      final tail = parts.last;
+      final tailParts = tail.split(RegExp(r'\s+'));
+      if (tailParts.length >= 2) {
+        state = _stateCodeFromSegment(tailParts.last);
+        city = tailParts.sublist(0, tailParts.length - 1).join(' ');
+      } else {
+        city = tail;
+      }
+    } else if (parts.length == 1) {
+      line1 = parts.first;
+    }
+
+    return ParsedUsAddress(
+      line1: line1,
+      city: city,
+      state: state,
+      postalCode: postalCode,
+      formattedAddress: trimmed,
+    );
+  }
+
+  static String _stateCodeFromSegment(String segment) {
+    final token = segment.trim().toUpperCase();
+    if (ProviderOnboardingData.isValidUsStateCode(token)) return token;
+    for (final entry in ProviderOnboardingData.usStates) {
+      if (entry['name']!.toUpperCase() == token) {
+        return entry['code']!;
+      }
+    }
+    final match = RegExp(r'\b([A-Z]{2})\b').firstMatch(token);
+    if (match != null) {
+      final code = match.group(1)!;
+      if (ProviderOnboardingData.isValidUsStateCode(code)) return code;
+    }
+    return '';
+  }
+
+  static ParsedUsAddress fromPlacemark(
+    Placemark placemark, {
+    required double latitude,
+    required double longitude,
+  }) {
+    var line1 = placemark.street?.trim() ?? '';
+    if (line1.isEmpty) {
+      final parts = <String>[];
+      final sub = placemark.subThoroughfare?.trim();
+      final thoroughfare = placemark.thoroughfare?.trim();
+      if (sub != null && sub.isNotEmpty) parts.add(sub);
+      if (thoroughfare != null && thoroughfare.isNotEmpty) parts.add(thoroughfare);
+      line1 = parts.join(' ');
+    }
+
+    final city = (placemark.locality?.trim().isNotEmpty == true
+            ? placemark.locality!.trim()
+            : placemark.subAdministrativeArea?.trim()) ??
+        '';
+    final state = placemark.administrativeArea?.trim().toUpperCase() ?? '';
+    final postalCode =
+        placemark.postalCode?.replaceAll(RegExp(r'\D'), '') ?? '';
+
+    final formattedAddress = [
+      if (line1.isNotEmpty) line1,
+      if (city.isNotEmpty) city,
+      if (state.isNotEmpty) state,
+      if (postalCode.isNotEmpty) postalCode,
+    ].join(', ');
+
+    return ParsedUsAddress(
+      line1: line1,
+      city: city,
+      state: state,
+      postalCode: postalCode,
       formattedAddress: formattedAddress,
       latitude: latitude,
       longitude: longitude,
@@ -203,6 +320,147 @@ class GooglePlacesAddressService {
       return parsed;
     } finally {
       resetSession();
+    }
+  }
+
+  Future<ParsedUsAddress?> reverseGeocode(double lat, double lng) async {
+    if (_apiKey.isNotEmpty) {
+      try {
+        final uri = Uri.https(
+          'maps.googleapis.com',
+          '/maps/api/geocode/json',
+          {
+            'latlng': '$lat,$lng',
+            'key': _apiKey,
+          },
+        );
+
+        final response = await http.get(uri);
+        if (response.statusCode == 200) {
+          final body = json.decode(response.body) as Map<String, dynamic>;
+          if (body['status'] == 'OK') {
+            final results = body['results'];
+            if (results is List && results.isNotEmpty) {
+              Map<String, dynamic>? best;
+              for (final raw in results) {
+                if (raw is! Map) continue;
+                final types = List<String>.from(raw['types'] ?? const []);
+                if (types.contains('street_address') ||
+                    types.contains('premise') ||
+                    types.contains('subpremise')) {
+                  best = Map<String, dynamic>.from(raw);
+                  break;
+                }
+              }
+              best ??= Map<String, dynamic>.from(results.first as Map);
+
+              var parsed = parsePlaceResult(best);
+              if (parsed != null) {
+                final formattedAddress =
+                    best['formatted_address']?.toString() ?? '';
+                parsed = parsed.copyWith(
+                  formattedAddress: formattedAddress.isNotEmpty
+                      ? formattedAddress
+                      : parsed.displaySummary,
+                  latitude: lat,
+                  longitude: lng,
+                );
+
+                if (!parsed.hasPostalCode) {
+                  final zipFromCoords = await _lookupZipFromCoordinates(lat, lng);
+                  if (zipFromCoords != null) {
+                    parsed = parsed.copyWith(postalCode: zipFromCoords);
+                  }
+                }
+
+                return parsed;
+              }
+            }
+          }
+        }
+      } catch (_) {
+        // Fall through to device geocoding.
+      }
+    }
+
+    return _reverseGeocodeWithPlacemark(lat, lng);
+  }
+
+  Future<ParsedUsAddress?> geocodeAddress(String address) async {
+    final query = address.trim();
+    if (query.isEmpty) return null;
+
+    if (_apiKey.isNotEmpty) {
+      try {
+        final uri = Uri.https(
+          'maps.googleapis.com',
+          '/maps/api/geocode/json',
+          {
+            'address': query,
+            'key': _apiKey,
+            'components': 'country:US',
+          },
+        );
+
+        final response = await http.get(uri);
+        if (response.statusCode == 200) {
+          final body = json.decode(response.body) as Map<String, dynamic>;
+          if (body['status'] == 'OK') {
+            final results = body['results'];
+            if (results is List && results.isNotEmpty) {
+              final best = Map<String, dynamic>.from(results.first as Map);
+              var parsed = parsePlaceResult(best);
+              if (parsed != null) {
+                final formattedAddress =
+                    best['formatted_address']?.toString() ?? '';
+                final coordinates = _readCoordinates(best);
+                parsed = parsed.copyWith(
+                  formattedAddress: formattedAddress.isNotEmpty
+                      ? formattedAddress
+                      : parsed.displaySummary,
+                  latitude: coordinates?.$1,
+                  longitude: coordinates?.$2,
+                );
+                return parsed;
+              }
+            }
+          }
+        }
+      } catch (_) {
+        // Fall through to heuristic parse.
+      }
+    }
+
+    final parsed = ParsedUsAddress.parseFreeform(query);
+    return parsed.hasLine1 ? parsed : null;
+  }
+
+  Future<ParsedUsAddress?> _reverseGeocodeWithPlacemark(
+    double lat,
+    double lng,
+  ) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(lat, lng);
+      if (placemarks.isEmpty) return null;
+      return ParsedUsAddress.fromPlacemark(
+        placemarks.first,
+        latitude: lat,
+        longitude: lng,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<String?> _lookupZipFromCoordinates(double lat, double lng) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(lat, lng);
+      if (placemarks.isEmpty) return null;
+      final zip = placemarks.first.postalCode?.trim() ?? '';
+      if (zip.isEmpty) return null;
+      return zip.replaceAll(RegExp(r'\D'), '');
+    } catch (_) {
+      return null;
     }
   }
 

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:intl/intl.dart';
 
 import 'api_datetime.dart';
@@ -100,28 +102,137 @@ RentalWindow? findOverlappingRentalOrder({
   return null;
 }
 
+/// ISO date keys (`yyyy-MM-dd`) from listing [blocked_dates].
+Set<String> parseBlockedDateKeys(dynamic raw) {
+  Iterable<dynamic> items = const [];
+  if (raw is String && raw.trim().isNotEmpty) {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is List) items = decoded;
+    } catch (_) {
+      return {};
+    }
+  } else if (raw is List) {
+    items = raw;
+  } else {
+    return {};
+  }
+  final out = <String>{};
+  for (final item in items) {
+    final key = parseRentalDate(item);
+    if (key != null && key.isNotEmpty) out.add(key);
+  }
+  return out;
+}
+
+bool isDayBlocked(DateTime day, Set<String> blockedIsoDates) {
+  if (blockedIsoDates.isEmpty) return false;
+  final key = DateFormat('yyyy-MM-dd').format(
+    DateTime(day.year, day.month, day.day),
+  );
+  return blockedIsoDates.contains(key);
+}
+
 bool isDayInBookedRange(DateTime day, Iterable<RentalWindow> booked) {
+  return isDayInBookedRangeWithTurnaround(day, booked, turnaroundHours: 0);
+}
+
+/// Includes [turnaroundHours] after each rental end (day-granular calendar).
+bool isDayInBookedRangeWithTurnaround(
+  DateTime day,
+  Iterable<RentalWindow> booked, {
+  int turnaroundHours = 0,
+}) {
   final normalized = DateTime(day.year, day.month, day.day);
   for (final window in booked) {
     final start = rentalDateToDateTime(window.startDate);
     final end = rentalDateToDateTime(window.endDate);
     if (start == null || end == null) continue;
-    if (!normalized.isBefore(start) && !normalized.isAfter(end)) return true;
+    var blockedThrough = end;
+    if (turnaroundHours > 0) {
+      final withBuffer = end.add(Duration(hours: turnaroundHours));
+      blockedThrough = DateTime(
+        withBuffer.year,
+        withBuffer.month,
+        withBuffer.day,
+      );
+    }
+    if (!normalized.isBefore(start) && !normalized.isAfter(blockedThrough)) {
+      return true;
+    }
   }
   return false;
 }
 
-/// True when a listing has at least one bookable calendar day on or after today.
-bool productHasFutureBookableDates(String? availableFrom, String? availableTo) {
-  final end = rentalDateToDateTime(availableTo);
-  final start = rentalDateToDateTime(availableFrom);
-  if (end == null || start == null) return false;
-  if (start.isAfter(end)) return false;
+DateTime dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  if (end.isBefore(today)) return false;
-
-  final effectiveStart = start.isBefore(today) ? today : start;
-  return !effectiveStart.isAfter(end);
+/// First calendar day allowed as rental start given advance notice.
+DateTime earliestRentalStartDay(int advanceNoticeHours) {
+  final afterNotice = DateTime.now().add(Duration(hours: advanceNoticeHours));
+  return dateOnly(afterNotice);
 }
+
+int rentalDayCountForDates(DateTime start, DateTime end) {
+  final a = dateOnly(start);
+  final b = dateOnly(end);
+  return b.difference(a).inDays + 1;
+}
+
+String? validateRentalLengthDays({
+  required int dayCount,
+  int? minRentalDays,
+  int? maxRentalDays,
+}) {
+  if (minRentalDays != null && dayCount < minRentalDays) {
+    return 'Minimum rental length is $minRentalDays day(s).';
+  }
+  if (maxRentalDays != null && dayCount > maxRentalDays) {
+    return 'Maximum rental length is $maxRentalDays day(s).';
+  }
+  return null;
+}
+
+bool rentalRangeIncludesBlockedDay(
+  DateTime start,
+  DateTime end,
+  Set<String> blockedIsoDates,
+) {
+  if (blockedIsoDates.isEmpty) return false;
+  var cursor = dateOnly(start);
+  final last = dateOnly(end);
+  while (!cursor.isAfter(last)) {
+    if (isDayBlocked(cursor, blockedIsoDates)) return true;
+    cursor = cursor.add(const Duration(days: 1));
+  }
+  return false;
+}
+
+String? validateRentalStartAdvanceNotice({
+  required DateTime start,
+  required int advanceNoticeHours,
+}) {
+  final earliest = earliestRentalStartDay(advanceNoticeHours);
+  if (dateOnly(start).isBefore(earliest)) {
+    if (advanceNoticeHours <= 24) {
+      return 'This listing requires at least $advanceNoticeHours hours advance notice before the rental start.';
+    }
+    final days = (advanceNoticeHours / 24).ceil();
+    return 'This listing requires about $days day(s) advance notice before the rental start.';
+  }
+  return null;
+}
+
+bool isDayUnavailableForRental(
+  DateTime day, {
+  required Iterable<RentalWindow> booked,
+  required Set<String> blockedIsoDates,
+  int turnaroundHours = 0,
+}) {
+  if (isDayBlocked(day, blockedIsoDates)) return true;
+  return isDayInBookedRangeWithTurnaround(
+    day,
+    booked,
+    turnaroundHours: turnaroundHours,
+  );
+}
+

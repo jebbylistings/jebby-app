@@ -326,7 +326,6 @@ class _SubCategoryScreenState extends State<SubCategoryScreen> {
         item.price,
         item.stars,
         AppUrl.baseUrlM + (item.image ?? ''),
-        item.specifications,
         item.userId,
         item.description,
         item.delivery_charges,

@@ -204,6 +204,168 @@ class StripeRequirementFields {
     return keys.toList();
   }
 
+  static List<String> collectPendingVerificationKeys(
+    Map<String, dynamic>? requirements,
+  ) {
+    if (requirements == null) return const [];
+    final value = requirements['pending_verification'];
+    if (value is! List) return const [];
+    return value
+        .map((item) => item?.toString().trim() ?? '')
+        .where((item) => item.isNotEmpty)
+        .toList();
+  }
+
+  static bool isBankRequirementKey(String key) {
+    final lower = key.toLowerCase();
+    return lower.contains('external_account') ||
+        lower.startsWith('bank.') ||
+        lower.contains('bank_account') ||
+        lower.contains('ownership') ||
+        (lower.contains('document') && lower.contains('bank'));
+  }
+
+  static bool _isBankOrOwnershipPendingKey(String key) {
+    if (isBankRequirementKey(key)) return true;
+    final lower = key.toLowerCase();
+    return lower.contains('ownership') ||
+        lower.contains('proof') && lower.contains('bank');
+  }
+
+  /// Bank account / ownership docs submitted and Stripe is reviewing.
+  static bool isBankPendingReview(Map<String, dynamic>? requirements) {
+    if (requirements == null) return false;
+    final pending = collectPendingVerificationKeys(requirements);
+    return pending.any(_isBankOrOwnershipPendingKey);
+  }
+
+  /// Stripe is reviewing submitted info (e.g. bank ownership) with nothing else due.
+  static bool isPayoutPendingReview(Map<String, dynamic>? requirements) {
+    if (requirements == null) return false;
+    if (isBankPendingReview(requirements)) return true;
+    if (collectDueKeys(requirements).isNotEmpty) return false;
+    return collectPendingVerificationKeys(requirements).isNotEmpty;
+  }
+
+  static bool isIdentityRequirementKey(String key) {
+    if (isBankRequirementKey(key)) return false;
+    final lower = key.toLowerCase();
+    return lower.contains('verification') ||
+        lower.contains('document') ||
+        lower.contains('identity') ||
+        lower.startsWith('individual.');
+  }
+
+  /// ID / KYC docs submitted and Stripe is reviewing (not bank-only pending).
+  static bool isIdentityPendingReview(Map<String, dynamic>? requirements) {
+    if (requirements == null) return false;
+    final due = collectDueKeys(requirements);
+    if (due.any(isIdentityRequirementKey)) return false;
+    final pending = collectPendingVerificationKeys(requirements);
+    return pending.any(isIdentityRequirementKey);
+  }
+
+  /// Safe to show identity outcome / start payout track (not still in Stripe review).
+  static bool identityClearedForNextStep(Map<String, dynamic> response) {
+    final requirements = requirementsFromResponse(response);
+    if (isIdentityPendingReview(requirements)) return false;
+
+    if (response['identity_verified'] == true) return true;
+
+    final status = response['status']?.toString().trim() ?? '';
+    if (status == 'active') return true;
+
+    final dueKeys = collectDueKeys(requirements);
+    if (status == 'requires_info' && isBankOnlyRequirements(dueKeys)) {
+      return true;
+    }
+    return false;
+  }
+
+  /// True only when payouts are actually enabled — not merely an active Connect account.
+  static bool payoutsFullyEnabledFromResponse(Map<String, dynamic> response) {
+    final requirements = requirementsFromResponse(response);
+    if (isPayoutPendingReview(requirements)) return false;
+    if (isBankPendingReview(requirements)) return false;
+
+    final disabledReason = requirements?['disabled_reason'];
+    if (disabledReason != null && disabledReason.toString().trim().isNotEmpty) {
+      return false;
+    }
+
+    final account = response['account'];
+    final payoutsEnabled = response['payouts_enabled'] == true ||
+        (account is Map && account['payouts_enabled'] == true);
+    if (!payoutsEnabled) return false;
+
+    final status = response['status']?.toString().trim().toLowerCase() ?? '';
+    if (status == 'requires_info' ||
+        status == 'not_started' ||
+        status == 'pending' ||
+        status == 'in_review' ||
+        status == 'active') {
+      return false;
+    }
+
+    // Only explicit post-review success — never treat Connect "active" as payouts live.
+    return status == 'enabled';
+  }
+
+  /// Renters can book / payout nag banners should hide (Stripe live for earnings).
+  static bool payoutSetupCompleteForBookings(Map<String, dynamic> response) {
+    if (payoutsFullyEnabledFromResponse(response)) return true;
+    if (shouldShowPayoutInReview(response)) return false;
+
+    final requirements = requirementsFromResponse(response);
+    if (isPayoutPendingReview(requirements)) return false;
+    if (isBankPendingReview(requirements)) return false;
+
+    final account = response['account'];
+    final payoutsEnabled = response['payouts_enabled'] == true ||
+        (account is Map && account['payouts_enabled'] == true);
+    final chargesEnabled = response['charges_enabled'] == true ||
+        (account is Map && account['charges_enabled'] == true);
+    if (!payoutsEnabled || !chargesEnabled) return false;
+
+    final status = response['status']?.toString().trim().toLowerCase() ?? '';
+    if (status == 'not_started' ||
+        status == 'pending' ||
+        status == 'in_review') {
+      return false;
+    }
+
+    if (status == 'requires_info') {
+      final due = collectDueKeys(requirements);
+      return due.isEmpty || !dueKeysNeedBank(due);
+    }
+
+    return status == 'active' || status == 'enabled';
+  }
+
+  /// After bank submit / verify: show success only on an explicit enabled status.
+  static bool showPayoutEnabledAfterBankSubmit(Map<String, dynamic> response) {
+    final status = response['status']?.toString().trim().toLowerCase() ?? '';
+    if (status != 'enabled') return false;
+    return payoutsFullyEnabledFromResponse(response);
+  }
+
+  /// Bank submitted and Stripe is reviewing — not “still need to add bank”.
+  static bool shouldShowPayoutInReview(Map<String, dynamic> response) {
+    if (showPayoutEnabledAfterBankSubmit(response)) return false;
+
+    final requirements = requirementsFromResponse(response);
+    if (isPayoutPendingReview(requirements)) return true;
+    if (isBankPendingReview(requirements)) return true;
+
+    final status = response['status']?.toString().trim().toLowerCase() ?? '';
+    if (status == 'pending' || status == 'in_review') {
+      final last4 = response['bank_last4']?.toString().trim();
+      return last4 != null && last4.isNotEmpty;
+    }
+
+    return false;
+  }
+
   static List<String> collectEventuallyDueKeys(
     Map<String, dynamic>? requirements,
   ) {
@@ -310,12 +472,33 @@ class StripeRequirementFields {
   }
 
   static bool dueKeysNeedBank(List<String> dueKeys) {
-    return dueKeys.any((key) {
-      final lower = key.toLowerCase();
-      return lower.contains('external_account') ||
-          lower.startsWith('bank.') ||
-          lower.contains('bank_account');
-    });
+    return dueKeys.any(isBankRequirementKey);
+  }
+
+  static bool isBankOnlyRequirements(List<String> dueKeys) {
+    return dueKeys.isNotEmpty && dueKeys.every(isBankRequirementKey);
+  }
+
+  /// True when the identity hub / action-needed screen should handle gaps (not bank-only).
+  static bool shouldPromptIdentityAction(
+    List<String> dueKeys, {
+    required bool identityAlreadyVerified,
+  }) {
+    if (identityAlreadyVerified) return false;
+    if (dueKeys.isEmpty) return true;
+    return !isBankOnlyRequirements(dueKeys);
+  }
+
+  static Map<String, dynamic>? requirementsFromResponse(
+    Map<String, dynamic> response,
+  ) {
+    final direct = response['requirements'];
+    if (direct is Map) return Map<String, dynamic>.from(direct);
+    final account = response['account'];
+    if (account is Map && account['requirements'] is Map) {
+      return Map<String, dynamic>.from(account['requirements'] as Map);
+    }
+    return null;
   }
 
   static bool dueKeysNeedBusiness(List<String> dueKeys) {

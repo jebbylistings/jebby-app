@@ -37,7 +37,7 @@ class Data {
   int? subcategoryId;
   String? name;
   int? price;
-  String? specifications;
+  String? conditionRating;
   String? description;
   String? createdAt;
   String? updatedAt;
@@ -46,8 +46,6 @@ class Data {
   int? productId;
   int? offersPickup;
   int? offersDelivery;
-  String? availableFrom;
-  String? availableTo;
   String? address;
   var latitude;
   var longitude;
@@ -56,6 +54,11 @@ class Data {
   String? delivery_charges;
   TransportOptions? transport;
   List<RentalWindow> bookedDates = [];
+  Set<String> blockedDateKeys = {};
+  int advanceNoticeHours = 24;
+  int turnaroundHours = 0;
+  int? minRentalDays;
+  int? maxRentalDays;
 
   Data({
     this.id,
@@ -64,7 +67,6 @@ class Data {
     this.subcategoryId,
     this.name,
     this.price,
-    this.specifications,
     this.description,
     this.createdAt,
     this.updatedAt,
@@ -73,8 +75,6 @@ class Data {
     this.productId,
     this.offersPickup,
     this.offersDelivery,
-    this.availableFrom,
-    this.availableTo,
     this.address,
     this.latitude,
     this.longitude,
@@ -90,7 +90,7 @@ class Data {
     subcategoryId = json['subcategory_id'];
     name = json['name'];
     price = json['price'];
-    specifications = json['specifications'];
+    conditionRating = json['condition_rating']?.toString();
     description = json['description'];
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
@@ -103,8 +103,6 @@ class Data {
     offersDelivery = json['offers_delivery'] is bool
         ? (json['offers_delivery'] ? 1 : 0)
         : json['offers_delivery'];
-    availableFrom = json['available_from'];
-    availableTo = json['available_to'];
     address = json['address']?.toString();
     latitude = json['latitude'];
     longitude = json['longitude'];
@@ -140,6 +138,12 @@ class Data {
                 : int.tryParse('${json['delivery_radius_miles']}'),
             deliveryCharges: json['delivery_charges']?.toString(),
           );
+    blockedDateKeys = parseBlockedDateKeys(json['blocked_dates']);
+    advanceNoticeHours =
+        int.tryParse('${json['advance_notice_hours']}') ?? 24;
+    turnaroundHours = int.tryParse('${json['turnaround_hours']}') ?? 0;
+    minRentalDays = int.tryParse('${json['min_rental_days']}');
+    maxRentalDays = int.tryParse('${json['max_rental_days']}');
     final rawBooked = json['booked_dates'];
     if (rawBooked is List) {
       bookedDates = rawBooked
@@ -174,7 +178,6 @@ class Data {
     data['subcategory_id'] = this.subcategoryId;
     data['name'] = this.name;
     data['price'] = this.price;
-    data['specifications'] = this.specifications;
     data['description'] = this.description;
     data['created_at'] = this.createdAt;
     data['updated_at'] = this.updatedAt;
@@ -183,8 +186,6 @@ class Data {
     data['product_id'] = this.productId;
     data['offers_pickup'] = this.offersPickup;
     data['offers_delivery'] = this.offersDelivery;
-    data['available_from'] = this.availableFrom;
-    data['available_to'] = this.availableTo;
     data['address'] = this.address;
     data['latitude'] = this.latitude;
     data['longitude'] = this.longitude;

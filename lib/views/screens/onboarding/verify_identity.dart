@@ -1,23 +1,28 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:jebby/constants/color.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:jebby/views/screens/onboarding/bank_account.dart';
-import 'package:jebby/views/screens/onboarding/onboarding_form_widgets.dart';
-import 'package:jebby/views/screens/onboarding/onboarding_scaffold.dart';
+import 'package:jebby/constants/color.dart';
+import 'package:jebby/models/onboarding_state.dart';
 import 'package:jebby/models/provider_onboarding_data.dart';
 import 'package:jebby/utils/show_snackbar.dart';
 import 'package:jebby/view_models/onboarding_controller.dart';
+import 'package:jebby/views/screens/onboarding/onboarding_form_widgets.dart';
+import 'package:jebby/views/screens/onboarding/onboarding_kit.dart';
 
 class VerifyIdentityScreen extends StatefulWidget {
   final bool returnToReview;
+  final bool embedded;
+  final VoidCallback? onFinished;
+  final VoidCallback? onDraftExit;
 
   const VerifyIdentityScreen({
     super.key,
     this.returnToReview = false,
+    this.embedded = false,
+    this.onFinished,
+    this.onDraftExit,
   });
 
   @override
@@ -25,6 +30,8 @@ class VerifyIdentityScreen extends StatefulWidget {
 }
 
 class _VerifyIdentityScreenState extends State<VerifyIdentityScreen> {
+  static const Color _fieldSurface = Colors.white;
+
   late final OnboardingController _controller = ensureOnboardingController();
   final ImagePicker _picker = ImagePicker();
   late String _idType;
@@ -35,15 +42,23 @@ class _VerifyIdentityScreenState extends State<VerifyIdentityScreen> {
   void initState() {
     super.initState();
     if (!widget.returnToReview) {
-      _controller.advanceTo(7);
+      _controller.advanceTo(OnboardingSteps.stepIdentityDocs);
     }
     final data = _controller.providerData;
     _idType = data.idType;
+    if (!ProviderIdType.labels.containsKey(_idType)) {
+      _idType = ProviderIdType.drivingLicense;
+    }
     _frontPath = data.frontImagePath;
     _backPath = data.backImagePath;
   }
 
   bool get _needsBack => ProviderIdType.requiresBack(_idType);
+
+  bool get _hasFront =>
+      _frontPath != null && File(_frontPath!).existsSync();
+
+  bool get _hasBack => _backPath != null && File(_backPath!).existsSync();
 
   void _showError(String message) =>
       showAppErrorSnackbar(message, title: 'Required');
@@ -64,12 +79,49 @@ class _VerifyIdentityScreenState extends State<VerifyIdentityScreen> {
     });
   }
 
-  Future<void> _continue() async {
-    if (_frontPath == null || !File(_frontPath!).existsSync()) {
+  Future<void> _saveDraftAndExit() async {
+    var data = _controller.providerData.copyWith(idType: _idType);
+
+    if (_hasFront) {
+      data = data.copyWith(
+        frontImagePath: _frontPath,
+        clearFrontFileId: true,
+      );
+    }
+
+    if (!_needsBack) {
+      data = data.copyWith(
+        backImagePath: '',
+        clearBackFileId: true,
+      );
+    } else if (_hasBack) {
+      data = data.copyWith(
+        backImagePath: _backPath,
+        clearBackFileId: true,
+      );
+    }
+
+    await _controller.updateProviderData(data);
+
+    if (widget.onDraftExit != null) {
+      widget.onDraftExit!();
+      return;
+    }
+    if (!mounted) return;
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+      return;
+    }
+    Get.back();
+  }
+
+  Future<void> _saveAndContinue() async {
+    if (!_hasFront) {
       _showError('Please upload the front of your ID.');
       return;
     }
-    if (_needsBack && (_backPath == null || !File(_backPath!).existsSync())) {
+    if (_needsBack && !_hasBack) {
       _showError('Please upload the back of your ID.');
       return;
     }
@@ -85,152 +137,245 @@ class _VerifyIdentityScreenState extends State<VerifyIdentityScreen> {
     );
 
     if (widget.returnToReview) {
-      await _controller.advanceTo(9);
-      Get.back();
+      await _controller.advanceTo(OnboardingSteps.stepReview);
+    }
+    if (widget.onFinished != null) {
+      widget.onFinished!();
       return;
     }
+    Get.back();
+  }
 
-    await _controller.advanceTo(8);
-    Get.to(() => const BankAccountScreen());
+  void _primaryAction() {
+    if (!_hasFront) {
+      _pickImage(false);
+      return;
+    }
+    if (_needsBack && !_hasBack) {
+      _pickImage(true);
+      return;
+    }
+    _saveAndContinue();
+  }
+
+  String get _primaryLabel {
+    if (!_hasFront) return 'Add front of ID';
+    if (_needsBack && !_hasBack) return 'Add back of ID';
+    return widget.returnToReview ? 'Save' : 'Continue';
   }
 
   @override
   Widget build(BuildContext context) {
-    return OnboardingScaffold(
-      currentStep: 7,
-      title: 'Verify Identity',
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const OnboardingSectionTitle(
-            'Upload your government ID',
-            subtitle:
-                'Choose your ID type and upload clear photos. Documents are sent to Stripe when you submit on the final step.',
-          ),
-          Text(
-            'ID type',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8),
-          ...ProviderIdType.labels.entries.map((entry) {
-            return RadioListTile<String>(
-              value: entry.key,
-              groupValue: _idType,
-              contentPadding: EdgeInsets.zero,
-              activeColor: AppColors.darkBlue,
-              title: Text(
-                entry.value,
-                style: GoogleFonts.inter(fontSize: 15, color: Colors.black87),
-              ),
-              onChanged: (value) {
-                if (value == null) return;
-                setState(() {
-                  _idType = value;
-                  if (!ProviderIdType.requiresBack(value)) {
-                    _backPath = null;
-                  }
-                });
-              },
-            );
-          }),
-          const SizedBox(height: 8),
-          _UploadTile(
-            label: 'Front of ID',
-            path: _frontPath,
-            onTap: () => _pickImage(false),
-          ),
-          if (_needsBack) ...[
-            const SizedBox(height: 12),
-            _UploadTile(
-              label: 'Back of ID',
-              path: _backPath,
-              onTap: () => _pickImage(true),
-            ),
-          ],
-          const SizedBox(height: 24),
-          const OnboardingStripeFooter(),
-          const SizedBox(height: 24),
-        ],
-      ),
-      bottomBar: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-        child: OnboardingPrimaryButton(
-          label: widget.returnToReview ? 'Save' : 'Continue',
-          onPressed: _continue,
+    final idTypes = ProviderIdType.labels.keys.toList();
+
+    final formFields = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 20),
+        Text(
+          'Add your photo ID',
+          style: onboardingNunito(size: 22, weight: FontWeight.w800),
         ),
-      ),
+        const SizedBox(height: 8),
+        Text(
+          "Your photo ID helps Stripe confirm it's you.",
+          style: onboardingNunito(
+            size: 15,
+            weight: FontWeight.w600,
+            color: AppColors.jebbyTextMuted,
+            height: 1.35,
+          ),
+        ),
+        const SizedBox(height: 20),
+        const OnboardingFieldLabel('Document type', muted: true),
+        OnboardingDropdownField<String>(
+          value: idTypes.contains(_idType) ? _idType : idTypes.first,
+          items: idTypes,
+          fillColor: _fieldSurface,
+          labelBuilder: (key) => ProviderIdType.labels[key]!,
+          onChanged: (value) {
+            if (value == null) return;
+            setState(() {
+              _idType = value;
+              if (!ProviderIdType.requiresBack(value)) {
+                _backPath = null;
+              }
+            });
+          },
+        ),
+        const SizedBox(height: 16),
+        _PhotoIdUploadCard(
+          title: 'Front of ID',
+          subtitle: _hasFront ? 'Photo added' : 'Add a clear photo',
+          isComplete: _hasFront,
+          isNextAction: !_hasFront,
+          onTap: () => _pickImage(false),
+        ),
+        if (_needsBack) ...[
+          const SizedBox(height: 16),
+          _PhotoIdUploadCard(
+            title: 'Back of ID',
+            subtitle: _hasBack ? 'Photo added' : 'Add a clear photo',
+            isComplete: _hasBack,
+            isNextAction: _hasFront && !_hasBack,
+            onTap: () => _pickImage(true),
+          ),
+        ],
+        const SizedBox(height: 16),
+        const OnboardingInfoBanner(
+          message:
+              'Make sure your photo is clear and all four corners are visible.',
+        ),
+      ],
+    );
+
+    final actionButtons = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        OnboardingPrimaryButton(
+          label: _primaryLabel,
+          onPressed: _primaryAction,
+        ),
+        const SizedBox(height: 10),
+        OnboardingSecondaryButton(
+          label: 'Save and exit',
+          onPressed: () => _saveDraftAndExit(),
+        ),
+      ],
+    );
+
+    if (widget.embedded) {
+      return OnboardingEmbeddedFormLayout(
+        scrollChild: formFields,
+        bottomBar: actionButtons,
+      );
+    }
+
+    return OnboardingShell(
+      title: 'Verify your identity',
+      subtitle: 'Upload your ID to continue verification.',
+      headerDivider: true,
+      body: formFields,
+      bottomBar: actionButtons,
     );
   }
 }
 
-class _UploadTile extends StatelessWidget {
-  final String label;
-  final String? path;
+class _PhotoIdUploadCard extends StatelessWidget {
+  static const Color _completeCheckGreen = Color(0xFF52B788);
+  static const Color _completeCheckBg = Color(0xFFEDF7F1);
+
+  final String title;
+  final String subtitle;
+  final bool isComplete;
+  final bool isNextAction;
   final VoidCallback onTap;
 
-  const _UploadTile({
-    required this.label,
-    required this.path,
+  const _PhotoIdUploadCard({
+    required this.title,
+    required this.subtitle,
+    required this.isComplete,
+    required this.isNextAction,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final hasImage = path != null && File(path!).existsSync();
+    final bg = isNextAction && !isComplete
+        ? AppColors.earnerOrangeSoft
+        : Colors.white;
+    final border = isNextAction && !isComplete
+        ? AppColors.jebbyAccentOrange.withValues(alpha: 0.35)
+        : const Color(0xFFE3E6EC);
+    final iconBg = isNextAction && !isComplete
+        ? AppColors.primaryColorLight
+        : AppColors.jebbySoftBlue;
+    final iconFg = isNextAction && !isComplete
+        ? AppColors.jebbyAccentOrange
+        : AppColors.jebbyBlue;
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF7F7F9),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade300),
+    return Material(
+      color: bg,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: border),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.photo_camera_outlined,
+                  color: iconFg,
+                  size: 22,
+                ),
               ),
-              clipBehavior: Clip.antiAlias,
-              child: hasImage
-                  ? Image.file(File(path!), fit: BoxFit.cover)
-                  : Icon(Icons.add_a_photo_outlined, color: Colors.grey.shade600),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: onboardingNunito(
+                        size: 17,
+                        weight: FontWeight.w800,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    hasImage ? 'Tap to replace' : 'Tap to upload',
-                    style: GoogleFonts.inter(fontSize: 13, color: Colors.black45),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: onboardingNunito(
+                        size: 14,
+                        weight: FontWeight.w600,
+                        color: AppColors.jebbyTextMuted,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Icon(Icons.chevron_right, color: Colors.grey.shade500),
-          ],
+              if (isComplete) ...[
+                Container(
+                  width: 30,
+                  height: 30,
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(
+                    color: _completeCheckBg,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check,
+                    size: 20,
+                    color: _completeCheckGreen,
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.jebbyTextMuted.withValues(alpha: 0.7),
+                  size: 24,
+                ),
+              ] else
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: isNextAction
+                      ? AppColors.jebbyAccentOrange
+                      : AppColors.jebbyTextMuted.withValues(alpha: 0.7),
+                  size: 24,
+                ),
+            ],
+          ),
         ),
       ),
     );

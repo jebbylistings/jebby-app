@@ -453,21 +453,17 @@ class ApiRepository extends ChangeNotifier {
     subcategory_id,
     name,
     price,
-    specifications,
     description,
     id,
     prodID,
     user_id1,
     offers_pickup,
     offers_delivery,
-    available_from,
-    available_to,
     delivery_charges,
     security_deposit,
     address,
     latitude,
     longitude, [
-    List<dynamic>? handoffWindows,
     String? deliveryRadiusMiles,
   ]) async {
     final body = <String, dynamic>{
@@ -476,26 +472,18 @@ class ApiRepository extends ChangeNotifier {
       "subcategory_id": subcategory_id,
       "name": name,
       "price": price,
-      "specifications": specifications,
       "description": description,
       "id": id,
       "product_id": prodID,
       "user_id1": user_id1,
       "offers_pickup": offers_pickup,
       "offers_delivery": offers_delivery,
-      "available_from": available_from,
-      "available_to": available_to,
       "delivery_charges": delivery_charges,
       "security_deposit": security_deposit,
       "address": address,
       "latitude": latitude,
       "longitude": longitude,
     };
-    if (handoffWindows != null) {
-      body["handoff_windows"] = jsonEncode(
-        handoffWindows.map((w) => (w as dynamic).toJson()).toList(),
-      );
-    }
     if (deliveryRadiusMiles != null && deliveryRadiusMiles.isNotEmpty) {
       body["delivery_radius_miles"] = deliveryRadiusMiles;
     }
@@ -515,6 +503,39 @@ class ApiRepository extends ChangeNotifier {
     } else if (response.statusCode == 500) {
     }
     return ProductUpdateModel();
+  }
+
+  Future<Map<String, dynamic>?> fetchProductDetailRaw(String productId) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.getProductsByID + productId),
+      headers: await ApiHeaders.json(),
+    );
+    if (response.statusCode != 200) return null;
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map && decoded['data'] is List) {
+        final list = decoded['data'] as List;
+        for (final item in list) {
+          if (item is Map && item['images'] == null) {
+            return Map<String, dynamic>.from(item);
+          }
+        }
+        if (list.isNotEmpty && list.first is Map) {
+          return Map<String, dynamic>.from(list.first as Map);
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Listing redesign update — does not navigate away on success.
+  Future<bool> updateListingJson(Map<String, dynamic> body) async {
+    final response = await http.post(
+      Uri.parse("${Url}/productUpdate"),
+      body: json.encode(body),
+      headers: await ApiHeaders.json(),
+    );
+    return response.statusCode == 200;
   }
 
   Future<GetCategoryByIdModel> CategoryId(
@@ -1758,6 +1779,58 @@ class ApiRepository extends ChangeNotifier {
     return completer.future;
   }
 
+  Future<dynamic> submitProviderBankAccount({
+    required Map<String, dynamic> body,
+    required onResponse(dynamic data),
+    required onError(error),
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse(AppUrl.stripeProviderBankAccount),
+        body: json.encode(body),
+        headers: await ApiHeaders.json(),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        onResponse(data is Map ? data : {'status': 'in_review', 'raw': data});
+        return data;
+      }
+
+      final errorBody = _tryDecodeResponseBody(response.body);
+      onError(
+        _extractApiErrorMessage(
+          errorBody,
+          fallback: 'Unable to add bank account (${response.statusCode})',
+        ),
+      );
+    } catch (e) {
+      onError(e.toString());
+    }
+
+    return {};
+  }
+
+  Future<Map<String, dynamic>> submitProviderBankAccountFuture({
+    required Map<String, dynamic> body,
+  }) async {
+    final completer = Completer<Map<String, dynamic>>();
+    await submitProviderBankAccount(
+      body: body,
+      onResponse: (data) {
+        if (data is Map<String, dynamic>) {
+          completer.complete(data);
+        } else if (data is Map) {
+          completer.complete(Map<String, dynamic>.from(data));
+        } else {
+          completer.completeError('Invalid bank submit response');
+        }
+      },
+      onError: (error) => completer.completeError(error.toString()),
+    );
+    return completer.future;
+  }
+
   Future<dynamic> submitProviderRequirements({
     required Map<String, dynamic> body,
     required onResponse(dynamic data),
@@ -1884,14 +1957,23 @@ class ApiRepository extends ChangeNotifier {
   Future<bool> uploadProductImages({
     required String productId,
     required List<dio.MultipartFile> files,
-    required String insertAtJson,
+    List<int?>? insertAt,
+    bool append = false,
   }) async {
     if (files.isEmpty) return true;
     try {
+      final Object insertAtField;
+      if (insertAt != null && insertAt.length == files.length) {
+        insertAtField = insertAt;
+      } else if (append || insertAt == null) {
+        insertAtField = 'append';
+      } else {
+        insertAtField = insertAt;
+      }
       final formData = dio.FormData();
       formData.fields
         ..add(MapEntry('id', productId))
-        ..add(MapEntry('insert_at', insertAtJson));
+        ..add(MapEntry('insert_at', jsonEncode(insertAtField)));
       for (final part in files) {
         formData.files.add(MapEntry('file', part));
       }

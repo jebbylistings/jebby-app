@@ -10,8 +10,9 @@ const Color _fieldFill = Color(0xFFF7F7F9);
 
 class OnboardingFieldLabel extends StatelessWidget {
   final String text;
+  final bool muted;
 
-  const OnboardingFieldLabel(this.text, {super.key});
+  const OnboardingFieldLabel(this.text, {super.key, this.muted = false});
 
   @override
   Widget build(BuildContext context) {
@@ -20,9 +21,9 @@ class OnboardingFieldLabel extends StatelessWidget {
       child: Text(
         text,
         style: GoogleFonts.inter(
-          fontSize: 14,
+          fontSize: muted ? 13 : 14,
           fontWeight: FontWeight.w600,
-          color: Colors.black87,
+          color: muted ? const Color(0xFF6B7280) : Colors.black87,
         ),
       ),
     );
@@ -38,6 +39,10 @@ class OnboardingTextField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final ValueChanged<String>? onChanged;
   final Widget? suffix;
+  final bool readOnly;
+  final Color? fillColor;
+  final int? minLines;
+  final int? maxLines;
 
   const OnboardingTextField({
     super.key,
@@ -49,6 +54,10 @@ class OnboardingTextField extends StatelessWidget {
     this.inputFormatters,
     this.onChanged,
     this.suffix,
+    this.readOnly = false,
+    this.fillColor,
+    this.minLines,
+    this.maxLines,
   });
 
   @override
@@ -57,7 +66,10 @@ class OnboardingTextField extends StatelessWidget {
       controller: controller,
       keyboardType: keyboardType,
       maxLength: maxLength,
+      minLines: minLines,
+      maxLines: maxLines ?? (minLines != null ? null : 1),
       obscureText: obscureText,
+      readOnly: readOnly,
       inputFormatters: inputFormatters,
       onChanged: onChanged,
       style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF1B1B1F)),
@@ -69,7 +81,7 @@ class OnboardingTextField extends StatelessWidget {
         ),
         counterText: maxLength != null ? null : '',
         filled: true,
-        fillColor: _fieldFill,
+        fillColor: fillColor ?? _fieldFill,
         suffixIcon: suffix,
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -89,11 +101,15 @@ class OnboardingTextField extends StatelessWidget {
 class OnboardingDateField extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
+  final Color? fillColor;
+  final bool showCalendarIcon;
 
   const OnboardingDateField({
     super.key,
     required this.label,
     required this.onTap,
+    this.fillColor,
+    this.showCalendarIcon = true,
   });
 
   @override
@@ -105,7 +121,7 @@ class OnboardingDateField extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
-          color: _fieldFill,
+          color: fillColor ?? _fieldFill,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.grey.shade300),
         ),
@@ -122,7 +138,8 @@ class OnboardingDateField extends StatelessWidget {
                 ),
               ),
             ),
-            Icon(Icons.calendar_today_outlined, size: 18, color: Colors.grey.shade600),
+            if (showCalendarIcon)
+              Icon(Icons.calendar_today_outlined, size: 18, color: Colors.grey.shade600),
           ],
         ),
       ),
@@ -131,30 +148,33 @@ class OnboardingDateField extends StatelessWidget {
 }
 
 class OnboardingDropdownField<T> extends StatelessWidget {
-  final T value;
+  final T? value;
   final List<T> items;
   final String Function(T item) labelBuilder;
   final ValueChanged<T?>? onChanged;
   final String? hint;
+  final Color? fillColor;
 
   const OnboardingDropdownField({
     super.key,
-    required this.value,
+    this.value,
     required this.items,
     required this.labelBuilder,
     required this.onChanged,
     this.hint,
+    this.fillColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    final effectiveValue = items.contains(value) ? value : null;
+    final effectiveValue =
+        value != null && items.contains(value) ? value : null;
 
     return Container(
       height: 48,
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: _fieldFill,
+        color: fillColor ?? _fieldFill,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade300),
       ),
@@ -243,12 +263,14 @@ Future<DateTime?> showOnboardingDatePicker(
   required DateTime initialDate,
   required DateTime firstDate,
   required DateTime lastDate,
+  DatePickerEntryMode entryMode = DatePickerEntryMode.calendar,
 }) {
   return showDatePicker(
     context: context,
     initialDate: initialDate,
     firstDate: firstDate,
     lastDate: lastDate,
+    initialEntryMode: entryMode,
     helpText: 'Select date of birth',
     cancelText: 'Cancel',
     confirmText: 'OK',

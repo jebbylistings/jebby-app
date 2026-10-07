@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:jebby/constants/color.dart';
+import 'package:jebby/models/onboarding_state.dart';
+import 'package:jebby/models/stripe_requirement_fields.dart';
 import 'package:jebby/repositories/api_repository.dart';
 import 'package:jebby/utils/earner_navigation.dart';
 import 'package:jebby/view_models/onboarding_controller.dart';
-import 'package:jebby/views/screens/onboarding/review_submit.dart';
 import 'package:jebby/views/screens/vendors/stripe_requirements_modal.dart';
 import 'package:provider/provider.dart';
 
@@ -29,11 +30,14 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
   bool isLoading = true;
   bool isError = false;
   bool isEmpty = false;
-  bool isAccountLoading = false;
+  bool isAccountLoading = true;
   String? accountStatus;
   String? accountMessage;
   Map<String, dynamic>? accountDetails;
-  bool _requirementsModalShown = false;
+  bool _identityVerified = false;
+  bool _payoutsEnabled = false;
+  bool _payoutInReview = false;
+  String? _stripeBankLast4;
 
   TextStyle _nunito({
     required double size,
@@ -66,24 +70,25 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
     );
   }
 
+  bool _hasNoVisibleTransactions() {
+    if (isEmpty) return true;
+    final raw = ApiRepository.shared.getAllOrdersByVenodrIdList?.data ?? [];
+    return raw
+        .where((e) => !OrderStatus.isTerminal(e.orderStatus))
+        .isEmpty;
+  }
+
   getNewOrders() {
     ApiRepository.shared.getVenodorOrders(
       sourceId,
       (List) {
         if (this.mounted) {
-          if (List.data!.length == 0) {
-            setState(() {
-              isLoading = false;
-              isEmpty = true;
-              isError = false;
-            });
-          } else {
-            setState(() {
-              isLoading = false;
-              isError = false;
-              isEmpty = false;
-            });
-          }
+          final orders = List.data ?? [];
+          setState(() {
+            isLoading = false;
+            isError = false;
+            isEmpty = orders.isEmpty;
+          });
         }
       },
       (error) {
@@ -114,15 +119,28 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
   void profileData(BuildContext context) async {
     getUserDate()
         .then((value) async {
+          if (!mounted) return;
+          setState(() {
+            isLoading = true;
+            isAccountLoading = true;
+          });
           token = value.token.toString();
           sourceId = value.id.toString();
           fullname = value.name.toString();
           email = value.email.toString();
           role = value.role.toString();
+          await _prepareOnboardingController();
+          if (!mounted) return;
           getNewOrders();
           checkStripeAccountStatus();
         })
         .onError((error, stackTrace) {
+          if (!mounted) return;
+          setState(() {
+            isLoading = false;
+            isAccountLoading = false;
+            isError = true;
+          });
           if (kDebugMode) {}
         });
   }
@@ -159,21 +177,80 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
     }
 
     accountDetails = account.isEmpty ? null : account;
+
+    final dueKeys = StripeRequirementFields.collectDueKeys(
+      data['requirements'] is Map
+          ? Map<String, dynamic>.from(data['requirements'] as Map)
+          : account['requirements'] is Map
+              ? Map<String, dynamic>.from(account['requirements'] as Map)
+              : null,
+    );
+    final requirementsForReview = data['requirements'] is Map
+        ? Map<String, dynamic>.from(data['requirements'] as Map)
+        : account['requirements'] is Map
+            ? Map<String, dynamic>.from(account['requirements'] as Map)
+            : null;
+    if (!StripeRequirementFields.isIdentityPendingReview(requirementsForReview)) {
+      _identityVerified = data['identity_verified'] == true ||
+          rawStatus == 'active' ||
+          (account['details_submitted'] == true &&
+              rawStatus != 'requires_info') ||
+          (rawStatus == 'requires_info' &&
+              StripeRequirementFields.isBankOnlyRequirements(dueKeys));
+    } else {
+      _identityVerified = false;
+    }
+    _payoutsEnabled =
+        StripeRequirementFields.payoutSetupCompleteForBookings(data);
+    _payoutInReview = !_payoutsEnabled &&
+        StripeRequirementFields.shouldShowPayoutInReview(data);
+    final last4 = data['bank_last4']?.toString().trim();
+    if (last4 != null && last4.isNotEmpty) {
+      _stripeBankLast4 = last4;
+    }
   }
 
   Future<void> _prepareOnboardingController() async {
+    if (sourceId.isEmpty) return;
     final controller = ensureOnboardingController();
-    if (controller.userId.isEmpty && sourceId.isNotEmpty) {
+    if (controller.userId.isEmpty || controller.userId != sourceId) {
       await controller.loadAndReconcile(
         userId: sourceId,
         name: fullname,
         email: email,
       );
+    } else {
+      await controller.refreshStripeStatus();
+    }
+    if (!mounted) return;
+    setState(() => _syncOnboardingFlagsFromController(controller));
+  }
+
+  void _syncOnboardingFlagsFromController(OnboardingController controller) {
+    _payoutsEnabled = controller.payoutsEnabled;
+    final lastResponse = controller.lastStripeStatusResponse;
+    if (lastResponse != null) {
+      _payoutInReview = !_payoutsEnabled &&
+          StripeRequirementFields.shouldShowPayoutInReview(lastResponse);
+    } else {
+      _payoutInReview = false;
+    }
+    if (controller.state.isIdentityComplete) {
+      _identityVerified = true;
+    }
+    final last4 = controller.bankLast4?.trim();
+    if (last4 != null && last4.isNotEmpty) {
+      _stripeBankLast4 = last4;
     }
   }
 
   Future<void> _showRequirementsModal() async {
     if (!_hasActionableRequirements() || _isPendingStripeReview()) return;
+
+    if (_requirementsAreBankOnly()) {
+      await _openPayoutSetupFromRequirements();
+      return;
+    }
 
     final requirements = _accountRequirements;
     if (requirements == null) return;
@@ -190,29 +267,62 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
     );
   }
 
-  void _maybeAutoShowRequirementsModal() {
-    if (_requirementsModalShown || !mounted || isAccountLoading) return;
-    if (!_hasActionableRequirements() || _isPendingStripeReview()) return;
+  Future<void> _openPayoutSetupFromRequirements() async {
+    await _prepareOnboardingController();
+    if (!mounted) return;
+    final controller = ensureOnboardingController();
+    controller.cacheStripeRequirements(_accountRequirements);
+    controller.navigateToPayoutMethod(fromTransactions: true);
+  }
 
-    _requirementsModalShown = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _showRequirementsModal();
-    });
+  bool _requirementsAreBankOnly() {
+    final dueKeys =
+        StripeRequirementFields.collectDueKeys(_accountRequirements);
+    return StripeRequirementFields.isBankOnlyRequirements(dueKeys);
   }
 
   Future<void> _openProviderOnboarding({bool openReview = false}) async {
-    final controller = ensureOnboardingController();
     await _prepareOnboardingController();
+    final controller = ensureOnboardingController();
 
-    if (openReview ||
-        accountStatus == 'requires_info' ||
-        controller.state.isComplete) {
-      Get.to(() => const ReviewSubmitScreen());
+    if (_payoutsEnabled && openReview) {
+      _showAccountDetailsModal();
       return;
     }
 
-    await controller.startOrResume();
+    if (!_identityVerified ||
+        accountStatus == 'not_started' ||
+        accountStatus == null) {
+      await controller.startOrResume();
+      return;
+    }
+
+    if (accountStatus == 'requires_info' && !_payoutsEnabled) {
+      if (controller.state.identityStatus == IdentityStatus.actionNeeded &&
+          controller.shouldPromptIdentityActionScreen()) {
+        controller.navigateToIdentityHub();
+        return;
+      }
+      controller.navigateToPayoutMethod(fromTransactions: true);
+      return;
+    }
+
+    if (!_payoutsEnabled) {
+      controller.navigateToPayoutMethod(fromTransactions: true);
+      return;
+    }
+
+    _showAccountDetailsModal();
+  }
+
+  Future<void> _openFinishPayoutSetup() async {
+    await _prepareOnboardingController();
+    if (!mounted) return;
+    final controller = ensureOnboardingController();
+    if (_accountRequirements != null) {
+      controller.cacheStripeRequirements(_accountRequirements);
+    }
+    controller.navigateToPayoutMethod(fromTransactions: true);
   }
 
   String _accountStatusHeadline(String status) {
@@ -232,66 +342,6 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
         return 'Could not load account';
       default:
         return 'Account status';
-    }
-  }
-
-  Color _accountStatusColor(String status) {
-    switch (status) {
-      case 'active':
-        return Colors.green.shade700;
-      case 'pending':
-        return Colors.blue.shade700;
-      case 'requires_info':
-        return Colors.orange.shade800;
-      case 'failed':
-      case 'failure':
-      case 'error':
-        return Colors.red.shade700;
-      default:
-        return AppColors.jebbyTextMuted;
-    }
-  }
-
-  IconData _accountStatusIcon(String status) {
-    switch (status) {
-      case 'active':
-        return Icons.check_circle;
-      case 'pending':
-        return Icons.pending_actions;
-      case 'requires_info':
-        return Icons.info_outline;
-      case 'failed':
-      case 'failure':
-      case 'error':
-        return Icons.error_outline;
-      case 'not_started':
-        return Icons.warning_amber_rounded;
-      default:
-        return Icons.account_balance_outlined;
-    }
-  }
-
-  String _accountStatusDescription(String status) {
-    switch (status) {
-      case 'active':
-        return 'Ready to receive payouts.';
-      case 'pending':
-        return 'Your account is being reviewed. This usually takes 1–2 business days.';
-      case 'requires_info':
-        return accountMessage ??
-            'Stripe needs additional information to finish verifying your account.';
-      case 'not_started':
-        return 'Set up your payout account to receive payments from rentals.';
-      case 'failed':
-      case 'failure':
-        return accountMessage ??
-            'There was an issue with your account setup. Please try again.';
-      case 'error':
-        return accountMessage ??
-            'We could not load your Stripe account status. Pull to refresh or try again.';
-      default:
-        return accountMessage ??
-            'Your Stripe Connect account status is $status.';
     }
   }
 
@@ -324,22 +374,6 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
     return requirements['disabled_reason'] != null;
   }
 
-  bool _hasRequirementsToDisplay() {
-    final requirements = _accountRequirements;
-    if (requirements == null) return false;
-
-    for (final key in [
-      'currently_due',
-      'past_due',
-      'eventually_due',
-      'pending_verification',
-    ]) {
-      if (_requirementListHasItems(requirements[key])) return true;
-    }
-
-    return requirements['disabled_reason'] != null;
-  }
-
   bool _isPendingStripeReview() {
     if (accountStatus == 'pending') return true;
 
@@ -351,54 +385,6 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
   }
 
   bool _hasOutstandingRequirements() => _hasActionableRequirements();
-
-  Widget _buildAccountSummaryDetails() {
-    if (accountDetails == null) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (accountDetails!['id'] != null) ...[
-          Text(
-            'Account ID: ${accountDetails!['id']}',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-              fontFamily: 'monospace',
-            ),
-          ),
-          const SizedBox(height: 4),
-        ],
-        if (accountDetails!['charges_enabled'] != null) ...[
-          Text(
-            'Charges enabled: ${accountDetails!['charges_enabled'] == true ? 'Yes' : 'No'}',
-            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-          ),
-          const SizedBox(height: 4),
-        ],
-        if (accountDetails!['payouts_enabled'] != null)
-          Text(
-            'Payouts enabled: ${accountDetails!['payouts_enabled'] == true ? 'Yes' : 'No'}',
-            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-          ),
-        if (_hasRequirementsToDisplay()) ...[
-          const SizedBox(height: 12),
-          Text(
-            _isPendingStripeReview()
-                ? 'Verification in progress'
-                : 'Outstanding requirements',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.jebbyTextMuted,
-            ),
-          ),
-          const SizedBox(height: 8),
-          _buildRequirementsSection(accountDetails!['requirements']),
-        ],
-      ],
-    );
-  }
 
   Widget _buildAccountActionButton({
     required String label,
@@ -424,79 +410,11 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
     );
   }
 
-  Widget _buildResolvedAccountStatus(String status) {
-    final color = _accountStatusColor(status);
-    final isActive = status == 'active';
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(_accountStatusIcon(status), color: color, size: 18),
-            const SizedBox(width: 6),
-            Text(
-              _accountStatusHeadline(status),
-              style: _nunito(size: 14, weight: FontWeight.w700, color: color),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          _accountStatusDescription(status),
-          style: _nunito(
-            size: 14,
-            weight: FontWeight.w600,
-            color: AppColors.jebbyTextMuted,
-            height: 1.35,
-          ),
-        ),
-        if (!isActive && accountDetails != null) ...[
-          const SizedBox(height: 12),
-          _buildAccountSummaryDetails(),
-        ],
-        const SizedBox(height: 16),
-        if (_hasOutstandingRequirements())
-          _buildAccountActionButton(
-            label: 'Submit required info',
-            onPressed: _showRequirementsModal,
-          )
-        else if (status == 'active')
-          _buildAccountActionButton(
-            label: 'View account details',
-            onPressed: _showAccountDetailsModal,
-          )
-        else if (status == 'not_started')
-          _buildAccountActionButton(
-            label: 'Set up account',
-            onPressed: () => _openProviderOnboarding(),
-          )
-        else if (status == 'pending')
-          _buildAccountActionButton(
-            label: 'View setup progress',
-            onPressed: _showAccountDetailsModal,
-          )
-        else if (status == 'failed' ||
-            status == 'failure' ||
-            status == 'error')
-          _buildAccountActionButton(
-            label: status == 'error' ? 'Retry' : 'Try again',
-            backgroundColor: const Color(0xFFC62828),
-            onPressed:
-                status == 'error'
-                    ? checkStripeAccountStatus
-                    : () => _openProviderOnboarding(openReview: true),
-          )
-        else
-          _buildAccountActionButton(
-            label: 'Manage account',
-            onPressed: _showAccountDetailsModal,
-          ),
-      ],
-    );
-  }
-
   void checkStripeAccountStatus() {
     if (sourceId.isEmpty) {
+      if (mounted) {
+        setState(() => isAccountLoading = false);
+      }
       return;
     }
 
@@ -513,14 +431,26 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
             isAccountLoading = false;
             if (data is Map<String, dynamic>) {
               _applyStripeStatusResponse(data);
+              if (sourceId.isNotEmpty) {
+                final controller = ensureOnboardingController();
+                controller.userId = sourceId;
+                controller.applyStripeAccountStatus(data);
+                _syncOnboardingFlagsFromController(controller);
+              }
             } else if (data is Map) {
-              _applyStripeStatusResponse(Map<String, dynamic>.from(data));
+              final map = Map<String, dynamic>.from(data);
+              _applyStripeStatusResponse(map);
+              if (sourceId.isNotEmpty) {
+                final controller = ensureOnboardingController();
+                controller.userId = sourceId;
+                controller.applyStripeAccountStatus(map);
+                _syncOnboardingFlagsFromController(controller);
+              }
             } else {
               accountStatus = 'error';
               accountDetails = null;
             }
           });
-          _maybeAutoShowRequirementsModal();
         }
       },
       (error) {
@@ -555,6 +485,10 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
     super.didChangeAppLifecycleState(state);
     // Refresh data when app becomes active (e.g., returning from onboarding)
     if (state == AppLifecycleState.resumed && sourceId.isNotEmpty) {
+      setState(() {
+        isLoading = true;
+        isAccountLoading = true;
+      });
       getNewOrders();
       checkStripeAccountStatus();
     }
@@ -573,22 +507,22 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'My transactions',
+                  'Transactions',
                   style: _nunito(
-                    size: 28,
+                    size: 22,
                     weight: FontWeight.w800,
                     color: AppColors.jebbyTextPrimary,
-                    height: 1.1,
+                    height: 1.15,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Track activity and manage payouts.',
+                  'Keep track of your earnings and payouts.',
                   style: _nunito(
-                    size: 15,
+                    size: 14,
                     weight: FontWeight.w600,
                     color: AppColors.jebbyTextMuted,
-                    height: 1.2,
+                    height: 1.35,
                   ),
                 ),
               ],
@@ -641,38 +575,38 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
                 24,
               ),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    width: 88,
-                    height: 88,
+                    width: 72,
+                    height: 72,
                     decoration: const BoxDecoration(
                       color: AppColors.jebbySoftBlue,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      Icons.receipt_long_outlined,
-                      size: 40,
+                      Icons.description_outlined,
+                      size: 32,
                       color: AppColors.jebbyBlue,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   Text(
                     'No transactions yet',
                     textAlign: TextAlign.center,
                     style: _nunito(
-                      size: 22,
+                      size: 18,
                       weight: FontWeight.w800,
                       color: AppColors.jebbyTextPrimary,
                       height: 1.2,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   Text(
-                    'Your transaction history will appear here.',
+                    'Your rentals and payouts will appear here after setup is complete.',
                     textAlign: TextAlign.center,
                     style: _nunito(
-                      size: 15,
+                      size: 14,
                       weight: FontWeight.w600,
                       color: AppColors.jebbyTextMuted,
                       height: 1.35,
@@ -690,7 +624,7 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.jebbyBackground,
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
@@ -704,7 +638,13 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
                     _pageHeader(),
                     const SizedBox(height: 20),
                     accountSection(),
-                    const SizedBox(height: 24),
+                    if (_showPublishedListingsInfoBelowCards()) ...[
+                      const SizedBox(height: 12),
+                      _buildListingsVisibleInfo(),
+                    ],
+                    const SizedBox(height: 20),
+                    const Divider(height: 1, thickness: 1, color: Color(0xFFE3E6EC)),
+                    const SizedBox(height: 20),
                     Text(
                       'Recent activity',
                       style: _nunito(
@@ -713,7 +653,7 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
                         color: AppColors.jebbyTextPrimary,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -786,7 +726,7 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
         ),
       );
     }
-    if (isEmpty) {
+    if (_hasNoVisibleTransactions()) {
       return SliverToBoxAdapter(
         child: SizedBox(
           height: 320,
@@ -796,16 +736,8 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
     }
 
     final raw = ApiRepository.shared.getAllOrdersByVenodrIdList?.data ?? [];
-    final visible = raw.where((e) => !OrderStatus.isTerminal(e.orderStatus)).toList();
-
-    if (visible.isEmpty) {
-      return SliverToBoxAdapter(
-        child: SizedBox(
-          height: 320,
-          child: _emptyTransactionsState(),
-        ),
-      );
-    }
+    final visible =
+        raw.where((e) => !OrderStatus.isTerminal(e.orderStatus)).toList();
 
     return SliverList.separated(
       itemCount: visible.length,
@@ -881,66 +813,326 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
     );
   }
 
-  Widget accountSection() {
+  double _availableForPayoutDollars() {
+    final balance = accountDetails?['balance'];
+    if (balance is! Map) return 0;
+    final available = balance['available'];
+    if (available is! List) return 0;
+    var total = 0.0;
+    for (final item in available) {
+      if (item is Map) {
+        total += (item['amount'] ?? 0) / 100.0;
+      }
+    }
+    return total;
+  }
+
+  Widget _buildAvailableForPayoutCard() {
+    final amount = _availableForPayoutDollars();
     return Container(
+      width: double.infinity,
       decoration: _surfaceCardDecoration(),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: AppColors.jebbySoftBlue,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.account_balance_outlined,
-                    color: AppColors.jebbyBlue,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Stripe payout account',
-                    style: _nunito(size: 17, weight: FontWeight.w800),
-                  ),
-                ),
-              ],
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Available for payout',
+            style: _nunito(
+              size: 14,
+              weight: FontWeight.w600,
+              color: AppColors.jebbyTextMuted,
             ),
-            const SizedBox(height: 16),
-            if (isAccountLoading)
-              Center(
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '\$${amount.toStringAsFixed(2)}',
+            style: _nunito(
+              size: 36,
+              weight: FontWeight.w800,
+              color: AppColors.jebbyTextPrimary,
+              height: 1.05,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _showPublishedListingsInfoBelowCards() =>
+      _identityVerified && !_payoutsEnabled && !_payoutInReview;
+
+  bool _bankAccountOnFile() {
+    final last4 = _stripeBankLast4?.trim();
+    if (last4 != null && last4.isNotEmpty) return true;
+    if (!Get.isRegistered<OnboardingController>()) return false;
+    final last4Cached = Get.find<OnboardingController>().bankLast4?.trim();
+    return last4Cached != null && last4Cached.isNotEmpty;
+  }
+
+  Map<String, dynamic> _stripeStatusPayload() {
+    return {
+      'status': accountStatus ?? '',
+      'payouts_enabled': accountDetails?['payouts_enabled'] == true,
+      if (_stripeBankLast4 != null) 'bank_last4': _stripeBankLast4,
+      if (accountDetails != null) 'account': accountDetails,
+      if (_accountRequirements != null) 'requirements': _accountRequirements,
+    };
+  }
+
+  bool _isPayoutInReview() {
+    if (_payoutsEnabled) return false;
+    if (_isPendingStripeReview()) return true;
+    return _payoutInReview;
+  }
+
+  bool _shouldShowFinishPayoutSetupCard() {
+    if (_payoutsEnabled || _isPayoutInReview()) return false;
+    if (!_identityVerified) {
+      return _hasOutstandingRequirements() && _requirementsAreBankOnly();
+    }
+    if (!_bankAccountOnFile()) return true;
+    return _hasOutstandingRequirements() && _requirementsAreBankOnly();
+  }
+
+  Widget _buildListingsVisibleInfo() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          Icons.info_outline,
+          size: 18,
+          color: AppColors.jebbyBlue,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            'Your published listings are visible. Complete payout setup so renters can book your items.',
+            style: _nunito(
+              size: 13,
+              weight: FontWeight.w600,
+              color: AppColors.jebbyTextMuted,
+              height: 1.35,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPayoutInReviewCard() {
+    final ending = _stripeBankLast4?.trim();
+    final bankLine = ending != null && ending.isNotEmpty
+        ? 'Account ending in $ending'
+        : 'Bank account on file';
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.earnerInfoBlue,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.jebbyBlue.withValues(alpha: 0.12)),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.hourglass_top_rounded,
+                  color: AppColors.jebbyBlue,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const CircularProgressIndicator(
-                      color: AppColors.jebbyBlue,
-                      strokeWidth: 2.4,
-                    ),
-                    const SizedBox(height: 8),
                     Text(
-                      'Checking account status…',
+                      'Payout setup in review',
+                      style: _nunito(size: 17, weight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      bankLine,
                       style: _nunito(
                         size: 14,
                         weight: FontWeight.w600,
                         color: AppColors.jebbyTextMuted,
+                        height: 1.3,
                       ),
                     ),
                   ],
                 ),
-              )
-            else if (accountStatus == 'not_started' || accountStatus == null)
-              _buildResolvedAccountStatus('not_started')
-            else
-              _buildResolvedAccountStatus(accountStatus!),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Stripe is reviewing your bank details. Bookings open once payouts are enabled—we\'ll update this screen when that happens.',
+            style: _nunito(
+              size: 13,
+              weight: FontWeight.w600,
+              color: AppColors.jebbyTextMuted,
+              height: 1.35,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFinishPayoutSetupCard() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.earnerInfoBlue,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.jebbyBlue.withValues(alpha: 0.12)),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.account_balance_outlined,
+                  color: AppColors.jebbyBlue,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Lets finish your payouts setup',
+                      style: _nunito(size: 17, weight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Set up payouts.',
+                      style: _nunito(
+                        size: 14,
+                        weight: FontWeight.w600,
+                        color: AppColors.jebbyTextMuted,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: _openFinishPayoutSetup,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.jebbyBlue,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: Text(
+                'Finish payout setup',
+                style: _nunito(
+                  size: 15,
+                  weight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget accountSection() {
+    if (isAccountLoading) {
+      return Container(
+        width: double.infinity,
+        decoration: _surfaceCardDecoration(),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Available for payout',
+              style: _nunito(
+                size: 14,
+                weight: FontWeight.w600,
+                color: AppColors.jebbyTextMuted,
+              ),
+            ),
+            const SizedBox(height: 32),
+            const Center(
+              child: CircularProgressIndicator(
+                color: AppColors.jebbyBlue,
+                strokeWidth: 2.4,
+              ),
+            ),
+            const SizedBox(height: 32),
           ],
         ),
-      ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildAvailableForPayoutCard(),
+        if (!_identityVerified &&
+            (accountStatus == 'not_started' || accountStatus == null)) ...[
+          const SizedBox(height: 12),
+          _buildAccountActionButton(
+            label: 'Verify identity to earn',
+            onPressed: () => _openProviderOnboarding(),
+          ),
+        ],
+        if (_shouldShowFinishPayoutSetupCard()) ...[
+          const SizedBox(height: 12),
+          _buildFinishPayoutSetupCard(),
+        ],
+        if (_isPayoutInReview()) ...[
+          const SizedBox(height: 12),
+          _buildPayoutInReviewCard(),
+        ],
+        if (_hasOutstandingRequirements() &&
+            !_isPendingStripeReview() &&
+            !_requirementsAreBankOnly()) ...[
+          const SizedBox(height: 12),
+          _buildAccountActionButton(
+            label: 'Submit required info',
+            onPressed: _showRequirementsModal,
+          ),
+        ],
+      ],
     );
   }
 

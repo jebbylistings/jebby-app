@@ -8,9 +8,10 @@ import 'package:jebby/constants/app_url.dart';
 import 'package:jebby/constants/color.dart';
 import 'package:jebby/models/get_all_products_by_vendor_id_model.dart' as vendor_products;
 import 'package:jebby/repositories/api_repository.dart';
-import 'package:jebby/views/screens/vendors/add_product.dart';
+import 'package:jebby/views/screens/vendors/listing/create_listing.dart';
 import 'package:jebby/views/screens/vendors/product_details.dart';
 import 'package:jebby/utils/earner_navigation.dart';
+import 'package:jebby/utils/listing_publish_state.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -136,7 +137,7 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
         if (!mounted) return;
         final rented = <int>{};
         for (final order in list.data ?? []) {
-          if (OrderStatus.isVendorActiveTab(order.orderStatus)) {
+          if (OrderStatus.isListingRented(order.orderStatus)) {
             final productId = order.productId;
             if (productId != null) rented.add(productId);
           }
@@ -193,7 +194,8 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
         items = items.where(_isRented);
         break;
       case _ListingFilter.drafts:
-        return const [];
+        items = items.where(ListingPublishState.isDraftListing);
+        break;
       case _ListingFilter.all:
         break;
     }
@@ -208,9 +210,14 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
     return items.toList();
   }
 
-  int get _allCount => _allProducts.length + _draftCount;
+  int get _localDraftCount => _draftListing == null ? 0 : 1;
+
+  int get _allCount => _allProducts.length + _localDraftCount;
   int get _rentedCount => _allProducts.where(_isRented).length;
-  int get _draftCount => _draftListing == null ? 0 : 1;
+  int get _serverDraftCount =>
+      _allProducts.where(ListingPublishState.isDraftListing).length;
+
+  int get _draftCount => _localDraftCount + _serverDraftCount;
 
   @override
   void initState() {
@@ -234,7 +241,7 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
   }
 
   void _openDraftListing() {
-    Get.to(() => const AddProductScreen(popToProductsOnBack: true));
+    Get.to(() => const CreateListingScreen(popToProductsOnBack: true));
   }
 
   int _gridItemCount({
@@ -243,7 +250,7 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
   }) {
     if (showDraftOnly) return _draftCount;
     return products.length +
-        (_selectedFilter == _ListingFilter.all ? _draftCount : 0);
+        (_selectedFilter == _ListingFilter.all ? _localDraftCount : 0);
   }
 
   @override
@@ -520,15 +527,13 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
       ),
       itemCount: itemCount,
       itemBuilder: (context, index) {
-        if (showDraftOnly || (_selectedFilter == _ListingFilter.all && _draftListing != null && index == 0)) {
-          if (_draftListing == null) return const SizedBox.shrink();
+        final showLocalDraftFirst = _draftListing != null &&
+            (showDraftOnly || _selectedFilter == _ListingFilter.all);
+        if (showLocalDraftFirst && index == 0) {
           return _draftListingCard(_draftListing!);
         }
 
-        final productIndex =
-            _selectedFilter == _ListingFilter.all && _draftListing != null
-            ? index - 1
-            : index;
+        final productIndex = showLocalDraftFirst ? index - 1 : index;
         final product = products[productIndex];
         return _listingCard(product);
       },
@@ -540,17 +545,31 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
 
   Widget _listingCard(vendor_products.Data product) {
     final rented = _isRented(product);
+    final isDraft = ListingPublishState.isDraftListing(product);
     final imageUrl = AppUrl.baseUrlM + (product.image ?? '').toString();
 
+    void openListing() {
+      if (isDraft) {
+        Get.to(
+          () => CreateListingScreen(
+            editProductId: product.id?.toString(),
+            popToProductsOnBack: true,
+          ),
+        );
+        return;
+      }
+      Get.to(() => VendorProductDetailScreen(id: product.id));
+    }
+
     return _listingCardShell(
-      onTap: () => Get.to(() => VendorProductDetailScreen(id: product.id)),
+      onTap: openListing,
       image: _listingImage(
         imageUrl: imageUrl,
-        badge: _statusBadge(rented: rented),
+        badge: _statusBadge(rented: rented, product: product),
       ),
       name: product.name?.toString() ?? 'Listing',
       price: '${product.price ?? 0}',
-      onEdit: () => Get.to(() => VendorProductDetailScreen(id: product.id)),
+      onEdit: openListing,
     );
   }
 
@@ -704,8 +723,18 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
     );
   }
 
-  Widget _statusBadge({required bool rented, bool isDraft = false}) {
-    final label = isDraft ? 'Draft' : (rented ? 'Rented' : 'Live');
+  Widget _statusBadge({
+    required bool rented,
+    bool isDraft = false,
+    vendor_products.Data? product,
+  }) {
+    final label = isDraft
+        ? 'Draft'
+        : (rented
+            ? 'Rented'
+            : (product != null
+                ? ListingPublishState.badgeLabel(product)
+                : 'Live'));
     final dotColor = isDraft
         ? AppColors.jebbyTextMuted
         : (rented ? AppColors.jebbyAccentOrange : AppColors.jebbyBlue);

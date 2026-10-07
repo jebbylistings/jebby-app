@@ -176,7 +176,6 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
         final servAgreement = data.description.toString();
         final img = data.image.toString();
         final name = data.name.toString();
-        final specs = data.specifications.toString();
         final priceInt = data.price ?? 0;
         final stars = data.stars.toString();
         final delivery_charges = data.delivery_charges.toString();
@@ -195,7 +194,6 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
                 priceInt,
                 stars,
                 AppUrl.baseUrlM + img,
-                specs,
                 userID,
                 servAgreement,
                 delivery_charges,

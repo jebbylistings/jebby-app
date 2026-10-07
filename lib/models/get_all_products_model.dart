@@ -60,7 +60,7 @@ class Data {
   int? subcategoryId;
   String? name;
   int? price;
-  String? specifications;
+  String? conditionRating;
   String? description;
   String? createdAt;
   String? updatedAt;
@@ -78,7 +78,6 @@ class Data {
     this.subcategoryId,
     this.name,
     this.price,
-    this.specifications,
     this.description,
     this.createdAt,
     this.updatedAt,
@@ -97,7 +96,7 @@ class Data {
     subcategoryId = json['subcategory_id'];
     name = json['name'];
     price = json['price'];
-    specifications = json['specifications'];
+    conditionRating = json['condition_rating']?.toString();
     description = json['description'];
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
@@ -117,7 +116,6 @@ class Data {
     data['subcategory_id'] = this.subcategoryId;
     data['name'] = this.name;
     data['price'] = this.price;
-    data['specifications'] = this.specifications;
     data['description'] = this.description;
     data['created_at'] = this.createdAt;
     data['updated_at'] = this.updatedAt;

@@ -37,6 +37,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   static const Color _cardBorder = Color(0xFFE3E6EC);
   static const double _coverPreviewHeight = 96;
   static const double _profileAvatarRadius = 46;
+  /// Cover height plus how far the avatar hangs below the cover bottom.
+  static const double _profilePhotoOverlap = 40;
+  static double get _publicPhotoStackHeight =>
+      _coverPreviewHeight + _profilePhotoOverlap;
 
   static const double _spaceLabelToField = 6;
   static const double _spaceFieldToHelper = 6;
@@ -72,28 +76,34 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  Future getGalleryImage1() async {
-    final picker = ImagePicker();
-    final pickedImage = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-    );
+  Future<void> getGalleryImage1() async {
+    try {
+      final pickedImage = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+      if (!mounted) return;
 
-    if (pickedImage != null) {
-      final file = File(pickedImage.path);
-      final fileSize = await file.length();
+      if (pickedImage != null) {
+        final file = File(pickedImage.path);
+        final fileSize = await file.length();
 
-      if (fileSize > 5 * 1024 * 1024) {
-        _showAlert(
-          'Selected file is larger than 5MB. Please select a smaller file.',
-        );
-      } else {
-        setState(() {
-          _image1 = file;
-        });
+        if (fileSize > 5 * 1024 * 1024) {
+          _showAlert(
+            'Selected file is larger than 5MB. Please select a smaller file.',
+          );
+        } else {
+          setState(() {
+            _image1 = file;
+          });
+        }
       }
-    } else {
-      log("No image picked");
+    } catch (e) {
+      log('Profile photo pick failed: $e');
+      if (!mounted) return;
+      showAppErrorSnackbar(
+        'Could not open your photo library. Check app permissions and try again.',
+      );
     }
   }
 
@@ -199,8 +209,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void _clearResolvedAddress() {
     setState(() {
       _resolvedAddress = const ParsedUsAddress();
-      Latitiude = null;
-      Longitude = null;
     });
   }
 
@@ -312,9 +320,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         Expanded(
           child: Padding(
             padding: const EdgeInsets.only(top: 2),
-            child: Text(
-              'Edit profile',
-              style: _nunito(size: 24, weight: FontWeight.w800, height: 1.1),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Edit profile',
+                  style: _nunito(size: 24, weight: FontWeight.w800, height: 1.1),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Update your photos, name, and default listing address.',
+                  style: _helperTextStyle,
+                ),
+              ],
             ),
           ),
         ),
@@ -350,13 +368,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }) {
     return Material(
       color: Colors.white,
-      shape: const CircleBorder(),
-      elevation: 1,
+      elevation: 2,
       shadowColor: Colors.black26,
+      shape: const CircleBorder(),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onTap,
-        splashColor: AppColors.jebbyBlue.withValues(alpha: 0.12),
+        splashColor: AppColors.jebbyBlue.withValues(alpha: 0.18),
+        highlightColor: AppColors.jebbyBlue.withValues(alpha: 0.08),
         child: SizedBox(
           width: size,
           height: size,
@@ -365,6 +385,34 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             size: size * 0.48,
             color: AppColors.jebbyBlue,
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _profilePhotoWithCamera() {
+    return Center(
+      child: SizedBox(
+        width: (_profileAvatarRadius + 3) * 2 + 8,
+        height: (_profileAvatarRadius + 3) * 2 + 8,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: getGalleryImage1,
+              child: _profileAvatar(),
+            ),
+            Positioned(
+              right: -2,
+              bottom: -2,
+              child: _photoCameraButton(
+                onTap: getGalleryImage1,
+                size: 36,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -399,48 +447,42 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.bottomCenter,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: SizedBox(
+        SizedBox(
+          height: _publicPhotoStackHeight,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.topCenter,
+            children: [
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
                 height: _coverPreviewHeight,
-                width: double.infinity,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    _coverPreview(),
-                    Positioned(
-                      top: 10,
-                      right: 10,
-                      child: _photoCameraButton(onTap: getGalleryImage),
-                    ),
-                  ],
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      _coverPreview(),
+                      Positioned(
+                        top: 10,
+                        right: 10,
+                        child: _photoCameraButton(onTap: getGalleryImage),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            Positioned(
-              bottom: -40,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  _profileAvatar(),
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: _photoCameraButton(
-                      onTap: getGalleryImage1,
-                      size: 34,
-                    ),
-                  ),
-                ],
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: _profilePhotoWithCamera(),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-        const SizedBox(height: 48),
+        const SizedBox(height: 16),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -630,6 +672,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             onAddressSelected: _applySelectedAddress,
             hint: 'Search for your address',
             decoration: _profileAddressDecoration,
+            enableMapPicker: true,
+            mapPickerInitialLatitude:
+                double.tryParse(Latitiude?.toString() ?? ''),
+            mapPickerInitialLongitude:
+                double.tryParse(Longitude?.toString() ?? ''),
           ),
         ],
         SizedBox(height: _spaceFieldToHelper),

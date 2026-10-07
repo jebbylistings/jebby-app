@@ -97,6 +97,7 @@ class ProviderOnboardingData {
   int? dobYear;
   String? ssnLast4;
   String addressLine1;
+  String addressLine2;
   String addressCity;
   String addressState;
   String addressPostalCode;
@@ -124,6 +125,7 @@ class ProviderOnboardingData {
     this.dobYear,
     this.ssnLast4,
     this.addressLine1 = '',
+    this.addressLine2 = '',
     this.addressCity = '',
     this.addressState = '',
     this.addressPostalCode = '',
@@ -171,6 +173,7 @@ class ProviderOnboardingData {
     int? dobYear,
     String? ssnLast4,
     String? addressLine1,
+    String? addressLine2,
     String? addressCity,
     String? addressState,
     String? addressPostalCode,
@@ -202,6 +205,7 @@ class ProviderOnboardingData {
       dobYear: dobYear ?? this.dobYear,
       ssnLast4: clearSsnLast4 ? null : (ssnLast4 ?? this.ssnLast4),
       addressLine1: addressLine1 ?? this.addressLine1,
+      addressLine2: addressLine2 ?? this.addressLine2,
       addressCity: addressCity ?? this.addressCity,
       addressState: addressState ?? this.addressState,
       addressPostalCode: addressPostalCode ?? this.addressPostalCode,
@@ -222,6 +226,51 @@ class ProviderOnboardingData {
     );
   }
 
+  bool get hasPersonalDetails =>
+      firstName.trim().isNotEmpty &&
+      lastName.trim().isNotEmpty &&
+      email.trim().isNotEmpty &&
+      isValidUsPhone(phone) &&
+      isAdult &&
+      ssnLast4 != null &&
+      ssnLast4!.length == 4;
+
+  bool get hasHomeAddress =>
+      addressLine1.trim().isNotEmpty &&
+      addressCity.trim().isNotEmpty &&
+      isValidUsStateCode(addressState) &&
+      isValidUsPostalCode(addressPostalCode);
+
+  String get formattedHomeAddress {
+    final parts = <String>[
+      if (addressLine1.trim().isNotEmpty) addressLine1.trim(),
+      if (addressLine2.trim().isNotEmpty) addressLine2.trim(),
+      [
+        addressCity.trim(),
+        addressState.trim().toUpperCase(),
+        addressPostalCode.trim(),
+      ].where((s) => s.isNotEmpty).join(', '),
+    ].where((s) => s.isNotEmpty);
+    return parts.join(', ');
+  }
+
+  bool get hasIdentityDocuments {
+    if (frontFileId == null || frontFileId!.isEmpty) {
+      if (frontImagePath == null || frontImagePath!.isEmpty) return false;
+    }
+    if (ProviderIdType.requiresBack(idType)) {
+      final hasBack = (backFileId != null && backFileId!.isNotEmpty) ||
+          (backImagePath != null && backImagePath!.isNotEmpty);
+      if (!hasBack) return false;
+    }
+    return true;
+  }
+
+  bool get hasBankDetails =>
+      accountHolderName.trim().isNotEmpty &&
+      routingNumber.replaceAll(RegExp(r'\D'), '').length == 9 &&
+      accountNumber.replaceAll(RegExp(r'\D'), '').length >= 4;
+
   Map<String, dynamic> toPersistedJson() {
     return {
       'first_name': firstName,
@@ -233,6 +282,7 @@ class ProviderOnboardingData {
       if (dobYear != null) 'dob_year': dobYear,
       if (ssnLast4 != null && ssnLast4!.isNotEmpty) 'ssn_last_4': ssnLast4,
       'address_line1': addressLine1,
+      if (addressLine2.isNotEmpty) 'address_line2': addressLine2,
       'address_city': addressCity,
       'address_state': addressState,
       'address_postal_code': addressPostalCode,
@@ -263,6 +313,7 @@ class ProviderOnboardingData {
       dobYear: _parseOptionalInt(json['dob_year']),
       ssnLast4: json['ssn_last_4']?.toString(),
       addressLine1: json['address_line1']?.toString() ?? '',
+      addressLine2: json['address_line2']?.toString() ?? '',
       addressCity: json['address_city']?.toString() ?? '',
       addressState: json['address_state']?.toString() ?? '',
       addressPostalCode: json['address_postal_code']?.toString() ?? '',
@@ -285,8 +336,12 @@ class ProviderOnboardingData {
     );
   }
 
-  Map<String, dynamic> toSubmitJson({required String userId, String? ip}) {
-    return {
+  Map<String, dynamic> toSubmitJson({
+    required String userId,
+    String? ip,
+    bool includeBank = false,
+  }) {
+    final payload = <String, dynamic>{
       'user_id': userId,
       'personal': {
         'first_name': firstName,
@@ -301,6 +356,7 @@ class ProviderOnboardingData {
         if (ssnLast4 != null && ssnLast4!.isNotEmpty) 'ssn_last_4': ssnLast4,
         'address': {
           'line1': addressLine1,
+          if (addressLine2.trim().isNotEmpty) 'line2': addressLine2.trim(),
           'city': addressCity,
           'state': addressState,
           'postal_code': addressPostalCode,
@@ -312,19 +368,40 @@ class ProviderOnboardingData {
         'front_file_id': frontFileId,
         if (backFileId != null) 'back_file_id': backFileId,
       },
-      'bank': {
-        'country': country,
-        'currency': 'usd',
-        'account_holder_name': accountHolderName,
-        'routing_number': routingNumber,
-        'account_number': accountNumber,
-      },
       'tos': {
         'accepted': true,
         'ip': ip ?? 'mobile_client',
         'date': DateTime.now().toUtc().toIso8601String(),
       },
     };
+    if (includeBank && hasBankDetails) {
+      payload['bank'] = {
+        'country': country,
+        'currency': 'usd',
+        'account_holder_name': accountHolderName,
+        'routing_number': routingNumber,
+        'account_number': accountNumber,
+      };
+    }
+    return payload;
+  }
+
+  Map<String, dynamic> toBankSubmitJson({required String userId}) {
+    return {
+      'user_id': userId,
+      'bank': {
+        'country': country,
+        'currency': 'usd',
+        'account_holder_name': accountHolderName,
+        'routing_number': routingNumber.replaceAll(RegExp(r'\D'), ''),
+        'account_number': accountNumber.replaceAll(RegExp(r'\D'), ''),
+      },
+    };
+  }
+
+  /// @deprecated Prefer [toSubmitJson] without bank.
+  Map<String, dynamic> toLegacySubmitJson({required String userId, String? ip}) {
+    return toSubmitJson(userId: userId, ip: ip, includeBank: true);
   }
 
   void clearSensitiveFields() {
@@ -333,26 +410,40 @@ class ProviderOnboardingData {
 
   /// Stripe requires E.164 format (e.g. +14155552671).
   static String formatPhoneE164(String phone) {
+    final tenDigit = usTenDigits(phone);
+    if (tenDigit != null) return '+1$tenDigit';
     final digits = phone.replaceAll(RegExp(r'\D'), '');
     if (digits.isEmpty) return '';
     if (phone.trim().startsWith('+')) return '+$digits';
-    if (digits.length == 10) return '+1$digits';
-    if (digits.length == 11 && digits.startsWith('1')) return '+$digits';
     return '+$digits';
   }
 
+  /// Normalizes common US inputs to 10 national digits, or null if not US-shaped.
+  static String? usTenDigits(String phone) {
+    var digits = phone.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) return null;
+    while (digits.length > 10 && digits.startsWith('1')) {
+      digits = digits.substring(1);
+    }
+    if (digits.length == 10) return digits;
+    return null;
+  }
+
   static bool isValidUsPhone(String phone) {
-    final digits = phone.replaceAll(RegExp(r'\D'), '');
-    final tenDigit = digits.length == 11 && digits.startsWith('1')
-        ? digits.substring(1)
-        : digits.length == 10
-            ? digits
-            : null;
+    final tenDigit = usTenDigits(phone);
     if (tenDigit == null) return false;
     if (RegExp(r'^(\d)\1{9}$').hasMatch(tenDigit)) return false;
     if (tenDigit.startsWith('0') || tenDigit.startsWith('1')) return false;
     if (tenDigit[3] == '0' || tenDigit[3] == '1') return false;
     return true;
+  }
+
+  static String displayUsPhone(String raw) {
+    if (!isValidUsPhone(raw)) return '';
+    final tenDigit = usTenDigits(raw)!;
+    return '(${tenDigit.substring(0, 3)}) '
+        '${tenDigit.substring(3, 6)}-'
+        '${tenDigit.substring(6)}';
   }
 
   static bool isValidUsPostalCode(String value) {

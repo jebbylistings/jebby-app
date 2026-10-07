@@ -1355,13 +1355,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
     setState(() {
       final profileImage = row['profile_image']?.toString().trim() ?? '';
-      imagesapi = ProfileImage.sanitizePath(profileImage);
+        imagesapi = ProfileImage.sanitizePath(profileImage);
       final coverImage = row['cover_image']?.toString().trim() ?? '';
-      back_image_api = ProfileImage.sanitizePath(coverImage);
+        back_image_api = ProfileImage.sanitizePath(coverImage);
       final apiRole = row['role']?.toString();
-      if (apiRole != null && apiRole.trim().isNotEmpty) {
-        role = apiRole;
-      }
+        if (apiRole != null && apiRole.trim().isNotEmpty) {
+          role = apiRole;
+        }
       addressapi = row['address']?.toString() ?? '';
       phoneapi = row['phone_number']?.toString() ?? '';
     });

@@ -5,7 +5,7 @@ import 'package:jebby/views/screens/agreements/insurance_and_indemnifications.da
 import 'package:jebby/views/screens/agreements/rental_agreement.dart';
 import 'package:jebby/views/screens/agreements/terms_and_conditions.dart';
 import 'package:jebby/views/screens/agreements/transport_and_installation_policy.dart';
-import 'package:jebby/views/screens/vendors/edit_product.dart';
+import 'package:jebby/views/screens/vendors/listing/create_listing.dart';
 import 'package:jebby/views/screens/vendors/my_products.dart';
 import 'package:jebby/views/screens/shared/reviews.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -50,7 +50,7 @@ class _VendorProductDetailScreenState extends State<VendorProductDetailScreen> {
   var subCategoryID = null;
   var name = null;
   var price = null;
-  var specifications = null;
+  var conditionRating = '';
   var description = null;
   var product_id = null;
   var images = null;
@@ -237,12 +237,14 @@ class _VendorProductDetailScreenState extends State<VendorProductDetailScreen> {
                 price =
                     ApiRepository.shared.getProductsByIdList!.data![0].price
                         .toString(),
-                specifications =
+                conditionRating =
                     ApiRepository
-                        .shared
-                        .getProductsByIdList
-                        ?.data![0]
-                        .specifications,
+                            .shared
+                            .getProductsByIdList
+                            ?.data![0]
+                            .conditionRating
+                            ?.toString() ??
+                        '',
                 description =
                     ApiRepository
                         .shared
@@ -297,46 +299,20 @@ class _VendorProductDetailScreenState extends State<VendorProductDetailScreen> {
           ? _reviewTotalFromApi
           : (int.tryParse(length.toString()) ?? 0);
 
-  String _normalizedSpecificationsRaw() {
-    final raw = specifications?.toString().trim() ?? '';
-    if (raw.isEmpty) return '';
-    return raw;
-  }
-
-  List<MapEntry<String, String>> _parseSpecificationsString(String raw) {
-    final text = raw.trim();
-    if (text.isEmpty) return const [];
-
-    final commaSeparated = RegExp(r'(?:^|, )([^:]+):\s*(.*?)(?=, [^:]+:|$)');
-    final commaMatches = commaSeparated.allMatches(text).toList();
-    if (commaMatches.isNotEmpty) {
-      return commaMatches
-          .map((match) {
-            final key = match.group(1)?.trim() ?? '';
-            final value = match.group(2)?.trim() ?? '';
-            if (key.isEmpty) return null;
-            return MapEntry(key, value);
-          })
-          .whereType<MapEntry<String, String>>()
-          .toList();
+  String _conditionDisplayLabel(String raw) {
+    final key = raw.trim().toLowerCase();
+    switch (key) {
+      case 'excellent':
+        return 'Excellent condition';
+      case 'good':
+        return 'Good condition';
+      case 'fair':
+        return 'Fair condition';
+      default:
+        if (key.isEmpty) return '';
+        return '${key[0].toUpperCase()}${key.substring(1)} condition';
     }
-
-    final out = <MapEntry<String, String>>[];
-    for (final line in text.split(RegExp(r'\r?\n'))) {
-      final t = line.trim();
-      if (t.isEmpty) continue;
-      final idx = t.indexOf(':');
-      if (idx > 0) {
-        out.add(
-          MapEntry(t.substring(0, idx).trim(), t.substring(idx + 1).trim()),
-        );
-      }
-    }
-    return out;
   }
-
-  List<MapEntry<String, String>> _parsedSpecs() =>
-      _parseSpecificationsString(_normalizedSpecificationsRaw());
 
   void _loadRatingDistribution(String productId) {
     ApiRepository.shared.reviewsByProductId(productId, (
@@ -388,7 +364,7 @@ class _VendorProductDetailScreenState extends State<VendorProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
-    final specs = _parsedSpecs();
+    final conditionLabel = _conditionDisplayLabel(conditionRating);
     final carouselCount = imagesList.isEmpty ? 1 : imagesList.length;
 
     return Scaffold(
@@ -485,36 +461,18 @@ class _VendorProductDetailScreenState extends State<VendorProductDetailScreen> {
                                       height: 1.45,
                                     ),
                                   ),
-                                  const SizedBox(height: 20),
-                                  Divider(
-                                    height: 1,
-                                    thickness: 1,
-                                    color: Colors.grey.shade200,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'Product Specifications',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w700,
-                                      color: _titleDark,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  if (specs.isEmpty)
+                                  if (conditionLabel.isNotEmpty) ...[
+                                    const SizedBox(height: 10),
                                     Text(
-                                      'No specifications listed.',
+                                      conditionLabel,
                                       style: GoogleFonts.inter(
                                         fontSize: 15,
-                                        fontWeight: FontWeight.w400,
+                                        fontWeight: FontWeight.w500,
                                         color: _bodyGrey,
                                       ),
-                                    )
-                                  else
-                                    ...specs.map(
-                                      (e) => _specDividerRow(e.key, e.value),
                                     ),
-                                  const SizedBox(height: 8),
+                                  ],
+                                  const SizedBox(height: 20),
                                   Divider(
                                     height: 1,
                                     thickness: 1,
@@ -876,17 +834,8 @@ class _VendorProductDetailScreenState extends State<VendorProductDetailScreen> {
                                   ),
                                   onPressed: () {
                                     Get.to(
-                                      () => EditProductScreen(
-                                        category_id: categoryID,
-                                        sub_category_id: subCategoryID,
-                                        name: name,
-                                        price: price,
-                                        specifications: specifications,
-                                        description: description,
-                                        product_id: product_id,
-                                        images: images,
-                                        imageID: imageID,
-                                        delivery_charges: delivery_charges,
+                                      () => CreateListingScreen(
+                                        editProductId: product_id?.toString(),
                                       ),
                                     );
                                   },
@@ -998,45 +947,6 @@ class _VendorProductDetailScreenState extends State<VendorProductDetailScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _specDividerRow(String title, String value) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w400,
-                    color: _labelGrey,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  value,
-                  textAlign: TextAlign.right,
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: _titleDark,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
-      ],
     );
   }
 

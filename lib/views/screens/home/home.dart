@@ -549,7 +549,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       var reviews = (data.length ?? '0').toString();
                       var name = data.name.toString();
                       var id = data.id.toString();
-                      var specs = data.specifications.toString();
                       var desc = data.description.toString();
                       var userId = data.userId.toString();
                       var image = data.image.toString();
@@ -569,7 +568,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           locationText: _resolveProductLocation(data),
                           rt: stars,
                           id: id,
-                          specs: specs,
                           userId: userId,
                           desc: desc,
                           delivery_charges: delivery_charges,
@@ -832,7 +830,6 @@ class _HomeScreenState extends State<HomeScreen> {
     rt,
     rv,
     id,
-    specs,
     userId,
     desc,
     delivery_charges,
@@ -851,7 +848,6 @@ class _HomeScreenState extends State<HomeScreen> {
             int.parse(dx.toString()),
             rt,
             img,
-            specs,
             userId,
             desc,
             delivery_charges,

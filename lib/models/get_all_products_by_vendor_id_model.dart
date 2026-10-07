@@ -34,7 +34,6 @@ class Data {
   int? subcategoryId;
   String? name;
   int? price;
-  String? specifications;
   String? description;
   String? createdAt;
   String? updatedAt;
@@ -42,6 +41,9 @@ class Data {
   String? length;
   String? image;
   String? delivery_charges;
+  String? publishState;
+  String? listingStatus;
+  bool? bookable;
 
   Data({
     this.id,
@@ -50,7 +52,6 @@ class Data {
     this.subcategoryId,
     this.name,
     this.price,
-    this.specifications,
     this.description,
     this.createdAt,
     this.updatedAt,
@@ -67,7 +68,6 @@ class Data {
     subcategoryId = json['subcategory_id'];
     name = json['name'];
     price = json['price'];
-    specifications = json['specifications'];
     description = json['description'];
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
@@ -75,6 +75,11 @@ class Data {
     length = json['length'];
     image = json['image'];
     delivery_charges = json['delivery_charges'];
+    publishState = json['publish_state']?.toString();
+    listingStatus = json['listing_status']?.toString();
+    bookable = json['bookable'] == true ||
+        json['bookable'] == 1 ||
+        json['bookable'] == '1';
   }
 
   Map<String, dynamic> toJson() {
@@ -85,7 +90,6 @@ class Data {
     data['subcategory_id'] = this.subcategoryId;
     data['name'] = this.name;
     data['price'] = this.price;
-    data['specifications'] = this.specifications;
     data['description'] = this.description;
     data['created_at'] = this.createdAt;
     data['updated_at'] = this.updatedAt;

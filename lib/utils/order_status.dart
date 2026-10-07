@@ -43,6 +43,19 @@ class OrderStatus {
     return isPending(status) || isDisputeWindow(status);
   }
 
+  /// My Listings card badge: item is with the renter (not merely booked).
+  static bool isListingRented(String? status) {
+    switch (normalize(status)) {
+      case active:
+      case scheduledReturn:
+      case returnInProgress:
+      case waitingReturnConfirmation:
+        return true;
+      default:
+        return false;
+    }
+  }
+
   static String normalize(String? value) {
     final trimmed = value?.trim();
     if (trimmed == null || trimmed.isEmpty) {

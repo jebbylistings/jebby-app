@@ -1,9 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:jebby/constants/color.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:jebby/constants/color.dart';
 import 'package:jebby/models/provider_onboarding_data.dart';
 import 'package:jebby/utils/google_places_address.dart';
+import 'package:jebby/views/widgets/address_map_picker_screen.dart';
+
+TextStyle _addressNunito({
+  double size = 15,
+  FontWeight weight = FontWeight.w400,
+  Color? color,
+  double? height,
+}) {
+  return TextStyle(
+    fontFamily: 'Nunito',
+    fontSize: size,
+    fontWeight: weight,
+    color: color ?? AppColors.jebbyTextPrimary,
+    height: height,
+  );
+}
 
 class AddressAutocompleteField extends StatefulWidget {
   final TextEditingController controller;
@@ -14,6 +29,9 @@ class AddressAutocompleteField extends StatefulWidget {
   final String hint;
   final bool showConfirmationChip;
   final bool promptForMissingFields;
+  final bool enableMapPicker;
+  final double? mapPickerInitialLatitude;
+  final double? mapPickerInitialLongitude;
   final int maxLines;
 
   const AddressAutocompleteField({
@@ -26,6 +44,9 @@ class AddressAutocompleteField extends StatefulWidget {
     this.hint = 'Start typing your address',
     this.showConfirmationChip = true,
     this.promptForMissingFields = true,
+    this.enableMapPicker = false,
+    this.mapPickerInitialLatitude,
+    this.mapPickerInitialLongitude,
     this.maxLines = 1,
   });
 
@@ -96,6 +117,88 @@ class _AddressAutocompleteFieldState extends State<AddressAutocompleteField> {
     }
   }
 
+  Future<void> _openMapPicker() async {
+    final lat =
+        widget.resolvedAddress?.latitude ?? widget.mapPickerInitialLatitude;
+    final lng =
+        widget.resolvedAddress?.longitude ?? widget.mapPickerInitialLongitude;
+    final picked = await showAddressMapPicker(
+      context,
+      initialLatitude: lat,
+      initialLongitude: lng,
+    );
+    if (!mounted || picked == null) return;
+
+    setState(() {
+      _loadingDetails = true;
+      _predictions = [];
+    });
+    _suppressEditingCallback = true;
+    widget.controller.text = picked.displayLine;
+    _suppressEditingCallback = false;
+
+    try {
+      if (picked.isComplete) {
+        await widget.onAddressSelected(picked);
+        return;
+      }
+
+      if (!widget.promptForMissingFields) {
+        await widget.onAddressSelected(picked);
+        return;
+      }
+
+      final completed = await showMissingAddressDialog(
+        context,
+        initial: picked,
+      );
+      if (!mounted) return;
+      if (completed != null) {
+        await widget.onAddressSelected(completed);
+      }
+    } finally {
+      if (mounted) setState(() => _loadingDetails = false);
+    }
+  }
+
+  Widget? _buildSuffixIcon() {
+    if (_loadingDetails) {
+      return const Padding(
+        padding: EdgeInsets.all(12),
+        child: SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppColors.jebbyBlue,
+          ),
+        ),
+      );
+    }
+
+    final children = <Widget>[];
+    if (widget.enableMapPicker) {
+      children.add(
+        IconButton(
+          icon: Icon(Icons.map_outlined, color: AppColors.jebbyBlue),
+          tooltip: 'Pick on map',
+          onPressed: _openMapPicker,
+        ),
+      );
+    }
+
+    final custom = widget.decoration?.suffixIcon;
+    if (custom != null) children.add(custom);
+
+    if (children.isEmpty) return null;
+    if (children.length == 1) return children.first;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: children,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final resolved = widget.resolvedAddress;
@@ -114,7 +217,7 @@ class _AddressAutocompleteFieldState extends State<AddressAutocompleteField> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.darkBlue, width: 1.5),
+                borderSide: const BorderSide(color: AppColors.jebbyBlue, width: 1.5),
               ),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 14,
@@ -124,20 +227,12 @@ class _AddressAutocompleteFieldState extends State<AddressAutocompleteField> {
         .copyWith(
       hintText: customDecoration?.hintText ?? widget.hint,
       hintStyle: customDecoration?.hintStyle ??
-          GoogleFonts.inter(
-            fontSize: 15,
-            color: const Color(0xFF8F9098),
+          _addressNunito(
+            size: 15,
+            weight: FontWeight.w600,
+            color: AppColors.jebbyTextMuted,
           ),
-      suffixIcon: _loadingDetails
-          ? const Padding(
-              padding: EdgeInsets.all(12),
-              child: SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            )
-          : widget.decoration?.suffixIcon,
+      suffixIcon: _buildSuffixIcon(),
     );
 
     return Column(
@@ -147,10 +242,7 @@ class _AddressAutocompleteFieldState extends State<AddressAutocompleteField> {
           controller: widget.controller,
           maxLines: widget.maxLines,
           onChanged: _onQueryChanged,
-          style: GoogleFonts.inter(
-            fontSize: 15,
-            color: const Color(0xFF1B1B1F),
-          ),
+          style: _addressNunito(size: 15, weight: FontWeight.w600),
           decoration: fieldDecoration,
         ),
         if (_predictions.isNotEmpty)
@@ -197,17 +289,15 @@ class _AddressAutocompleteFieldState extends State<AddressAutocompleteField> {
                             children: [
                               Icon(
                                 Icons.place_outlined,
-                                color: AppColors.darkBlue,
+                                color: AppColors.jebbyBlue,
                                 size: 20,
                               ),
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
                                   description,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
-                                    color: Colors.black87,
+                                  style: _addressNunito(
+                                    size: 14,
                                     height: 1.3,
                                   ),
                                 ),
@@ -250,10 +340,9 @@ class _AddressAutocompleteFieldState extends State<AddressAutocompleteField> {
                 Expanded(
                   child: Text(
                     resolved.displayLine,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
+                    style: _addressNunito(
+                      size: 13,
+                      weight: FontWeight.w700,
                       height: 1.35,
                     ),
                   ),
@@ -336,10 +425,9 @@ class _MissingAddressDialogState extends State<_MissingAddressDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Text(
         'Complete your address',
-        style: GoogleFonts.inter(
-          fontWeight: FontWeight.w700,
-          fontSize: 18,
-          color: Colors.black87,
+        style: _addressNunito(
+          size: 18,
+          weight: FontWeight.w800,
         ),
       ),
       content: SingleChildScrollView(
@@ -349,9 +437,10 @@ class _MissingAddressDialogState extends State<_MissingAddressDialog> {
           children: [
             Text(
               'We could not read every part of that address. Please fill in the missing details.',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: Colors.black54,
+              style: _addressNunito(
+                size: 14,
+                weight: FontWeight.w600,
+                color: AppColors.jebbyTextMuted,
                 height: 1.4,
               ),
             ),
@@ -395,9 +484,9 @@ class _MissingAddressDialogState extends State<_MissingAddressDialog> {
           onPressed: () => Navigator.pop(context),
           child: Text(
             'Cancel',
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.w600,
-              color: Colors.black54,
+            style: _addressNunito(
+              weight: FontWeight.w700,
+              color: AppColors.jebbyTextMuted,
             ),
           ),
         ),
@@ -405,9 +494,9 @@ class _MissingAddressDialogState extends State<_MissingAddressDialog> {
           onPressed: _save,
           child: Text(
             'Save',
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.w700,
-              color: AppColors.darkBlue,
+            style: _addressNunito(
+              weight: FontWeight.w800,
+              color: AppColors.jebbyBlue,
             ),
           ),
         ),
@@ -420,10 +509,9 @@ class _MissingAddressDialogState extends State<_MissingAddressDialog> {
       padding: const EdgeInsets.only(bottom: 6),
       child: Text(
         text,
-        style: GoogleFonts.inter(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: Colors.black87,
+        style: _addressNunito(
+          size: 14,
+          weight: FontWeight.w700,
         ),
       ),
     );
@@ -440,10 +528,16 @@ class _MissingAddressDialogState extends State<_MissingAddressDialog> {
       controller: controller,
       keyboardType: keyboardType,
       maxLength: maxLength,
+      style: _addressNunito(size: 15, weight: FontWeight.w600),
       inputFormatters:
           digitsOnly ? [FilteringTextInputFormatter.digitsOnly] : null,
       decoration: InputDecoration(
         hintText: hint,
+        hintStyle: _addressNunito(
+          size: 15,
+          weight: FontWeight.w600,
+          color: AppColors.jebbyTextMuted,
+        ),
         filled: true,
         fillColor: const Color(0xFFF7F7F9),
         border: OutlineInputBorder(
@@ -490,9 +584,10 @@ class _AddressStateDropdown extends StatelessWidget {
           isExpanded: true,
           hint: Text(
             'Select state',
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              color: const Color(0xFF8F9098),
+            style: _addressNunito(
+              size: 15,
+              weight: FontWeight.w600,
+              color: AppColors.jebbyTextMuted,
             ),
           ),
           dropdownColor: Colors.white,
@@ -501,13 +596,12 @@ class _AddressStateDropdown extends StatelessWidget {
             Icons.keyboard_arrow_down_rounded,
             color: onChanged == null
                 ? const Color(0xFFBDBEC6)
-                : const Color(0xFF8F9098),
+                : AppColors.jebbyTextMuted,
           ),
           onChanged: onChanged,
-          style: GoogleFonts.inter(
-            color: const Color(0xFF1B1B1F),
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
+          style: _addressNunito(
+            size: 14,
+            weight: FontWeight.w600,
           ),
           items: items
               .map(

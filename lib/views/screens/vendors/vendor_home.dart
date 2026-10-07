@@ -4,12 +4,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jebby/constants/color.dart';
+import 'package:jebby/models/get_all_products_by_vendor_id_model.dart'
+    as vendor_products;
 import 'package:jebby/repositories/api_repository.dart';
+import 'package:jebby/utils/listing_publish_state.dart';
 import 'package:jebby/utils/public_location.dart';
 import 'package:jebby/utils/show_snackbar.dart';
+import 'package:jebby/models/onboarding_state.dart';
+import 'package:jebby/models/stripe_requirement_fields.dart';
+import 'package:jebby/view_models/onboarding_controller.dart';
 import 'package:jebby/views/screens/navigation/app_drawer.dart';
 import 'package:jebby/views/screens/shared/notifications.dart';
-import 'package:jebby/views/screens/vendors/add_product.dart';
+import 'package:jebby/views/screens/vendors/listing/create_listing.dart';
 import 'package:jebby/views/screens/vendors/my_orders.dart';
 import 'package:jebby/views/screens/vendors/my_products.dart';
 import 'package:jebby/views/screens/vendors/my_transactions.dart';
@@ -44,6 +50,7 @@ class _VendorHomeScreenState extends State<VendorHomeScreen> {
   int _draftListings = 0;
   int _orderRequests = 0;
   int _orderActive = 0;
+  int _transactionActivityCount = 0;
 
   bool isLoadingNotifications = true;
   bool isErrorNotifications = false;
@@ -66,10 +73,10 @@ class _VendorHomeScreenState extends State<VendorHomeScreen> {
           email = value.email.toString();
           role = value.role.toString();
           await getProductsApi(sourceId);
-          loadListingStats();
+          await _refreshListingStats();
           loadOrderStats();
+          await _refreshPayoutFlagsFromStripe();
           getNotifications();
-          await _loadDraftCount();
         })
         .onError((error, stackTrace) {
           if (kDebugMode) {}
@@ -105,26 +112,25 @@ class _VendorHomeScreenState extends State<VendorHomeScreen> {
     }
   }
 
-  Future<void> _loadDraftCount() async {
-    final prefs = await SharedPreferences.getInstance();
+  Future<void> _refreshListingStats() async {
+    var products = <vendor_products.Data>[];
+    if (sourceId.trim().isNotEmpty) {
+      try {
+        final list = await ApiRepository.shared.getAllVendorProductsByID(
+          (_) {},
+          (_) {},
+          sourceId,
+        );
+        products = list.data ?? [];
+      } catch (_) {}
+    }
+
+    final counts = await ListingPublishState.vendorHomeCountsAsync(products);
     if (!mounted) return;
     setState(() {
-      _draftListings = prefs.getBool('listing_draft_active') == true ? 1 : 0;
+      _liveListings = counts.live;
+      _draftListings = counts.draft;
     });
-  }
-
-  void loadListingStats() {
-    if (sourceId.trim().isEmpty) return;
-    ApiRepository.shared.getAllVendorProductsByID(
-      (list) {
-        if (!mounted) return;
-        setState(() {
-          _liveListings = list.data?.length ?? 0;
-        });
-      },
-      (error) {},
-      sourceId,
-    );
   }
 
   void loadOrderStats() {
@@ -136,13 +142,16 @@ class _VendorHomeScreenState extends State<VendorHomeScreen> {
         final orders = list.data ?? [];
         var requests = 0;
         var active = 0;
+        var activity = 0;
         for (final order in orders) {
           if (OrderStatus.isNewBooking(order.orderStatus)) requests++;
           if (OrderStatus.isVendorActiveTab(order.orderStatus)) active++;
+          if (!OrderStatus.isTerminal(order.orderStatus)) activity++;
         }
         setState(() {
           _orderRequests = requests;
           _orderActive = active;
+          _transactionActivityCount = activity;
         });
       },
       (error) {},
@@ -214,6 +223,7 @@ class _VendorHomeScreenState extends State<VendorHomeScreen> {
   @override
   void initState() {
     super.initState();
+    _loadPayoutFlags();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await getData();
       if (mounted) profileData(context);
@@ -242,12 +252,117 @@ class _VendorHomeScreenState extends State<VendorHomeScreen> {
     return unseen;
   }
 
-  void _openAddListing() {
+  bool _identityVerified = false;
+  bool _payoutsEnabled = false;
+  bool _payoutInReview = false;
+
+  Future<void> _loadPayoutFlags() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _identityVerified = prefs.getBool('is_identity_verified') ?? false;
+      _payoutsEnabled = prefs.getBool('payouts_enabled') ?? false;
+    });
+  }
+
+  Future<void> _refreshPayoutFlagsFromStripe() async {
+    if (sourceId.trim().isEmpty) return;
+    final controller = ensureOnboardingController();
+    await controller.ensureUserSession();
+    if (controller.userId.isEmpty || controller.userId != sourceId) {
+      await controller.loadAndReconcile(
+        userId: sourceId,
+        name: fullname,
+        email: email,
+      );
+    } else {
+      await controller.refreshStripeStatus();
+    }
+    if (!mounted) return;
+
+    final response = controller.lastStripeStatusResponse;
+    setState(() {
+      _payoutsEnabled = controller.payoutsEnabled;
+      if (controller.state.isIdentityComplete) {
+        _identityVerified = true;
+      }
+      _payoutInReview = !_payoutsEnabled &&
+          response != null &&
+          StripeRequirementFields.shouldShowPayoutInReview(response);
+    });
+  }
+
+  bool _shouldShowPayoutSetupBanner() {
+    if (!_identityVerified || _payoutsEnabled || _payoutInReview) {
+      return false;
+    }
+    return true;
+  }
+
+  Widget _payoutSetupBanner() {
+    return Material(
+      color: AppColors.earnerInfoBlue,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: () async {
+          await Get.to(() => const VendorMyTransactionsScreen());
+          if (mounted) await _refreshPayoutFlagsFromStripe();
+        },
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.account_balance_outlined,
+                  color: AppColors.jebbyBlue,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Listings can be published, but bookings need payout setup. Finish in Transactions.',
+                  style: _nunito(
+                    size: 13,
+                    weight: FontWeight.w700,
+                    color: AppColors.jebbyTextPrimary,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+              Icon(Icons.chevron_right, color: AppColors.jebbyBlue),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openAddListing() async {
+    final prefs = await SharedPreferences.getInstance();
+    final verified = prefs.getBool('is_identity_verified') ?? false;
+    if (!verified) {
+      showAppErrorSnackbar(
+        'Complete identity verification to list items.',
+        title: 'Verification required',
+      );
+      ensureOnboardingController().startOrResume();
+      return;
+    }
     if (profile.isEmpty) {
       showAppErrorSnackbar('Complete your profile', title: 'Required');
       return;
     }
-    Get.to(() => const AddProductScreen(popToHomeOnBack: true));
+    await Get.to(() => const CreateListingScreen(popToHomeOnBack: true));
+    if (mounted) await _refreshListingStats();
   }
 
   TextStyle _nunito({
@@ -382,6 +497,10 @@ class _VendorHomeScreenState extends State<VendorHomeScreen> {
           children: [
             _greetingBanner(),
             const SizedBox(height: 12),
+            if (_shouldShowPayoutSetupBanner()) ...[
+              _payoutSetupBanner(),
+              const SizedBox(height: 12),
+            ],
             _listItemButton(),
             const SizedBox(height: 16),
             Text(
@@ -527,7 +646,10 @@ class _VendorHomeScreenState extends State<VendorHomeScreen> {
             iconBackground: AppColors.jebbySoftBlue,
             title: 'Listings',
             subtitle: '$_liveListings live · $_draftListings draft',
-            onTap: () => Get.to(() => MyProductsScreen(side: false)),
+            onTap: () async {
+              await Get.to(() => MyProductsScreen(side: false));
+              if (mounted) await _refreshListingStats();
+            },
             showDivider: true,
           ),
           _businessRow(
@@ -544,7 +666,16 @@ class _VendorHomeScreenState extends State<VendorHomeScreen> {
             iconColor: AppColors.jebbyBlue,
             iconBackground: AppColors.jebbySoftBlue,
             title: 'Transactions',
-            onTap: () => Get.to(() => VendorMyTransactionsScreen()),
+            subtitle: _transactionActivityCount == 0
+                ? 'No transactions yet'
+                : '$_transactionActivityCount recent',
+            onTap: () async {
+              await Get.to(() => const VendorMyTransactionsScreen());
+              if (mounted) {
+                loadOrderStats();
+                await _refreshPayoutFlagsFromStripe();
+              }
+            },
             showDivider: false,
           ),
         ],

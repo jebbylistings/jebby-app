@@ -16,7 +16,7 @@ import '../../../constants/color.dart';
 import '../../../utils/api_datetime.dart';
 import 'package:jebby/repositories/api_repository.dart';
 import '../../../view_models/user_view_model.dart';
-import 'product_details.dart';
+import 'package:jebby/views/screens/home/product_details.dart' deferred as product_detail;
 
 class Chat extends StatefulWidget {
   const Chat(this.targetID, {super.key, this.productContext});
@@ -457,18 +457,21 @@ class _ProductInquiryCard extends StatelessWidget {
     return '${AppUrl.baseUrlM}$rel';
   }
 
-  void _openProduct() {
+  Future<void> _openProduct() async {
+    await product_detail.loadLibrary();
+    final price = int.tryParse(product.price.trim()) ?? 0;
+    final image = product.image.trim();
     Get.to(
-      () => ProductDetailScreen(
+      () => product_detail.ProductDetailScreen(
         product.productId,
         product.name,
-        product.price,
+        price,
         '0',
-        product.image,
-        '',
+        image,
         product.vendorUserId,
         '',
         0,
+        sourceId: 'chat',
       ),
     );
   }
