@@ -46,6 +46,7 @@ class Data {
   String? updatedAt;
   int? vendorId;
   String? userName;
+  String? profileImage;
 
   Data({
     this.id,
@@ -58,6 +59,7 @@ class Data {
     this.updatedAt,
     this.vendorId,
     this.userName,
+    this.profileImage,
   });
 
   Data.fromJson(Map<String, dynamic> json) {
@@ -65,12 +67,13 @@ class Data {
     userId = json['user_id'];
     productId = json['product_id'];
     stars = json['stars'];
-    image = json['image'];
+    image = json['image']?.toString();
     description = json['description'];
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
     vendorId = json['vendor_id'];
-    userName = json['user_name'];
+    userName = json['user_name']?.toString();
+    profileImage = json['profile_image']?.toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -85,6 +88,7 @@ class Data {
     data['updated_at'] = this.updatedAt;
     data['vendor_id'] = this.vendorId;
     data['user_name'] = this.userName;
+    data['profile_image'] = this.profileImage;
     return data;
   }
 }

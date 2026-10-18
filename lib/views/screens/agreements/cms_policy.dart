@@ -70,11 +70,20 @@ class _CmsPolicyScreenState extends State<CmsPolicyScreen> {
     return list.first.description?.toString();
   }
 
+  String? _lastUpdatedLabel() {
+    final page = ApiRepository.shared.cmsPageForSlug(widget.slug);
+    final list = page?.data;
+    if (list == null || list.isEmpty) return null;
+    return CmsPageShell.formatLastUpdatedLabel(list.first.updatedAt);
+  }
+
   @override
   Widget build(BuildContext context) {
     return CmsPageShell(
+      screenHeaderTitle: 'Legal',
       title: widget.title,
       subtitle: widget.subtitle,
+      lastUpdatedLabel: _lastUpdatedLabel(),
       body: CmsPageShell.htmlPolicyScroll(
         isLoading: isLoading,
         isError: isError,

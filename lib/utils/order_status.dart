@@ -92,6 +92,21 @@ class OrderStatus {
     return isCancelled(normalized) || isRejected(normalized) || isCompleted(normalized);
   }
 
+  /// In-progress rentals (not completed / cancelled / rejected).
+  static bool isEarnerDashboardRecentActivity(String? status) {
+    return !isTerminal(status);
+  }
+
+  /// Earner Transactions screen + dashboard "X recent" (same filter).
+  static bool showOnEarnerTransactionsList(String? status) {
+    if (isRejected(status)) return false;
+    final normalized = normalize(status);
+    if (normalized == bookingRequested) return false;
+    return isEarnerDashboardRecentActivity(status) ||
+        isCompleted(status) ||
+        isCancelled(status);
+  }
+
   /// Renter orders that are still in the rental lifecycle (not finished, cancelled, or declined).
   static bool isRenterActive(String? status) {
     return !isTerminal(status);
@@ -302,5 +317,72 @@ class OrderStatus {
       return 'This rental is complete. No further action is required.';
     }
     return '';
+  }
+
+  /// Home "Action required" card: drop items the API still returns after the user finished.
+  static bool actionRequiredStillRelevant({
+    required String? orderStatus,
+    required String actionType,
+    required String actionLabel,
+  }) {
+    if (isTerminal(orderStatus)) return false;
+    final type = actionType.trim().toLowerCase();
+    if (type.isEmpty || type == 'none') return false;
+
+    final status = normalize(orderStatus);
+    if (_isStalePickupInspectionPrompt(
+      status: status,
+      actionType: type,
+      actionLabel: actionLabel,
+    )) {
+      return false;
+    }
+    return true;
+  }
+
+  static bool _isStalePickupInspectionPrompt({
+    required String status,
+    required String actionType,
+    required String actionLabel,
+  }) {
+    const pickupPhaseComplete = {
+      active,
+      scheduledReturn,
+      returnInProgress,
+      waitingReturnConfirmation,
+      completed,
+      disputeWindow24h,
+    };
+    if (!pickupPhaseComplete.contains(status)) return false;
+
+    if (actionType.contains('return')) return false;
+
+    if (actionType.contains('inspection') || actionType.startsWith('handoff')) {
+      return true;
+    }
+
+    final label = actionLabel.trim().toLowerCase();
+    return label.contains('pickup') && label.contains('inspection');
+  }
+
+  static bool actionRequiredNeedsTrustCheck({
+    required String actionType,
+    required String actionLabel,
+  }) {
+    final type = actionType.trim().toLowerCase();
+    if (type.contains('inspection') || type.startsWith('handoff')) return true;
+    final label = actionLabel.trim().toLowerCase();
+    return label.contains('inspection');
+  }
+
+  static String trustPhaseForActionRequired({
+    required String? orderStatus,
+    required String actionType,
+  }) {
+    final type = actionType.trim().toLowerCase();
+    if (type.contains('return') || normalize(orderStatus).contains('RETURN')) {
+      return 'return';
+    }
+    return 'pickup';
   }
 }

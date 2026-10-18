@@ -7,7 +7,12 @@ import '../../view_models/reservation_view_model.dart';
 import '../screens/reservations/reservation_detail.dart';
 
 class ReservationActionCard extends StatefulWidget {
-  const ReservationActionCard({super.key});
+  const ReservationActionCard({super.key, this.outerPadding});
+
+  /// Screen padding; omit horizontal inset when the parent already pads the scroll view.
+  final EdgeInsetsGeometry? outerPadding;
+
+  static const defaultOuterPadding = EdgeInsets.fromLTRB(16, 8, 16, 0);
 
   @override
   State<ReservationActionCard> createState() => _ReservationActionCardState();
@@ -29,7 +34,7 @@ class _ReservationActionCardState extends State<ReservationActionCard> {
         if (vm.actionItems.isEmpty) return const SizedBox.shrink();
         final item = vm.actionItems.first;
         return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          padding: widget.outerPadding ?? ReservationActionCard.defaultOuterPadding,
           child: Material(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),

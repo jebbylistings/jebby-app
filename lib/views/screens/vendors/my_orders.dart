@@ -2,10 +2,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:jebby/constants/color.dart';
 import 'package:jebby/utils/earner_navigation.dart';
+import 'package:jebby/views/screens/reservations/rental_request_review.dart';
 import 'package:jebby/views/screens/reservations/reservation_detail.dart';
 import 'package:provider/provider.dart';
 
@@ -26,14 +26,17 @@ class VendorMyOrdersScreen extends StatefulWidget {
 class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
   static const String _emptyPlaceholderAsset =
       'assets/images/myorders-placeholder.png';
+  static const String _ordersBannerAsset = 'assets/images/my-orders-banner.png';
 
+  static const Color _cardBorder = Color(0xFFE3E6EC);
   static const Color _badgeActiveBg = AppColors.jebbySoftBlue;
   static const Color _badgeActiveFg = AppColors.jebbyBlue;
-  static const Color _badgeCompletedBg = AppColors.earnerInfoBlue;
-  static const Color _badgeCompletedFg = AppColors.jebbyBlue;
+  static const Color _badgePendingBg = AppColors.primaryColorLight;
+  static const Color _badgePendingFg = AppColors.jebbyAccentOrange;
+  static const Color _badgeCompletedBg = Color(0xFFDCFCE7);
+  static const Color _badgeCompletedFg = Color(0xFF16A34A);
   static const Color _badgeNeutralBg = AppColors.jebbySoftBlue;
   static const Color _badgeNeutralFg = AppColors.jebbyTextMuted;
-
   /// 0 = All, 1 = Requests (booking requested), 2 = Active (in progress), 3 = Completed
   int selectedTab = 0;
 
@@ -70,10 +73,6 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
   bool isError = false;
   bool isEmpty = false;
 
-  int? _actionLoadingOrderId;
-  String? _actionLoadingKind;
-
-  static const Color _labelGrey = Color(0xFF72747A);
   static const Color _titleDark = Color(0xFF1A1A1A);
 
   Future<void> getData() async {
@@ -137,164 +136,18 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
     );
   }
 
-  Future<bool> _confirmVendorBookingAction({
-    required String title,
-    required String message,
-    required String confirmLabel,
-    Color confirmColor = AppColors.primaryColor,
-  }) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Text(
-            title,
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.w700,
-              fontSize: 18,
-              color: _titleDark,
-            ),
-          ),
-          content: Text(
-            message,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: _labelGrey,
-              height: 1.4,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(
-                'Cancel',
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w600,
-                  color: _labelGrey,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(
-                confirmLabel,
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w700,
-                  color: confirmColor,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-    return confirmed == true;
-  }
-
-  Widget _actionButtonChild(bool loading, String label) {
-    if (loading) {
-      return const SizedBox(
-        width: 22,
-        height: 22,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          color: Colors.white,
-        ),
-      );
-    }
-    return Text(
-      label,
-      style: GoogleFonts.inter(
-        fontWeight: FontWeight.w600,
-        fontSize: 14,
-      ),
-    );
-  }
-
-  Future<void> _approveBooking(dynamic orderId, String productName) async {
-    final id = int.tryParse(orderId.toString());
-    if (id == null) return;
-
-    final name = productName.trim();
-    final confirmed = await _confirmVendorBookingAction(
-      title: 'Approve booking?',
-      message: name.isNotEmpty && name != 'null'
-          ? 'Accept this rental request for "$name"? The renter will be asked to complete payment.'
-          : 'Accept this rental request? The renter will be asked to complete payment.',
-      confirmLabel: 'Approve',
-    );
-    if (!confirmed || !mounted) return;
-
-    setState(() {
-      _actionLoadingOrderId = id;
-      _actionLoadingKind = 'approve';
-    });
-    try {
-      final ok = await ApiRepository.shared.acceptVendorBooking(id);
-      if (ok && mounted) {
-        ApiRepository.shared.getVenodorOrders(sourceId.toString(), (List) {
-          if (mounted) setState(() {});
-        }, (error) {});
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _actionLoadingOrderId = null;
-          _actionLoadingKind = null;
-        });
-      }
-    }
-  }
-
-  Future<void> _declineBooking(dynamic orderId, String productName) async {
-    final id = int.tryParse(orderId.toString());
-    if (id == null) return;
-
-    final name = productName.trim();
-    final confirmed = await _confirmVendorBookingAction(
-      title: 'Decline booking?',
-      message: name.isNotEmpty && name != 'null'
-          ? 'Decline the rental request for "$name"? The renter will be notified.'
-          : 'Decline this rental request? The renter will be notified.',
-      confirmLabel: 'Decline',
-      confirmColor: Colors.red.shade700,
-    );
-    if (!confirmed || !mounted) return;
-
-    setState(() {
-      _actionLoadingOrderId = id;
-      _actionLoadingKind = 'decline';
-    });
-    try {
-      final ok = await ApiRepository.shared.declineVendorBooking(
-        id,
-        reason: 'Order Declined',
-      );
-      if (ok && mounted) {
-        ApiRepository.shared.getVenodorOrders(sourceId.toString(), (List) {
-          if (mounted) setState(() {});
-        }, (error) {});
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _actionLoadingOrderId = null;
-          _actionLoadingKind = null;
-        });
-      }
-    }
-  }
-
   Future<void> _openReservation(dynamic orderId) async {
     final id = int.tryParse(orderId.toString());
     if (id == null) return;
     await Get.to(() => ReservationDetailScreen(orderId: id));
+    if (!mounted || sourceId.isEmpty) return;
+    getNewOrders();
+  }
+
+  Future<void> _openRentalRequest(dynamic orderId) async {
+    final id = int.tryParse(orderId.toString());
+    if (id == null) return;
+    await Get.to(() => RentalRequestReviewScreen(orderId: id));
     if (!mounted || sourceId.isEmpty) return;
     getNewOrders();
   }
@@ -313,68 +166,19 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
   }) {
     final due = _formatVendorDate(end);
     final renter = renterName.trim().isNotEmpty && renterName != 'null' ? renterName : 'Renter';
-    final orderIdInt = int.tryParse(orderId.toString());
-    final approving =
-        orderIdInt != null &&
-        _actionLoadingOrderId == orderIdInt &&
-        _actionLoadingKind == 'approve';
-    final declining =
-        orderIdInt != null &&
-        _actionLoadingOrderId == orderIdInt &&
-        _actionLoadingKind == 'decline';
-    final busy = orderIdInt != null && _actionLoadingOrderId == orderIdInt;
+    void openRequest() => _openRentalRequest(orderId);
     return _VendorOrderCardShell(
-      badgeLabel: OrderStatus.renterBadgeLabel(OrderStatus.bookingRequested),
-      badgeBg: _badgeActiveBg,
-      badgeFg: _badgeActiveFg,
+      badgeLabel: 'Request Pending',
+      badgeBg: _badgePendingBg,
+      badgeFg: _badgePendingFg,
+      badgeIcon: Icons.schedule_rounded,
       displayPrice: price,
       title: productName,
-      metaLine: 'Requested by $renter · Return due: $due',
+      renterName: renter,
+      returnDueLabel: due,
       imageUrl: _imageUrl(productImage),
-      onHeaderTap: () => _openReservation(orderId),
-      actionRow: Row(
-        children: [
-          Expanded(
-            child: SizedBox(
-              height: 44,
-              child: FilledButton(
-                onPressed: busy ? null : () => _approveBooking(orderId, productName),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.jebbyBlue,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: AppColors.jebbyBlue.withValues(alpha: 0.7),
-                  disabledForegroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: _actionButtonChild(approving, 'Approve'),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: SizedBox(
-              height: 44,
-              child: FilledButton(
-                onPressed: busy ? null : () => _declineBooking(orderId, productName),
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.grey.shade500,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: Colors.grey.shade400,
-                  disabledForegroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: _actionButtonChild(declining, 'Decline'),
-              ),
-            ),
-          ),
-        ],
-      ),
+      onHeaderTap: openRequest,
+      actionRow: _viewRequestButton(openRequest),
     );
   }
 
@@ -391,22 +195,21 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'My orders',
+                  'My Rentals',
                   style: _nunito(
-                    size: 28,
+                    size: 22,
                     weight: FontWeight.w800,
-                    color: AppColors.jebbyTextPrimary,
-                    height: 1.1,
+                    height: 1.15,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Manage bookings for your items.',
                   style: _nunito(
-                    size: 15,
+                    size: 14,
                     weight: FontWeight.w600,
                     color: AppColors.jebbyTextMuted,
-                    height: 1.2,
+                    height: 1.35,
                   ),
                 ),
               ],
@@ -444,32 +247,118 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
     );
   }
 
+  int _countRequests() =>
+      _allOrders().where((e) => OrderStatus.isNewBooking(e.orderStatus)).length;
+
+  int _countActive() => _allOrders()
+      .where((e) => OrderStatus.isVendorActiveTab(e.orderStatus))
+      .where((e) => !OrderStatus.isNewBooking(e.orderStatus))
+      .length;
+
+  int _countPast() =>
+      _allOrders().where((e) => OrderStatus.isCompleted(e.orderStatus)).length;
+
+  String _filterChipLabel(int index) {
+    switch (index) {
+      case 1:
+        final n = _countRequests();
+        return n > 0 ? 'Request ($n)' : 'Request';
+      case 2:
+        final n = _countActive();
+        return n > 0 ? 'Active ($n)' : 'Active';
+      case 3:
+        final n = _countPast();
+        return n > 0 ? 'Past ($n)' : 'Past';
+      default:
+        return 'All';
+    }
+  }
+
+  Widget _earningsBanner() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bannerWidth = constraints.maxWidth;
+        final textWidth = bannerWidth * 0.56;
+
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            clipBehavior: Clip.hardEdge,
+            children: [
+              Image.asset(
+                _ordersBannerAsset,
+                width: bannerWidth,
+                fit: BoxFit.fitWidth,
+                alignment: Alignment.center,
+              ),
+              Positioned(
+                left: 20,
+                top: 25,
+                width: textWidth,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Your Items, Your\nEarnings',
+                      style: _nunito(
+                        size: 24,
+                        weight: FontWeight.w800,
+                        color: _titleDark,
+                        height: 1.18,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Track your rentals and watch your earnings grow.',
+                      style: _nunito(
+                        size: 15,
+                        weight: FontWeight.w500,
+                        color: const Color(0xFF4E5E74),
+                        height: 1.18,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _filterChips() {
     return Row(
       children: [
-        Expanded(child: _filterChip(label: 'All', index: 0)),
-        const SizedBox(width: 6),
-        Expanded(child: _filterChip(label: 'Requests', index: 1)),
-        const SizedBox(width: 6),
-        Expanded(child: _filterChip(label: 'Active', index: 2)),
-        const SizedBox(width: 6),
-        Expanded(child: _filterChip(label: 'Completed', index: 3)),
+        Expanded(child: _filterChip(index: 0)),
+        const SizedBox(width: 8),
+        Expanded(child: _filterChip(index: 1)),
+        const SizedBox(width: 8),
+        Expanded(child: _filterChip(index: 2)),
+        const SizedBox(width: 8),
+        Expanded(child: _filterChip(index: 3)),
       ],
     );
   }
 
-  Widget _filterChip({required String label, required int index}) {
+  Widget _filterChip({required int index}) {
     final selected = selectedTab == index;
+    final label = _filterChipLabel(index);
     return Material(
-      color: selected ? AppColors.jebbyBlue : AppColors.jebbySoftBlue,
-      borderRadius: BorderRadius.circular(20),
+      color: selected ? AppColors.jebbyBlue : Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: selected
+            ? BorderSide.none
+            : const BorderSide(color: _cardBorder),
+      ),
       child: InkWell(
         onTap: () => setState(() => selectedTab = index),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         child: Container(
           constraints: const BoxConstraints(minHeight: 40),
           alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
           child: Text(
             label,
             maxLines: 1,
@@ -483,6 +372,49 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _primaryOrderCardButton({
+    required VoidCallback onPressed,
+    required String label,
+    required IconData icon,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: FilledButton.icon(
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.jebbyBlue,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        icon: Icon(icon, size: 18),
+        label: Text(
+          label,
+          style: _nunito(size: 15, weight: FontWeight.w800, color: Colors.white),
+        ),
+      ),
+    );
+  }
+
+  Widget _viewRequestButton(VoidCallback onPressed) {
+    return _primaryOrderCardButton(
+      onPressed: onPressed,
+      label: 'View request',
+      icon: Icons.receipt_long_outlined,
+    );
+  }
+
+  Widget _openReservationButton(VoidCallback onPressed) {
+    return _primaryOrderCardButton(
+      onPressed: onPressed,
+      label: 'Open reservation',
+      icon: Icons.calendar_today_outlined,
     );
   }
 
@@ -551,7 +483,7 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
   String _formatVendorDate(String? raw) {
     if (raw == null || raw.isEmpty) return '—';
     try {
-      return DateFormat('d/M/yyyy').format(DateTime.parse(raw));
+      return DateFormat('d MMM yyyy').format(DateTime.parse(raw));
     } catch (_) {
       return raw;
     }
@@ -669,29 +601,32 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
     }
 
     if (OrderStatus.isCompleted(status)) {
+      void openReservation() => _openReservation(orderId);
       return _VendorOrderCardShell(
-        badgeLabel: 'COMPLETED',
+        badgeLabel: 'Completed',
         badgeBg: _badgeCompletedBg,
         badgeFg: _badgeCompletedFg,
+        badgeIcon: Icons.check_circle_outline_rounded,
         displayPrice: _displayPrice(data.totalPrice),
         title: productName,
-        metaLine: 'Completed · Return was ${_formatVendorDate(end)}',
+        renterName: renter,
+        returnDueLabel: _formatVendorDate(end),
         imageUrl: _imageUrl(data.productImage),
-        onHeaderTap: () => _openReservation(orderId),
+        onHeaderTap: openReservation,
+        actionRow: _openReservationButton(openReservation),
       );
     }
 
     if (OrderStatus.isTerminal(status)) {
       final rejected = OrderStatus.isRejected(status);
       return _VendorOrderCardShell(
-        badgeLabel: OrderStatus.renterBadgeLabel(status),
+        badgeLabel: rejected ? 'Declined' : 'Cancelled',
         badgeBg: _badgeNeutralBg,
         badgeFg: _badgeNeutralFg,
         displayPrice: _displayPrice(data.totalPrice),
         title: productName,
-        metaLine: rejected
-            ? 'Declined · ${_formatVendorDate(start)} – ${_formatVendorDate(end)}'
-            : 'Cancelled · ${_formatVendorDate(start)} – ${_formatVendorDate(end)}',
+        renterName: renter,
+        returnDueLabel: _formatVendorDate(end),
         imageUrl: _imageUrl(data.productImage),
         onHeaderTap: () => _openReservation(orderId),
       );
@@ -701,50 +636,28 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
       void openReservation() => _openReservation(orderId);
 
       return _VendorOrderCardShell(
-        badgeLabel: OrderStatus.renterBadgeLabel(status),
+        badgeLabel: 'Active',
         badgeBg: _badgeActiveBg,
         badgeFg: _badgeActiveFg,
+        badgeIcon: Icons.check_circle_outline_rounded,
         displayPrice: _displayPrice(data.totalPrice),
         title: productName,
-        metaLine:
-            'Requested by $renter · Return due: ${_formatVendorDate(end)}',
+        renterName: renter,
+        returnDueLabel: _formatVendorDate(end),
         imageUrl: _imageUrl(data.productImage),
         onHeaderTap: openReservation,
-        actionRow: SizedBox(
-          width: double.infinity,
-          height: 44,
-          child: FilledButton(
-            onPressed: openReservation,
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.jebbyBlue,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: Text(
-              'Open reservation',
-              style: GoogleFonts.inter(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
+        actionRow: _openReservationButton(openReservation),
       );
     }
 
-    final cancelled = OrderStatus.isCancelled(status);
-    final rejected = OrderStatus.isRejected(status);
-    final terminal = cancelled || rejected;
     return _VendorOrderCardShell(
       badgeLabel: OrderStatus.renterBadgeLabel(status),
-      badgeBg: terminal ? _badgeNeutralBg : _badgeActiveBg,
-      badgeFg: terminal ? _badgeNeutralFg : _badgeActiveFg,
+      badgeBg: _badgeActiveBg,
+      badgeFg: _badgeActiveFg,
       displayPrice: _displayPrice(data.totalPrice),
       title: productName,
-      metaLine: 'Requested by $renter · Return due: ${_formatVendorDate(end)}',
+      renterName: renter,
+      returnDueLabel: _formatVendorDate(end),
       imageUrl: _imageUrl(data.productImage),
       onHeaderTap: () => _openReservation(orderId),
     );
@@ -768,7 +681,7 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.jebbyBackground,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
@@ -776,7 +689,9 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _pageHeader(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
+              _earningsBanner(),
+              const SizedBox(height: 16),
               _filterChips(),
               const SizedBox(height: 16),
               Expanded(child: _buildTabContent()),
@@ -788,14 +703,85 @@ class _VendorMyOrdersScreenState extends State<VendorMyOrdersScreen> {
   }
 }
 
-/// Order row layout aligned with renter [MyOrdersScreen] `_RenterOrderCard`.
+/// Image is a square whose side matches the measured details column height.
+class _VendorOrderCardHeader extends StatefulWidget {
+  const _VendorOrderCardHeader({
+    required this.thumbnail,
+    required this.details,
+    this.gap = 12,
+    this.minThumbSide = 80,
+  });
+
+  final Widget thumbnail;
+  final Widget details;
+  final double gap;
+  final double minThumbSide;
+
+  @override
+  State<_VendorOrderCardHeader> createState() => _VendorOrderCardHeaderState();
+}
+
+class _VendorOrderCardHeaderState extends State<_VendorOrderCardHeader> {
+  final GlobalKey _detailsKey = GlobalKey();
+  double _thumbSide = 96;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback(_syncThumbSide);
+  }
+
+  @override
+  void didUpdateWidget(covariant _VendorOrderCardHeader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    WidgetsBinding.instance.addPostFrameCallback(_syncThumbSide);
+  }
+
+  void _syncThumbSide(_) {
+    final box = _detailsKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+    final next = box.size.height < widget.minThumbSide
+        ? widget.minThumbSide
+        : box.size.height;
+    if ((next - _thumbSide).abs() > 0.5 && mounted) {
+      setState(() => _thumbSide = next);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: SizedBox(
+            width: _thumbSide,
+            height: _thumbSide,
+            child: widget.thumbnail,
+          ),
+        ),
+        SizedBox(width: widget.gap),
+        Expanded(
+          child: KeyedSubtree(
+            key: _detailsKey,
+            child: widget.details,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _VendorOrderCardShell extends StatelessWidget {
   final String badgeLabel;
   final Color badgeBg;
   final Color badgeFg;
+  final IconData? badgeIcon;
   final String displayPrice;
   final String title;
-  final String metaLine;
+  final String renterName;
+  final String returnDueLabel;
   final String imageUrl;
   final VoidCallback onHeaderTap;
   final Widget? actionRow;
@@ -804,142 +790,179 @@ class _VendorOrderCardShell extends StatelessWidget {
     required this.badgeLabel,
     required this.badgeBg,
     required this.badgeFg,
+    this.badgeIcon,
     required this.displayPrice,
     required this.title,
-    required this.metaLine,
+    required this.renterName,
+    required this.returnDueLabel,
     this.imageUrl = '',
     required this.onHeaderTap,
     this.actionRow,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      elevation: 2,
-      shadowColor: Colors.black26,
-      borderRadius: BorderRadius.circular(14),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onHeaderTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: SizedBox(
-                      width: 72,
-                      height: 72,
-                      child: imageUrl.isEmpty
-                          ? ColoredBox(
-                              color: const Color(0xFFF5F5F5),
-                              child: Icon(Icons.image_outlined, color: Colors.grey.shade400),
-                            )
-                          : CachedNetworkImage(
-                              imageUrl: imageUrl,
-                              fit: BoxFit.cover,
-                              placeholder: (_, __) => ColoredBox(
-                                color: const Color(0xFFF5F5F5),
-                                child: Center(
-                                  child: SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: AppColors.jebbyBlue.withValues(alpha: 0.6),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              errorWidget: (_, __, ___) => ColoredBox(
-                                color: const Color(0xFFF5F5F5),
-                                child: Icon(Icons.chair_outlined, color: Colors.grey.shade500),
-                              ),
-                            ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Text(
-                              '\$$displayPrice',
-                              style: GoogleFonts.inter(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.black,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: badgeBg,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  badgeLabel,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: badgeFg,
-                                    letterSpacing: 0.3,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          title,
-                          style: GoogleFonts.inter(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          metaLine,
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFF9A9AA1),
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              if (actionRow != null) ...[
-                const SizedBox(height: 14),
-                actionRow!,
-              ],
-            ],
+  TextStyle _nunito({
+    required double size,
+    FontWeight weight = FontWeight.w400,
+    Color? color,
+    double? height,
+  }) {
+    return TextStyle(
+      fontFamily: 'Nunito',
+      fontSize: size,
+      fontWeight: weight,
+      color: color ?? AppColors.jebbyTextPrimary,
+      height: height,
+    );
+  }
+
+  Widget _metaRow({required IconData icon, required String text}) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: AppColors.jebbyTextMuted),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: _nunito(
+              size: 13,
+              weight: FontWeight.w600,
+              color: AppColors.jebbyTextMuted,
+              height: 1.35,
+            ),
           ),
         ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _VendorMyOrdersScreenState._cardBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
+              onTap: onHeaderTap,
+              borderRadius: BorderRadius.circular(12),
+              child: _VendorOrderCardHeader(
+                thumbnail: _productThumbnail(),
+                details: _orderDetailsColumn(),
+              ),
+            ),
+            if (actionRow != null) ...[
+              const SizedBox(height: 14),
+              actionRow!,
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _orderDetailsColumn() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _statusBadge(),
+        const SizedBox(height: 8),
+        Text(
+          '\$$displayPrice',
+          style: _nunito(
+            size: 22,
+            weight: FontWeight.w800,
+            color: AppColors.jebbyBlue,
+            height: 1.1,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          title,
+          style: _nunito(size: 16, weight: FontWeight.w800, height: 1.25),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 8),
+        _metaRow(
+          icon: Icons.person_outline_rounded,
+          text: 'Requested by $renterName',
+        ),
+        const SizedBox(height: 4),
+        _metaRow(
+          icon: Icons.calendar_today_outlined,
+          text: 'Return due: $returnDueLabel',
+        ),
+      ],
+    );
+  }
+
+  Widget _productThumbnail() {
+    return ColoredBox(
+      color: const Color(0xFFF5F5F5),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (imageUrl.isEmpty)
+            Center(
+              child: Icon(Icons.image_outlined, color: Colors.grey.shade400),
+            )
+          else
+            CachedNetworkImage(
+              imageUrl: imageUrl,
+              fit: BoxFit.cover,
+              placeholder: (_, __) => Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.jebbyBlue.withValues(alpha: 0.6),
+                  ),
+                ),
+              ),
+              errorWidget: (_, __, ___) => Center(
+                child: Icon(Icons.chair_outlined, color: Colors.grey.shade500),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statusBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: badgeBg,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (badgeIcon != null) ...[
+            Icon(badgeIcon, size: 14, color: badgeFg),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            badgeLabel,
+            style: _nunito(size: 12, weight: FontWeight.w700, color: badgeFg),
+          ),
+        ],
       ),
     );
   }

@@ -392,7 +392,12 @@ Widget _listingSheetDivider() => const Divider(
       color: _listingSheetDividerColor,
     );
 
-Future<ImageSource?> showListingPhotoSourceSheet(BuildContext context) {
+Future<ImageSource?> showListingPhotoSourceSheet(
+  BuildContext context, {
+  String title = 'Add a photo',
+  String takePhotoLabel = 'Take photo',
+  String galleryLabel = 'Choose from photos',
+}) {
   return showModalBottomSheet<ImageSource>(
     context: context,
     backgroundColor: Colors.white,
@@ -415,7 +420,7 @@ Future<ImageSource?> showListingPhotoSourceSheet(BuildContext context) {
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
             child: Text(
-              'Add a photo',
+              title,
               textAlign: TextAlign.center,
               style: onboardingNunito(size: 18, weight: FontWeight.w800),
             ),
@@ -424,14 +429,14 @@ Future<ImageSource?> showListingPhotoSourceSheet(BuildContext context) {
           _listingPhotoSourceRow(
             ctx,
             icon: Icons.photo_camera_outlined,
-            label: 'Take photo',
+            label: takePhotoLabel,
             source: ImageSource.camera,
           ),
           _listingSheetDivider(),
           _listingPhotoSourceRow(
             ctx,
             icon: Icons.photo_outlined,
-            label: 'Choose from photos',
+            label: galleryLabel,
             source: ImageSource.gallery,
           ),
           _listingSheetDivider(),

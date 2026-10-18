@@ -14,6 +14,8 @@ class ReservationViewModel extends ChangeNotifier {
   final ReservationRepository _repository;
 
   Reservation? reservation;
+  /// Filled from order payload or [ApiRepository.fetchProductDetailRaw].
+  String? productDescription;
   TrustStatus? trustStatus;
   List<ReservationActionItem> actionItems = [];
   bool loading = false;
@@ -22,12 +24,23 @@ class ReservationViewModel extends ChangeNotifier {
   String? bookingActionLoading;
   String? error;
 
-  Future<void> loadReservation(int orderId) async {
+  /// Clears cached order data when opening a different reservation (avoids showing stale UI).
+  void beginOrderLoad(int orderId) {
     loading = true;
     error = null;
+    if (reservation?.id != orderId) {
+      reservation = null;
+      productDescription = null;
+      trustStatus = null;
+    }
     notifyListeners();
+  }
+
+  Future<void> loadReservation(int orderId) async {
+    beginOrderLoad(orderId);
     try {
       reservation = await _repository.fetchReservation(orderId);
+      await _loadProductDescriptionIfNeeded();
     } catch (e) {
       error = e.toString();
     } finally {
@@ -36,14 +49,68 @@ class ReservationViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> refreshProductDescription() async {
+    await _loadProductDescriptionIfNeeded();
+    notifyListeners();
+  }
+
+  Future<void> _loadProductDescriptionIfNeeded() async {
+    final r = reservation;
+    if (r == null) return;
+
+    var desc = r.productDescription?.trim() ?? '';
+    if (desc.isNotEmpty) {
+      productDescription = desc;
+      return;
+    }
+
+    try {
+      final raw = await ApiRepository.shared.fetchProductDetailRaw('${r.productId}');
+      desc = raw?['description']?.toString().trim() ?? '';
+      if (desc.isNotEmpty) {
+        productDescription = desc;
+      }
+    } catch (_) {}
+  }
+
   Future<void> loadActionRequired() async {
     try {
       final items = await _repository.fetchActionRequired();
-      actionItems = items
-          .where((item) => !OrderStatus.isDisputeWindow(item.orderStatus))
-          .toList();
+      final kept = <ReservationActionItem>[];
+      for (final item in items) {
+        if (OrderStatus.isDisputeWindow(item.orderStatus)) continue;
+        if (!OrderStatus.actionRequiredStillRelevant(
+          orderStatus: item.orderStatus,
+          actionType: item.nextAction.type,
+          actionLabel: item.nextAction.label,
+        )) {
+          continue;
+        }
+        if (!await _userStillNeedsActionItem(item)) continue;
+        kept.add(item);
+      }
+      actionItems = kept;
       notifyListeners();
     } catch (_) {}
+  }
+
+  Future<bool> _userStillNeedsActionItem(ReservationActionItem item) async {
+    if (!OrderStatus.actionRequiredNeedsTrustCheck(
+      actionType: item.nextAction.type,
+      actionLabel: item.nextAction.label,
+    )) {
+      return true;
+    }
+    final phase = OrderStatus.trustPhaseForActionRequired(
+      orderStatus: item.orderStatus,
+      actionType: item.nextAction.type,
+    );
+    try {
+      final trust = await _repository.fetchTrustStatus(item.orderId, phase: phase);
+      if (trust.bothConfirmed) return false;
+      if (trust.myConfirmation?.isConfirmed == true) return false;
+    } catch (_) {}
+    return true;
   }
 
   Future<void> loadTrust(int orderId, {String? phase}) async {
@@ -212,6 +279,7 @@ class ReservationViewModel extends ChangeNotifier {
     try {
       reservation = await _repository.fetchReservation(orderId);
     } catch (_) {}
+    await loadActionRequired();
     notifyListeners();
     return true;
   }

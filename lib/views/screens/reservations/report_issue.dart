@@ -1,14 +1,19 @@
 import 'dart:io';
 
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import '../../../constants/color.dart';
 import '../../../utils/show_snackbar.dart';
 import '../../../view_models/reservation_view_model.dart';
+import '../../widgets/jebby_flow_back_button.dart';
+import '../onboarding/onboarding_kit.dart';
+import '../vendors/listing/listing_kit.dart';
+import 'reservation_flow_theme.dart';
 
 class ReportIssueScreen extends StatefulWidget {
   final int orderId;
@@ -21,19 +26,19 @@ class ReportIssueScreen extends StatefulWidget {
 }
 
 class _ReportIssueScreenState extends State<ReportIssueScreen> {
-  static const Color _titleDark = Color(0xFF1A1A1A);
-  static const Color _labelGrey = Color(0xFF6B7280);
-  static const Color _fieldFill = Color(0xFFF7F7F9);
   static const Color _cardBorder = Color(0xFFE8E8EC);
-  static const Color _issueAccent = Color(0xFF7C3AED);
+  static const int _maxDescriptionLength = 1000;
+  static const int _maxPhotos = 3;
 
   static const List<MapEntry<String, String>> _categories = [
-    MapEntry('damage', 'Damage'),
+    MapEntry('damage', 'Item is damaged'),
     MapEntry('missing_item', 'Missing accessories'),
-    MapEntry('other', 'Item not working properly'),
+    MapEntry('other', "Item isn't working properly"),
     MapEntry('no_show', 'Late return / not on time'),
     MapEntry('other_issue', 'Other'),
   ];
+
+  ReservationFlowTheme get _theme => ReservationFlowTheme(widget.phase ?? 'pickup');
 
   String _category = 'damage';
   final _descriptionController = TextEditingController();
@@ -49,158 +54,214 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
 
   String get _apiCategory => _category == 'other_issue' ? 'other' : _category;
 
+  bool get _canAddPhoto => _photos.length < _maxPhotos;
+
   @override
   Widget build(BuildContext context) {
     final noteLength = _descriptionController.text.length;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      appBar: AppBar(
-        backgroundColor: Colors.grey.shade100,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        centerTitle: true,
-        leading: InkWell(
-          onTap: Get.back,
-          borderRadius: BorderRadius.circular(50),
-          child: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
-        ),
-        title: Text(
-          'Report an Issue',
-          style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 18, color: Colors.black87),
-        ),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-              children: [
-                Text(
-                  "What's the issue?",
-                  style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 16, color: _titleDark),
-                ),
-                const SizedBox(height: 12),
-                ..._categories.map((entry) => _categoryTile(entry.key, entry.value)),
-                const SizedBox(height: 20),
-                Text(
-                  'Add photos (required)',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14, color: _titleDark),
-                ),
-                const SizedBox(height: 10),
-                _photoRow(),
-                const SizedBox(height: 20),
-                Row(
+      backgroundColor: AppColors.jebbyBackground,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+              child: _pageHeader(),
+            ),
+            const SizedBox(height: 12),
+            const Divider(height: 1, thickness: 1, color: _cardBorder),
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Add notes (optional)',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14, color: _titleDark),
+                      'Tell us what happened',
+                      style: onboardingNunito(size: 22, weight: FontWeight.w800, height: 1.15),
                     ),
-                    const Spacer(),
+                    const SizedBox(height: 8),
                     Text(
-                      '$noteLength/500',
-                      style: GoogleFonts.inter(fontSize: 12, color: _labelGrey),
+                      'Share the details so we can better understand the issues.',
+                      style: onboardingNunito(
+                        size: 15,
+                        weight: FontWeight.w600,
+                        color: AppColors.jebbyTextMuted,
+                        height: 1.45,
+                      ),
                     ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Choose an issue',
+                      style: onboardingNunito(size: 16, weight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 4),
+                    ..._categories.map((entry) => _categoryOption(entry.key, entry.value)),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Add photos (optional)',
+                      style: onboardingNunito(size: 16, weight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 12),
+                    _photoSection(),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Tell us more (optional)',
+                      style: onboardingNunito(size: 16, weight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _descriptionController,
+                      maxLines: 5,
+                      minLines: 5,
+                      maxLength: _maxDescriptionLength,
+                      enabled: !_submitting,
+                      onChanged: (_) => setState(() {}),
+                      style: onboardingNunito(size: 15, weight: FontWeight.w600, height: 1.45),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white,
+                        counterText: '',
+                        hintText: 'Describe the issue in detail...',
+                        hintStyle: onboardingNunito(
+                          size: 15,
+                          weight: FontWeight.w600,
+                          color: AppColors.jebbyTextMuted,
+                          height: 1.45,
+                        ),
+                        contentPadding: const EdgeInsets.all(16),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(color: _cardBorder),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(color: _theme.accent, width: 1.5),
+                        ),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(
+                          '$noteLength/$_maxDescriptionLength',
+                          style: onboardingNunito(
+                            size: 13,
+                            weight: FontWeight.w600,
+                            color: AppColors.jebbyTextMuted,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    _infoBanner(),
                   ],
                 ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _descriptionController,
-                  maxLines: 5,
-                  minLines: 4,
-                  maxLength: 500,
-                  enabled: !_submitting,
-                  onChanged: (_) => setState(() {}),
-                  style: GoogleFonts.inter(fontSize: 15, color: _titleDark),
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: _fieldFill,
-                    counterText: '',
-                    hintText: 'Describe the issue in detail…',
-                    hintStyle: GoogleFonts.inter(fontSize: 15, color: _labelGrey),
-                    contentPadding: const EdgeInsets.all(14),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: _cardBorder),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: _issueAccent, width: 1.5),
-                    ),
+              ),
+            ),
+            SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: _submitting ? null : _submit,
+                    style: _theme.primaryButton(),
+                    child: _submitting
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Text('Submit Report'),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _pageHeader() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        JebbyFlowBackButton(onTap: Get.back),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Report an Issue',
+                  style: onboardingNunito(size: 22, weight: FontWeight.w800, height: 1.15),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "We're here to help",
+                  style: onboardingNunito(
+                    size: 14,
+                    weight: FontWeight.w600,
+                    color: AppColors.jebbyTextMuted,
+                    height: 1.35,
                   ),
                 ),
               ],
             ),
           ),
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-              child: Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: FilledButton(
-                      onPressed: (_submitting || _photos.isEmpty) ? null : _submit,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: _issueAccent,
-                        disabledBackgroundColor: _issueAccent.withValues(alpha: 0.45),
-                        disabledForegroundColor: Colors.white,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        textStyle: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 16),
-                      ),
-                      child: _submitting
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Text('Submit Report'),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Jebby will review the report and contact both parties if needed.',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(fontSize: 12, color: _labelGrey, height: 1.35),
-                  ),
-                ],
+        ),
+      ],
+    );
+  }
+
+  Widget _categoryOption(String value, String label) {
+    return InkWell(
+      onTap: _submitting
+          ? null
+          : () => setState(() => _category = value),
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          children: [
+            Radio<String>(
+              value: value,
+              groupValue: _category,
+              activeColor: AppColors.jebbyBlue,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+              onChanged: _submitting
+                  ? null
+                  : (next) => setState(() => _category = next ?? value),
+            ),
+            Expanded(
+              child: Text(
+                label,
+                style: onboardingNunito(size: 16, weight: FontWeight.w600, height: 1.35),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _categoryTile(String value, String label) {
-    final selected = _category == value;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: selected ? _issueAccent.withValues(alpha: 0.45) : _cardBorder),
-      ),
-      child: RadioListTile<String>(
-        value: value,
-        groupValue: _category,
-        activeColor: _issueAccent,
-        title: Text(label, style: GoogleFonts.inter(fontSize: 15, color: _titleDark)),
-        onChanged: _submitting ? null : (next) => setState(() => _category = next ?? value),
-      ),
-    );
-  }
-
-  Widget _photoRow() {
-    return SizedBox(
-      height: 88,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
+  Widget _photoSection() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const ClampingScrollPhysics(),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           ..._photos.map(
             (file) => Padding(
@@ -208,7 +269,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
               child: Stack(
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                     child: Image.file(file, width: 88, height: 88, fit: BoxFit.cover),
                   ),
                   Positioned(
@@ -227,18 +288,90 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
               ),
             ),
           ),
-          InkWell(
-            onTap: _submitting ? null : _pickPhoto,
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              width: 88,
-              height: 88,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _cardBorder),
+          if (_canAddPhoto)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                DottedBorder(
+                  color: AppColors.jebbyBlue,
+                  strokeWidth: 2,
+                  dashPattern: const [7, 5],
+                  borderType: BorderType.RRect,
+                  radius: const Radius.circular(14),
+                  child: Material(
+                    color: AppColors.earnerInfoBlue,
+                    borderRadius: BorderRadius.circular(14),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onTap: _submitting ? null : _pickPhoto,
+                      borderRadius: BorderRadius.circular(14),
+                      splashColor: AppColors.jebbyBlue.withValues(alpha: 0.18),
+                      highlightColor: AppColors.jebbyBlue.withValues(alpha: 0.08),
+                      child: const SizedBox(
+                        width: 88,
+                        height: 88,
+                        child: Center(
+                          child: Icon(
+                            Icons.add_photo_alternate_outlined,
+                            color: AppColors.jebbyBlue,
+                            size: 32,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                GestureDetector(
+                  onTap: _submitting ? null : _pickPhoto,
+                  behavior: HitTestBehavior.opaque,
+                  child: Text(
+                    'Add photos',
+                    style: onboardingNunito(
+                      size: 16,
+                      weight: FontWeight.w700,
+                      color: AppColors.jebbyBlue,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      decoration: BoxDecoration(
+        color: AppColors.earnerInfoBlue,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: const BoxDecoration(
+              color: AppColors.jebbySoftBlue,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.info_outline, color: AppColors.jebbyBlue, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              "We'll review your report and contact you or the other person if we need more details",
+              style: onboardingNunito(
+                size: 14,
+                weight: FontWeight.w600,
+                color: AppColors.jebbyTextMuted,
+                height: 1.4,
               ),
-              child: const Icon(Icons.photo_camera_outlined, color: _issueAccent, size: 28),
             ),
           ),
         ],
@@ -246,58 +379,17 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
     );
   }
 
-  Future<ImageSource?> _showImageSourceSheet() {
-    return showModalBottomSheet<ImageSource>(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Add issue photo',
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: _titleDark,
-                    ),
-                  ),
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_camera_outlined, color: _issueAccent),
-                title: Text(
-                  'Take a photo',
-                  style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500, color: _titleDark),
-                ),
-                onTap: () => Navigator.pop(context, ImageSource.camera),
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library_outlined, color: _issueAccent),
-                title: Text(
-                  'Choose from gallery',
-                  style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500, color: _titleDark),
-                ),
-                onTap: () => Navigator.pop(context, ImageSource.gallery),
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   Future<void> _pickPhoto() async {
-    final source = await _showImageSourceSheet();
+    if (!_canAddPhoto) {
+      showAppErrorSnackbar('You can add up to $_maxPhotos photos.');
+      return;
+    }
+    final source = await showListingPhotoSourceSheet(
+      context,
+      title: 'Add issue photo',
+      takePhotoLabel: 'Take a photo',
+      galleryLabel: 'Choose from gallery',
+    );
     if (source == null || !mounted) return;
 
     XFile? image;
@@ -318,6 +410,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
     }
 
     if (image == null || !mounted) return;
+    if (!_canAddPhoto) return;
     final picked = File(image.path);
     setState(() => _photos.add(picked));
   }
@@ -340,6 +433,8 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
     setState(() => _submitting = false);
     if (ok) {
       Get.back(result: true);
+    } else if (vm.error != null && vm.error!.isNotEmpty) {
+      showAppErrorSnackbar(vm.error!);
     }
   }
 }

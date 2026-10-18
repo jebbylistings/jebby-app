@@ -23,7 +23,7 @@ class AppColors {
   static const Color jebbyAccentOrange = Color(0xFFFFA936);
   static const Color jebbyBackground = Color(0xFFF4F7FA);
   static const Color jebbyTextPrimary = Color(0xFF111827);
-  static const Color jebbyTextMuted = Color(0xFF545E70);
+  static const Color jebbyTextMuted = Color(0xFF64748B);
   static const Color jebbySoftBlue = Color(0xFFEEF2FF);
 
   /// Earner home tokens.

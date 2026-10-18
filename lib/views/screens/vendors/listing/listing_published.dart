@@ -146,7 +146,7 @@ class _ListingPublishedScreenState extends State<ListingPublishedScreen> {
                     Text(
                       'Your item is listed!',
                       textAlign: TextAlign.center,
-                      style: onboardingNunito(size: 24, weight: FontWeight.w800),
+                      style: onboardingNunito(size: 22, weight: FontWeight.w800),
                     ),
                     const SizedBox(height: 10),
                     Text(

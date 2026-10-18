@@ -58,9 +58,12 @@ class Reservation {
   final String? depositRefundStatus;
   final String? depositRefundedAt;
   final String? location;
+  final double? latitude;
+  final double? longitude;
   final bool addressRevealed;
   final String? productName;
   final String? productImage;
+  final String? productDescription;
   final String? role;
   final String? counterpartyLabel;
   final String? counterpartyName;
@@ -102,9 +105,12 @@ class Reservation {
     this.depositRefundStatus,
     this.depositRefundedAt,
     this.location,
+    this.latitude,
+    this.longitude,
     this.addressRevealed = false,
     this.productName,
     this.productImage,
+    this.productDescription,
     this.role,
     this.counterpartyLabel,
     this.counterpartyName,
@@ -158,9 +164,12 @@ class Reservation {
       depositRefundStatus: json['deposit_refund_status']?.toString(),
       depositRefundedAt: json['deposit_refunded_at']?.toString(),
       location: json['location']?.toString(),
+      latitude: _coordinateFromJson(json, 'latitude') ?? _coordinateFromJson(json, 'lat'),
+      longitude: _coordinateFromJson(json, 'longitude') ?? _coordinateFromJson(json, 'lng'),
       addressRevealed: isAddressRevealed(status),
       productName: json['product_name']?.toString(),
       productImage: json['product_image']?.toString(),
+      productDescription: _productDescriptionFromJson(json),
       role: json['role']?.toString(),
       counterpartyLabel: _counterpartyField(json, 'label'),
       counterpartyName: _counterpartyField(json, 'name'),
@@ -187,6 +196,53 @@ class Reservation {
       vendorStripeAccountId: paymentDueMap?['vendor_stripe_account_id']?.toString(),
       canUpdateHandoff: json['can_update_handoff'] == true,
     );
+  }
+
+  static String? _productDescriptionFromJson(Map<String, dynamic> json) {
+    final direct = json['product_description']?.toString().trim() ??
+        json['description']?.toString().trim();
+    if (direct != null && direct.isNotEmpty) return direct;
+
+    final product = json['product'];
+    if (product is Map<String, dynamic>) {
+      final nested = product['description']?.toString().trim();
+      if (nested != null && nested.isNotEmpty) return nested;
+    } else if (product is Map) {
+      final nested = product['description']?.toString().trim();
+      if (nested != null && nested.isNotEmpty) return nested;
+    }
+    return null;
+  }
+
+  static double? _coordinateFromJson(Map<String, dynamic> json, String key) {
+    final keys = key == 'latitude'
+        ? const ['latitude', 'lat']
+        : const ['longitude', 'lng'];
+
+    for (final k in keys) {
+      final parsed = _parseCoordinate(json[k]);
+      if (parsed != null) return parsed;
+    }
+
+    final product = json['product'];
+    if (product is Map<String, dynamic>) {
+      for (final k in keys) {
+        final parsed = _parseCoordinate(product[k]);
+        if (parsed != null) return parsed;
+      }
+    } else if (product is Map) {
+      for (final k in keys) {
+        final parsed = _parseCoordinate(product[k]);
+        if (parsed != null) return parsed;
+      }
+    }
+    return null;
+  }
+
+  static double? _parseCoordinate(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
   }
 
   static String? _counterpartyField(Map<String, dynamic> json, String key) {

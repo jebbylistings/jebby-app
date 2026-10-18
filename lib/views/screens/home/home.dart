@@ -11,7 +11,6 @@ import 'package:jebby/views/screens/home/category.dart';
 import '../../../models/get_featured_products_model.dart' as datamodel;
 
 import 'package:jebby/views/screens/shared/notifications.dart';
-import 'package:jebby/views/screens/navigation/app_drawer.dart';
 import 'package:jebby/views/screens/profile/user_profile.dart';
 import 'package:intl/intl.dart';
 import 'package:jebby/views/screens/home/search_data.dart';
@@ -222,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
   var myFormat = DateFormat('MM/dd/yyyy');
 
   double starss = 0.0;
-  final GlobalKey<ScaffoldState> _key = GlobalKey();
+  final BottomNavController _bottomNav = Get.find<BottomNavController>();
 
   /// Cached so the category future is not recreated on every build (avoids repeated loading).
   /// Lazy init so it works after hot reload (initState may not run again).
@@ -360,13 +359,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       width: double.infinity,
       child: Scaffold(
-        key: _key,
-        drawer: Consumer<UserViewModel>(
-          builder: (context, usp, _) => AppDrawerScreen(
-            key: ValueKey('drawer-guest-${usp.isGuestUser}-${usp.role}'),
-          ),
-        ),
-
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(220),
           child: Builder(
@@ -396,7 +388,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             _RoundIconButton(
                               onTap: () {
-                                _key.currentState!.openDrawer();
+                                _bottomNav.openMainDrawer();
                               },
                               bg: Colors.transparent,
                               image: const AssetImage(

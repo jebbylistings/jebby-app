@@ -15,7 +15,6 @@ import 'package:jebby/views/screens/auth/login.dart';
 import 'package:jebby/views/screens/home/favourites.dart';
 import 'package:jebby/views/screens/home/my_orders.dart';
 import 'package:jebby/views/screens/home/my_transactions.dart';
-import 'package:jebby/views/screens/shared/chat.dart';
 import 'package:jebby/views/screens/navigation/home_main.dart';
 import 'package:jebby/views/screens/profile/user_profile.dart';
 import 'package:jebby/views/screens/shared/settings.dart';
@@ -23,7 +22,9 @@ import 'package:jebby/views/screens/vendors/my_orders.dart';
 import 'package:jebby/utils/earner_navigation.dart';
 import 'package:jebby/views/screens/vendors/my_transactions.dart';
 import 'package:jebby/view_models/onboarding_controller.dart';
+import 'package:jebby/constants/color.dart';
 import 'package:jebby/views/screens/onboarding/start_earning_button.dart';
+import 'package:jebby/views/widgets/earn_member_banner.dart';
 import 'package:jebby/views/widgets/role_switcher_card.dart';
 import 'package:jebby/utils/profile_image.dart';
 import 'package:jebby/utils/show_snackbar.dart';
@@ -40,9 +41,43 @@ import '../../../view_models/user_view_model.dart';
 import 'package:jebby/views/screens/navigation/bottom_nav_controller.dart';
 
 class AppDrawerScreen extends StatefulWidget {
+  static const double drawerCornerRadius = 24;
+  static const double mainBottomNavBarHeight = 64;
+
   final VoidCallback? onCloseDrawer;
 
   const AppDrawerScreen({super.key, this.onCloseDrawer});
+
+  /// Shell used by [MainScreen] so the menu sits above the footer and clips rounded right edges.
+  static Widget buildMainDrawer(BuildContext context, {Key? key}) {
+    const radius = drawerCornerRadius;
+    final width = MediaQuery.sizeOf(context).width * 0.85;
+    const panelRadius = BorderRadius.only(
+      topRight: Radius.circular(radius),
+      bottomRight: Radius.circular(radius),
+    );
+
+    return Drawer(
+      width: width,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      clipBehavior: Clip.none,
+      child: ClipRRect(
+        borderRadius: panelRadius,
+        child: Material(
+          color: Colors.white,
+          elevation: 8,
+          shadowColor: Colors.black26,
+          clipBehavior: Clip.antiAlias,
+          shape: const RoundedRectangleBorder(borderRadius: panelRadius),
+          child: SafeArea(
+            bottom: false,
+            child: AppDrawerScreen(key: key),
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   State<AppDrawerScreen> createState() => _AppDrawerScreenState();
@@ -179,9 +214,129 @@ class _AppDrawerScreenState extends State<AppDrawerScreen> {
     }
   }
 
+  TextStyle _drawerNunito({
+    required double size,
+    FontWeight weight = FontWeight.w400,
+    Color? color,
+    double? height,
+  }) {
+    return TextStyle(
+      fontFamily: 'Nunito',
+      fontSize: size,
+      fontWeight: weight,
+      color: color ?? AppColors.jebbyTextPrimary,
+      height: height,
+    );
+  }
+
+  Widget _buildDrawerProfileHeader(
+    UserViewModel usp,
+    SignInProvider sp,
+    double resWidth,
+  ) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        ProfileImage.blueRingAvatar(
+          radius: 28,
+          baseUrl: Url,
+          imagePath: _drawerAvatarPath(usp),
+          isLoading: _drawerAvatarLoading(usp),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                getText(usp, sp),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: _drawerNunito(size: 22, weight: FontWeight.w800),
+              ),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    Get.to(() => const UserProfileScreen(showBackButton: true));
+                  },
+                  borderRadius: BorderRadius.circular(6),
+                  splashColor: AppColors.jebbyBlue.withValues(alpha: 0.12),
+                  highlightColor: AppColors.jebbyBlue.withValues(alpha: 0.06),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'View profile',
+                          style: _drawerNunito(
+                            size: 14,
+                            weight: FontWeight.w700,
+                            color: AppColors.jebbyBlue,
+                          ),
+                        ),
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          size: 20,
+                          color: AppColors.jebbyBlue,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildRoleModeSection(UserViewModel usp, double resWidth) {
     if (!usp.isEarnMode && !onboardingCompleted) {
-      return const StartEarningButton();
+      return SizedBox(
+        width: resWidth * 0.75,
+        child: GetBuilder<OnboardingController>(
+          builder: (controller) {
+            if (controller.isLoading) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              );
+            }
+            if (controller.state.isComplete) {
+              return RoleSwitcherCard(
+                isEarnMode: usp.isEarnMode,
+                isLoading: _roleSwitchInProgress,
+                onModeChanged: (toEarn) => _switchRole(context, toEarn: toEarn),
+              );
+            }
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                EarnMemberBanner(onTap: () => controller.startOrResume()),
+                const SizedBox(height: 10),
+                StartEarningProgressCard(
+                  stepsRemaining: controller.state.stepsRemaining,
+                  filledSegments: StartEarningButton.drawerProgressFilled(
+                    status: controller.state.onboardingStatus,
+                    step: controller.state.onboardingStep,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      );
     }
     return SizedBox(
       width: resWidth * 0.75,
@@ -195,21 +350,14 @@ class _AppDrawerScreenState extends State<AppDrawerScreen> {
 
   final bottomctrl = Get.put(BottomNavController());
 
-  void _openProviderChat(BuildContext context) {
-    Navigator.of(context).pop();
-    Get.to(() => const MessagesScreen(showBackButton: true));
-  }
-
-  void _openRenterChat(BuildContext context) {
+  void _openChatFromDrawer(BuildContext context) {
     bottomctrl.navBarChange(5);
     Navigator.of(context).pop();
   }
 
-  /// Space below drawer items so Logout/Settings clear the home footer bar.
+  /// Bottom scroll padding (drawer is above the main footer bar).
   double _drawerBottomSpacing(BuildContext context) {
-    const footerClearance = 48.0;
-    const extraPadding = 8.0;
-    return MediaQuery.paddingOf(context).bottom + footerClearance + extraPadding;
+    return MediaQuery.paddingOf(context).bottom + 24;
   }
 
   Widget _drawerMenuRow({
@@ -463,13 +611,9 @@ class _AppDrawerScreenState extends State<AppDrawerScreen> {
     double baseWidth = 428;
     double fem = MediaQuery.of(context).size.width / baseWidth;
     double ffem = fem * 0.97;
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body:
-          isGuest
-              ? getGuestDrawer(res_width, res_height, ffem)
-              : getNormalDrawer(res_width, res_height, ffem),
-    );
+    return isGuest
+        ? getGuestDrawer(res_width, res_height, ffem)
+        : getNormalDrawer(res_width, res_height, ffem);
   }
 
   Widget getGuestDrawer(double res_width, double res_height, double ffem) {
@@ -477,24 +621,14 @@ class _AppDrawerScreenState extends State<AppDrawerScreen> {
     final usp = context.watch<UserViewModel>();
     final textScaleFactor = MediaQuery.of(context).textScaler.scale(1.0);
 
-    return Container(
-      width: res_width * 0.85,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topRight: Radius.circular(10),
-          bottomRight: Radius.circular(10),
-        ),
-      ),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.only(left: 30.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: res_height * 0.06),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.only(left: 30.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Material(
                     color: Colors.transparent,
@@ -616,7 +750,6 @@ class _AppDrawerScreenState extends State<AppDrawerScreen> {
             ],
           ),
         ),
-      ),
     );
   }
 
@@ -626,16 +759,7 @@ class _AppDrawerScreenState extends State<AppDrawerScreen> {
     // Retrieve the current text scale factor from the MediaQuery
     final textScaleFactor = MediaQuery.of(context).textScaler.scale(1.0);
 
-    return Container(
-      width: res_width * 0.85,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topRight: Radius.circular(10),
-          bottomRight: Radius.circular(10),
-        ),
-      ),
-      child: SingleChildScrollView(
+    return SingleChildScrollView(
         child:
             usp.isEarnMode
                 ? Padding(
@@ -643,7 +767,6 @@ class _AppDrawerScreenState extends State<AppDrawerScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(height: res_height * 0.06),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -670,60 +793,8 @@ class _AppDrawerScreenState extends State<AppDrawerScreen> {
                           SizedBox(width: 20),
                         ],
                       ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ProfileImage.circularAvatar(
-                            radius: 40,
-                            baseUrl: Url,
-                            imagePath: _drawerAvatarPath(usp),
-                            isLoading: _drawerAvatarLoading(usp),
-                          ),
-                          SizedBox(width: 15),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(
-                                width: res_width * 0.55,
-                                child: Text(
-                                  getText(usp, sp),
-                                  style: TextStyle(
-                                    fontSize: 26 * textScaleFactor,
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
-                              ),
-                              Builder(
-                                builder: (_) {
-                                  final email = UserViewModel.displayEmail(
-                                    usp.email,
-                                  );
-                                  if (email == null) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  return SizedBox(
-                                    width: res_width * 0.55,
-                                    child: Text(
-                                      email,
-                                      style: TextStyle(
-                                        fontSize: 15 * textScaleFactor,
-                                        color: Colors.black,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
+                      _buildDrawerProfileHeader(usp, sp, res_width),
+                      const SizedBox(height: 20),
                       _buildRoleModeSection(usp, res_width),
                       const SizedBox(height: 24),
                       GestureDetector(
@@ -825,7 +896,7 @@ class _AppDrawerScreenState extends State<AppDrawerScreen> {
                       SizedBox(height: 25),
                       GestureDetector(
                         onTap: () {
-                          _openProviderChat(context);
+                          _openChatFromDrawer(context);
                         },
                         child: Container(
                           width: res_width * 0.75,
@@ -954,7 +1025,6 @@ class _AppDrawerScreenState extends State<AppDrawerScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(height: res_height * 0.06),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -980,60 +1050,8 @@ class _AppDrawerScreenState extends State<AppDrawerScreen> {
                           SizedBox(width: 20),
                         ],
                       ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ProfileImage.circularAvatar(
-                            radius: 40,
-                            baseUrl: Url,
-                            imagePath: _drawerAvatarPath(usp),
-                            isLoading: _drawerAvatarLoading(usp),
-                          ),
-                          SizedBox(width: 15),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(
-                                width: res_width * 0.55,
-                                child: Text(
-                                  getText(usp, sp),
-                                  style: TextStyle(
-                                    fontSize: 26 * textScaleFactor,
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
-                              ),
-                              Builder(
-                                builder: (_) {
-                                  final email = UserViewModel.displayEmail(
-                                    usp.email,
-                                  );
-                                  if (email == null) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  return SizedBox(
-                                    width: res_width * 0.55,
-                                    child: Text(
-                                      email,
-                                      style: TextStyle(
-                                        fontSize: 15 * textScaleFactor,
-                                        color: Colors.black,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
+                      _buildDrawerProfileHeader(usp, sp, res_width),
+                      const SizedBox(height: 20),
                       _buildRoleModeSection(usp, res_width),
                       const SizedBox(height: 24),
                       GestureDetector(
@@ -1134,7 +1152,7 @@ class _AppDrawerScreenState extends State<AppDrawerScreen> {
 
                       GestureDetector(
                         onTap: () {
-                          _openRenterChat(context);
+                          _openChatFromDrawer(context);
                         },
                         child: Container(
                           width: res_width * 0.75,
@@ -1295,7 +1313,6 @@ class _AppDrawerScreenState extends State<AppDrawerScreen> {
                     ],
                   ),
                 ),
-      ),
     );
   }
 

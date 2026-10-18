@@ -11,11 +11,12 @@ class ReservationFlowTheme {
 
   bool get isReturn => phase == 'return';
 
-  Color get accent => isReturn ? AppColors.primaryColor : const Color(0xFF2563EB);
+  Color get accent => AppColors.jebbyBlue;
 
-  Color get accentSoft => isReturn ? const Color(0xFFFFF4E5) : const Color(0xFFEFF6FF);
+  Color get accentSoft =>
+      isReturn ? AppColors.jebbySoftBlue : const Color(0xFFEFF6FF);
 
-  Color get accentBorder => isReturn ? const Color(0xFFFFE0B2) : const Color(0xFFBFDBFE);
+  Color get accentBorder => const Color(0xFFBFDBFE);
 
   String get beginInspectionLabel =>
       isReturn ? 'Begin Return Inspection' : 'Begin Pickup Inspection';
@@ -56,8 +57,12 @@ class ReservationFlowTheme {
       disabledForegroundColor: Colors.white,
       elevation: 0,
       minimumSize: Size.fromHeight(height),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      textStyle: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      textStyle: const TextStyle(
+        fontFamily: 'Nunito',
+        fontWeight: FontWeight.w800,
+        fontSize: 16,
+      ),
     );
   }
 

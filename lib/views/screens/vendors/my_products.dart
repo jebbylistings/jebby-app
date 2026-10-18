@@ -43,6 +43,8 @@ class MyProductsScreen extends StatefulWidget {
 }
 
 class _MyProductsScreenState extends State<MyProductsScreen> {
+  static const String _noListingsAsset = 'assets/images/nolistings.png';
+
   final TextEditingController _searchController = TextEditingController();
 
   String _searchQuery = '';
@@ -278,29 +280,7 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
               _searchBar(),
               const SizedBox(height: 14),
               _filterChips(),
-              const SizedBox(height: 10),
-              Align(
-                alignment: Alignment.centerRight,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Newest first',
-                      style: _nunito(
-                        size: 13,
-                        weight: FontWeight.w600,
-                        color: AppColors.jebbyTextMuted,
-                      ),
-                    ),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      size: 18,
-                      color: AppColors.jebbyTextMuted.withValues(alpha: 0.8),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 20),
               Expanded(
                 child: isError
                     ? Center(
@@ -321,15 +301,9 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
                         ),
                       )
                     : showEmpty
-                    ? Center(
-                        child: Text(
-                          showDraftOnly ? 'No drafts yet' : 'No listings found',
-                          style: _nunito(
-                            size: 15,
-                            weight: FontWeight.w600,
-                            color: AppColors.jebbyTextMuted,
-                          ),
-                        ),
+                    ? Align(
+                        alignment: const Alignment(0, -0.35),
+                        child: _listingsEmptyState(filter: _selectedFilter),
                       )
                     : _buildGrid(
                         showDraftOnly: showDraftOnly,
@@ -341,6 +315,63 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _listingsEmptyState({required _ListingFilter filter}) {
+    final hasSearch = _searchQuery.isNotEmpty;
+
+    late final String title;
+    late final String subtitle;
+    if (hasSearch) {
+      title = 'No listings found';
+      subtitle = 'Try a different search term.';
+    } else {
+      switch (filter) {
+        case _ListingFilter.drafts:
+          title = 'No drafts yet';
+          subtitle = 'Draft listings you save will appear here.';
+          break;
+        case _ListingFilter.rented:
+          title = 'No rented listings';
+          subtitle = 'Listings with an active rental will appear here.';
+          break;
+        case _ListingFilter.all:
+          title = 'No listings found';
+          subtitle = 'You haven\'t created any listings yet.';
+          break;
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset(
+            _noListingsAsset,
+            width: 200,
+            fit: BoxFit.contain,
+          ),
+          const SizedBox(height: 20),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: _nunito(size: 18, weight: FontWeight.w800, height: 1.2),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: _nunito(
+              size: 14,
+              weight: FontWeight.w600,
+              color: AppColors.jebbyTextMuted,
+              height: 1.35,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -360,20 +391,19 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
                 Text(
                   'My listings',
                   style: _nunito(
-                    size: 28,
+                    size: 22,
                     weight: FontWeight.w800,
-                    color: AppColors.jebbyTextPrimary,
-                    height: 1.1,
+                    height: 1.15,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Manage and edit your items.',
                   style: _nunito(
-                    size: 15,
+                    size: 14,
                     weight: FontWeight.w600,
                     color: AppColors.jebbyTextMuted,
-                    height: 1.2,
+                    height: 1.35,
                   ),
                 ),
               ],
@@ -413,17 +443,24 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
 
   Widget _searchBar() {
     return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
+      height: 52,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE3E6EC)),
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(Icons.search_rounded, size: 22, color: Colors.grey.shade500),
-          const SizedBox(width: 10),
+          const SizedBox(width: 18),
+          Icon(Icons.search, size: 22, color: AppColors.jebbyBlue),
+          const SizedBox(width: 12),
           Expanded(
             child: TextField(
               controller: _searchController,
@@ -439,13 +476,16 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
                 hintStyle: _nunito(
                   size: 15,
                   weight: FontWeight.w600,
-                  color: AppColors.jebbyTextMuted.withValues(alpha: 0.75),
+                  color: AppColors.jebbyTextMuted,
                 ),
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 15),
               ),
             ),
           ),
+          const SizedBox(width: 16),
         ],
       ),
     );
@@ -541,7 +581,8 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
   }
 
   static const double _cardImageHeight = 118;
-  static const double _listingCardHeight = 236;
+  static const double _listingCardHeight = 248;
+  static const Color _liveDotGreen = Color(0xFF22C55E);
 
   Widget _listingCard(vendor_products.Data product) {
     final rented = _isRented(product);
@@ -569,7 +610,8 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
       ),
       name: product.name?.toString() ?? 'Listing',
       price: '${product.price ?? 0}',
-      onEdit: openListing,
+      actionLabel: isDraft ? 'Edit listing' : 'View listing',
+      onAction: openListing,
     );
   }
 
@@ -579,7 +621,7 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
       image: Stack(
         children: [
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             child: draft.imagePath != null &&
                     draft.imagePath!.isNotEmpty &&
                     File(draft.imagePath!).existsSync()
@@ -601,7 +643,8 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
       ),
       name: draft.name,
       price: draft.price,
-      onEdit: _openDraftListing,
+      actionLabel: 'Edit listing',
+      onAction: _openDraftListing,
     );
   }
 
@@ -610,30 +653,40 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
     required Widget image,
     required String name,
     required String price,
-    required VoidCallback onEdit,
+    required String actionLabel,
+    required VoidCallback onAction,
   }) {
     return SizedBox(
       height: _listingCardHeight,
       child: Material(
-        color: Colors.white,
+        color: Colors.transparent,
+        elevation: 0,
+        shadowColor: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
-          splashColor: AppColors.jebbyBlue.withValues(alpha: 0.08),
-          highlightColor: AppColors.jebbyBlue.withValues(alpha: 0.04),
+          splashColor: AppColors.jebbyBlue.withValues(alpha: 0.06),
+          highlightColor: AppColors.jebbyBlue.withValues(alpha: 0.03),
           child: Ink(
             decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xFFE8EAEE)),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 image,
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -642,28 +695,31 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: _nunito(
-                          size: 16,
+                          size: 18,
                           weight: FontWeight.w800,
-                          height: 1.1,
+                          height: 1.25,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 4),
                       RichText(
                         text: TextSpan(
-                          style: _nunito(
-                            size: 16,
-                            weight: FontWeight.w800,
-                            height: 1.1,
-                          ),
                           children: [
-                            TextSpan(text: '\$$price'),
                             TextSpan(
-                              text: '/day',
+                              text: '\$$price',
+                              style: _nunito(
+                                size: 18,
+                                weight: FontWeight.w800,
+                                color: AppColors.jebbyBlue,
+                                height: 1.25,
+                              ),
+                            ),
+                            TextSpan(
+                              text: ' / day',
                               style: _nunito(
                                 size: 13,
                                 weight: FontWeight.w600,
                                 color: AppColors.jebbyTextMuted,
-                                height: 1.1,
+                                height: 1.15,
                               ),
                             ),
                           ],
@@ -672,10 +728,13 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
+                const Spacer(),
                 Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: _editListingButton(onTap: onEdit),
+                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                  child: _listingActionButton(
+                    onTap: onAction,
+                    label: actionLabel,
+                  ),
                 ),
               ],
             ),
@@ -692,7 +751,7 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
     return Stack(
       children: [
         ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
           child: CachedNetworkImage(
             imageUrl: imageUrl,
             height: _cardImageHeight,
@@ -735,65 +794,81 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
             : (product != null
                 ? ListingPublishState.badgeLabel(product)
                 : 'Live'));
+    final live = !isDraft && !rented;
     final dotColor = isDraft
         ? AppColors.jebbyTextMuted
-        : (rented ? AppColors.jebbyAccentOrange : AppColors.jebbyBlue);
-    final background = rented && !isDraft
-        ? AppColors.earnerOrangeSoft
-        : Colors.white;
+        : (rented ? AppColors.jebbyAccentOrange : _liveDotGreen);
+    final labelColor = live
+        ? AppColors.jebbyBlue
+        : (isDraft
+            ? AppColors.jebbyTextMuted
+            : AppColors.jebbyTextPrimary);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: background,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
             width: 7,
             height: 7,
             decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
           ),
-          const SizedBox(width: 5),
+          const SizedBox(width: 6),
           Text(
             label,
-            style: _nunito(size: 12, weight: FontWeight.w700),
+            textHeightBehavior: const TextHeightBehavior(
+              applyHeightToFirstAscent: false,
+              applyHeightToLastDescent: false,
+            ),
+            style: _nunito(
+              size: 12,
+              weight: FontWeight.w700,
+              color: labelColor,
+              height: 1,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _editListingButton({required VoidCallback onTap}) {
-    return Material(
-      color: AppColors.jebbySoftBlue,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        splashColor: AppColors.jebbyBlue.withValues(alpha: 0.14),
-        highlightColor: AppColors.jebbyBlue.withValues(alpha: 0.08),
-        child: SizedBox(
-          width: double.infinity,
-          height: 36,
-          child: Center(
-            child: Text(
-              'Edit listing',
-              style: _nunito(
-                size: 14,
-                weight: FontWeight.w700,
-                color: AppColors.jebbyBlue,
-              ),
-            ),
+  Widget _listingActionButton({
+    required VoidCallback onTap,
+    required String label,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 40,
+      child: FilledButton(
+        onPressed: onTap,
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.jebbyBlue,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          padding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: Text(
+          label,
+          style: _nunito(
+            size: 14,
+            weight: FontWeight.w800,
+            color: Colors.white,
           ),
         ),
       ),

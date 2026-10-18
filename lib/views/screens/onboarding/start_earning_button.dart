@@ -1,13 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:jebby/constants/color.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:jebby/models/onboarding_state.dart';
 import 'package:jebby/view_models/onboarding_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+TextStyle _nunito({
+  required double size,
+  FontWeight weight = FontWeight.w400,
+  Color? color,
+  double? height,
+}) {
+  return TextStyle(
+    fontFamily: 'Nunito',
+    fontSize: size,
+    fontWeight: weight,
+    color: color,
+    height: height,
+  );
+}
+
 class StartEarningButton extends StatefulWidget {
   const StartEarningButton({super.key});
+
+  /// One segment per onboarding screen (Step 1–5 of 5).
+  static int drawerProgressFilled({
+    required String status,
+    required int step,
+  }) {
+    if (status == OnboardingStatus.notStarted) return 0;
+    return OnboardingSteps.toDisplayStep(step);
+  }
 
   @override
   State<StartEarningButton> createState() => _StartEarningButtonState();
@@ -63,7 +86,7 @@ class _StartEarningButtonState extends State<StartEarningButton> {
         }
 
         final stepsRemaining = controller.state.stepsRemaining;
-        final filledSegments = _drawerProgressFilled(
+        final filledSegments = StartEarningButton.drawerProgressFilled(
           status: controller.state.onboardingStatus,
           step: controller.state.onboardingStep,
         );
@@ -109,9 +132,9 @@ class _StartEarningButtonState extends State<StartEarningButton> {
                             children: [
                               Text(
                                 'Start Earning',
-                                style: GoogleFonts.inter(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
+                                style: _nunito(
+                                  size: 16,
+                                  weight: FontWeight.w700,
                                   color: Colors.white,
                                   height: 1.2,
                                 ),
@@ -119,9 +142,9 @@ class _StartEarningButtonState extends State<StartEarningButton> {
                               const SizedBox(height: 4),
                               Text(
                                 'Rent out items and earn money nearby.',
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w400,
+                                style: _nunito(
+                                  size: 12,
+                                  weight: FontWeight.w400,
                                   color: Colors.white.withValues(alpha: 0.92),
                                   height: 1.3,
                                 ),
@@ -149,7 +172,7 @@ class _StartEarningButtonState extends State<StartEarningButton> {
                 ),
               ),
               const SizedBox(height: 10),
-              _StartEarningProgressCard(
+              StartEarningProgressCard(
                 stepsRemaining: stepsRemaining,
                 filledSegments: filledSegments,
               ),
@@ -159,22 +182,13 @@ class _StartEarningButtonState extends State<StartEarningButton> {
       },
     );
   }
-
-  /// One segment per onboarding screen (Step 1–5 of 5).
-  static int _drawerProgressFilled({
-    required String status,
-    required int step,
-  }) {
-    if (status == OnboardingStatus.notStarted) return 0;
-    return OnboardingSteps.toDisplayStep(step);
-  }
 }
 
-class _StartEarningProgressCard extends StatelessWidget {
+class StartEarningProgressCard extends StatelessWidget {
   final int stepsRemaining;
   final int filledSegments;
 
-  const _StartEarningProgressCard({
+  const StartEarningProgressCard({
     required this.stepsRemaining,
     required this.filledSegments,
   });
@@ -215,8 +229,9 @@ class _StartEarningProgressCard extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 2),
                   child: RichText(
                     text: TextSpan(
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
+                      style: _nunito(
+                        size: 13,
+                        weight: FontWeight.w400,
                         color: const Color(0xFF4A4D55),
                         height: 1.4,
                       ),
@@ -224,10 +239,11 @@ class _StartEarningProgressCard extends StatelessWidget {
                         const TextSpan(text: "You're "),
                         TextSpan(
                           text: '$stepsRemaining',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
+                          style: _nunito(
+                            size: 13,
+                            weight: FontWeight.w700,
                             color: AppColors.darkBlue,
+                            height: 1.4,
                           ),
                         ),
                         const TextSpan(

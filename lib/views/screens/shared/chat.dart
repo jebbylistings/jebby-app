@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:jebby/views/screens/home/messages.dart';
 import 'package:jebby/constants/app_url.dart';
 import 'package:jebby/constants/color.dart';
@@ -29,6 +30,27 @@ class _CachedThreadInquiry {
   final String recipientId;
 }
 
+const _chatCardBorder = Color(0xFFE3E6EC);
+const _chatTimeBlue = Color(0xFF5B8DEF);
+const _noMessageAsset = 'assets/images/nomessage.png';
+const _chatListHorizontalMargin = 12.0;
+const _chatScreenHorizontalPadding = 20.0;
+
+String _formatChatListTime(String? raw) {
+  final dt = parseApiDateTime(raw);
+  if (dt == null) return '';
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final messageDay = DateTime(dt.year, dt.month, dt.day);
+  final diffDays = today.difference(messageDay).inDays;
+  if (diffDays == 0) {
+    return DateFormat.jm().format(dt);
+  }
+  if (diffDays == 1) return 'Yesterday';
+  if (diffDays < 7) return '$diffDays days ago';
+  return DateFormat('MMM d').format(dt);
+}
+
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({
     super.key,
@@ -46,9 +68,12 @@ class MessagesScreen extends StatefulWidget {
   State<MessagesScreen> createState() => _MessagesScreenState();
 }
 
-class _MessagesScreenState extends State<MessagesScreen>
-    with SingleTickerProviderStateMixin {
-  TabController? _tabController;
+class _MessagesScreenState extends State<MessagesScreen> {
+  /// 0 = Renter threads, 1 = Earner threads (listing-side conversations).
+  int _segmentTab = 0;
+
+  /// 0 = All, 1 = Unread, 2 = Favorites, 3 = Archive.
+  int _filterChip = 0;
   Future<void> getData() async {
     final sp = context.read<SignInProvider>();
     final usp = context.read<UserViewModel>();
@@ -174,20 +199,20 @@ class _MessagesScreenState extends State<MessagesScreen>
         Text(
           'Chat',
           style: _nunito(
-            size: 28,
+            size: 22,
             weight: FontWeight.w800,
             color: AppColors.jebbyTextPrimary,
-            height: 1.1,
+            height: 1.15,
           ),
         ),
         const SizedBox(height: 4),
         Text(
-          'Stay connected with renters and providers.',
+          'Stay connected with renters and Earners.',
           style: _nunito(
-            size: 15,
+            size: 14,
             weight: FontWeight.w600,
             color: AppColors.jebbyTextMuted,
-            height: 1.2,
+            height: 1.35,
           ),
         ),
       ],
@@ -356,20 +381,39 @@ class _MessagesScreenState extends State<MessagesScreen>
     return items.where(_isRenterTabConversation).toList();
   }
 
-  void _initTabController() {
-    _tabController?.dispose();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
   bool get _openedFromMessageNotification =>
       (widget.messageSenderName ?? '').trim().isNotEmpty;
 
   void _applyDefaultTab() {
-    final tabs = _tabController;
-    if (!mounted || tabs == null || role == null) return;
+    if (!mounted || role == null) return;
     final index = role == '1' ? 1 : 0;
-    if (tabs.index != index) {
-      tabs.index = index;
+    if (_segmentTab != index) {
+      setState(() => _segmentTab = index);
+    }
+  }
+
+  List<datamodel.Data> _applyMessageFilter(List<datamodel.Data> items) {
+    switch (_filterChip) {
+      case 1:
+        return items.where((e) => (e.count ?? 0) > 0).toList();
+      case 2:
+      case 3:
+        return <datamodel.Data>[];
+      default:
+        return items;
+    }
+  }
+
+  String _emptyLabelForFilter({required bool earnerSegment}) {
+    switch (_filterChip) {
+      case 1:
+        return 'No unread messages';
+      case 2:
+        return 'No favorite chats yet';
+      case 3:
+        return 'No archived chats';
+      default:
+        return earnerSegment ? 'No Earner chats' : 'No Renter chats';
     }
   }
 
@@ -397,8 +441,7 @@ class _MessagesScreenState extends State<MessagesScreen>
   }
 
   void _applyTabForNotificationContext() {
-    final tabs = _tabController;
-    if (!mounted || tabs == null || sourceId.isEmpty) return;
+    if (!mounted || sourceId.isEmpty) return;
     if (!_openedFromMessageNotification) return;
 
     final raw = ApiRepository.shared.getChatsHistoryModelList?.data;
@@ -414,58 +457,130 @@ class _MessagesScreenState extends State<MessagesScreen>
     }
 
     final index = _isProviderTabConversation(thread) ? 1 : 0;
-    if (tabs.index != index) {
-      tabs.index = index;
-      setState(() {});
+    if (_segmentTab != index) {
+      setState(() => _segmentTab = index);
     }
   }
 
   @override
   void initState() {
     super.initState();
-    _initTabController();
     _startPoll();
     getData();
     profileData(context);
   }
 
   @override
-  void activate() {
-    super.activate();
-    if (_tabController == null) {
-      _initTabController();
-      _applyDefaultTab();
-    }
-  }
-
-  @override
   void dispose() {
-    _tabController?.dispose();
-    _tabController = null;
     _pollTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final tabs = _tabController;
-    if (tabs == null) {
-      return Scaffold(
-        backgroundColor: Colors.white,
-        body: const SafeArea(
-          child: Center(
-            child: CircularProgressIndicator(
-              color: AppColors.jebbyBlue,
-              strokeWidth: 2.4,
+  Widget _roleSegmentedControl() {
+    return Container(
+      height: 44,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _chatCardBorder),
+      ),
+      padding: const EdgeInsets.all(3),
+      child: Row(
+        children: [
+          Expanded(
+            child: _RoleSegmentOption(
+              label: 'Renter',
+              selected: _segmentTab == 0,
+              onTap: () => setState(() => _segmentTab = 0),
             ),
           ),
-        ),
-      );
-    }
+          Expanded(
+            child: _RoleSegmentOption(
+              label: 'Earner',
+              selected: _segmentTab == 1,
+              onTap: () => setState(() => _segmentTab = 1),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
+  Widget _noChatsEmptyState({required String message}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: _chatListHorizontalMargin),
+      child: LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Align(
+              alignment: const Alignment(0, -0.35),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: _chatScreenHorizontalPadding - _chatListHorizontalMargin,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      _noMessageAsset,
+                      width: 220,
+                      height: 220,
+                      fit: BoxFit.contain,
+                      gaplessPlayback: true,
+                      errorBuilder: (_, __, ___) => Icon(
+                        Icons.chat_bubble_outline_rounded,
+                        size: 96,
+                        color: AppColors.jebbyBlue.withValues(alpha: 0.35),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      message,
+                      textAlign: TextAlign.center,
+                      style: _nunito(
+                        size: 16,
+                        weight: FontWeight.w600,
+                        color: AppColors.jebbyTextMuted,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+      ),
+    );
+  }
+
+  Widget _messageFilterChips() {
+    const labels = ['All', 'Unread', 'Favorites', 'Archive'];
+    return Row(
+      children: List.generate(labels.length, (index) {
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(left: index == 0 ? 0 : 4, right: index == 3 ? 0 : 4),
+            child: _ChatFilterChip(
+              label: labels[index],
+              selected: _filterChip == index,
+              onTap: () => setState(() => _filterChip = index),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.jebbyBackground,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -475,7 +590,7 @@ class _MessagesScreenState extends State<MessagesScreen>
               child: _pageHeader(showBack: widget.showBackButton),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: _SearchPill(
                 controller: _searchController,
                 onChanged: (v) {
@@ -483,31 +598,25 @@ class _MessagesScreenState extends State<MessagesScreen>
                 },
               ),
             ),
+            const SizedBox(height: 16),
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-              child: TabBar(
-                controller: tabs,
-                indicatorColor: AppColors.jebbyBlue,
-                indicatorWeight: 2.5,
-                labelColor: AppColors.jebbyTextPrimary,
-                unselectedLabelColor: AppColors.jebbyTextMuted,
-                labelStyle: _nunito(size: 15, weight: FontWeight.w800),
-                unselectedLabelStyle: _nunito(size: 15, weight: FontWeight.w600),
-                tabs: const [
-                  Tab(text: 'Renter'),
-                  Tab(text: 'Provider'),
-                ],
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: _roleSegmentedControl(),
             ),
-            const SizedBox(height: 6),
-            Expanded(child: _buildBody(tabs)),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: _messageFilterChips(),
+            ),
+            const SizedBox(height: 16),
+            Expanded(child: _buildBody()),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildBody(TabController tabs) {
+  Widget _buildBody() {
     if (isError) {
       return Center(
         child: Text(
@@ -527,65 +636,54 @@ class _MessagesScreenState extends State<MessagesScreen>
     }
     final items = _visibleChats();
     if (isEmpty || items.isEmpty) {
-      return Center(
-        child: Text(
-          'No messages',
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Colors.black54,
-          ),
-        ),
-      );
+      return _noChatsEmptyState(message: 'No messages');
     }
 
-    return TabBarView(
-      controller: tabs,
-      children: [
-        _buildChatList(_chatsForRenterTab(items), emptyLabel: 'No renter chats'),
-        _buildChatList(_chatsForProviderTab(items), emptyLabel: 'No provider chats'),
-      ],
+    final segmentItems = _segmentTab == 0
+        ? _chatsForRenterTab(items)
+        : _chatsForProviderTab(items);
+    final filtered = _applyMessageFilter(segmentItems);
+    return _buildChatList(
+      filtered,
+      emptyLabel: _emptyLabelForFilter(earnerSegment: _segmentTab == 1),
     );
   }
 
   Widget _buildChatList(List<datamodel.Data> items, {required String emptyLabel}) {
     if (items.isEmpty) {
-      return Center(
-        child: Text(
-          emptyLabel,
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Colors.black54,
-          ),
-        ),
-      );
+      return _noChatsEmptyState(message: emptyLabel);
     }
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(15, 1, 15, 24),
-      children: _chatTiles(items),
-    );
-  }
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(
+        _chatListHorizontalMargin,
+        6,
+        _chatListHorizontalMargin,
+        24,
+      ),
+      itemCount: items.length,
+      separatorBuilder: (_, __) => const Divider(
+        height: 1,
+        thickness: 1,
+        color: _chatCardBorder,
+      ),
+      itemBuilder: (context, index) {
+        final element = items[index];
+        final name = element.name;
+        final image = element.image.toString();
+        final targetId = element.id.toString();
+        final count = element.count ?? 0;
+        final lastMessage = (element.lastMessage ?? '').toString();
+        final displayName =
+            (name == null || name.toString().trim().isEmpty)
+                ? 'User'
+                : name.toString();
 
-  List<Widget> _chatTiles(List<datamodel.Data> items) {
-    return items.map((element) {
-      final name = element.name;
-      final image = element.image.toString();
-      final targetId = element.id.toString();
-      final count = element.count ?? 0;
-      final lastMessage = (element.lastMessage ?? '').toString();
-      final displayName =
-          (name == null || name.toString().trim().isEmpty)
-              ? 'Vendor'
-              : name.toString();
-
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: _ChatListTile(
+        return _ChatListTile(
           name: displayName,
           imageUrl: image.isEmpty ? null : AppUrl.baseUrlM + image,
           lastMessage: lastMessage,
+          timeLabel: _formatChatListTime(element.lastMessageTime),
           unreadCount: count,
           onTap: () {
             _pollTimer?.cancel();
@@ -597,9 +695,9 @@ class _MessagesScreenState extends State<MessagesScreen>
                   _startPoll();
                 });
           },
-        ),
-      );
-    }).toList();
+        );
+      },
+    );
   }
 }
 
@@ -615,13 +713,13 @@ class _SearchPill extends StatelessWidget {
       height: 48,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE3E6EC)),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _chatCardBorder),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          Icon(Icons.search_rounded, color: Colors.grey.shade500, size: 22),
+          Icon(Icons.search_rounded, color: AppColors.jebbyBlue, size: 22),
           const SizedBox(width: 10),
           Expanded(
             child: TextField(
@@ -653,11 +751,93 @@ class _SearchPill extends StatelessWidget {
   }
 }
 
+class _RoleSegmentOption extends StatelessWidget {
+  const _RoleSegmentOption({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? AppColors.jebbyBlue : Colors.transparent,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          alignment: Alignment.center,
+          height: double.infinity,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: selected ? Colors.white : AppColors.jebbyTextMuted,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChatFilterChip extends StatelessWidget {
+  const _ChatFilterChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? AppColors.jebbyBlue : Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: selected ? BorderSide.none : const BorderSide(color: _chatCardBorder),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 36),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: selected ? Colors.white : AppColors.jebbyTextPrimary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ChatListTile extends StatelessWidget {
   const _ChatListTile({
     required this.name,
     required this.imageUrl,
     required this.lastMessage,
+    required this.timeLabel,
     required this.unreadCount,
     required this.onTap,
   });
@@ -665,6 +845,7 @@ class _ChatListTile extends StatelessWidget {
   final String name;
   final String? imageUrl;
   final String lastMessage;
+  final String timeLabel;
   final int unreadCount;
   final VoidCallback onTap;
 
@@ -680,65 +861,100 @@ class _ChatListTile extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+          padding: EdgeInsets.fromLTRB(
+            _chatScreenHorizontalPadding - _chatListHorizontalMargin,
+            16,
+            _chatScreenHorizontalPadding - _chatListHorizontalMargin,
+            16,
+          ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               _Avatar(imageUrl: imageUrl),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black,
-                      ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.jebbyTextPrimary,
+                              height: 1.2,
+                            ),
+                          ),
+                        ),
+                        if (timeLabel.isNotEmpty) ...[
+                          const SizedBox(width: 8),
+                          Text(
+                            timeLabel,
+                            style: const TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: _chatTimeBlue,
+                              height: 1.2,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _preview,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: const Color(0xFF6B6B70),
-                        height: 1.35,
-                      ),
+                    const SizedBox(height: 5),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _preview,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.jebbyTextMuted,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                        if (unreadCount > 0) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            width: 22,
+                            height: 22,
+                            alignment: Alignment.center,
+                            decoration: const BoxDecoration(
+                              color: AppColors.jebbyBlue,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              unreadCount > 9 ? '9+' : '$unreadCount',
+                              style: const TextStyle(
+                                fontFamily: 'Nunito',
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                height: 1,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 ),
               ),
-              if (unreadCount > 0) ...[
-                const SizedBox(width: 10),
-                Container(
-                  width: 26,
-                  height: 26,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: AppColors.jebbyBlue,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    unreadCount > 9 ? '9+' : '$unreadCount',
-                    style: const TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      height: 1,
-                    ),
-                  ),
-                ),
-              ],
             ],
           ),
         ),
@@ -756,7 +972,7 @@ class _Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const size = 54.0;
+    const size = 52.0;
     if (imageUrl == null || imageUrl!.isEmpty) {
       return CircleAvatar(
         radius: size / 2,

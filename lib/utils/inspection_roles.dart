@@ -21,9 +21,9 @@ class InspectionRoles {
 
   static String waitingForInitiatorMessage(String phase) {
     if (phase == 'return') {
-      return 'Waiting for the provider to complete the return inspection.';
+      return 'Waiting for provider\'s return inspection.';
     }
-    return 'Waiting for the renter to complete the pickup inspection.';
+    return 'Waiting for renter\'s pickup inspection.';
   }
 
   static String waitingForInitiatorConfirmationMessage(String phase) {

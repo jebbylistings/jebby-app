@@ -10,7 +10,111 @@ class InspectionChecklistItem {
   final String key;
   final String label;
 
-  InspectionChecklistItem({required this.key, required this.label});
+  const InspectionChecklistItem({required this.key, required this.label});
+
+  /// Pickup inspection checklist (v1).
+  static const checklistTemplatePickupV1 = [
+    InspectionChecklistItem(
+      key: 'matches_listing',
+      label: 'Matches listing & description',
+    ),
+    InspectionChecklistItem(
+      key: 'ready_to_use',
+      label: 'Ready to use',
+    ),
+    InspectionChecklistItem(
+      key: 'accessories_included',
+      label: 'Accessories included',
+    ),
+    InspectionChecklistItem(
+      key: 'works_as_expected',
+      label: 'Works as expected',
+    ),
+    InspectionChecklistItem(
+      key: 'existing_damage_noted',
+      label: 'Any existing damage has been noted',
+    ),
+  ];
+
+  /// Return inspection checklist (v1).
+  static const checklistTemplateReturnV1 = [
+    InspectionChecklistItem(key: 'item_returned', label: 'Item returned'),
+    InspectionChecklistItem(key: 'in_working_order', label: 'In working order'),
+    InspectionChecklistItem(
+      key: 'all_accessories_returned',
+      label: 'All accessories returned',
+    ),
+    InspectionChecklistItem(key: 'no_new_damage', label: 'No new damage'),
+    InspectionChecklistItem(key: 'reasonably_clean', label: 'Reasonably clean'),
+    InspectionChecklistItem(
+      key: 'condition_matches_pickup',
+      label: 'Condition matches pickup record',
+    ),
+  ];
+
+  static const checklistTemplateV1 = checklistTemplatePickupV1;
+
+  static List<InspectionChecklistItem> templateForPhase(String? phase) {
+    if (phase?.trim().toLowerCase() == 'return') {
+      return checklistTemplateReturnV1;
+    }
+    return checklistTemplatePickupV1;
+  }
+
+  /// Canonical pickup/return inspection copy (design v1).
+  static const displayLabelsByKey = <String, String>{
+    'matches_listing': 'Matches listing & description',
+    'matches_listing_description': 'Matches listing & description',
+    'matches_listing_and_description': 'Matches listing & description',
+    'listing_matches_description': 'Matches listing & description',
+    'ready_to_use': 'Ready to use',
+    'accessories_included': 'Accessories included',
+    'works_as_expected': 'Works as expected',
+    'existing_damage_noted': 'Any existing damage has been noted',
+    'damage_noted': 'Any existing damage has been noted',
+    'noted_existing_damage': 'Any existing damage has been noted',
+    'item_returned': 'Item returned',
+    'in_working_order': 'In working order',
+    'all_accessories_returned': 'All accessories returned',
+    'no_new_damage': 'No new damage',
+    'reasonably_clean': 'Reasonably clean',
+    'condition_matches_pickup': 'Condition matches pickup record',
+  };
+
+  String get displayLabel {
+    if (label.trim().isNotEmpty) return label;
+
+    final normalizedKey = key.trim().toLowerCase().replaceAll('-', '_');
+    final fromKey = displayLabelsByKey[normalizedKey];
+    if (fromKey != null) return fromKey;
+
+    final fromLabel = _displayLabelFromApiText(label);
+    if (fromLabel != null) return fromLabel;
+
+    return key;
+  }
+
+  static String? _displayLabelFromApiText(String raw) {
+    final text = raw.trim().toLowerCase();
+    if (text.isEmpty) return null;
+
+    if (text.contains('matches') && text.contains('listing')) {
+      return 'Matches listing & description';
+    }
+    if (text.contains('ready') && text.contains('use')) {
+      return 'Ready to use';
+    }
+    if (text.contains('accessories')) {
+      return 'Accessories included';
+    }
+    if (text.contains('works') && text.contains('expected')) {
+      return 'Works as expected';
+    }
+    if (text.contains('damage') && (text.contains('noted') || text.contains('note'))) {
+      return 'Any existing damage has been noted';
+    }
+    return null;
+  }
 
   factory InspectionChecklistItem.fromJson(Map<String, dynamic> json) {
     return InspectionChecklistItem(
@@ -200,6 +304,10 @@ class TrustStatus {
 
   bool get bothConfirmed =>
       myConfirmation?.isConfirmed == true && otherConfirmation?.isConfirmed == true;
+
+  /// UI + save use v1 checklist; API `checklist_template` is ignored for item list.
+  List<InspectionChecklistItem> get inspectionChecklistItems =>
+      InspectionChecklistItem.templateForPhase(phase);
 
   factory TrustStatus.fromJson(Map<String, dynamic> json) {
     final template = <InspectionChecklistItem>[];

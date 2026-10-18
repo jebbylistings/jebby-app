@@ -7,13 +7,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'bottom_nav_controller.dart';
+import 'package:jebby/views/screens/navigation/app_drawer.dart';
 import 'package:jebby/views/screens/home/featured_categories.dart';
 import 'package:jebby/views/screens/home/home.dart';
 import 'package:jebby/views/screens/shared/settings.dart';
 import 'package:jebby/views/screens/profile/user_profile.dart';
 import 'package:jebby/views/screens/shared/notifications.dart';
 import 'package:jebby/views/screens/vendors/vendor_home.dart';
-import 'package:jebby/views/widgets/earner_bottom_nav.dart';
+import 'package:jebby/views/screens/vendors/listing/create_listing.dart';
 import 'package:jebby/repositories/api_repository.dart';
 import 'package:jebby/utils/profile_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,6 +22,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../services/provider/sign_in_provider.dart';
 import '../../../models/user_model.dart';
 import '../../../view_models/auth_view_model.dart';
+import '../../../view_models/reservation_view_model.dart';
 import '../../../view_models/user_view_model.dart';
 
 class MainScreen extends StatefulWidget {
@@ -44,13 +46,25 @@ class _MainScreenState extends State<MainScreen> {
     MessagesScreen(),
   ];
 
-  var screensVendor = [
-    const VendorHomeScreen(),
-    const MessagesScreen(),
-    const UserProfileScreen(),
-  ];
-
   int _inboxUnread = 0;
+
+  Widget _buildEarnerScreen(int index) {
+    switch (index) {
+      case 1:
+        return const UserProfileScreen();
+      case 4:
+        return SettingsScreen();
+      case 5:
+        return const MessagesScreen();
+      case 0:
+      default:
+        return const VendorHomeScreen();
+    }
+  }
+
+  Future<void> _openEarnerListItem() async {
+    await Get.to(() => const CreateListingScreen());
+  }
 
   Future<UserModel> getUserDate() => UserViewModel().getUser();
   String? ids;
@@ -198,30 +212,27 @@ class _MainScreenState extends State<MainScreen> {
     Future.delayed(const Duration(seconds: 1), () {});
 
     return Scaffold(
+      key: bottomctrl.mainScaffoldKey,
       extendBody: true,
+      drawer: Consumer<UserViewModel>(
+        builder: (context, usp, _) => AppDrawerScreen.buildMainDrawer(
+          context,
+          key: ValueKey('main-drawer-${usp.isGuestUser}-${usp.role}-${usp.isEarnMode}'),
+        ),
+      ),
       body: GetBuilder<BottomNavController>(
         init: bottomctrl,
         builder: (_) {
           activeIndex = bottomctrl.navigationBarIndexValue;
           if (isProviderMode) {
-            final vendorIndex =
-                activeIndex.toInt().clamp(0, screensVendor.length - 1);
-            return screensVendor[vendorIndex];
+            return _buildEarnerScreen(activeIndex.toInt());
           }
           return screens[bottomctrl.navigationBarIndexValue];
         },
       ),
       bottomNavigationBar:
           isProviderMode
-              ? EarnerBottomNav(
-                  activeIndex: activeIndex.toInt().clamp(0, 2),
-                  inboxBadge: _inboxUnread,
-                  onTap: (index) {
-                    bottomctrl.navBarChange(index);
-                    setState(() => activeIndex = index);
-                    if (index == 1) getChatHistory();
-                  },
-                )
+              ? bottomForEarner()
               : (userViewModel.isGuestUser
                     ? bottomForGuest()
                     : bottomForUser(userName)),
@@ -230,44 +241,80 @@ class _MainScreenState extends State<MainScreen> {
 
   static const double _footerBarHeight = 64;
   static const double _footerFabSize = 60;
+  static const double _footerCenterGapWidth = _footerFabSize + 4;
+  /// Extra inset between side tabs and center List Item slot (earner only).
+  static const double _earnerFooterFabSideGap = 12;
   static const double _footerNavIconSize = 28;
   static const double _footerLabelFontSize = 12.5;
   static const Color _footerInactive = Color(0xFFB5B5B5);
   static const Color _footerLabelActive = Color(0xFF2C2C2C);
 
-  TextStyle _footerTextStyle(bool selected) => GoogleFonts.inter(
+  TextStyle _footerTextStyle(
+    bool selected, {
+    Color? activeAccent,
+    Color? activeLabelColor,
+  }) =>
+      GoogleFonts.inter(
         fontSize: _footerLabelFontSize,
         fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
         height: 1.15,
-        color: selected ? _footerLabelActive : _footerInactive,
+        color: selected
+            ? (activeLabelColor ?? activeAccent ?? _footerLabelActive)
+            : _footerInactive,
       );
 
-  Color _footerIconColor(bool selected) =>
-      selected ? AppColors.primaryColor : _footerInactive;
+  Color _footerIconColor(bool selected, {Color? activeAccent}) => selected
+      ? (activeAccent ?? AppColors.primaryColor)
+      : _footerInactive;
 
   Widget _footerNavTap({
     required Widget icon,
     required String label,
     required bool selected,
     required VoidCallback onTap,
+    Color? activeAccent,
+    Color? activeLabelColor,
+    bool suppressRipple = false,
   }) {
+    final content = Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        icon,
+        const SizedBox(height: 4),
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: _footerTextStyle(
+            selected,
+            activeAccent: activeAccent,
+            activeLabelColor: activeLabelColor,
+          ),
+        ),
+      ],
+    );
+
+    if (suppressRipple) {
+      return GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: content,
+      );
+    }
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(14),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            icon,
-            const SizedBox(height: 4),
-            Text(label, style: _footerTextStyle(selected)),
-          ],
-        ),
+        child: content,
       ),
     );
   }
+
+  static const Color _earnerFooterAccent = AppColors.jebbyBlue;
 
   Widget _footerSearchSlot() {
     return _footerNavTap(
@@ -307,6 +354,223 @@ class _MainScreenState extends State<MainScreen> {
             size: 30,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _footerProfileSlot() {
+    return _footerNavTap(
+      suppressRipple: true,
+      activeAccent: _earnerFooterAccent,
+      activeLabelColor: _earnerFooterAccent,
+      icon: Icon(
+        Icons.person_outline_rounded,
+        size: _footerNavIconSize,
+        color: _footerIconColor(activeIndex == 1, activeAccent: _earnerFooterAccent),
+      ),
+      label: 'Profile',
+      selected: activeIndex == 1,
+      onTap: () {
+        bottomctrl.navBarChange(1);
+        setState(() => activeIndex = 1);
+      },
+    );
+  }
+
+  Widget _footerEarnerMessagesSlot() {
+    return _footerNavTap(
+      suppressRipple: true,
+      activeAccent: _earnerFooterAccent,
+      activeLabelColor: _earnerFooterAccent,
+      icon: SizedBox(
+        width: _footerNavIconSize,
+        height: _footerNavIconSize,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(
+              child: Icon(
+                Icons.chat_outlined,
+                size: _footerNavIconSize,
+                color: _footerIconColor(
+                  activeIndex == 5,
+                  activeAccent: _earnerFooterAccent,
+                ),
+              ),
+            ),
+            if (_inboxUnread > 0)
+              Positioned(
+                top: -4,
+                right: -6,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE53935),
+                    shape: BoxShape.circle,
+                  ),
+                  constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                  child: Text(
+                    _inboxUnread > 9 ? '9+' : '$_inboxUnread',
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      height: 1.1,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+      label: 'Messages',
+      selected: activeIndex == 5,
+      onTap: () {
+        setState(() => activeIndex = 5);
+        bottomctrl.navBarChange(5);
+        getChatHistory();
+      },
+    );
+  }
+
+  Widget _earnerDockedFab() {
+    return Material(
+      elevation: 4,
+      shadowColor: Colors.black26,
+      shape: const CircleBorder(),
+      color: _earnerFooterAccent,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: _openEarnerListItem,
+        child: const SizedBox(
+          width: _footerFabSize,
+          height: _footerFabSize,
+          child: Icon(Icons.add, color: Colors.white, size: 32),
+        ),
+      ),
+    );
+  }
+
+  /// Center gap label — FAB is docked separately like renter categories button.
+  Widget _footerListItemLabelSlot() {
+    return SizedBox(
+      width: _footerCenterGapWidth,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(height: _footerNavIconSize),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              'List Item',
+              maxLines: 1,
+              style: GoogleFonts.inter(
+                fontSize: _footerLabelFontSize,
+                fontWeight: FontWeight.w600,
+                height: 1.15,
+                color: _earnerFooterAccent,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget bottomForEarner() {
+    final size = MediaQuery.sizeOf(context);
+    final bottomPad = MediaQuery.paddingOf(context).bottom;
+    final paintHeight = _footerBarHeight + bottomPad;
+
+    return SizedBox(
+      height: _footerBarHeight + 22 + bottomPad,
+      width: size.width,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.bottomCenter,
+        children: [
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: paintHeight,
+            child: CustomPaint(
+              painter: JebbyFooterBarPainter(),
+              size: Size(size.width, paintHeight),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: bottomPad,
+            height: _footerBarHeight,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: _footerNavTap(
+                      suppressRipple: true,
+                      activeAccent: _earnerFooterAccent,
+                      activeLabelColor: _earnerFooterAccent,
+                      icon: Icon(
+                        Icons.home_outlined,
+                        size: _footerNavIconSize,
+                        color: _footerIconColor(
+                          activeIndex == 0,
+                          activeAccent: _earnerFooterAccent,
+                        ),
+                      ),
+                      label: 'Home',
+                      selected: activeIndex == 0,
+                      onTap: () {
+                        bottomctrl.navBarChange(0);
+                        setState(() => activeIndex = 0);
+                        context.read<ReservationViewModel>().loadActionRequired();
+                      },
+                    ),
+                  ),
+                  Expanded(child: _footerProfileSlot()),
+                  const SizedBox(width: _earnerFooterFabSideGap),
+                  _footerListItemLabelSlot(),
+                  const SizedBox(width: _earnerFooterFabSideGap),
+                  Expanded(child: _footerEarnerMessagesSlot()),
+                  Expanded(
+                    child: _footerNavTap(
+                      suppressRipple: true,
+                      activeAccent: _earnerFooterAccent,
+                      activeLabelColor: _earnerFooterAccent,
+                      icon: Icon(
+                        Icons.settings_outlined,
+                        size: _footerNavIconSize,
+                        color: _footerIconColor(
+                          activeIndex == 4,
+                          activeAccent: _earnerFooterAccent,
+                        ),
+                      ),
+                      label: 'Settings',
+                      selected: activeIndex == 4,
+                      onTap: () {
+                        setState(() => activeIndex = 4);
+                        bottomctrl.navBarChange(4);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: bottomPad + _footerBarHeight - (_footerFabSize * 0.75),
+            child: Center(child: _earnerDockedFab()),
+          ),
+        ],
       ),
     );
   }
@@ -356,6 +620,7 @@ class _MainScreenState extends State<MainScreen> {
                         onTap: () {
                           bottomctrl.navBarChange(0);
                           setState(() => activeIndex = 0);
+                          context.read<ReservationViewModel>().loadActionRequired();
                         },
                       ),
                     ),
@@ -451,6 +716,7 @@ class _MainScreenState extends State<MainScreen> {
                         onTap: () {
                           bottomctrl.navBarChange(0);
                           setState(() => activeIndex = 0);
+                          context.read<ReservationViewModel>().loadActionRequired();
                         },
                       ),
                     ),

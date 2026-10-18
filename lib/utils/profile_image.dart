@@ -63,4 +63,31 @@ class ProfileImage {
       ),
     );
   }
+
+  /// Earner / drawer style: solid [AppColors.jebbyBlue] ring (matches profile).
+  static Widget blueRingAvatar({
+    required double radius,
+    required String baseUrl,
+    String? imagePath,
+    bool isLoading = false,
+    double ringWidth = 3.5,
+  }) {
+    return Container(
+      width: (radius + ringWidth) * 2,
+      height: (radius + ringWidth) * 2,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppColors.jebbyBlue,
+      ),
+      padding: EdgeInsets.all(ringWidth),
+      child: ClipOval(
+        child: circularAvatar(
+          radius: radius,
+          baseUrl: baseUrl,
+          imagePath: imagePath,
+          isLoading: isLoading,
+        ),
+      ),
+    );
+  }
 }

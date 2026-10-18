@@ -2,8 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:jebby/constants/color.dart';
 import 'package:jebby/models/onboarding_state.dart';
+import 'package:jebby/models/get_all_orders_by_vendor_id_model.dart'
+    as vendor_orders;
+import 'package:jebby/models/stripe_transactions_model.dart';
 import 'package:jebby/models/stripe_requirement_fields.dart';
 import 'package:jebby/repositories/api_repository.dart';
 import 'package:jebby/utils/earner_navigation.dart';
@@ -26,6 +30,8 @@ class VendorMyTransactionsScreen extends StatefulWidget {
 class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
     with WidgetsBindingObserver {
   static const Color _cardBorder = Color(0xFFE3E6EC);
+  static const Color _refundGreen = Color(0xFF16A34A);
+  static const Color _refundGreenSoft = Color(0xFFDCFCE7);
 
   bool isLoading = true;
   bool isError = false;
@@ -38,6 +44,8 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
   bool _payoutsEnabled = false;
   bool _payoutInReview = false;
   String? _stripeBankLast4;
+
+  List<_EarnerTransactionRow> _transactions = [];
 
   TextStyle _nunito({
     required double size,
@@ -70,36 +78,212 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
     );
   }
 
-  bool _hasNoVisibleTransactions() {
-    if (isEmpty) return true;
-    final raw = ApiRepository.shared.getAllOrdersByVenodrIdList?.data ?? [];
-    return raw
-        .where((e) => !OrderStatus.isTerminal(e.orderStatus))
-        .isEmpty;
+  List<_EarnerTransactionRow> get _displayTransactions {
+    if (_transactions.isNotEmpty) return _transactions;
+    final cached = ApiRepository.shared.stripeTransactionsModelList?.data;
+    if (cached == null || cached.isEmpty) return const [];
+    return cached.map(_rowFromStripe).toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
   }
 
-  getNewOrders() {
+  bool _hasNoVisibleTransactions() =>
+      isEmpty || _displayTransactions.isEmpty;
+
+  void getEarnerTransactions() {
+    if (sourceId.trim().isEmpty) {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+          isEmpty = true;
+          _transactions = [];
+        });
+      }
+      return;
+    }
+
+    var ordersLoaded = false;
+    var stripeLoaded = false;
+    var ordersFailed = false;
+    var stripeFailed = false;
+    List<_EarnerTransactionRow> fromOrders = [];
+    List<_EarnerTransactionRow> fromStripe = [];
+
+    void finishIfReady() {
+      if (!ordersLoaded || !stripeLoaded || !mounted) return;
+
+      final stripeRows =
+          fromStripe.isNotEmpty ? fromStripe : _stripeRowsFromRepository();
+      final merged = _mergeEarnerTransactionRows(stripeRows, fromOrders);
+      merged.sort((a, b) => b.date.compareTo(a.date));
+
+      setState(() {
+        isLoading = false;
+        isError = merged.isEmpty && ordersFailed && stripeFailed;
+        isEmpty = merged.isEmpty;
+        _transactions = merged;
+      });
+    }
+
     ApiRepository.shared.getVenodorOrders(
       sourceId,
-      (List) {
-        if (this.mounted) {
-          final orders = List.data ?? [];
-          setState(() {
-            isLoading = false;
-            isError = false;
-            isEmpty = orders.isEmpty;
-          });
-        }
+      (list) {
+        fromOrders = (list.data ?? [])
+            .where((o) => _vendorOrderVisible(o.orderStatus))
+            .map(_rowFromVendorOrder)
+            .toList();
+        ordersLoaded = true;
+        finishIfReady();
       },
       (error) {
-        if (error != null) {
-          setState(() {
-            isLoading = false;
-            isError = true;
-          });
-        }
+        ordersFailed = error != null;
+        ordersLoaded = true;
+        finishIfReady();
       },
     );
+
+    ApiRepository.shared.getUserStripeTransactions(
+      sourceId,
+      (StripeTransactionsModel data) {
+        fromStripe = _stripeRowsFromModel(data);
+        stripeLoaded = true;
+        finishIfReady();
+      },
+      (error) {
+        stripeFailed = error != null;
+        fromStripe = _stripeRowsFromRepository();
+        stripeLoaded = true;
+        finishIfReady();
+      },
+    );
+  }
+
+  List<_EarnerTransactionRow> _stripeRowsFromModel(StripeTransactionsModel data) {
+    final rows = (data.data ?? []).map(_rowFromStripe).toList();
+    if (rows.isNotEmpty) return rows;
+    return _stripeRowsFromRepository();
+  }
+
+  List<_EarnerTransactionRow> _stripeRowsFromRepository() {
+    final cached = ApiRepository.shared.stripeTransactionsModelList?.data ?? [];
+    return cached.map(_rowFromStripe).toList();
+  }
+
+  bool _vendorOrderVisible(String? status) =>
+      OrderStatus.showOnEarnerTransactionsList(status);
+
+  DateTime? _orderDate(vendor_orders.Data order) {
+    for (final raw in [
+      order.completedAt,
+      order.updatedAt,
+      order.createdAt,
+    ]) {
+      if (raw == null || raw.trim().isEmpty) continue;
+      final parsed = DateTime.tryParse(raw);
+      if (parsed != null) return parsed;
+    }
+    return null;
+  }
+
+  _EarnerTransactionRow _rowFromVendorOrder(vendor_orders.Data order) {
+    final title = order.productName?.trim().isNotEmpty == true
+        ? order.productName!.trim()
+        : 'Rental payment';
+    final normalized = OrderStatus.normalize(order.orderStatus);
+    final paid = normalized != OrderStatus.accepted &&
+        normalized != OrderStatus.bookingRequested;
+    return _EarnerTransactionRow(
+      key: 'order-${order.id}',
+      title: title,
+      date: _orderDate(order) ?? DateTime.now(),
+      amount: (order.totalPrice ?? 0).toDouble(),
+      refunded: OrderStatus.isCancelled(order.orderStatus),
+      paid: paid,
+      paymentLabel: 'Card',
+      orderId: order.id,
+    );
+  }
+
+  _EarnerTransactionRow _rowFromStripe(StripeTransactionData tx) {
+    final title = tx.productName?.trim().isNotEmpty == true
+        ? tx.productName!.trim()
+        : 'Rental payment';
+    final orderPart = tx.orderId?.toString() ?? '';
+    final idPart = tx.id?.trim() ?? '';
+    final key = idPart.isNotEmpty
+        ? 'stripe-$idPart'
+        : orderPart.isNotEmpty
+            ? 'stripe-order-$orderPart'
+            : 'stripe-${title.hashCode}-${_transactionDate(tx)?.millisecondsSinceEpoch ?? 0}';
+
+    return _EarnerTransactionRow(
+      key: key,
+      title: title,
+      date: _transactionDate(tx) ?? DateTime.now(),
+      amount: _transactionAmount(tx).abs(),
+      refunded: _isRefunded(tx),
+      paid: !_isRefunded(tx),
+      paymentLabel: _paymentMethodLabel(tx),
+      orderId: tx.orderId,
+    );
+  }
+
+  List<_EarnerTransactionRow> _mergeEarnerTransactionRows(
+    List<_EarnerTransactionRow> stripe,
+    List<_EarnerTransactionRow> orders,
+  ) {
+    final merged = <_EarnerTransactionRow>[];
+    final seenOrderIds = <int>{};
+    final seenKeys = <String>{};
+
+    void addRow(_EarnerTransactionRow row) {
+      if (!seenKeys.add(row.key)) return;
+      if (row.orderId != null) seenOrderIds.add(row.orderId!);
+      merged.add(row);
+    }
+
+    for (final row in orders) {
+      addRow(row);
+    }
+    for (final row in stripe) {
+      if (row.orderId != null && seenOrderIds.contains(row.orderId)) continue;
+      addRow(row);
+    }
+
+    return merged;
+  }
+
+  double _transactionAmount(StripeTransactionData tx) {
+    if (tx.amount != null) return tx.amount!;
+    if (tx.totalPrice != null) return tx.totalPrice!.toDouble();
+    return 0;
+  }
+
+  DateTime? _transactionDate(StripeTransactionData tx) {
+    if (tx.created != null) return tx.created;
+    final raw = tx.createdAt?.trim();
+    if (raw == null || raw.isEmpty) return null;
+    return DateTime.tryParse(raw);
+  }
+
+  bool _isRefunded(StripeTransactionData tx) {
+    final status = (tx.status ?? '').toLowerCase();
+    if (status.contains('refund')) return true;
+    return _transactionAmount(tx) < 0;
+  }
+
+  String _paymentMethodLabel(StripeTransactionData tx) {
+    final types = tx.paymentMethodTypes;
+    if (types == null || types.isEmpty) return 'Card';
+    final type = types.first.toLowerCase();
+    switch (type) {
+      case 'card':
+        return 'Card';
+      case 'link':
+        return 'Link';
+      default:
+        if (type.isEmpty) return 'Card';
+        return type[0].toUpperCase() + type.substring(1);
+    }
   }
 
   Future getData() async {
@@ -131,7 +315,7 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
           role = value.role.toString();
           await _prepareOnboardingController();
           if (!mounted) return;
-          getNewOrders();
+          getEarnerTransactions();
           checkStripeAccountStatus();
         })
         .onError((error, stackTrace) {
@@ -489,7 +673,7 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
         isLoading = true;
         isAccountLoading = true;
       });
-      getNewOrders();
+      getEarnerTransactions();
       checkStripeAccountStatus();
     }
   }
@@ -511,13 +695,12 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
                   style: _nunito(
                     size: 22,
                     weight: FontWeight.w800,
-                    color: AppColors.jebbyTextPrimary,
                     height: 1.15,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Keep track of your earnings and payouts.',
+                  'Keep track of your earnings and transactions.',
                   style: _nunito(
                     size: 14,
                     weight: FontWeight.w600,
@@ -642,18 +825,7 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
                       const SizedBox(height: 12),
                       _buildListingsVisibleInfo(),
                     ],
-                    const SizedBox(height: 20),
-                    const Divider(height: 1, thickness: 1, color: Color(0xFFE3E6EC)),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Recent activity',
-                      style: _nunito(
-                        size: 18,
-                        weight: FontWeight.w800,
-                        color: AppColors.jebbyTextPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 8),
                   ],
                 ),
               ),
@@ -692,7 +864,7 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
                       isError = false;
                       isEmpty = false;
                     });
-                    getNewOrders();
+                    getEarnerTransactions();
                   },
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.jebbyBlue,
@@ -735,124 +907,148 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
       );
     }
 
-    final raw = ApiRepository.shared.getAllOrdersByVenodrIdList?.data ?? [];
-    final visible =
-        raw.where((e) => !OrderStatus.isTerminal(e.orderStatus)).toList();
+    final items = List<_EarnerTransactionRow>.from(_displayTransactions)
+      ..sort((a, b) => b.date.compareTo(a.date));
 
-    return SliverList.separated(
-      itemCount: visible.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
-      itemBuilder: (context, index) {
-        final data = visible[index];
-        return _transactionCard(
-          data.name.toString(),
-          data.totalPrice.toString(),
-          data.email.toString(),
-        );
-      },
-    );
-  }
+    final grouped = <DateTime, List<_EarnerTransactionRow>>{};
+    for (final tx in items) {
+      final key = DateTime(tx.date.year, tx.date.month);
+      grouped.putIfAbsent(key, () => []).add(tx);
+    }
 
-  Widget _transactionCard(
-    String name,
-    String price,
-    String email,
-  ) {
-    final amount = price;
-    return Container(
-      decoration: _surfaceCardDecoration(),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppColors.jebbySoftBlue,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.payments_outlined,
-                color: AppColors.jebbyBlue,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: _nunito(size: 16, weight: FontWeight.w800),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    email,
-                    style: _nunito(
-                      size: 13,
-                      weight: FontWeight.w600,
-                      color: AppColors.jebbyTextMuted,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            Text(
-              '\$$amount',
-              style: _nunito(size: 16, weight: FontWeight.w800),
-            ),
-          ],
-        ),
+    final monthKeys = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
+
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          final monthKey = monthKeys[index];
+          final monthLabel = DateFormat('MMMM yyyy').format(monthKey);
+          final monthItems = grouped[monthKey]!;
+          return _monthTransactionSection(monthLabel, monthItems);
+        },
+        childCount: monthKeys.length,
       ),
     );
   }
 
-  double _availableForPayoutDollars() {
-    final balance = accountDetails?['balance'];
-    if (balance is! Map) return 0;
-    final available = balance['available'];
-    if (available is! List) return 0;
-    var total = 0.0;
-    for (final item in available) {
-      if (item is Map) {
-        total += (item['amount'] ?? 0) / 100.0;
-      }
-    }
-    return total;
-  }
-
-  Widget _buildAvailableForPayoutCard() {
-    final amount = _availableForPayoutDollars();
-    return Container(
-      width: double.infinity,
-      decoration: _surfaceCardDecoration(),
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
-      child: Column(
+  Widget _monthTransactionSection(
+    String monthLabel,
+    List<_EarnerTransactionRow> items,
+  ) {
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Available for payout',
-            style: _nunito(
-              size: 14,
-              weight: FontWeight.w600,
-              color: AppColors.jebbyTextMuted,
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text(
+              monthLabel,
+              style: _nunito(size: 17, weight: FontWeight.w800, height: 1.2),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            '\$${amount.toStringAsFixed(2)}',
-            style: _nunito(
-              size: 36,
-              weight: FontWeight.w800,
-              color: AppColors.jebbyTextPrimary,
-              height: 1.05,
+          Container(
+            decoration: _surfaceCardDecoration(),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                for (var i = 0; i < items.length; i++) ...[
+                  if (i > 0)
+                    const Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: _cardBorder,
+                      indent: 16,
+                      endIndent: 16,
+                    ),
+                  _earnerTransactionRow(items[i]),
+                ],
+              ],
             ),
+          ),
+          const SizedBox(height: 20),
+        ],
+    );
+  }
+
+  Widget _earnerTransactionRow(_EarnerTransactionRow tx) {
+    final refunded = tx.refunded;
+    final date = tx.date;
+    final amount = tx.amount;
+    final title = tx.title;
+    final subtitle =
+        '${DateFormat('MMM d').format(date)} · ${tx.paymentLabel}';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: refunded ? _refundGreenSoft : AppColors.jebbySoftBlue,
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              refunded ? Icons.replay_rounded : Icons.receipt_long_outlined,
+              color: refunded ? _refundGreen : AppColors.jebbyBlue,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: _nunito(size: 16, weight: FontWeight.w800, height: 1.25),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: _nunito(
+                    size: 13,
+                    weight: FontWeight.w600,
+                    color: AppColors.jebbyTextMuted,
+                    height: 1.2,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '\$${amount.toStringAsFixed(2)}',
+                style: _nunito(size: 16, weight: FontWeight.w800, height: 1.2),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                refunded
+                    ? 'Refunded'
+                    : tx.paid
+                        ? 'Paid'
+                        : 'Pending',
+                style: _nunito(
+                  size: 14,
+                  weight: FontWeight.w700,
+                  color: refunded
+                      ? _refundGreen
+                      : tx.paid
+                          ? AppColors.jebbyBlue
+                          : AppColors.jebbyTextMuted,
+                  height: 1.1,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1074,65 +1270,44 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
   }
 
   Widget accountSection() {
-    if (isAccountLoading) {
-      return Container(
-        width: double.infinity,
-        decoration: _surfaceCardDecoration(),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Available for payout',
-              style: _nunito(
-                size: 14,
-                weight: FontWeight.w600,
-                color: AppColors.jebbyTextMuted,
-              ),
-            ),
-            const SizedBox(height: 32),
-            const Center(
-              child: CircularProgressIndicator(
-                color: AppColors.jebbyBlue,
-                strokeWidth: 2.4,
-              ),
-            ),
-            const SizedBox(height: 32),
-          ],
+    if (isAccountLoading) return const SizedBox.shrink();
+
+    final children = <Widget>[];
+
+    if (!_identityVerified &&
+        (accountStatus == 'not_started' || accountStatus == null)) {
+      children.add(
+        _buildAccountActionButton(
+          label: 'Verify identity to earn',
+          onPressed: () => _openProviderOnboarding(),
+        ),
+      );
+    }
+    if (_shouldShowFinishPayoutSetupCard()) {
+      if (children.isNotEmpty) children.add(const SizedBox(height: 12));
+      children.add(_buildFinishPayoutSetupCard());
+    }
+    if (_isPayoutInReview()) {
+      if (children.isNotEmpty) children.add(const SizedBox(height: 12));
+      children.add(_buildPayoutInReviewCard());
+    }
+    if (_hasOutstandingRequirements() &&
+        !_isPendingStripeReview() &&
+        !_requirementsAreBankOnly()) {
+      if (children.isNotEmpty) children.add(const SizedBox(height: 12));
+      children.add(
+        _buildAccountActionButton(
+          label: 'Submit required info',
+          onPressed: _showRequirementsModal,
         ),
       );
     }
 
+    if (children.isEmpty) return const SizedBox.shrink();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildAvailableForPayoutCard(),
-        if (!_identityVerified &&
-            (accountStatus == 'not_started' || accountStatus == null)) ...[
-          const SizedBox(height: 12),
-          _buildAccountActionButton(
-            label: 'Verify identity to earn',
-            onPressed: () => _openProviderOnboarding(),
-          ),
-        ],
-        if (_shouldShowFinishPayoutSetupCard()) ...[
-          const SizedBox(height: 12),
-          _buildFinishPayoutSetupCard(),
-        ],
-        if (_isPayoutInReview()) ...[
-          const SizedBox(height: 12),
-          _buildPayoutInReviewCard(),
-        ],
-        if (_hasOutstandingRequirements() &&
-            !_isPendingStripeReview() &&
-            !_requirementsAreBankOnly()) ...[
-          const SizedBox(height: 12),
-          _buildAccountActionButton(
-            label: 'Submit required info',
-            onPressed: _showRequirementsModal,
-          ),
-        ],
-      ],
+      children: children,
     );
   }
 
@@ -1186,10 +1361,10 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
                         Expanded(
                           child: Text(
                             'Stripe account',
-                            style: GoogleFonts.inter(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.black,
+                            style: _nunito(
+                              size: 22,
+                              weight: FontWeight.w800,
+                              height: 1.15,
                             ),
                           ),
                         ),
@@ -1260,14 +1435,12 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
                                 accountDetails!['payouts_enabled'] == true
                                     ? 'Yes'
                                     : 'No',
-                                Icons.account_balance_wallet_outlined,
+                                Icons.account_balance_outlined,
                                 valueGood:
                                     accountDetails!['payouts_enabled'] == true,
                                 valueBad:
                                     accountDetails!['payouts_enabled'] != true,
                               ),
-                              const SizedBox(height: 16),
-                              _buildBalanceSection(),
                               const SizedBox(height: 16),
                             ],
                             if (accountDetails != null &&
@@ -1501,139 +1674,26 @@ class _VendorMyTransactionsScreenState extends State<VendorMyTransactionsScreen>
     );
   }
 
-  Widget _buildBalanceSection() {
-    // Extract balance data from accountDetails
-    Map<String, dynamic>? balance = accountDetails?['balance'];
-    List<dynamic>? available = balance?['available'];
-    List<dynamic>? pending = balance?['pending'];
+}
 
-    // Calculate totals
-    double availableTotal = 0.0;
-    double pendingTotal = 0.0;
-    String currency = 'USD';
+class _EarnerTransactionRow {
+  const _EarnerTransactionRow({
+    required this.key,
+    required this.title,
+    required this.date,
+    required this.amount,
+    required this.refunded,
+    required this.paid,
+    required this.paymentLabel,
+    this.orderId,
+  });
 
-    if (available != null) {
-      for (var item in available) {
-        availableTotal += (item['amount'] ?? 0) / 100.0; // Convert from cents
-        currency = item['currency'] ?? 'USD';
-      }
-    }
-
-    if (pending != null) {
-      for (var item in pending) {
-        pendingTotal += (item['amount'] ?? 0) / 100.0; // Convert from cents
-      }
-    }
-
-    double totalBalance = availableTotal + pendingTotal;
-    final currencyUpper = currency.toUpperCase();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Balances',
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AppColors.jebbyTextMuted,
-            letterSpacing: 0.2,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Material(
-          color: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.grey.shade200),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildBalanceItem(
-                        'Available',
-                        '\$${availableTotal.toStringAsFixed(2)}',
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _buildBalanceItem(
-                        'Pending',
-                        '\$${pendingTotal.toStringAsFixed(2)}',
-                        subtitle: 'Future payouts',
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildBalanceItem(
-                        'Total',
-                        '\$${totalBalance.toStringAsFixed(2)}',
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _buildBalanceItem('Currency', currencyUpper),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBalanceItem(String label, String amount, {String? subtitle}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8F8FA),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: AppColors.jebbyTextMuted,
-            ),
-          ),
-          if (subtitle != null) ...[
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: GoogleFonts.inter(
-                fontSize: 10,
-                fontWeight: FontWeight.w400,
-                color: AppColors.jebbyTextMuted.withValues(alpha: 0.85),
-              ),
-            ),
-          ],
-          const SizedBox(height: 6),
-          Text(
-            amount,
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: Colors.black,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  final String key;
+  final String title;
+  final DateTime date;
+  final double amount;
+  final bool refunded;
+  final bool paid;
+  final String paymentLabel;
+  final int? orderId;
 }

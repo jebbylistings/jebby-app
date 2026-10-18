@@ -1,13 +1,14 @@
 import 'dart:developer';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:dio/dio.dart' as d;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:jebby/views/widgets/address_autocomplete_field.dart';
+import 'package:jebby/views/widgets/jebby_flow_back_button.dart';
 import 'package:jebby/utils/google_places_address.dart';
 import 'package:jebby/utils/profile_image.dart';
 import 'package:jebby/utils/public_location.dart';
@@ -35,15 +36,17 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   static const Color _cardBorder = Color(0xFFE3E6EC);
-  static const double _coverPreviewHeight = 96;
-  static const double _profileAvatarRadius = 46;
-  /// Cover height plus how far the avatar hangs below the cover bottom.
-  static const double _profilePhotoOverlap = 40;
-  static double get _publicPhotoStackHeight =>
-      _coverPreviewHeight + _profilePhotoOverlap;
+  static const Color _fieldFill = Color(0xFFF5F7FA);
+  static const Color _fieldValueColor = Color(0xFF4B5563);
+  static const Color _fieldMutedColor = Color(0xFF9CA3AF);
+  static const double _fieldFontSize = 15;
+  static const double _coverPreviewHeight = 132;
+  static const double _profileAvatarRadius = 44;
+  static const double _avatarRingWidth = 3.5;
 
   static const double _spaceLabelToField = 6;
   static const double _spaceFieldToHelper = 6;
+  static const double _profileLocationMaxWidth = 300;
 
   File? _image;
   File? _image1;
@@ -126,7 +129,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     profileData(context);
   }
 
-
   void _showAlert(String message) {
     showDialog(
       context: context,
@@ -134,17 +136,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         return AlertDialog(
           title: Text(
             'File Size Exceeded',
-            style: GoogleFonts.inter(fontWeight: FontWeight.w700),
+            style: _nunito(size: 18, weight: FontWeight.w800),
           ),
           content: Text(
             message,
-            style: GoogleFonts.inter(fontWeight: FontWeight.w400),
+            style: _nunito(size: 15, weight: FontWeight.w600, height: 1.35),
           ),
           actions: <Widget>[
             TextButton(
               child: Text(
                 'OK',
-                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                style: _nunito(size: 15, weight: FontWeight.w700),
               ),
               onPressed: () {
                 Navigator.of(context).pop();
@@ -236,21 +238,50 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     });
   }
 
-  InputDecoration get _profileAddressDecoration => InputDecoration(
+  InputDecoration _filledFieldDecoration({
+    String? hintText,
+    Widget? suffixIcon,
+    bool compact = false,
+  }) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: _nunito(
+        size: 15,
+        weight: FontWeight.w600,
+        color: AppColors.jebbyTextMuted,
+      ),
+      isDense: compact,
+      suffixIcon: suffixIcon,
+      suffixIconConstraints: BoxConstraints(
+        minWidth: compact ? 32 : 40,
+        minHeight: compact ? 32 : 40,
+      ),
+      contentPadding: compact
+          ? const EdgeInsets.fromLTRB(16, 12, 4, 12)
+          : const EdgeInsets.fromLTRB(16, 13, 8, 13),
+      filled: true,
+      fillColor: _fieldFill,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.jebbyBlue, width: 1.5),
+      ),
+      disabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+    );
+  }
+
+  InputDecoration get _profileAddressDecoration => _filledFieldDecoration(
         hintText: 'Search for your address',
-        hintStyle: _nunito(size: 15, weight: FontWeight.w600, color: AppColors.jebbyTextMuted),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: _cardBorder),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.jebbyBlue, width: 1.5),
-        ),
       );
 
   TextStyle _nunito({
@@ -282,6 +313,70 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return PublicLocation.cityStateLine(saved) ?? 'Not set';
   }
 
+  String? _publicLocationForHero() {
+    final line = _publicLocationLine();
+    if (line == 'Not set') return null;
+    return line;
+  }
+
+  Widget _heroNameAndPublicLocation() {
+    final name = _nameController.text.trim().isEmpty
+        ? 'Your name'
+        : _nameController.text.trim();
+    final location = _publicLocationForHero();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          name,
+          textAlign: TextAlign.center,
+          style: _nunito(size: 22, weight: FontWeight.w800, height: 1.15),
+        ),
+        if (location != null && location.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: math.min(
+                  _profileLocationMaxWidth,
+                  MediaQuery.sizeOf(context).width - 40,
+                ),
+              ),
+              child: Text.rich(
+                TextSpan(
+                  style: _nunito(
+                    size: 14,
+                    weight: FontWeight.w500,
+                    color: AppColors.jebbyTextMuted,
+                    height: 1.35,
+                  ),
+                  children: [
+                    const WidgetSpan(
+                      alignment: PlaceholderAlignment.middle,
+                      child: Padding(
+                        padding: EdgeInsets.only(right: 4),
+                        child: Icon(
+                          Icons.location_on_outlined,
+                          size: 17,
+                          color: AppColors.jebbyBlue,
+                        ),
+                      ),
+                    ),
+                    TextSpan(text: location),
+                  ],
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   String _savedAddressDisplay() {
     final text = _locationController.text.trim();
     if (text.isEmpty) return 'No address saved';
@@ -289,59 +384,57 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Widget _pageHeader() {
+    final titleBlock = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'Edit Profile',
+          style: _nunito(size: 22, weight: FontWeight.w800, height: 1.15),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Update photos and default address.',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: _nunito(
+            size: 14,
+            weight: FontWeight.w600,
+            color: AppColors.jebbyTextMuted,
+            height: 1.35,
+          ),
+        ),
+      ],
+    );
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Material(
-          color: AppColors.jebbySoftBlue,
-          shape: const CircleBorder(),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: () => Get.back(),
-            splashColor: AppColors.jebbyBlue.withValues(alpha: 0.12),
-            highlightColor: AppColors.jebbyBlue.withValues(alpha: 0.06),
-            child: SizedBox(
-              width: 40,
-              height: 40,
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 2),
-                  child: Icon(
-                    Icons.arrow_back_ios_new,
-                    size: 18,
-                    color: AppColors.jebbyTextPrimary,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
+        JebbyFlowBackButton(onTap: () => Get.back()),
         const SizedBox(width: 12),
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Edit profile',
-                  style: _nunito(size: 24, weight: FontWeight.w800, height: 1.1),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Update your photos, name, and default listing address.',
-                  style: _helperTextStyle,
-                ),
-              ],
-            ),
+            padding: const EdgeInsets.only(top: 2, bottom: 8),
+            child: titleBlock,
           ),
         ),
       ],
     );
   }
 
-  Widget _sectionTitle(String title) {
-    return Text(title, style: _nunito(size: 17, weight: FontWeight.w800));
+  Widget _profileCard({required List<Widget> children}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _cardBorder),
+      ),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      ),
+    );
   }
 
   Widget _fieldLabel(String text) {
@@ -350,39 +443,105 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       style: _nunito(
         size: 14,
         weight: FontWeight.w700,
-        color: AppColors.jebbyTextMuted,
+        color: AppColors.jebbyTextPrimary,
+      ),
+    );
+  }
+
+  TextStyle _fieldValueTextStyle({bool muted = false, int maxLines = 1}) {
+    return _nunito(
+      size: _fieldFontSize,
+      weight: FontWeight.w500,
+      color: muted ? _fieldMutedColor : _fieldValueColor,
+      height: maxLines > 1 ? 1.35 : 1.25,
+    );
+  }
+
+  Widget _readOnlyFieldBox({
+    required String value,
+    int maxLines = 1,
+    bool muted = true,
+    bool compact = false,
+    Widget? trailing,
+    VoidCallback? onTap,
+  }) {
+    final verticalPad = compact
+        ? 12.0
+        : (maxLines > 1 ? 12.0 : 13.0);
+    final box = Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(
+        16,
+        verticalPad,
+        trailing != null ? 4 : 16,
+        verticalPad,
+      ),
+      decoration: BoxDecoration(
+        color: _fieldFill,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: maxLines > 1
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Text(
+              value,
+              maxLines: maxLines,
+              overflow: TextOverflow.ellipsis,
+              style: _fieldValueTextStyle(muted: muted, maxLines: maxLines),
+            ),
+          ),
+          if (trailing != null) trailing,
+        ],
+      ),
+    );
+
+    if (onTap == null) return box;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: box,
       ),
     );
   }
 
   TextStyle get _helperTextStyle => _nunito(
-        size: 13,
+        size: 12,
+        weight: FontWeight.w600,
+        color: _fieldMutedColor,
+        height: 1.4,
+      );
+
+  TextStyle get _privateSectionSubtitleStyle => _nunito(
+        size: 14,
         weight: FontWeight.w600,
         color: AppColors.jebbyTextMuted,
         height: 1.35,
       );
 
-  Widget _photoCameraButton({
-    required VoidCallback onTap,
-    double size = 36,
-  }) {
+  Widget _coverPhotoCameraButton({required VoidCallback onTap}) {
     return Material(
       color: Colors.white,
-      elevation: 2,
+      elevation: 3,
       shadowColor: Colors.black26,
       shape: const CircleBorder(),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onTap,
-        splashColor: AppColors.jebbyBlue.withValues(alpha: 0.18),
-        highlightColor: AppColors.jebbyBlue.withValues(alpha: 0.08),
-        child: SizedBox(
-          width: size,
-          height: size,
+        splashColor: AppColors.jebbyBlue.withValues(alpha: 0.12),
+        highlightColor: AppColors.jebbyBlue.withValues(alpha: 0.06),
+        child: const SizedBox(
+          width: 36,
+          height: 36,
           child: Icon(
-            Icons.photo_camera_outlined,
-            size: size * 0.48,
+            Icons.photo_camera,
+            size: 18,
             color: AppColors.jebbyBlue,
           ),
         ),
@@ -390,68 +549,99 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _profilePhotoWithCamera() {
-    return Center(
-      child: SizedBox(
-        width: (_profileAvatarRadius + 3) * 2 + 8,
-        height: (_profileAvatarRadius + 3) * 2 + 8,
-        child: Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.center,
-          children: [
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: getGalleryImage1,
-              child: _profileAvatar(),
+  Widget _profilePhotoCameraButton({required VoidCallback onTap}) {
+    return Material(
+      color: AppColors.jebbyBlue,
+      elevation: 3,
+      shadowColor: Colors.black26,
+      shape: const CircleBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        splashColor: Colors.white24,
+        highlightColor: Colors.white12,
+        child: const SizedBox(
+          width: 32,
+          height: 32,
+          child: Center(
+            child: Icon(
+              Icons.photo_camera,
+              size: 15,
+              color: Colors.white,
             ),
-            Positioned(
-              right: -2,
-              bottom: -2,
-              child: _photoCameraButton(
-                onTap: getGalleryImage1,
-                size: 36,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _profileAvatar({double radius = _profileAvatarRadius}) {
+  void _pickProfilePhoto() {
+    getGalleryImage1();
+  }
+
+  Widget _editProfileAvatarRing() {
+    final r = _profileAvatarRadius;
     return Container(
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
+      width: (r + _avatarRingWidth) * 2,
+      height: (r + _avatarRingWidth) * 2,
+      decoration: const BoxDecoration(
         shape: BoxShape.circle,
-        gradient: LinearGradient(
-          colors: [AppColors.jebbySoftBlue, AppColors.jebbyBlue],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        color: AppColors.jebbyBlue,
+      ),
+      padding: const EdgeInsets.all(_avatarRingWidth),
+      child: ClipOval(
+        child: SizedBox(
+          width: r * 2,
+          height: r * 2,
+          child: _image1 != null
+              ? Image.file(_image1!, fit: BoxFit.cover)
+              : ProfileImage.circularAvatar(
+                  radius: r,
+                  baseUrl: AppUrl.baseUrlM,
+                  imagePath: imagesapi,
+                ),
         ),
       ),
-      child: _image1 != null
-          ? CircleAvatar(
-              radius: radius,
-              backgroundColor: Colors.white,
-              backgroundImage: FileImage(_image1!),
-            )
-          : ProfileImage.circularAvatar(
-              radius: radius,
-              baseUrl: AppUrl.baseUrlM,
-              imagePath: imagesapi,
-            ),
+    );
+  }
+
+  Widget _profilePhotoWithCamera() {
+    final outer = (_profileAvatarRadius + _avatarRingWidth) * 2;
+    return SizedBox(
+      width: outer + 6,
+      height: outer + 6,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
+        children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _pickProfilePhoto,
+            child: _editProfileAvatarRing(),
+          ),
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: _profilePhotoCameraButton(onTap: _pickProfilePhoto),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _publicPhotoSection() {
+    final avatarHang = _profileAvatarRadius + _avatarRingWidth;
+    final heroHeight = _coverPreviewHeight + avatarHang + 12;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SizedBox(
-          height: _publicPhotoStackHeight,
+          height: heroHeight,
+          width: double.infinity,
           child: Stack(
             clipBehavior: Clip.none,
-            alignment: Alignment.topCenter,
             children: [
               Positioned(
                 top: 0,
@@ -459,68 +649,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 right: 0,
                 height: _coverPreviewHeight,
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(20),
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
                       _coverPreview(),
                       Positioned(
-                        top: 10,
-                        right: 10,
-                        child: _photoCameraButton(onTap: getGalleryImage),
+                        right: 12,
+                        bottom: 12,
+                        child: _coverPhotoCameraButton(onTap: getGalleryImage),
                       ),
                     ],
                   ),
                 ),
               ),
               Positioned(
+                top: _coverPreviewHeight - avatarHang,
                 left: 0,
                 right: 0,
-                bottom: 0,
-                child: _profilePhotoWithCamera(),
+                child: Center(child: _profilePhotoWithCamera()),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Cover photo',
-                    style: _nunito(size: 14, weight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Shown at the top of your earner profile.',
-                    style: _helperTextStyle,
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    'Profile photo',
-                    style: _nunito(size: 14, weight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Renters see this on your profile and listings.',
-                    textAlign: TextAlign.center,
-                    style: _helperTextStyle,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+        const SizedBox(height: 6),
+        _heroNameAndPublicLocation(),
       ],
     );
   }
@@ -551,125 +704,64 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _nameField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _fieldLabel('Name'),
-        SizedBox(height: _spaceLabelToField),
-        TextField(
-          controller: _nameController,
-          style: _nunito(size: 16, weight: FontWeight.w600),
-          decoration: InputDecoration(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: _cardBorder),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppColors.jebbyBlue, width: 1.5),
-            ),
-          ),
-        ),
-        SizedBox(height: _spaceFieldToHelper),
-        Text(
-          'Public location: ${_publicLocationLine()}',
-          style: _helperTextStyle,
-        ),
-      ],
-    );
-  }
+  Widget _privateDetailsCard() {
+    final email = _emailController.text.trim().isEmpty
+        ? 'No email saved'
+        : _emailController.text.trim();
 
-  Widget _privateDetailsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return _profileCard(
       children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.lock_outline, size: 17, color: AppColors.jebbyTextMuted),
-            const SizedBox(width: 8),
-            Text('Private details', style: _nunito(size: 17, weight: FontWeight.w800)),
+            Container(
+              width: 46,
+              height: 46,
+              decoration: const BoxDecoration(
+                color: AppColors.jebbySoftBlue,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.lock_outline,
+                size: 22,
+                color: AppColors.jebbyBlue,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Private details',
+                    style: _nunito(size: 19, weight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Your email and street address aren\'t shown on your profile.',
+                    style: _privateSectionSubtitleStyle,
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
+        const SizedBox(height: 18),
+        _fieldLabel('Email'),
         SizedBox(height: _spaceLabelToField),
-        Text(
-          'Your email and street address aren\'t shown on your profile.',
-          style: _helperTextStyle,
-        ),
-        const SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.jebbySoftBlue,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: AppColors.jebbyBlue.withValues(alpha: 0.12),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: _privateDetailRow(
-                  label: 'Email',
-                  value: _emailController.text.trim().isEmpty
-                      ? 'No email saved'
-                      : _emailController.text.trim(),
-                ),
-              ),
-              Divider(
-                height: 1,
-                thickness: 1,
-                color: AppColors.jebbyBlue.withValues(alpha: 0.14),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _fieldLabel('Saved address'),
-                        SizedBox(height: _spaceLabelToField),
-                        Padding(
-                          padding: const EdgeInsets.only(right: 36),
-                          child: Text(
-                            _savedAddressDisplay(),
-                            style: _nunito(
-                              size: 16,
-                              weight: FontWeight.w700,
-                              height: 1.35,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: _editIconButton(
-                        onTap: () =>
-                            setState(() => _editingAddress = !_editingAddress),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (_editingAddress) ...[
-          SizedBox(height: _spaceLabelToField),
+        _readOnlyFieldBox(value: email, muted: true),
+        const SizedBox(height: 18),
+        _fieldLabel('Saved Address'),
+        SizedBox(height: _spaceLabelToField),
+        if (_editingAddress)
           AddressAutocompleteField(
             controller: _locationController,
             resolvedAddress: _resolvedAddress,
             onEditingStarted: _clearResolvedAddress,
-            onAddressSelected: _applySelectedAddress,
+            onAddressSelected: (address) async {
+              await _applySelectedAddress(address);
+              if (mounted) setState(() => _editingAddress = false);
+            },
             hint: 'Search for your address',
             decoration: _profileAddressDecoration,
             enableMapPicker: true,
@@ -677,8 +769,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 double.tryParse(Latitiude?.toString() ?? ''),
             mapPickerInitialLongitude:
                 double.tryParse(Longitude?.toString() ?? ''),
+          )
+        else
+          _readOnlyFieldBox(
+            value: _savedAddressDisplay(),
+            maxLines: 2,
+            muted: false,
+            onTap: () => setState(() => _editingAddress = true),
+            trailing: _fieldEditIcon(
+              onTap: () => setState(() => _editingAddress = true),
+            ),
           ),
-        ],
         SizedBox(height: _spaceFieldToHelper),
         Text(
           'Default for new listings. Existing pickup locations stay the same.',
@@ -688,43 +789,38 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _editIconButton({required VoidCallback onTap}) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(6),
-          child: Icon(
-            Icons.edit_outlined,
-            size: 20,
-            color: AppColors.jebbyBlue,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _privateDetailRow({
-    required String label,
-    required String value,
-    bool multiline = false,
+  Widget _fieldEditIcon({
+    required VoidCallback onTap,
+    bool compact = false,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _fieldLabel(label),
-        SizedBox(height: _spaceLabelToField),
-        Text(
-          value,
-          style: _nunito(
-            size: 16,
-            weight: FontWeight.w700,
-            height: multiline ? 1.35 : null,
+    if (compact) {
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            child: Icon(
+              Icons.edit_outlined,
+              size: 18,
+              color: AppColors.jebbyBlue,
+            ),
           ),
         ),
-      ],
+      );
+    }
+
+    return IconButton(
+      onPressed: onTap,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+      splashRadius: 18,
+      icon: const Icon(
+        Icons.edit_outlined,
+        size: 18,
+        color: AppColors.jebbyBlue,
+      ),
     );
   }
 
@@ -1054,64 +1150,62 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey.shade100,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
               child: _pageHeader(),
             ),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _sectionTitle('Public profile'),
-                    const SizedBox(height: 8),
                     _publicPhotoSection(),
-                    const SizedBox(height: 12),
-                    _nameField(),
                     const SizedBox(height: 20),
-                    _privateDetailsSection(),
-                    const SizedBox(height: 28),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: FilledButton(
-                        onPressed: _isSaving ? null : _saveProfile,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.jebbyBlue,
-                          disabledBackgroundColor:
-                              AppColors.jebbyBlue.withValues(alpha: 0.6),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                    _privateDetailsCard(),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+              child: SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: FilledButton(
+                  onPressed: _isSaving ? null : _saveProfile,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.jebbyBlue,
+                    disabledBackgroundColor:
+                        AppColors.jebbyBlue.withValues(alpha: 0.6),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          'Save changes',
+                          style: _nunito(
+                            size: 17,
+                            weight: FontWeight.w800,
+                            color: Colors.white,
                           ),
                         ),
-                        child: _isSaving
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Text(
-                                'Save changes',
-                                style: _nunito(
-                                  size: 17,
-                                  weight: FontWeight.w800,
-                                  color: Colors.white,
-                                ),
-                              ),
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ),
@@ -1152,6 +1246,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             longitude: double.tryParse(Longitude?.toString() ?? ''),
           );
         }
+        _editingAddress = false;
       });
     }
 

@@ -40,6 +40,7 @@ class AppUrl {
       '$baseUrlM/getAllNotificationsForApp/';
   static String get getReviewsByProductId => '$baseUrlM/getReviewsByProductId/';
   static String get getAllReviewsByVendorId => '$baseUrlM/getReviewsByVendorId/';
+  static String get getReviewsByUserId => '$baseUrlM/getReviewsByUserId/';
   static String get getVendorProductsByReviews =>
       '$baseUrlM/getProductsByReviews/';
   static String get deleteNotification => '$baseUrlM/deleteNotification';

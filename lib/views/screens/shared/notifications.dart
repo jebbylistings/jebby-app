@@ -372,9 +372,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 Text(
                   'Notifications',
                   style: _nunito(
-                    size: 28,
+                    size: 22,
                     weight: FontWeight.w800,
-                    height: 1.1,
+                    height: 1.15,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -383,10 +383,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       ? 'Keep your business moving.'
                       : 'Stay on top of what matters.',
                   style: _nunito(
-                    size: 15,
+                    size: 14,
                     weight: FontWeight.w600,
                     color: AppColors.jebbyTextMuted,
-                    height: 1.2,
+                    height: 1.35,
                   ),
                 ),
               ],

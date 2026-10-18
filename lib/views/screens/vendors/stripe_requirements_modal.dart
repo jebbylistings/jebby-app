@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:jebby/views/screens/onboarding/onboarding_kit.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:jebby/views/screens/onboarding/onboarding_form_widgets.dart';
@@ -504,10 +505,10 @@ class _StripeRequirementsModalState extends State<StripeRequirementsModal> {
                     Expanded(
                       child: Text(
                         'Required information',
-                        style: GoogleFonts.inter(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black,
+                        style: onboardingNunito(
+                          size: 22,
+                          weight: FontWeight.w800,
+                          height: 1.15,
                         ),
                       ),
                     ),

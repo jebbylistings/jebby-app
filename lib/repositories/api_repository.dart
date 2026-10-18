@@ -1153,6 +1153,35 @@ class ApiRepository extends ChangeNotifier {
     return GetAllReviewsByVendorId();
   }
 
+  Future<GetAllReviewsByVendorId> reviewsByUserId(
+    String id,
+    onResponse(GetAllReviewsByVendorId List),
+    onError(error),
+  ) async {
+    final response = await http.get(
+      Uri.parse(AppUrl.getReviewsByUserId + id),
+      headers: await ApiHeaders.json(),
+    );
+    if (response.statusCode == 200) {
+      try {
+        var data = GetAllReviewsByVendorId.fromJson(jsonDecode(response.body));
+
+        getAllReviewsByVendorId(data);
+        onResponse(data);
+
+        return data;
+      } catch (error) {
+        onError(error.toString());
+      }
+    } else if (response.statusCode == 400) {
+      onError("You are not in Range");
+    } else if (response.statusCode == 500) {
+      onError("Internal Server Error");
+    }
+
+    return GetAllReviewsByVendorId();
+  }
+
   Future<GetVendorProductsByReveiwsModel> reviewsByVenodorProduct(
     String id,
     onResponse(GetVendorProductsByReveiwsModel List),

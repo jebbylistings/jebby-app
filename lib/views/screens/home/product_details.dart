@@ -282,6 +282,38 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   String _formatApiDate(DateTime? d) =>
       d == null ? '' : DateFormat('yyyy-MM-dd').format(d);
 
+  String _chatListingSummary() {
+    final fromApi = _descriptionFromApi.trim();
+    if (fromApi.isNotEmpty) {
+      final firstLine = fromApi.split(RegExp(r'\r?\n')).first.trim();
+      if (firstLine.length <= 72) return firstLine;
+      return '${firstLine.substring(0, 69)}…';
+    }
+    final legacy = widget.desc?.toString().trim() ?? '';
+    return legacy;
+  }
+
+  String _chatLocationLine() {
+    final city = _listingLocationLabel().trim();
+    if (city.isEmpty) return '';
+    if (_offersPickup) return '$city · Available for pickup today';
+    if (_offersDelivery) return '$city · Delivery available';
+    return city;
+  }
+
+  ProductChatContext _productChatContext() {
+    return ProductChatContext(
+      productId: widget.id.toString(),
+      name: widget.name.toString(),
+      price: widget.price.toString(),
+      image: widget.image.toString(),
+      vendorUserId: widget.userID.toString(),
+      recipientId: widget.userID.toString(),
+      description: _chatListingSummary(),
+      locationLine: _chatLocationLine(),
+    );
+  }
+
   String _listingLocationLabel() {
     if (_listingAddress.isNotEmpty) {
       return PublicLocation.cityStateLine(_listingAddress) ?? _listingAddress;
@@ -1004,7 +1036,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               );
                             },
                             child: Text(
-                              'Read More',
+                              'View More',
                               style: GoogleFonts.inter(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 14,
@@ -1505,14 +1537,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     onTap: () => Get.to(
                       () => Chat(
                         widget.userID,
-                        productContext: ProductChatContext(
-                          productId: widget.id.toString(),
-                          name: widget.name.toString(),
-                          price: widget.price.toString(),
-                          image: widget.image.toString(),
-                          vendorUserId: widget.userID.toString(),
-                          recipientId: widget.userID.toString(),
-                        ),
+                        productContext: _productChatContext(),
                       ),
                     ),
                     child: const Padding(

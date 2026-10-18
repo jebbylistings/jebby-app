@@ -4,8 +4,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:jebby/views/widgets/jebby_flow_back_button.dart';
 
 import '../../../services/provider/sign_in_provider.dart';
 import '../../../models/get_all_messages_model.dart' as msg_model;
@@ -14,9 +15,35 @@ import '../../../models/user_model.dart';
 import '../../../constants/app_url.dart';
 import '../../../constants/color.dart';
 import '../../../utils/api_datetime.dart';
+import '../../../utils/order_status.dart';
+import '../../../utils/public_location.dart';
+import '../../../utils/rental_date.dart';
 import 'package:jebby/repositories/api_repository.dart';
 import '../../../view_models/user_view_model.dart';
 import 'package:jebby/views/screens/home/product_details.dart' deferred as product_detail;
+import 'package:jebby/views/screens/reservations/rental_request_review.dart';
+import 'package:jebby/views/screens/reservations/reservation_detail.dart';
+
+const _chatThreadDivider = Color(0xFFE3E6EC);
+const _chatIncomingBubble = Colors.white;
+const _chatComposerFieldBg = Color(0xFFF1F5F9);
+const _threadListingCardBg = Color(0xFFE7EFFB);
+const _badgePendingBg = AppColors.primaryColorLight;
+const _badgePendingFg = AppColors.jebbyAccentOrange;
+
+class _ThreadOrderSnapshot {
+  const _ThreadOrderSnapshot({
+    required this.orderId,
+    required this.rentalStartDate,
+    required this.rentalEndDate,
+    required this.orderStatus,
+  });
+
+  final int orderId;
+  final String rentalStartDate;
+  final String rentalEndDate;
+  final String orderStatus;
+}
 
 class Chat extends StatefulWidget {
   const Chat(this.targetID, {super.key, this.productContext});
@@ -43,6 +70,7 @@ class _ChatState extends State<Chat> {
 
   String _peerDisplayName = '';
   String _targetImage = '';
+  String _peerAddress = '';
 
   bool isLoading = true;
   bool isError = false;
@@ -52,6 +80,11 @@ class _ChatState extends State<Chat> {
   String? _lastMessagesFingerprint;
 
   bool _productContextSent = false;
+
+  ProductChatContext? _displayProductContext;
+  String? _enrichingProductId;
+  _ThreadOrderSnapshot? _threadOrder;
+  String? _fetchingThreadOrderKey;
 
   Future<void> getData() async {
     final sp = context.read<SignInProvider>();
@@ -71,7 +104,10 @@ class _ChatState extends State<Chat> {
           phoneNumber = value.phoneNumber.toString();
           email = value.email.toString();
           role = value.role.toString();
-          if (mounted) setState(() {});
+          if (mounted) {
+            setState(() {});
+            _maybeFetchThreadOrder(_displayProductContext);
+          }
           getUserData();
           getMessageApi();
         })
@@ -96,6 +132,7 @@ class _ChatState extends State<Chat> {
             isEmpty = true;
             isError = false;
           });
+          _updateDisplayProductContext(const []);
           if (changed) {
             _lastMessagesFingerprint = newFp;
             _scheduleScrollToBottom();
@@ -107,6 +144,7 @@ class _ChatState extends State<Chat> {
             isError = false;
             isEmpty = false;
           });
+          _updateDisplayProductContext(res.data!);
           if (changed) {
             _lastMessagesFingerprint = newFp;
             _scheduleScrollToBottom();
@@ -181,6 +219,7 @@ class _ChatState extends State<Chat> {
           setState(() {
             _peerDisplayName = 'Chat';
             _targetImage = '';
+            _peerAddress = '';
           });
         } else {
           final row = List.data![0];
@@ -190,6 +229,7 @@ class _ChatState extends State<Chat> {
                     ? 'Chat'
                     : (row.name ?? '').toString().trim();
             _targetImage = (row.profileImage ?? '').toString();
+            _peerAddress = (row.address ?? '').toString().trim();
           });
         }
       },
@@ -216,6 +256,10 @@ class _ChatState extends State<Chat> {
     profileData(context);
     getTargetData();
     _startPoll();
+    if (widget.productContext != null) {
+      _displayProductContext = widget.productContext;
+      _updateDisplayProductContext(const []);
+    }
   }
 
   @override
@@ -226,7 +270,20 @@ class _ChatState extends State<Chat> {
     super.dispose();
   }
 
-  static const Color _pageBg = Color(0xFFF5F5F5);
+  TextStyle _nunito({
+    double size = 15,
+    FontWeight weight = FontWeight.w600,
+    Color color = AppColors.jebbyTextPrimary,
+    double height = 1.35,
+  }) {
+    return TextStyle(
+      fontFamily: 'Nunito',
+      fontSize: size,
+      fontWeight: weight,
+      color: color,
+      height: height,
+    );
+  }
 
   String _firstName(String? full) {
     if (full == null || full.trim().isEmpty) return 'You';
@@ -265,11 +322,295 @@ class _ChatState extends State<Chat> {
     return '${sorted.length}_${last.id}_${last.createdAt}_${last.content}';
   }
 
-  /// With [reverse: true], offset 0 is the visual bottom (newest).
+  ProductChatContext? _mergedProductContextFromMessages(
+    List<msg_model.Data> msgs,
+  ) {
+    ProductChatContext? merged = widget.productContext;
+    for (final m in msgs) {
+      final ctx = ProductChatContext.tryParsePayload(m.content);
+      if (ctx == null) continue;
+      merged =
+          merged == null
+              ? ctx
+              : ProductChatContext.mergePreferFilled(merged, ctx);
+    }
+    return merged;
+  }
+
+  void _updateDisplayProductContext(List<msg_model.Data> msgs) {
+    final base = _mergedProductContextFromMessages(msgs);
+    if (base == null) {
+      if (_displayProductContext != null) {
+        setState(() => _displayProductContext = null);
+      }
+      return;
+    }
+
+    final needsDescription = base.description.trim().isEmpty;
+    final needsLocation = base.locationLine.trim().isEmpty;
+    if (needsDescription || needsLocation) {
+      _fetchProductEnrichment(base);
+      return;
+    }
+
+    if (_displayProductContext != base) {
+      setState(() => _displayProductContext = base);
+    }
+    _maybeFetchThreadOrder(base);
+  }
+
+  _ThreadOrderSnapshot? _orderFromProductContext(ProductChatContext ctx) {
+    final id = int.tryParse(ctx.orderId.trim());
+    if (id == null) return null;
+    return _ThreadOrderSnapshot(
+      orderId: id,
+      rentalStartDate: ctx.rentalStartDate.trim(),
+      rentalEndDate: ctx.rentalEndDate.trim(),
+      orderStatus: OrderStatus.normalize(ctx.orderStatus),
+    );
+  }
+
+  void _maybeFetchThreadOrder(ProductChatContext? ctx) {
+    if (ctx == null || sourceId.isEmpty) return;
+    final fromCtx = _orderFromProductContext(ctx);
+    if (fromCtx != null) {
+      if (_threadOrder?.orderId != fromCtx.orderId) {
+        setState(() => _threadOrder = fromCtx);
+      }
+      return;
+    }
+
+    final productId = int.tryParse(ctx.productId.trim());
+    final peerId = widget.targetID.toString().trim();
+    if (productId == null || peerId.isEmpty) return;
+
+    final key = '${ctx.productId}_$peerId';
+    if (_fetchingThreadOrderKey == key) return;
+    _fetchingThreadOrderKey = key;
+
+    final amVendor = ctx.vendorUserId.trim() == sourceId.trim();
+    if (amVendor) {
+      ApiRepository.shared.getVenodorOrders(
+        sourceId,
+        (res) {
+          _fetchingThreadOrderKey = null;
+          if (!mounted) return;
+          final snap = _pickThreadOrder(
+            orders: res.data ?? [],
+            productId: productId,
+            peerUserId: peerId,
+            amVendor: true,
+          );
+          if (snap != null) setState(() => _threadOrder = snap);
+        },
+        (_) {
+          _fetchingThreadOrderKey = null;
+        },
+        updateCache: false,
+      );
+    } else {
+      ApiRepository.shared.getAllOrdersByUserId(
+        sourceId,
+        (res) {
+          _fetchingThreadOrderKey = null;
+          if (!mounted) return;
+          final snap = _pickThreadOrder(
+            orders: res.data ?? [],
+            productId: productId,
+            peerUserId: peerId,
+            amVendor: false,
+          );
+          if (snap != null) setState(() => _threadOrder = snap);
+        },
+        (_) {
+          _fetchingThreadOrderKey = null;
+        },
+      );
+    }
+  }
+
+  _ThreadOrderSnapshot? _pickThreadOrder({
+    required List<dynamic> orders,
+    required int productId,
+    required String peerUserId,
+    required bool amVendor,
+  }) {
+    final matches = <dynamic>[];
+    for (final o in orders) {
+      if (o.productId != productId) continue;
+      if (amVendor) {
+        if (o.userId?.toString() != peerUserId) continue;
+      } else {
+        if (o.vendorId?.toString() != peerUserId) continue;
+      }
+      matches.add(o);
+    }
+    if (matches.isEmpty) return null;
+
+    int score(dynamic o) {
+      final status = OrderStatus.normalize(o.orderStatus?.toString());
+      if (OrderStatus.isNewBooking(status)) return 0;
+      if (OrderStatus.isPending(status)) return 1;
+      if (OrderStatus.isCompleted(status)) return 3;
+      return 2;
+    }
+
+    matches.sort((a, b) {
+      final sa = score(a);
+      final sb = score(b);
+      if (sa != sb) return sa.compareTo(sb);
+      final ca = parseApiDateTime(a.createdAt?.toString()) ?? DateTime(1970);
+      final cb = parseApiDateTime(b.createdAt?.toString()) ?? DateTime(1970);
+      return cb.compareTo(ca);
+    });
+
+    final best = matches.first;
+    final id = best.id;
+    if (id == null) return null;
+    final orderId = id is int ? id : int.tryParse(id.toString());
+    if (orderId == null || orderId <= 0) return null;
+    return _ThreadOrderSnapshot(
+      orderId: orderId,
+      rentalStartDate: (best.rentalStartDate ?? '').toString(),
+      rentalEndDate: (best.rentalEndDate ?? '').toString(),
+      orderStatus: OrderStatus.normalize(best.orderStatus?.toString()),
+    );
+  }
+
+  void _fetchProductEnrichment(ProductChatContext base) {
+    final id = base.productId.trim();
+    if (id.isEmpty || _enrichingProductId == id) return;
+    _enrichingProductId = id;
+
+    ApiRepository.shared.getProductsById(
+      (list) {
+        _enrichingProductId = null;
+        if (!mounted) return;
+
+        var enriched = base;
+        if (list.data != null && list.data!.isNotEmpty) {
+          final p = list.data!.first;
+          final summary = ProductChatContext.summaryFromDescription(
+            p.description?.toString(),
+          );
+          final city =
+              PublicLocation.cityStateLine(p.address?.toString()) ?? '';
+          var locationLine = base.locationLine.trim();
+          if (locationLine.isEmpty && city.isNotEmpty) {
+            locationLine =
+                p.hasPickup
+                    ? '$city · Available for pickup today'
+                    : city;
+          }
+
+          String firstImage = base.image.trim();
+          if (firstImage.isEmpty &&
+              p.images != null &&
+              p.images!.isNotEmpty) {
+            firstImage = (p.images!.first.path ?? '').toString();
+          }
+
+          enriched = ProductChatContext(
+            productId: base.productId,
+            name:
+                base.name.trim().isNotEmpty
+                    ? base.name
+                    : (p.name ?? '').toString(),
+            price:
+                base.price.trim().isNotEmpty
+                    ? base.price
+                    : (p.price ?? '').toString(),
+            image: firstImage,
+            vendorUserId: base.vendorUserId,
+            recipientId: base.recipientId,
+            description:
+                base.description.trim().isNotEmpty ? base.description : summary,
+            locationLine: locationLine,
+            orderId: base.orderId,
+            rentalStartDate: base.rentalStartDate,
+            rentalEndDate: base.rentalEndDate,
+            orderStatus: base.orderStatus,
+          );
+        }
+
+        setState(() => _displayProductContext = enriched);
+        _maybeFetchThreadOrder(enriched);
+      },
+      (_) {
+        _enrichingProductId = null;
+        if (mounted) setState(() => _displayProductContext = base);
+      },
+      id,
+    );
+  }
+
+  List<msg_model.Data> _textMessages(List<msg_model.Data> msgs) {
+    return msgs
+        .where((m) => ProductChatContext.tryParsePayload(m.content) == null)
+        .toList();
+  }
+
+  String _peerSubtitle(ProductChatContext? productCtx) {
+    if (productCtx != null && sourceId.isNotEmpty) {
+      final amVendor =
+          productCtx.vendorUserId.trim() == sourceId.trim();
+      return amVendor ? 'Renter' : 'Earner';
+    }
+    return '';
+  }
+
+  bool _isMessageReadByRecipient(msg_model.Data m) {
+    if (m.senderId.toString() != sourceId.toString()) return false;
+    return m.isShow == 1;
+  }
+
+  String _formatDateSeparator(DateTime dt) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(dt.year, dt.month, dt.day);
+    final dayLabel =
+        day == today
+            ? 'Today'
+            : day == today.subtract(const Duration(days: 1))
+            ? 'Yesterday'
+            : DateFormat('EEE').format(dt);
+    return '$dayLabel · ${DateFormat('MMM d').format(dt)}';
+  }
+
+  List<_ChatThreadItem> _buildThreadItems(List<msg_model.Data> msgs) {
+    final textMsgs = _textMessages(msgs);
+    if (textMsgs.isEmpty) return const [];
+
+    final items = <_ChatThreadItem>[];
+    DateTime? lastDay;
+
+    for (var i = 0; i < textMsgs.length; i++) {
+      final m = textMsgs[i];
+      final dt = parseApiDateTime(m.createdAt);
+      if (dt != null) {
+        final day = DateTime(dt.year, dt.month, dt.day);
+        if (lastDay == null || day != lastDay) {
+          items.add(_ChatThreadItem.date(_formatDateSeparator(dt)));
+          lastDay = day;
+        }
+      }
+      final isMe = m.senderId.toString() == sourceId.toString();
+      items.add(
+        _ChatThreadItem.message(
+          m,
+          isMe: isMe,
+          showRead: _isMessageReadByRecipient(m),
+        ),
+      );
+    }
+    return items;
+  }
+
   void _scrollToBottom() {
     if (!mounted) return;
     if (!_scrollController.hasClients) return;
-    _scrollController.jumpTo(0);
+    final max = _scrollController.position.maxScrollExtent;
+    _scrollController.jumpTo(max);
   }
 
   void _scheduleScrollToBottom() {
@@ -281,120 +622,91 @@ class _ChatState extends State<Chat> {
   @override
   Widget build(BuildContext context) {
     final msgs = _messagesChronological();
+    final productCtx =
+        _displayProductContext ?? _mergedProductContextFromMessages(msgs);
+    final threadItems = _buildThreadItems(msgs);
+    final peerName =
+        _peerDisplayName.isEmpty ? 'Chat' : _peerDisplayName;
 
     return Scaffold(
-      backgroundColor: _pageBg,
+      backgroundColor: AppColors.jebbyBackground,
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        titleSpacing: 4,
-        foregroundColor: Colors.black,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-          onPressed: () => Get.back(),
-          style: IconButton.styleFrom(foregroundColor: Colors.black),
-        ),
-        title: Row(
-          children: [
-            if (!isLoading) ...[
-              _HeaderAvatar(imageUrl: _avatarUrl(_targetImage)),
-              const SizedBox(width: 10),
-            ],
-            Expanded(
-              child: Text(
-                _peerDisplayName.isEmpty ? 'Chat' : _peerDisplayName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.inter(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black,
-                ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _ChatThreadHeader(
+            displayName: peerName,
+            subtitle: _peerSubtitle(productCtx),
+            imageUrl: _avatarUrl(_targetImage),
+            showAvatar: !isLoading,
+            onBack: () => Get.back(),
+          ),
+          if (productCtx != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: _ThreadListingCard(
+                product: productCtx,
+                order: _threadOrder ?? _orderFromProductContext(productCtx),
+                isVendorTab: productCtx.vendorUserId.trim() == sourceId.trim(),
               ),
             ),
-          ],
-        ),
-      ),
-      body: Column(
-        children: [
           Expanded(
             child:
                 isLoading
                     ? Center(
                       child: Text(
                         'Loading…',
-                        style: GoogleFonts.inter(color: Colors.black54),
+                        style: _nunito(
+                          color: AppColors.jebbyTextMuted,
+                        ),
                       ),
                     )
                     : isError
                     ? Center(
                       child: Text(
                         'Could not load messages',
-                        style: GoogleFonts.inter(color: Colors.black54),
+                        style: _nunito(
+                          color: AppColors.jebbyTextMuted,
+                        ),
                       ),
                     )
-                    : isEmpty || msgs.isEmpty
-                    ? _EmptyThreadBody(productContext: widget.productContext)
+                    : threadItems.isEmpty && productCtx == null
+                    ? _EmptyThreadBody()
                     : ListView.builder(
                       controller: _scrollController,
-                      reverse: true,
-                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
-                      itemCount: msgs.length,
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                      itemCount: threadItems.length,
                       itemBuilder: (context, index) {
-                        final msgIndex = msgs.length - 1 - index;
-                        final m = msgs[msgIndex];
-                        final isMe =
-                            m.senderId.toString() == sourceId.toString();
-                        final showSenderHeader =
-                            msgIndex == 0 ||
-                            msgs[msgIndex - 1].senderId != m.senderId;
-                        final sameSenderAsOlder =
-                            msgIndex > 0 &&
-                            msgs[msgIndex - 1].senderId == m.senderId;
-                        final topPad = sameSenderAsOlder ? 4.0 : 12.0;
+                        final item = threadItems[index];
+                        if (item.isDate) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16, top: 8),
+                            child: _DateSeparator(label: item.dateLabel!),
+                          );
+                        }
+                        final m = item.message!;
                         final content = (m.content ?? '').toString();
-                        final productCtx =
-                            ProductChatContext.tryParsePayload(content);
-
                         return Padding(
-                          padding: EdgeInsets.only(top: topPad),
-                          child:
-                              productCtx != null
-                                  ? _ProductInquiryCard(
-                                    product: productCtx,
-                                    createdAt: m.createdAt,
-                                    isMe: isMe,
-                                    showSenderHeader: showSenderHeader,
-                                    senderLabel:
-                                        isMe
-                                            ? _firstName(fullname)
-                                            : _peerFirstName(),
-                                  )
-                                  : _MessageRow(
-                                    content: content,
-                                    createdAt: m.createdAt,
-                                    isMe: isMe,
-                                    showSenderHeader: showSenderHeader,
-                                    senderLabel:
-                                        isMe
-                                            ? _firstName(fullname)
-                                            : _peerFirstName(),
-                                  ),
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: _MessageRow(
+                            content: content,
+                            createdAt: m.createdAt,
+                            isMe: item.isMe!,
+                            showRead: item.showRead,
+                          ),
                         );
                       },
                     ),
           ),
           _Composer(
             controller: _sendMessageController,
+            peerFirstName: _peerFirstName(),
             onSend: () {
               final text = _sendMessageController.text;
               if (text.trim().isEmpty) return;
               sendMessage(text);
               _sendMessageController.clear();
+              getMessageApi();
               _scheduleScrollToBottom();
             },
           ),
@@ -404,51 +716,189 @@ class _ChatState extends State<Chat> {
   }
 }
 
-class _EmptyThreadBody extends StatelessWidget {
-  const _EmptyThreadBody({this.productContext});
+class _ChatThreadItem {
+  const _ChatThreadItem._({
+    this.dateLabel,
+    this.message,
+    this.isMe,
+    this.showRead = false,
+  });
 
-  final ProductChatContext? productContext;
+  final String? dateLabel;
+  final msg_model.Data? message;
+  final bool? isMe;
+  final bool showRead;
+
+  bool get isDate => dateLabel != null;
+
+  factory _ChatThreadItem.date(String label) =>
+      _ChatThreadItem._(dateLabel: label);
+
+  factory _ChatThreadItem.message(
+    msg_model.Data msg, {
+    required bool isMe,
+    required bool showRead,
+  }) => _ChatThreadItem._(
+    message: msg,
+    isMe: isMe,
+    showRead: showRead,
+  );
+}
+
+class _ChatThreadHeader extends StatelessWidget {
+  const _ChatThreadHeader({
+    required this.displayName,
+    required this.subtitle,
+    required this.imageUrl,
+    required this.showAvatar,
+    required this.onBack,
+  });
+
+  final String displayName;
+  final String subtitle;
+  final String imageUrl;
+  final bool showAvatar;
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
-    if (productContext != null) {
-      return ListView(
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+    final top = MediaQuery.paddingOf(context).top;
+    return Material(
+      color: AppColors.jebbyBackground,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _ProductInquiryCard(
-            product: productContext!,
-            isMe: true,
-            showSenderHeader: true,
-            senderLabel: 'You',
+          Padding(
+            padding: EdgeInsets.fromLTRB(16, top + 8, 16, 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                JebbyFlowBackButton(onTap: onBack),
+                const SizedBox(width: 12),
+                if (showAvatar) ...[
+                  _HeaderAvatar(imageUrl: imageUrl),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'Nunito',
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.jebbyTextPrimary,
+                          height: 1.2,
+                        ),
+                      ),
+                      if (subtitle.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.jebbyTextMuted,
+                            height: 1.25,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
+          const Divider(height: 1, thickness: 1, color: _chatThreadDivider),
         ],
-      );
-    }
-    return Center(
-      child: Text(
-        'Start your chat',
-        style: GoogleFonts.inter(fontSize: 16, color: Colors.black54),
       ),
     );
   }
 }
 
-class _ProductInquiryCard extends StatelessWidget {
-  const _ProductInquiryCard({
+class _DateSeparator extends StatelessWidget {
+  const _DateSeparator({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: Divider(color: Colors.grey.shade300, height: 1)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: AppColors.jebbyTextMuted,
+            ),
+          ),
+        ),
+        Expanded(child: Divider(color: Colors.grey.shade300, height: 1)),
+      ],
+    );
+  }
+}
+
+class _EmptyThreadBody extends StatelessWidget {
+  const _EmptyThreadBody();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        'Start your chat',
+        style: TextStyle(
+          fontFamily: 'Nunito',
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: AppColors.jebbyTextMuted,
+        ),
+      ),
+    );
+  }
+}
+
+String _formatChatRentalRange(String? start, String? end) {
+  final s = rentalDateToDateTime(start);
+  final e = rentalDateToDateTime(end);
+  if (s == null && e == null) return '';
+  if (s != null && e == null) {
+    return DateFormat('MMM d, yyyy').format(s);
+  }
+  if (s == null && e != null) {
+    return DateFormat('MMM d, yyyy').format(e);
+  }
+  if (s!.year == e!.year && s.month == e.month) {
+    return '${DateFormat('MMM d').format(s)} -${DateFormat('d, yyyy').format(e)}';
+  }
+  if (s.year == e.year) {
+    return '${DateFormat('MMM d').format(s)} - ${DateFormat('MMM d, yyyy').format(e)}';
+  }
+  return '${DateFormat('MMM d, yyyy').format(s)} - ${DateFormat('MMM d, yyyy').format(e)}';
+}
+
+class _ThreadListingCard extends StatelessWidget {
+  const _ThreadListingCard({
     required this.product,
-    this.createdAt,
-    required this.isMe,
-    required this.showSenderHeader,
-    required this.senderLabel,
+    required this.isVendorTab,
+    this.order,
   });
 
   final ProductChatContext product;
-  final String? createdAt;
-  final bool isMe;
-  final bool showSenderHeader;
-  final String senderLabel;
-
-  static const Color _accent = Color(0xFFF6AE02);
+  final bool isVendorTab;
+  final _ThreadOrderSnapshot? order;
 
   String _resolveImageUrl() {
     final rel = product.image.trim();
@@ -476,130 +926,183 @@ class _ProductInquiryCard extends StatelessWidget {
     );
   }
 
+  void _openPrimaryAction() {
+    final snap = order;
+    if (snap != null && snap.orderId > 0) {
+      final status = OrderStatus.normalize(snap.orderStatus);
+      if (isVendorTab && OrderStatus.isNewBooking(status)) {
+        Get.to(() => RentalRequestReviewScreen(orderId: snap.orderId));
+        return;
+      }
+      Get.to(() => ReservationDetailScreen(orderId: snap.orderId));
+      return;
+    }
+    _openProduct();
+  }
+
+  String? _actionLabel() {
+    final snap = order;
+    if (snap != null && snap.orderId > 0) {
+      final status = OrderStatus.normalize(snap.orderStatus);
+      if (isVendorTab && OrderStatus.isNewBooking(status)) {
+        return 'View request';
+      }
+      return 'View reservation';
+    }
+    return 'View listing';
+  }
+
+  String? _badgeLabel() {
+    final snap = order;
+    if (snap == null || snap.orderId <= 0) return null;
+    final status = OrderStatus.normalize(snap.orderStatus);
+    if (OrderStatus.isNewBooking(status)) return 'Request Pending';
+    return OrderStatus.displayLabel(status);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final maxW = MediaQuery.sizeOf(context).width * 0.88;
-    final timeStr = formatApiTime(createdAt);
     final imageUrl = _resolveImageUrl();
+    final dateLine = _formatChatRentalRange(
+      order?.rentalStartDate ?? product.rentalStartDate,
+      order?.rentalEndDate ?? product.rentalEndDate,
+    );
+    final badge = _badgeLabel();
+    final actionLabel = _actionLabel();
 
-    final card = Material(
-      color: Colors.white,
-      elevation: 0,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: _openProduct,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          constraints: BoxConstraints(maxWidth: maxW),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE8E8E8)),
-            color: Colors.white,
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: SizedBox(
-                  width: 72,
-                  height: 72,
-                  child:
-                      imageUrl.isNotEmpty
-                          ? CachedNetworkImage(
-                            imageUrl: imageUrl,
-                            fit: BoxFit.cover,
-                          )
-                          : ColoredBox(
-                            color: Colors.grey.shade200,
-                            child: Icon(
-                              Icons.image_outlined,
-                              color: Colors.grey.shade400,
-                            ),
+    return Material(
+      color: _threadListingCardBg,
+      borderRadius: BorderRadius.circular(24),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: SizedBox(
+                width: 80,
+                height: 80,
+                child:
+                    imageUrl.isNotEmpty
+                        ? CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.cover,
+                        )
+                        : ColoredBox(
+                          color: Colors.grey.shade200,
+                          child: Icon(
+                            Icons.image_outlined,
+                            color: Colors.grey.shade400,
                           ),
-                ),
+                        ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Product inquiry',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF6B6B70),
-                      ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.name.trim().isNotEmpty ? product.name : 'Listing',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.jebbyTextPrimary,
+                      height: 1.25,
                     ),
+                  ),
+                  if (dateLine.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
-                      product.name,
-                      maxLines: 2,
+                      dateLine,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '\$${product.price}',
-                      style: GoogleFonts.inter(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: _accent,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Tap to view listing',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: Colors.black45,
+                      style: const TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.jebbyTextMuted,
+                        height: 1.35,
                       ),
                     ),
                   ],
+                  if (badge != null) ...[
+                    const SizedBox(height: 8),
+                    _ThreadStatusBadge(label: badge),
+                  ],
+                ],
+              ),
+            ),
+            if (actionLabel != null) ...[
+              const SizedBox(width: 8),
+              InkWell(
+                onTap: _openPrimaryAction,
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        actionLabel,
+                        style: const TextStyle(
+                          fontFamily: 'Nunito',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.jebbyBlue,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        size: 18,
+                        color: AppColors.jebbyBlue,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
-          ),
+          ],
         ),
       ),
     );
+  }
+}
 
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Column(
-        crossAxisAlignment:
-            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+class _ThreadStatusBadge extends StatelessWidget {
+  const _ThreadStatusBadge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: _badgePendingBg,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          if (showSenderHeader)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Text(
-                senderLabel,
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF6B6B70),
-                ),
-              ),
+          const Icon(Icons.schedule_rounded, size: 14, color: _badgePendingFg),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              color: _badgePendingFg,
             ),
-          card,
-          if (timeStr.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(
-                timeStr,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  color: const Color(0xFF9E9E9E),
-                ),
-              ),
-            ),
+          ),
         ],
       ),
     );
@@ -611,18 +1114,32 @@ class _HeaderAvatar extends StatelessWidget {
 
   final String imageUrl;
 
-  static const Color _placeholderFill = Color(0xFFFFF4E8);
-
   @override
   Widget build(BuildContext context) {
     final hasUrl = imageUrl.isNotEmpty;
-    final accent = AppColors.primaryColor.withValues(alpha: 0.85);
-    return CircleAvatar(
-      radius: 18,
-      backgroundColor: _placeholderFill,
-      backgroundImage: hasUrl ? CachedNetworkImageProvider(imageUrl) : null,
-      onBackgroundImageError: hasUrl ? (_, __) {} : null,
-      child: hasUrl ? null : Icon(Icons.person, color: accent, size: 22),
+    return SizedBox(
+      width: 48,
+      height: 48,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: AppColors.jebbySoftBlue,
+            backgroundImage:
+                hasUrl ? CachedNetworkImageProvider(imageUrl) : null,
+            onBackgroundImageError: hasUrl ? (_, __) {} : null,
+            child:
+                hasUrl
+                    ? null
+                    : const Icon(
+                      Icons.person_outline_rounded,
+                      color: AppColors.jebbyBlue,
+                      size: 26,
+                    ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -632,157 +1149,206 @@ class _MessageRow extends StatelessWidget {
     required this.content,
     required this.createdAt,
     required this.isMe,
-    required this.showSenderHeader,
-    required this.senderLabel,
+    this.showRead = false,
   });
 
   final String content;
   final String? createdAt;
   final bool isMe;
-  final bool showSenderHeader;
-  final String senderLabel;
+  final bool showRead;
 
   @override
   Widget build(BuildContext context) {
-    final maxW = MediaQuery.sizeOf(context).width * 0.78;
+    final maxW = MediaQuery.sizeOf(context).width * 0.82;
     final timeStr = formatApiTime(createdAt);
+
+    final radius = BorderRadius.only(
+      topLeft: const Radius.circular(20),
+      topRight: const Radius.circular(20),
+      bottomLeft: Radius.circular(isMe ? 20 : 6),
+      bottomRight: Radius.circular(isMe ? 6 : 20),
+    );
 
     final bubble = Container(
       constraints: BoxConstraints(maxWidth: maxW),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: isMe ? const Color(0xFF2C2C2E) : Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        color: isMe ? AppColors.jebbyBlue : _chatIncomingBubble,
+        borderRadius: radius,
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
+          if (!isMe)
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (showSenderHeader) ...[
-            Text(
-              senderLabel,
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: isMe ? Colors.white70 : const Color(0xFF6B6B70),
-              ),
-            ),
-            const SizedBox(height: 6),
-          ],
-          Text(
-            content,
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              fontWeight: FontWeight.w400,
-              height: 1.35,
-              color: isMe ? Colors.white : Colors.black,
-            ),
-          ),
-          if (timeStr.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Align(
-              alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-              child: Text(
-                timeStr,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w400,
-                  color: isMe ? Colors.white54 : const Color(0xFF9E9E9E),
-                ),
-              ),
-            ),
-          ],
-        ],
+      child: Text(
+        content,
+        style: TextStyle(
+          fontFamily: 'Nunito',
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          height: 1.4,
+          color: isMe ? Colors.white : AppColors.jebbyTextPrimary,
+        ),
       ),
     );
 
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: bubble,
+      child: Column(
+        crossAxisAlignment:
+            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          bubble,
+          if (timeStr.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  timeStr,
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.jebbyTextMuted,
+                  ),
+                ),
+                if (isMe && showRead) ...[
+                  const SizedBox(width: 6),
+                  const Icon(
+                    Icons.done_all_rounded,
+                    size: 14,
+                    color: AppColors.jebbyBlue,
+                  ),
+                  const SizedBox(width: 2),
+                  const Text(
+                    'Read',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.jebbyBlue,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
 
 class _Composer extends StatelessWidget {
-  const _Composer({required this.controller, required this.onSend});
+  const _Composer({
+    required this.controller,
+    required this.peerFirstName,
+    required this.onSend,
+  });
+
+  static const double _barHeight = 48;
 
   final TextEditingController controller;
+  final String peerFirstName;
   final VoidCallback onSend;
 
   @override
   Widget build(BuildContext context) {
-    // Do not add viewInsets.bottom here: Scaffold already insets the body
-    // when resizeToAvoidBottomInset is true; duplicating it leaves a gap
-    // above the keyboard.
     return Material(
       color: Colors.white,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: const Color(0xFFE8E8E8)),
-            ),
-            padding: const EdgeInsets.only(left: 4, right: 4, top: 4, bottom: 4),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: controller,
-                    minLines: 1,
-                    maxLines: 5,
-                    textCapitalization: TextCapitalization.sentences,
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      color: Colors.black,
-                      height: 1.3,
-                    ),
-                    cursorColor: AppColors.primaryColor,
-                    decoration: InputDecoration(
-                      isDense: true,
-                      hintText: 'Message',
-                      hintStyle: GoogleFonts.inter(
-                        color: Colors.grey.shade400,
-                        fontSize: 15,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Divider(height: 1, thickness: 1, color: _chatThreadDivider),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: _barHeight,
+                      decoration: BoxDecoration(
+                        color: _chatComposerFieldBg,
+                        borderRadius: BorderRadius.circular(_barHeight / 2),
                       ),
-                      border: InputBorder.none,
-                      filled: false,
-                      contentPadding: const EdgeInsets.fromLTRB(
-                        14,
-                        10,
-                        8,
-                        10,
+                      alignment: Alignment.center,
+                      child: TextField(
+                        controller: controller,
+                        expands: true,
+                        maxLines: null,
+                        minLines: null,
+                        textAlignVertical: TextAlignVertical.center,
+                        textCapitalization: TextCapitalization.sentences,
+                        style: const TextStyle(
+                          fontFamily: 'Nunito',
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.jebbyTextPrimary,
+                          height: 1.2,
+                        ),
+                        cursorColor: AppColors.jebbyBlue,
+                        decoration: InputDecoration(
+                          hintText: 'Message $peerFirstName…',
+                          hintStyle: TextStyle(
+                            fontFamily: 'Nunito',
+                            color: Colors.grey.shade500,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
+                            height: 1.2,
+                          ),
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 14,
+                          ),
+                        ),
+                        onSubmitted: (_) => onSend(),
                       ),
                     ),
-                    onSubmitted: (_) => onSend(),
                   ),
-                ),
-                InkWell(
-                  onTap: onSend,
-                  borderRadius: BorderRadius.circular(24),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                    child: Image.asset(
-                      'assets/images/chatsendicon.png',
-                      height: 40,
-                      width: 40,
+                  const SizedBox(width: 10),
+                  SizedBox(
+                    height: _barHeight,
+                    child: Material(
+                      color: AppColors.jebbyBlue,
+                      borderRadius: BorderRadius.circular(_barHeight / 2),
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
+                        onTap: onSend,
+                        borderRadius: BorderRadius.circular(_barHeight / 2),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          child: Center(
+                            child: Text(
+                              'Send',
+                              style: TextStyle(
+                                fontFamily: 'Nunito',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                height: 1.2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

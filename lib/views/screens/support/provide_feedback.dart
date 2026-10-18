@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:jebby/views/widgets/cms_page_shell.dart';
 import 'package:jebby/constants/color.dart';
 import 'package:jebby/repositories/auth_repository.dart';
+import 'package:jebby/utils/earner_navigation.dart';
 import 'package:jebby/utils/show_snackbar.dart';
+import 'package:jebby/views/widgets/jebby_flow_back_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProvideFeedbackScreen extends StatefulWidget {
@@ -14,7 +15,13 @@ class ProvideFeedbackScreen extends StatefulWidget {
 }
 
 class _ProvideFeedbackScreenState extends State<ProvideFeedbackScreen> {
-  static const Color _fieldFill = Color(0xFFF7F7F9);
+  static const String _feedbackBannerAsset =
+      'assets/images/feedback-banner.png';
+  static const Color _cardBorder = Color(0xFFE3E6EC);
+  static const Color _fieldFill = Color(0xFFF5F7FA);
+  static const Color _fieldValueColor = Color(0xFF4B5563);
+  static const Color _fieldPlaceholderColor = Color(0xFF9CA3AF);
+  static const Color _titleDark = Color(0xFF1A1A1A);
 
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -66,6 +73,14 @@ class _ProvideFeedbackScreenState extends State<ProvideFeedbackScreen> {
     _emailController.dispose();
     _commentsController.dispose();
     super.dispose();
+  }
+
+  void _handleBack() {
+    if (Get.key.currentState?.canPop() ?? false) {
+      Get.back();
+    } else {
+      EarnerNavigation.goHome();
+    }
   }
 
   Future<void> _submit() async {
@@ -126,134 +141,278 @@ class _ProvideFeedbackScreenState extends State<ProvideFeedbackScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return CmsPageShell(
-      title: 'Provide Feedback',
-      subtitle: 'Tell us what we can improve.',
-      body: CmsPageShell.paddedScroll(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 8),
-            Text(
-              'Describe your issue, question, or suggestion below. Our support team will review your message and respond as soon as possible.',
-              style: _nunito(
-                size: 16,
-                weight: FontWeight.w600,
-                color: const Color(0xFF374151),
-                height: 1.55,
-              ),
-            ),
-            const SizedBox(height: 24),
-            _fieldLabel('Name'),
-            _textField(
-              controller: _nameController,
-              hint: 'Your name',
-              textInputAction: TextInputAction.next,
-            ),
-            const SizedBox(height: 16),
-            _fieldLabel('Email'),
-            _textField(
-              controller: _emailController,
-              hint: 'you@example.com',
-              keyboardType: TextInputType.emailAddress,
-              textInputAction: TextInputAction.next,
-            ),
-            const SizedBox(height: 16),
-            _fieldLabel('Message'),
-            _textField(
-              controller: _commentsController,
-              hint: 'Describe your issue or inquiry…',
-              maxLines: 6,
-              minLines: 5,
-              textInputAction: TextInputAction.newline,
-            ),
-            const SizedBox(height: 28),
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: FilledButton(
-                onPressed: _isSubmitting ? null : _submit,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.jebbyBlue,
-                  disabledBackgroundColor:
-                      AppColors.jebbyBlue.withValues(alpha: 0.6),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(26),
+  Widget _pageHeader() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        JebbyFlowBackButton(onTap: _handleBack),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2, bottom: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Provide Feedback',
+                  style: _nunito(size: 22, weight: FontWeight.w800, height: 1.15),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Tell us what we can improve.',
+                  style: _nunito(
+                    size: 14,
+                    weight: FontWeight.w600,
+                    color: AppColors.jebbyTextMuted,
+                    height: 1.35,
                   ),
                 ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Text(
-                        'Submit Feedback',
-                        style: _nunito(
-                          size: 16,
-                          weight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
-                      ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _feedbackBanner() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bannerWidth = constraints.maxWidth;
+        final textWidth = bannerWidth * 0.56;
+
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            clipBehavior: Clip.hardEdge,
+            children: [
+              Image.asset(
+                _feedbackBannerAsset,
+                width: bannerWidth,
+                fit: BoxFit.fitWidth,
+                alignment: Alignment.center,
               ),
+              Positioned(
+                left: 20,
+                top: 25,
+                width: textWidth,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Your Voice Matters',
+                      style: _nunito(
+                        size: 24,
+                        weight: FontWeight.w800,
+                        color: _titleDark,
+                        height: 1.18,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Share your thoughts with us. Every little suggestion makes a difference.',
+                      style: _nunito(
+                        size: 14,
+                        weight: FontWeight.w500,
+                        color: const Color(0xFF4E5E74),
+                        height: 1.18,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  InputDecoration _fieldDecoration({String? hintText}) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: _nunito(
+        size: 15,
+        weight: FontWeight.w500,
+        color: _fieldPlaceholderColor,
+      ),
+      filled: true,
+      fillColor: _fieldFill,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.jebbyBlue, width: 1.5),
+      ),
+      disabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+    );
+  }
+
+  Widget _fieldIcon(IconData icon) {
+    return Icon(icon, size: 20, color: AppColors.jebbyBlue);
+  }
+
+  Widget _labeledField({
+    required IconData icon,
+    required String label,
+    required Widget field,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            _fieldIcon(icon),
+            const SizedBox(width: 10),
+            Text(
+              label,
+              style: _nunito(size: 16, weight: FontWeight.w800),
             ),
           ],
         ),
+        const SizedBox(height: 10),
+        field,
+      ],
+    );
+  }
+
+  Widget _feedbackFormCard() {
+    final fieldStyle = _nunito(
+      size: 15,
+      weight: FontWeight.w500,
+      color: _fieldValueColor,
+      height: 1.35,
+    );
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _cardBorder),
+      ),
+      padding: const EdgeInsets.fromLTRB(18, 20, 18, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _labeledField(
+            icon: Icons.person_outline,
+            label: 'Name',
+            field: TextField(
+              controller: _nameController,
+              enabled: !_isSubmitting,
+              style: fieldStyle,
+              textInputAction: TextInputAction.next,
+              decoration: _fieldDecoration(hintText: 'Your name'),
+            ),
+          ),
+          const SizedBox(height: 18),
+          _labeledField(
+            icon: Icons.mail_outline,
+            label: 'Email',
+            field: TextField(
+              controller: _emailController,
+              enabled: !_isSubmitting,
+              style: fieldStyle,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.next,
+              decoration: _fieldDecoration(hintText: 'you@example.com'),
+            ),
+          ),
+          const SizedBox(height: 18),
+          _labeledField(
+            icon: Icons.chat_bubble_outline,
+            label: 'Message',
+            field: TextField(
+              controller: _commentsController,
+              enabled: !_isSubmitting,
+              style: fieldStyle,
+              maxLines: 6,
+              minLines: 5,
+              textInputAction: TextInputAction.newline,
+              decoration: _fieldDecoration(
+                hintText: 'Describe your issue or inquiry',
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _fieldLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        text,
-        style: _nunito(size: 14, weight: FontWeight.w700),
-      ),
-    );
-  }
-
-  Widget _textField({
-    required TextEditingController controller,
-    required String hint,
-    TextInputType? keyboardType,
-    TextInputAction? textInputAction,
-    int? maxLines = 1,
-    int? minLines,
-  }) {
-    return TextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      textInputAction: textInputAction,
-      maxLines: maxLines,
-      minLines: minLines,
-      enabled: !_isSubmitting,
-      style: _nunito(size: 15, weight: FontWeight.w600),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: _nunito(
-          size: 15,
-          weight: FontWeight.w600,
-          color: const Color(0xFF8F9098),
-        ),
-        filled: true,
-        fillColor: _fieldFill,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.jebbyBlue, width: 1.5),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey.shade100,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+              child: _pageHeader(),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _feedbackBanner(),
+                    const SizedBox(height: 16),
+                    _feedbackFormCard(),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+              child: SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: FilledButton(
+                  onPressed: _isSubmitting ? null : _submit,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.jebbyBlue,
+                    disabledBackgroundColor:
+                        AppColors.jebbyBlue.withValues(alpha: 0.6),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          'Submit Feedback',
+                          style: _nunito(
+                            size: 17,
+                            weight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
